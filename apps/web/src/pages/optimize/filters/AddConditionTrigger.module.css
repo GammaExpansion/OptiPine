@@ -1,0 +1,6 @@
+/* R10: the trigger reads as selected while its popover is open. */
+.trigger[data-state='open'] {
+  border-color: var(--amber-border);
+  background: var(--amber-background);
+  color: var(--amber-text);
+}

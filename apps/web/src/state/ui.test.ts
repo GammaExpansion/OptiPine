@@ -22,15 +22,15 @@ test('persists only language and independent pane sizes, keeping session navigat
   first.getState().setPage('optimize');
   first.getState().setDockTab('trades');
   first.getState().setPaneSizes('backtest', { right: 380, chart: 500 });
-  first.getState().setPaneSizes('optimize', { right: 410 });
+  first.getState().setPaneSizes('optimize', { right: 410, summary: 280, map: -5 });
   first.getState().setDialogOpen('marketData', true);
   first.getState().setDialogOpen('marketData', true);
   expect(first.getState().openDialogs).toEqual(['marketData']);
   const restored = createUiStore(storage, 'zh-CN').getState();
   expect(restored.language).toBe('en');
   expect(restored.paneSizes).toEqual({
-    backtest: { right: 380, chart: 500 },
-    optimize: { right: 410, chart: 430 },
+    backtest: { ...defaultPaneSizes, right: 380, chart: 500 },
+    optimize: { ...defaultPaneSizes, right: 410, summary: 280 },
   });
   expect(restored.page).toBe('backtest');
   expect(restored.dockTab).toBe('code');

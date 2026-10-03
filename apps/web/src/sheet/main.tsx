@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import '../i18n/catalogs.ts';
 import { I18nProvider } from '../i18n/I18nProvider.tsx';
 import '../styles/base.css';
 import { Sheet } from './Sheet.tsx';

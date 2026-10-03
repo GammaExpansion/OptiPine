@@ -2,6 +2,7 @@ import { lazy, Suspense, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useBacktestStore } from '../../state/backtest.ts';
 import { FirstLaunch } from './FirstLaunch.tsx';
+import { PreviewBanner } from './preview/PreviewBanner.tsx';
 import { chartView } from './states/chart-view.ts';
 import styles from './ChartArea.module.css';
 
@@ -11,7 +12,7 @@ const ResultChart = lazy(() =>
 
 /**
  * The chart area (B1, B6–B12): the first-launch steps until there are a script and data, then the
- * result chart, which loads on first use.
+ * result chart, which loads on first use. The banner of a previewed set (B16) sits above either.
  */
 export function ChartArea() {
   const parts = useBacktestStore(
@@ -25,11 +26,18 @@ export function ChartArea() {
     })),
   );
   const view = useMemo(() => chartView(parts), [parts]);
-  return view.kind === 'firstLaunch' ? (
-    <FirstLaunch />
-  ) : (
-    <Suspense fallback={<div className={styles.area} />}>
-      <ResultChart view={view} />
-    </Suspense>
+  return (
+    <div className={styles.stack}>
+      <PreviewBanner />
+      <div className={styles.body}>
+        {view.kind === 'firstLaunch' ? (
+          <FirstLaunch />
+        ) : (
+          <Suspense fallback={<div className={styles.area} />}>
+            <ResultChart view={view} />
+          </Suspense>
+        )}
+      </div>
+    </div>
   );
 }

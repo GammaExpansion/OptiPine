@@ -3,6 +3,7 @@ import { expect, test } from 'vitest';
 import { getBacktestStore, openScript } from '../state/backtest.ts';
 import { getMarketDataStore } from '../state/marketData.ts';
 import { testInput } from '../state/test-support.ts';
+import { uiStore } from '../state/ui.ts';
 import {
   loadScript,
   renderInEnglish,
@@ -10,6 +11,11 @@ import {
   useBacktestTestServices,
 } from '../pages/backtest/states/test-support.tsx';
 import { strategySource } from '../workflows/test-support.ts';
+import {
+  loadOptimization,
+  optimization,
+  runOptimization,
+} from '../pages/optimize/test-support.tsx';
 import { RunControls } from './RunControls.tsx';
 
 useBacktestTestServices();
@@ -65,4 +71,45 @@ test('the header marks an outdated result, a failed run and a failed compile', a
   act(() => getBacktestStore().getState().actions.setSource('//@version=6\nplot(missing)'));
   await waitFor(() => expect(screen.getByText('1 compile error')).toBeInTheDocument());
   expect(runButton()).toHaveAccessibleDescription('Fix the compile errors to run');
+});
+
+const facts = () => screen.getByLabelText('Last run');
+
+test('on the Optimize page the header states the run, with Cancel and no main action (R1, O8)', async () => {
+  await loadOptimization();
+  act(() => uiStore.setState({ page: 'optimize' }));
+  renderInEnglish(<RunControls />);
+  expect(facts()).toHaveTextContent('No optimization has run yet');
+  expect(screen.queryByRole('button', { name: /Run backtest|Start/ })).toBeNull();
+  let run!: Promise<void>;
+  act(() => {
+    run = optimization().actions.start();
+  });
+  expect(facts()).toHaveTextContent(/^Optimizing 0 \/ (0|9)$/);
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  await act(() => run);
+  expect(facts()).toHaveTextContent('Optimization cancelled');
+  await runOptimization();
+  expect(facts()).toHaveTextContent('9 combos, 0:00');
+  act(() => optimization().actions.setValidation({ outOfSamplePercent: 40 }));
+  expect(facts()).toHaveTextContent('Results outdated');
+  act(() => void optimization().actions.start());
+  act(() => optimization().actions.cancel());
+  expect(facts()).toHaveTextContent('Results outdated');
+  act(() => optimization().actions.setValidation({ outOfSamplePercent: 30 }));
+  expect(facts()).toHaveTextContent('Optimization cancelled; last results kept');
+});
+
+test('the header links failed combinations to their list and says when sets were sampled', async () => {
+  await loadScript(`${strategySource}if length == 3 and bar_index == 40\n    runtime.error("x")\n`);
+  act(() => {
+    uiStore.setState({ page: 'optimize' });
+    optimization().actions.setRange('Length', { from: 2, to: 4, step: 1 });
+    optimization().actions.setSampling({ method: 'random', count: 5 });
+  });
+  renderInEnglish(<RunControls />);
+  await runOptimization();
+  expect(facts()).toHaveTextContent('5 random in 0:00');
+  fireEvent.click(screen.getByRole('button', { name: /\d failed/ }));
+  expect(uiStore.getState().openDialogs).toEqual(['failedCombinations']);
 });
