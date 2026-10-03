@@ -1,9 +1,14 @@
-import type { MarketBar } from '@pine/engine';
-import { handleEngineWorkerRequest, EngineWorkerClient } from '@pine/workers';
+import type { MarketBar, ParameterSet, RunInput } from '@pine/engine';
+import {
+  EngineWorkerClient,
+  handleEngineWorkerRequest,
+  handleOptimizationWorkerRequest,
+} from '@pine/workers';
 import type {
   EngineWorkerRequest,
   EngineWorkerResponse,
   EngineWorkerTransport,
+  OptimizationTrial,
 } from '@pine/workers';
 
 /** Hourly bars from `start` (Unix seconds): a slow trend with waves, so crossings happen. */
@@ -101,4 +106,30 @@ export function engineHarness(): {
 /** Let pending promise callbacks run. */
 export function settle(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+/** The trials the pool would stream for these sets, computed by the engine at once. */
+export function engineTrials(
+  source: string,
+  common: RunInput,
+  parameters: readonly ParameterSet[],
+): OptimizationTrial[] {
+  const trials: OptimizationTrial[] = [];
+  handleOptimizationWorkerRequest(
+    {
+      kind: 'optimize',
+      source,
+      common,
+      parameters,
+      chunkIndex: 0,
+      totalChunks: 1,
+      requestId: 1,
+      sourceRevision: 0,
+    },
+    undefined,
+    (response) => {
+      if (response.kind === 'trial') trials.push(response.trial);
+    },
+  );
+  return trials;
 }

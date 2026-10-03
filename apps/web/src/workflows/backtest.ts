@@ -283,10 +283,10 @@ function derive(state: BaseState): BacktestState {
 }
 
 /**
- * The engine's `Diagnostic` has no bar yet; B11 needs it. Once the engine adds `bar` to the
+ * The engine's `Diagnostic` has no bar yet; B11 and R11 need it. Once the engine adds `bar` to the
  * diagnostic that ends a run, this reads it without further changes here.
  */
-function failedBar(diagnostic: Diagnostic | undefined): number | null {
+export function diagnosticBar(diagnostic: Diagnostic | undefined): number | null {
   const bar = (diagnostic as { bar?: unknown } | undefined)?.bar;
   return typeof bar === 'number' && Number.isSafeInteger(bar) ? bar : null;
 }
@@ -521,7 +521,7 @@ export class BacktestSession implements Observable<BacktestState> {
         finishedAt,
         failure: {
           diagnostics: output.diagnostics,
-          bar: failedBar(output.diagnostics[0]),
+          bar: diagnosticBar(output.diagnostics[0]),
           error: null,
         },
       });
