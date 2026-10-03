@@ -1,11 +1,13 @@
-﻿import { useEffect, useRef, useState } from 'react';
-import { Button } from '../../components/Button.tsx';
-import { Dialog } from '../../components/Dialog.tsx';
-import { Note } from '../../components/Note.tsx';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { openScript } from '../../state/backtest.ts';
 import { registerFilePicker } from '../../shell/shortcuts.ts';
 import { setScriptPicker } from './actions.ts';
+
+// Only a file that cannot be opened shows it, so it loads then.
+const FileErrorDialog = lazy(() =>
+  import('./FileErrorDialog.tsx').then((module) => ({ default: module.FileErrorDialog })),
+);
 
 export function ScriptFilePicker() {
   const { t } = useI18n();
@@ -50,16 +52,11 @@ export function ScriptFilePicker() {
           event.target.value = '';
         }}
       />
-      <Dialog
-        open={failed}
-        onOpenChange={setFailed}
-        title={t('script.openFile')}
-        closeLabel={t('data.close')}
-        footer={<Button onClick={() => setFailed(false)}>{t('data.close')}</Button>}
-        size="small"
-      >
-        <Note tone="danger">{t('script.fileError')}</Note>
-      </Dialog>
+      {failed && (
+        <Suspense fallback={null}>
+          <FileErrorDialog close={() => setFailed(false)} />
+        </Suspense>
+      )}
     </>
   );
 }

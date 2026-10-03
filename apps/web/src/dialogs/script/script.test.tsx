@@ -60,7 +60,7 @@ test('pasted code asks before replacing an existing script and cancelling keeps 
   const user = userEvent.setup();
   await user.click(screen.getByRole('button', { name: 'Paste code' }));
   await user.type(
-    screen.getByRole('textbox', { name: 'Pine source' }),
+    await screen.findByRole('textbox', { name: 'Pine source' }),
     '//@version=6\nstrategy("Paste")',
   );
   await user.click(screen.getByRole('button', { name: 'Use this code' }));
@@ -78,9 +78,12 @@ test('clipboard menu seeds the paste dialog and failure still permits manual pas
   const user = userEvent.setup();
   await user.copy();
   vi.spyOn(navigator.clipboard, 'readText').mockResolvedValue(source);
+  // The menu loads on the first click and opens once it is in.
   await user.click(screen.getByRole('button', { name: 'Open script' }));
-  await user.click(screen.getByRole('menuitem', { name: 'Paste from clipboard and replace' }));
-  expect(screen.getByRole('textbox', { name: 'Pine source' })).toHaveValue(source);
+  await user.click(
+    await screen.findByRole('menuitem', { name: 'Paste from clipboard and replace' }),
+  );
+  expect(await screen.findByRole('textbox', { name: 'Pine source' })).toHaveValue(source);
   await user.click(screen.getByRole('button', { name: 'Cancel' }));
   vi.mocked(navigator.clipboard.readText).mockRejectedValue(new Error('denied'));
   await act(async () => showPaste(true));
@@ -127,7 +130,7 @@ test('script menu has compile facts and marks the current example', async () => 
   await user.click(screen.getByRole('button', { name: /Load example/ }));
   await waitFor(() => expect(getBacktestStore().getState().compile.status).toBe('compiled'));
   await user.click(screen.getByRole('button', { name: /trend-breakout.pine/ }));
-  expect(screen.getByText(/Pine v6, 5 inputs, 3 plots, compiled in/)).toBeVisible();
+  expect(await screen.findByText(/Pine v6, 5 inputs, 3 plots, compiled in/)).toBeVisible();
   expect(
     screen.getByRole('menuitem', { name: 'Trend Breakout' }).querySelector('svg'),
   ).not.toBeNull();

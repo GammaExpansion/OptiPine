@@ -1,8 +1,20 @@
-import type { ComponentType } from 'react';
+import { lazy, Suspense, type ComponentType } from 'react';
 import { useUiStore, type Dialog } from '../state/ui.ts';
-import { MarketDataDialog } from '../dialogs/marketData/MarketDataDialog.tsx';
-import { ScriptDialog } from '../dialogs/script/ScriptDialog.tsx';
-import { DateRangeDialog } from '../dialogs/dateRange/DateRangeDialog.tsx';
+
+// A dialog matters only once it opens, so each loads in a chunk of its own on first use.
+const ScriptDialog = lazy(() =>
+  import('../dialogs/script/ScriptDialog.tsx').then((module) => ({ default: module.ScriptDialog })),
+);
+const MarketDataDialog = lazy(() =>
+  import('../dialogs/marketData/MarketDataDialog.tsx').then((module) => ({
+    default: module.MarketDataDialog,
+  })),
+);
+const DateRangeDialog = lazy(() =>
+  import('../dialogs/dateRange/DateRangeDialog.tsx').then((module) => ({
+    default: module.DateRangeDialog,
+  })),
+);
 
 /** Phase 2 supplies dialogs/ components here; open state and mounting have one owner. */
 export function DialogsRoot({ slots = {} }: { slots?: Partial<Record<Dialog, ComponentType>> }) {
@@ -15,6 +27,10 @@ export function DialogsRoot({ slots = {} }: { slots?: Partial<Record<Dialog, Com
   };
   return openDialogs.map((dialog) => {
     const Slot = allSlots[dialog];
-    return Slot ? <Slot key={dialog} /> : null;
+    return Slot ? (
+      <Suspense key={dialog} fallback={null}>
+        <Slot />
+      </Suspense>
+    ) : null;
   });
 }

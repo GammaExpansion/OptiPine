@@ -109,7 +109,7 @@ test('dock tabs select empty results and issues without exposing an editor workf
     </I18nProvider>,
   );
   await user.click(screen.getByRole('tab', { name: /Issues/ }));
-  expect(screen.getByRole('tabpanel')).toHaveTextContent('No issues');
+  expect(await within(screen.getByRole('tabpanel')).findByText('No issues')).toBeVisible();
   await user.click(screen.getByRole('tab', { name: 'Trades' }));
   expect(screen.getByRole('tabpanel')).toHaveTextContent('Run a backtest to see results here.');
 });

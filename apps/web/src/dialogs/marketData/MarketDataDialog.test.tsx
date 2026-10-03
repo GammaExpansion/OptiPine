@@ -24,13 +24,16 @@ afterEach(() => {
   restore();
   vi.useRealTimers();
 });
-function mount() {
-  return render(
+/** The header and the open dialog, once its lazily loaded chunk is in. */
+async function mount() {
+  const view = render(
     <I18nProvider>
       <HeaderData />
       <DialogsRoot />
     </I18nProvider>,
   );
+  await screen.findByRole('dialog');
+  return view;
 }
 function file(name: string, raw: string) {
   const value = new File([raw], name);
@@ -62,6 +65,7 @@ test('StrictMode preserves an incoming refetch and real unmount clears its previ
     </StrictMode>,
   );
   await waitFor(() => expect(resolve).toBeDefined());
+  await screen.findByRole('dialog');
   expect(getMarketDataStore().getState().fetch.status).toBe('fetching');
   await act(async () => {
     resolve(Response.json(testDataset));
@@ -74,7 +78,7 @@ test('StrictMode preserves an incoming refetch and real unmount clears its previ
 });
 
 test('only Use this data installs the preview; invalid profile edits block it', async () => {
-  mount();
+  await mount();
   const user = userEvent.setup();
   await user.click(screen.getByRole('button', { name: 'Fetch data' }));
   await screen.findByText('120', { exact: true });
@@ -107,7 +111,7 @@ test('changing tabs cancels pending provider work and ignores its late response'
         }),
     }),
   );
-  mount();
+  await mount();
   const user = userEvent.setup();
   await user.click(screen.getByRole('button', { name: 'Fetch data' }));
   await waitFor(() => expect(resolve).toBeDefined());
@@ -132,7 +136,7 @@ test('closing the dialog aborts a fetch without replacing accepted data', async 
     }),
   );
   getMarketDataStore().getState().actions.useCsv(testInput, 'prior.csv');
-  mount();
+  await mount();
   const user = userEvent.setup();
   await user.click(screen.getByRole('tab', { name: /Binance/ }));
   await user.click(screen.getByRole('button', { name: 'Fetch data' }));
@@ -142,13 +146,13 @@ test('closing the dialog aborts a fetch without replacing accepted data', async 
 });
 
 test('progress advances on its timer and disappears on cancellation', async () => {
-  vi.useFakeTimers();
-  vi.setSystemTime(testNow);
   restore();
   restore = replaceServices(() =>
     fakeServices({ now: Date.now, fetcher: async () => new Promise<Response>(() => {}) }),
   );
-  mount();
+  await mount();
+  vi.useFakeTimers();
+  vi.setSystemTime(testNow);
   act(() => {
     void getMarketDataStore().getState().actions.fetch(exampleRequest(testNow));
   });
@@ -176,7 +180,7 @@ test('search is abortable, chooses results with the keyboard and reports search 
       },
     }),
   );
-  mount();
+  await mount();
   const user = userEvent.setup();
   const search = screen.getByRole('combobox', { name: 'Symbol' });
   await user.clear(search);
@@ -192,7 +196,7 @@ test('search is abortable, chooses results with the keyboard and reports search 
 });
 
 test('CSV uses edited metadata and calendar only after all validation passes', async () => {
-  mount();
+  await mount();
   const user = userEvent.setup();
   await user.click(screen.getByRole('tab', { name: 'Upload CSV' }));
   await user.upload(screen.getByLabelText('CSV file'), file('local.csv', csv));
@@ -217,7 +221,7 @@ test('CSV uses edited metadata and calendar only after all validation passes', a
 });
 
 test('CSV shows all failed rows beside raw records and handles dropped files', async () => {
-  mount();
+  await mount();
   const user = userEvent.setup();
   await user.click(screen.getByRole('tab', { name: 'Upload CSV' }));
   const raw = `${csv}\n1790938800,1,2,0,1,1\n1790942400,1,2,0,1,-1`;
@@ -235,7 +239,7 @@ test('date range validates Custom and opens a provider preview without installin
   await actions.fetch(exampleRequest(testNow));
   actions.accept();
   uiStore.setState({ openDialogs: ['dateRange'] });
-  mount();
+  await mount();
   const user = userEvent.setup();
   const before = getBacktestStore().getState().dataset;
   await user.clear(screen.getByLabelText('From'));
@@ -253,7 +257,7 @@ test('Chinese unavailable state keeps CSV accessible after switching providers',
     fakeServices({ fetcher: async () => new Response('missing', { status: 404 }) }),
   );
   uiStore.setState({ language: 'zh' });
-  mount();
+  await mount();
   const user = userEvent.setup();
   await user.click(screen.getByRole('button', { name: '获取数据' }));
   await screen.findByText('数据服务不可用。请改用 CSV。');
