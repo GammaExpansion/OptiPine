@@ -14,6 +14,15 @@ export const optimizeHooks = {
       outdated: state.outdated?.reasons ?? null,
     };
   },
+  /** Search `title` from `from` to `to` with every other input fixed, and run it to its end. */
+  async runOne(title: string, from: number, to: number) {
+    const { search, actions } = getOptimizationStore().getState();
+    for (const row of search.rows)
+      if (row.draft && row.descriptor.title !== title)
+        actions.setSearched(row.descriptor.title, false);
+    actions.setRange(title, { from, to, step: 1 });
+    await actions.start();
+  },
 };
 
 export type OptimizeHooks = typeof optimizeHooks;

@@ -2,6 +2,14 @@
   flex: 1;
   min-height: 0;
 }
+.single {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.single > .main {
+  flex: 1;
+}
 .main,
 .column {
   height: 100%;

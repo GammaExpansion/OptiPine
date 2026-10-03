@@ -12,7 +12,9 @@ import styles from '../../shell/Workbench.module.css';
 import { EmptyResults } from './dock/results/EmptyResults.tsx';
 import { DockActionsHost } from './dock/DockActions.tsx';
 import actionStyles from './dock/DockActions.module.css';
+import { Sidebar } from './Sidebar.tsx';
 import { closedTradeCount, shownResult } from './states/chart-view.ts';
+import phone from '../../shell/PhoneTabs.module.css';
 
 const ReportTab = lazy(() =>
   import('./dock/ReportTab.tsx').then((m) => ({ default: m.ReportTab })),
@@ -29,16 +31,74 @@ const IssuesTab = lazy(() =>
 );
 
 const dockTabs: DockTab[] = ['report', 'equity', 'trades', 'code', 'issues'];
+/** A phone has the right panel's inputs as a tab of their own, and shorter labels (G3). */
+const phoneTabs: DockTab[] = ['report', 'equity', 'trades', 'inputs', 'code', 'issues'];
 
-export function Dock({ children }: { children: ReactNode }) {
+/** The tabs with their labels and the trade and issue counts. */
+function useTabOptions(tabs: readonly DockTab[], short: boolean) {
   const { t } = useI18n();
   const issueCount = useBacktestStore((state) => backtestIssues(state).length);
   const tradeCount = useBacktestStore(closedTradeCount);
+  return tabs.map((value) => ({
+    value,
+    label: t(short && value === 'code' ? 'dock.codeShort' : `dock.${value}`),
+    ...(value === 'issues' ? { count: issueCount, bad: issueCount > 0 } : {}),
+    ...(value === 'trades' && tradeCount !== null ? { count: tradeCount } : {}),
+  }));
+}
+
+/** What a tab shows; S1 shows the empty dock without importing charts, tables or reporting. */
+function TabContent({ tab }: { tab: DockTab }) {
   const hasResult = useBacktestStore((state) => shownResult(state) !== null);
-  const codeLine = useSelectionStore((state) => state.codeLine);
-  const [actionsHost, setActionsHost] = useState<HTMLElement | null>(null);
+  return (
+    <>
+      <Suspense fallback={<EmptyResults />}>
+        {tab === 'report' && (hasResult ? <ReportTab /> : <EmptyResults />)}
+        {tab === 'equity' && (hasResult ? <EquityTab /> : <EmptyResults />)}
+        {tab === 'trades' && (hasResult ? <TradesTab /> : <EmptyResults />)}
+      </Suspense>
+      {tab === 'inputs' && <Sidebar />}
+      <Suspense fallback={null}>
+        {tab === 'code' && <CodeTab />}
+        {tab === 'issues' && <IssuesTab />}
+      </Suspense>
+    </>
+  );
+}
+
+/**
+ * The phone's tab row under the chart (G3): Report, Equity, Trades, Inputs, Code and Issues, with
+ * no dock actions or sizing.
+ */
+export function PhoneDock() {
+  const { t } = useI18n();
   const tab = useUiStore((state) => state.dockTab);
   const setTab = useUiStore((state) => state.setDockTab);
+  const options = useTabOptions(phoneTabs, true);
+  return (
+    <div className={phone.tabs}>
+      <DockTabs
+        label={t('dock.tabs')}
+        value={tab}
+        options={options}
+        onChange={(value) => setTab(value as DockTab)}
+      >
+        <DockActionsHost.Provider value={null}>
+          <TabContent tab={tab} />
+        </DockActionsHost.Provider>
+      </DockTabs>
+    </div>
+  );
+}
+
+export function Dock({ children }: { children: ReactNode }) {
+  const { t } = useI18n();
+  const codeLine = useSelectionStore((state) => state.codeLine);
+  const [actionsHost, setActionsHost] = useState<HTMLElement | null>(null);
+  // The phone's Inputs tab is the right panel here (G3).
+  const tab = useUiStore((state) => (state.dockTab === 'inputs' ? 'report' : state.dockTab));
+  const setTab = useUiStore((state) => state.setDockTab);
+  const options = useTabOptions(dockTabs, false);
   const setSizes = useUiStore((state) => state.setPaneSizes);
   const saved = useUiStore((state) => state.paneSizes.backtest.chart);
   // Keep the mount default stable: changing it while dragging resets the library's layout.
@@ -112,12 +172,7 @@ export function Dock({ children }: { children: ReactNode }) {
         <DockTabs
           label={t('dock.tabs')}
           value={tab}
-          options={dockTabs.map((value) => ({
-            value,
-            label: t(`dock.${value}`),
-            ...(value === 'issues' ? { count: issueCount, bad: issueCount > 0 } : {}),
-            ...(value === 'trades' && tradeCount !== null ? { count: tradeCount } : {}),
-          }))}
+          options={options}
           onChange={(value) => setTab(value as DockTab)}
           collapsed={dockCollapsed}
           actions={
@@ -154,16 +209,7 @@ export function Dock({ children }: { children: ReactNode }) {
           }
         >
           <DockActionsHost.Provider value={dockCollapsed ? null : actionsHost}>
-            {/* S1 shows the empty dock without importing charts, tables or engine reporting. */}
-            <Suspense fallback={<EmptyResults />}>
-              {tab === 'report' && (hasResult ? <ReportTab /> : <EmptyResults />)}
-              {tab === 'equity' && (hasResult ? <EquityTab /> : <EmptyResults />)}
-              {tab === 'trades' && (hasResult ? <TradesTab /> : <EmptyResults />)}
-            </Suspense>
-            <Suspense fallback={null}>
-              {tab === 'code' && <CodeTab />}
-              {tab === 'issues' && <IssuesTab />}
-            </Suspense>
+            <TabContent tab={tab} />
           </DockActionsHost.Provider>
         </DockTabs>
       </Panel>

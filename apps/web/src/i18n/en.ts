@@ -378,6 +378,7 @@ export const en = {
   'shell.timeframe': 'Timeframe',
   'shell.dateRange': 'Date range',
   'shell.runBacktest': 'Run backtest',
+  'shell.run': 'Run',
   'shell.runMissing': 'Open a script and select market data first',
   'shell.shortcut': 'Ctrl ↵',
   'shell.language': 'Language',
@@ -412,6 +413,8 @@ export const en = {
   'dock.trades': 'Trades',
   'dock.code': 'Pine code',
   'dock.issues': 'Issues',
+  'dock.inputs': 'Inputs',
+  'dock.codeShort': 'Code',
   'dock.maximize': 'Maximize panel',
   'dock.collapse': 'Collapse panel',
   'dock.restore': 'Restore panel',
@@ -540,6 +543,12 @@ export const en = {
   'layout.rightSize': 'Right panel {size} px',
   'layout.chartSize': 'Chart {size} px',
   'layout.resetHint': 'Double-click to reset',
+  'layout.sections': 'Page sections',
+  'layout.summary': 'Summary',
+  'layout.leaderboard': 'Leaderboard',
+  'layout.map': 'Parameter map',
+  'layout.sensitivity': 'Sensitivity',
+  'layout.settings': 'Settings',
   'optimize.map.title': 'Parameter map',
   'optimize.map.curve': 'Objective curve',
   'optimize.map.curveValues': 'Objective at the inspected value',
@@ -707,6 +716,10 @@ export const en = {
   'optimize.empty': 'No optimization has run yet',
   'optimize.emptyHint':
     'Set the search ranges and validation on the right. After a run, the summary chart, leaderboard, parameter map and sensitivity appear here.',
+  'optimize.emptyHintPanel':
+    'Set the search ranges and validation in the right panel, from the top bar. After a run, the summary chart, leaderboard, parameter map and sensitivity appear here.',
+  'optimize.emptyHintSettings':
+    'Set the search ranges and validation under Settings. After a run, the summary chart, leaderboard, parameter map and sensitivity appear in their tabs.',
   'optimize.singleSetHint':
     'Chart, equity, report and trades of one parameter set are on the Backtest page.',
   'optimize.dataRange': 'Data range',
