@@ -39,12 +39,6 @@ export function walkForwardFacts(settings: WalkForwardSettings): {
   };
 }
 
-export function windowCount(count: number): Message {
-  return count === 1
-    ? message('optimize.setup.window')
-    : message('optimize.setup.windows', { count });
-}
-
 /** One window's lane in the plan, as percentages of the time axis. */
 export interface PlanLane {
   readonly window: WindowPlan;

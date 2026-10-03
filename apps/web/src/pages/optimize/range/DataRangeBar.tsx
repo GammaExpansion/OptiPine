@@ -1,7 +1,8 @@
 import { useShallow } from 'zustand/react/shallow';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { useOptimizationStore } from '../../../state/optimization.ts';
-import { inSampleShare, spanText, walkForwardFacts, windowCount } from './range-display.ts';
+import { windowCount } from '../../../shell/optimize-status.ts';
+import { inSampleShare, spanText, walkForwardFacts } from './range-display.ts';
 import styles from './DataRangeBar.module.css';
 
 /** The walk-forward plan as the bar sums it up (O3): windows, their lengths and the step. */

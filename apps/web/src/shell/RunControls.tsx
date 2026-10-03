@@ -8,7 +8,7 @@ import { useBacktestStore } from '../state/backtest.ts';
 import { useOptimizationStore } from '../state/optimization.ts';
 import { getServices } from '../state/services.ts';
 import { useUiStore } from '../state/ui.ts';
-import { clockText, optimizeStatus, type OptimizeStatus } from './optimize-status.ts';
+import { clockText, optimizeStatus, windowCount, type OptimizeStatus } from './optimize-status.ts';
 import { disabledReason, runStatus, type RunStatus } from './run-status.ts';
 import header from './Header.module.css';
 import styles from './RunControls.module.css';
@@ -148,13 +148,18 @@ export function FailedLink({ count }: { count: number }) {
 }
 
 function OptimizeStatusText({ status }: { status: OptimizeStatus }) {
-  const { t } = useI18n();
+  const { t, text } = useI18n();
   switch (status.kind) {
     case 'running':
       return (
         <span className={`${styles.status} ${styles.strong}`}>
           <Icon name="spinner" />
-          {t('optimize.run.running', { done: status.done, total: status.combinations })}
+          {status.window
+            ? t('optimize.run.window', {
+                index: status.window.index + 1,
+                count: status.window.count,
+              })
+            : t('optimize.run.running', { done: status.done, total: status.combinations })}
         </span>
       );
     case 'failed':
@@ -179,10 +184,15 @@ function OptimizeStatusText({ status }: { status: OptimizeStatus }) {
     case 'done':
       return (
         <span className={styles.status}>
-          {t(status.random ? 'optimize.run.randomFacts' : 'optimize.run.facts', {
-            count: status.combinations,
-            time: clockText(status.durationMs),
-          })}
+          {status.windows !== null
+            ? t('optimize.run.windowFacts', {
+                windows: text(windowCount(status.windows)),
+                time: clockText(status.durationMs),
+              })
+            : t(status.random ? 'optimize.run.randomFacts' : 'optimize.run.facts', {
+                count: status.combinations,
+                time: clockText(status.durationMs),
+              })}
           {status.failed > 0 && <FailedLink count={status.failed} />}
         </span>
       );

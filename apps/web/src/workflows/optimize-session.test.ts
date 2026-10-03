@@ -200,6 +200,7 @@ test('trials stream into a buffer; subscribers see a snapshot at most every 250 
       elapsedMs: 0,
       remainingMs: null,
       workers: 0,
+      window: null,
     },
   });
 
@@ -750,6 +751,9 @@ test('walk-forward settings are planned and checked by the analysis job (O3)', a
   h.session.setValidation({ mode: 'walk-forward' });
   await settle();
   assert.equal(h.session.getState().plan.status, 'planning');
+  assert.deepEqual(h.session.getState().readiness.reasons, [
+    workflowMessage('optimize.wf.planning'),
+  ]);
   assert.deepEqual(h.analysis.kinds, ['plan']);
   await h.analysis.answerAll();
   let state = h.session.getState();
@@ -762,7 +766,7 @@ test('walk-forward settings are planned and checked by the analysis job (O3)', a
   );
   assert.equal(windows[3].partial, true);
   assert.equal(state.runBlock.backtests, 4 * 8);
-  assert.deepEqual(state.readiness.reasons, [workflowMessage('optimize.walkForwardUnavailable')]);
+  assert.deepEqual(state.readiness.reasons, []);
 
   h.session.setValidation({ walkForward: { stepMonths: 1 } });
   await h.analysis.answerAll();
@@ -771,10 +775,7 @@ test('walk-forward settings are planned and checked by the analysis job (O3)', a
     state.plan.status === 'failed' && state.plan.error,
     optimizerMessage('stepOverlappingWindows'),
   );
-  assert.deepEqual(state.readiness.reasons, [
-    workflowMessage('optimize.fixErrors', { count: 1 }),
-    workflowMessage('optimize.walkForwardUnavailable'),
-  ]);
+  assert.deepEqual(state.readiness.reasons, [workflowMessage('optimize.fixErrors', { count: 1 })]);
   h.session.setValidation({ walkForward: { stepMonths: 3 } });
   await settle();
   assert.deepEqual(h.analysis.kinds, ['plan']);
