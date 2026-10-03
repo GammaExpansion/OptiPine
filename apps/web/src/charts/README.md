@@ -99,11 +99,12 @@ npm run e2e --workspace @pine/web
 ```
 
 The chart checks run from `e2e/charts.spec.ts` in the main Playwright suite against the bundled e2e
-build on port 5175. The suite uses the existing server setup, writes screenshots under
-`apps/web/test-results/`, and checks real canvas pixels, calendar density, crosshair/range sync,
-keyboard interaction, B6 focus, B7 panes, both languages and 100,000-bar focus latency. Unit tests
-cover mapping, gaps, palette order, markers, dates, calendar/month buckets, SVG interaction, overlay
-culling, price formatting and the real shared examples on deterministic synthetic bars.
+build on the preview port (5175 by default). The suite uses the existing server setup, writes
+screenshots under `apps/web/test-results/`, and checks real canvas pixels, calendar density,
+crosshair/range sync, keyboard interaction, B6 focus, B7 panes, both languages and 100,000-bar focus
+latency. Unit tests cover mapping, gaps, palette order, markers, dates, calendar/month buckets, SVG
+interaction, overlay culling, price formatting and the real shared examples on deterministic
+synthetic bars.
 
 ## Visual review at 1440 × 900
 

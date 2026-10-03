@@ -33,8 +33,11 @@ The harness imports the real Worker factories and clients, checks describe/run, 
 optimization, and renders the shell with Optimize enabled for layout tests. The component sheet
 covers keyboard behavior, both languages at three viewport sizes, and G5 layout comparisons using
 the same self-hosted fonts. Neither test entry is in `dist/`.
-The test setup owns and closes the production, preview and dev servers on ports 5174–5176 directly,
-avoiding platform-specific shell process cleanup.
+The test setup owns and closes the production, preview and dev servers directly, avoiding
+platform-specific shell process cleanup. They listen on three consecutive ports from
+`E2E_BASE_PORT` (production, preview, dev), 5174–5176 by default; set another base, as in
+`E2E_BASE_PORT=6174 npm run e2e -w @pine/web`, to run suites in several worktrees at once.
+`e2e/ports.ts` gives the specs their origins.
 
 `src/i18n/translate.ts` is framework-free: use `translate` for `Text`, `translateId` for app ids,
 and `translateError` for errors carrying `errorText`. Unknown ids retain package fallbacks. Number

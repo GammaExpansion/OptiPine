@@ -3,10 +3,11 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { installMarketFixtures } from './market-fixtures.ts';
 import { strategySource, syntheticBars } from '../src/workflows/test-support.ts';
 import type { Language } from '../src/i18n/translate.ts';
+import { origins } from './ports.ts';
 
 // Use the dev server so tests can install synthetic input through the public stores without
 // adding production globals or another shared Vite entry. The actual run uses the real Worker.
-const app = 'http://127.0.0.1:5176';
+const app = origins.dev;
 const rapid = `//@version=6
 strategy("Ten thousand trades", initial_capital=1000000, default_qty_value=1, margin_long=0, margin_short=0)
 if bar_index % 2 == 0
