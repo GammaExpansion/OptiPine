@@ -1,0 +1,26 @@
+.tag {
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.neutral {
+  background: var(--selected);
+  color: var(--secondary);
+}
+.amber {
+  background: var(--amber-tag);
+  color: var(--link);
+}
+.danger {
+  background: var(--danger-tag);
+  color: var(--danger-text);
+}
+.blue {
+  background: var(--blue-background);
+  color: var(--blue-text);
+}

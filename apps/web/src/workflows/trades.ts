@@ -1,6 +1,7 @@
 import type { Trade } from '@pine/engine';
 import { tradeReturn } from '@pine/engine/reporting';
 import { reportedTradeProfit } from '@pine/engine/trade-profit';
+import { csvNumber, csvText } from './csv.ts';
 
 /** One row of the Trades tab (B2). */
 export interface TradeRow {
@@ -100,10 +101,6 @@ export const tradeCsvColumns = [
 export type TradeCsvColumn = (typeof tradeCsvColumns)[number];
 
 const utc = (time: number) => new Date(time * 1000).toISOString().slice(0, 16).replace('T', ' ');
-/** Twelve significant digits drop binary noise such as 579.6200000000001. */
-const decimal = (value: number) => String(Number(value.toPrecision(12)));
-const field = (value: string) =>
-  /[",\r\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
 
 /**
  * CSV text of `rows` in the order given, times in UTC as `YYYY-MM-DD HH:MM`. An open trade has
@@ -114,22 +111,22 @@ export function tradesCsv(
   header: Readonly<Record<TradeCsvColumn, string>>,
   sides: Readonly<Record<Trade['direction'], string>>,
 ): string {
-  const lines = [tradeCsvColumns.map((column) => field(header[column])).join(',')];
+  const lines = [tradeCsvColumns.map((column) => header[column])];
   for (const row of rows) {
     const cells: Record<TradeCsvColumn, string> = {
       number: String(row.number),
       side: sides[row.side],
       entryTime: utc(row.entryTime),
-      entryPrice: decimal(row.entryPrice),
+      entryPrice: csvNumber(row.entryPrice),
       exitTime: row.exitTime === null ? '' : utc(row.exitTime),
-      exitPrice: decimal(row.exitPrice),
-      quantity: decimal(row.quantity),
-      pnl: decimal(row.pnl),
-      pnlPercent: decimal(row.pnlPercent),
-      cumulativePnl: row.cumulativePnl === null ? '' : decimal(row.cumulativePnl),
+      exitPrice: csvNumber(row.exitPrice),
+      quantity: csvNumber(row.quantity),
+      pnl: csvNumber(row.pnl),
+      pnlPercent: csvNumber(row.pnlPercent),
+      cumulativePnl: row.cumulativePnl === null ? '' : csvNumber(row.cumulativePnl),
       bars: String(row.bars),
     };
-    lines.push(tradeCsvColumns.map((column) => field(cells[column])).join(','));
+    lines.push(tradeCsvColumns.map((column) => cells[column]));
   }
-  return lines.join('\r\n') + '\r\n';
+  return csvText(lines);
 }

@@ -20,8 +20,12 @@
   background: var(--selected);
   color: var(--text);
 }
-.group:has(.item:disabled) {
+.item:disabled {
   opacity: 0.45;
+}
+.item:hover:not(:disabled):not([data-state='on']) {
+  background: var(--hover);
+  color: var(--text);
 }
 .small {
   height: 26px;

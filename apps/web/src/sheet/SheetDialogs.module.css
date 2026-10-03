@@ -1,0 +1,39 @@
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.footerHint {
+  color: var(--caption);
+  font-size: 12px;
+  flex: 1;
+  min-width: 200px;
+}
+.condition {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 292px;
+  max-width: calc(100vw - 46px);
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+@media (max-width: 479px) {
+  .dates {
+    grid-template-columns: 1fr;
+  }
+}

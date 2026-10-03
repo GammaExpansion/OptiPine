@@ -1,0 +1,59 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  z-index: 40;
+}
+.dialog {
+  position: fixed;
+  z-index: 50;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(680px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  background: var(--panel);
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-dialog);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.small {
+  width: min(440px, calc(100vw - 32px));
+}
+.large {
+  width: min(880px, calc(100vw - 32px));
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--divider);
+  align-items: flex-start;
+}
+.title {
+  font-size: 15px;
+  font-weight: 600;
+}
+.description {
+  font-size: 12px;
+  color: var(--caption);
+  margin-top: 4px;
+}
+.body {
+  padding: 20px;
+  min-height: 0;
+  overflow: auto;
+}
+.footer {
+  border-top: 1px solid var(--divider);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}

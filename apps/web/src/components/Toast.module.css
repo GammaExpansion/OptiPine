@@ -1,0 +1,51 @@
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 5px 8px 5px 14px;
+  border-radius: 6px;
+  background: var(--selected);
+  border: 1px solid var(--subtle-border);
+  box-shadow: var(--shadow-toast);
+  font-size: 13px;
+  max-width: 100%;
+}
+.message {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+.toast[data-action='false'] {
+  padding-right: 14px;
+}
+.success {
+  color: var(--profit);
+}
+.amber {
+  color: var(--primary);
+}
+.danger {
+  color: var(--loss);
+}
+.action {
+  height: 28px;
+}
+.viewport {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 70;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+}
+.entry {
+  list-style: none;
+}
+.entry[data-swipe='move'] {
+  transform: translateX(var(--radix-toast-swipe-move-x));
+}

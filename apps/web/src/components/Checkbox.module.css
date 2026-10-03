@@ -1,0 +1,26 @@
+.checkbox {
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  border: 1px solid var(--checkbox-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.checkbox[data-state='checked'],
+.checkbox[data-state='indeterminate'] {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-text);
+}
+.checkbox:disabled {
+  opacity: 0.45;
+}
+.indicator {
+  display: flex;
+}
+.indicator[data-state='checked'] .mixed,
+.indicator[data-state='indeterminate'] .checked {
+  display: none;
+}
