@@ -416,9 +416,9 @@ test('a tolerance change recomputes only the stability', async () => {
   const h = await harness();
   await complete(h);
   const before = walkForward(h);
-  h.session.setTolerance(2);
+  h.session.setStabilityTolerance(2);
   assert.equal(h.session.getState().viewSettings.tolerance, 0.1);
-  h.session.setTolerance(0.5);
+  h.session.setStabilityTolerance(0.5);
   await settle();
   assert.deepEqual(h.analysis.kinds, ['stability']);
   const input = h.analysis.requests[0].input as AnalysisJobs['stability']['input'];
@@ -508,7 +508,7 @@ test('selecting a window gives its set to preview; the map shows it or the mean 
     window: 1,
   });
   assert.equal(view.selection?.explicit, true);
-  h.session.setWindowSurface('mean');
+  h.session.setWindowMapSurface('mean');
   await settle();
   const mean = h.analysis.requests[0].input as AnalysisJobs['view']['input'];
   assert.equal(mean.meanTrialGroups?.length, 4);
@@ -516,10 +516,22 @@ test('selecting a window gives its set to preview; the map shows it or the mean 
   assert.equal(walkForward(h).map?.surface, 'mean');
   assert.ok(walkForward(h).map!.panel.cells.length > 0);
 
-  const preview = h.backtest.preview(view.selection!.window.parameters!, view.selection!.origin!);
+  // View backtest previews the window's set; Apply to inputs writes the fixed parameters (B16, B17).
+  const preview = h.session.previewWindow();
   await h.engine.answerAll();
   await preview;
-  assert.deepEqual(h.backtest.getState().preview?.origin, view.selection!.origin);
+  const previewed = h.backtest.getState().preview!;
+  assert.deepEqual(previewed.origin, view.selection!.origin);
+  assert.deepEqual({ ...previewed.set }, { ...view.windows[1].parameters });
+  const apply = h.session.applyFixedParameters();
+  await h.engine.answerAll();
+  await apply;
+  const { applied, inputs } = h.backtest.getState();
+  assert.deepEqual(applied?.origin, { kind: 'fixed', optimizationId: state.results!.id });
+  const fixed = view.fixed!.parameters;
+  for (const field of inputs) assert.equal(field.value, fixed[field.descriptor.title]);
+  // Neither moves the ranges the run took, so the results stay current.
+  assert.deepEqual(h.session.getState().outdated, { reasons: [] });
 });
 
 test('walk-forward settings outdate the results; the plan follows them (R5, O3)', async () => {

@@ -24,8 +24,10 @@ function createOptimizationStore(services: AppServices) {
     select: session.select.bind(session),
     setPage: session.setPage.bind(session),
     selectWindow: session.selectWindow.bind(session),
-    setWindowSurface: session.setWindowSurface.bind(session),
-    setTolerance: session.setTolerance.bind(session),
+    setWindowMapSurface: session.setWindowMapSurface.bind(session),
+    setStabilityTolerance: session.setStabilityTolerance.bind(session),
+    previewWindow: session.previewWindow.bind(session),
+    applyFixedParameters: session.applyFixedParameters.bind(session),
     start: session.start.bind(session),
     cancel: session.cancel.bind(session),
   };

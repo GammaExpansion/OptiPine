@@ -743,7 +743,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
   }
 
   /** The window map shows the selected window's IS surface, or the mean over every window (W3). */
-  setWindowSurface(windowSurface: WindowMapSurface): void {
+  setWindowMapSurface(windowSurface: WindowMapSurface): void {
     this.#setView({ windowSurface });
   }
 
@@ -751,9 +751,29 @@ export class OptimizationSession implements Observable<OptimizationState> {
    * Stability's tolerance as a fraction of each window's best, from 0 to 1; only the stability is
    * computed again. Ignored outside that range.
    */
-  setTolerance(tolerance: number): void {
+  setStabilityTolerance(tolerance: number): void {
     if (!Number.isFinite(tolerance) || tolerance < 0 || tolerance > 1) return;
     this.#setView({ tolerance });
+  }
+
+  /**
+   * View backtest for the selected walk-forward window (WEB.md 3.3, B16): its set runs on the
+   * Backtest page without changing the current inputs. Does nothing unless the window ran a set.
+   */
+  previewWindow(): Promise<void> {
+    const selection = this.getState().walkForward?.selection;
+    const parameters = selection?.window.parameters;
+    return selection?.origin && parameters
+      ? this.#backtest.preview(parameters, selection.origin)
+      : Promise.resolve();
+  }
+
+  /** Apply to inputs for the fixed parameters for every window (W1, B17). */
+  applyFixedParameters(): Promise<void> {
+    const fixed = this.getState().walkForward?.fixed;
+    return fixed
+      ? this.#backtest.applyParameters(fixed.parameters, fixed.origin)
+      : Promise.resolve();
   }
 
   // ----- the run
