@@ -15,10 +15,6 @@
   align-items: center;
   gap: 4px 10px;
 }
-.parameters b {
-  margin-left: 5px;
-  font-weight: 500;
-}
 .toast {
   position: fixed;
   bottom: 24px;

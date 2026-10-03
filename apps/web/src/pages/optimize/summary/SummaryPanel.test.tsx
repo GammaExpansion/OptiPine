@@ -12,7 +12,7 @@ import {
 } from '../test-support.tsx';
 import { SummaryPanel } from './SummaryPanel.tsx';
 import { selectScatterRank } from './SummaryCanvas.tsx';
-import { extent, nearestPoint, scale } from './plot-geometry.ts';
+import { extent, nearestPoint, roundAxis, scale } from './plot-geometry.ts';
 
 useOptimizeTestServices();
 
@@ -131,8 +131,8 @@ test('a scatter click selects its hit without a preceding hover render', async (
   await userEvent.setup().click(screen.getByRole('radio', { name: 'IS vs OOS' }));
   const scatter = optimization().views!.scatter!;
   // ResizeObserver is inert in this test environment, so the canvas uses its minimum geometry.
-  const x = scale(extent([scatter.inSample], true), 66, 67);
-  const y = scale(extent([scatter.outOfSample], true), 35, 20);
+  const x = scale(roundAxis(extent([scatter.inSample], true)).bounds, 66, 67);
+  const y = scale(roundAxis(extent([scatter.outOfSample], true), 3).bounds, 35, 20);
   const points = Array.from(scatter.inSample, (value, index) => ({
     x: x(value),
     y: y(scatter.outOfSample[index]),

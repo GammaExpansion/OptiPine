@@ -18,7 +18,8 @@ if bar_index % (length * 2) == length
     strategy.close("L")
 plot(ta.sma(close, length), "Basis")
 `;
-const failing = `${source}if length == 3 and bar_index == 4
+const failing = `${source}multiplier = input.float(1.5, "Multiplier", step=0.25)
+if length == 3 and bar_index == 4
     runtime.error("Stopped on purpose")
 `;
 
@@ -220,6 +221,7 @@ for (const language of ['en', 'zh'] as const) {
       .click();
     const dialog = page.getByRole('dialog', { name: en ? '3 failed' : '3 组报错' });
     await expect(dialog.getByText('Stopped on purpose')).toHaveCount(3);
+    await expect(dialog.getByText('1.50', { exact: true })).toHaveCount(3);
     await expect(dialog).toContainText(en ? 'bar 5' : '第 5 根 K 线');
     await page.screenshot({ path: info.outputPath(`R11-${language}.png`) });
     const download = page.waitForEvent('download');

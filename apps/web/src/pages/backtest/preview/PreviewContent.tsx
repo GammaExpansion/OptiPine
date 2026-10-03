@@ -5,6 +5,8 @@ import { Button } from '../../../components/Button.tsx';
 import { IconButton } from '../../../components/IconButton.tsx';
 import { Toast } from '../../../components/Toast.tsx';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
+import { useOptimizationStore } from '../../../state/optimization.ts';
+import { searchedParameters } from '../../../workflows/optimize-parameters.ts';
 import { useBacktestStore } from '../../../state/backtest.ts';
 import type { AppliedSet } from '../../../workflows/backtest.ts';
 import { useResultFormat } from '../../optimize/leaderboard/useResultFormat.ts';
@@ -13,8 +15,10 @@ import styles from './PreviewBanner.module.css';
 
 export function PreviewContent() {
   const { t } = useI18n();
-  const { parameter } = useResultFormat();
+  const resultRows = useOptimizationStore((state) => state.results?.computedWith.search.rows);
   const preview = useBacktestStore((state) => state.preview);
+  const rows = preview?.origin.searchRows ?? resultRows;
+  const { parameter } = useResultFormat(rows);
   const applied = useBacktestStore((state) => state.applied);
   const run = useBacktestStore((state) => state.run.status);
   const actions = useBacktestStore((state) => state.actions);
@@ -50,12 +54,15 @@ export function PreviewContent() {
           }
         >
           <div className={styles.parameters}>
-            {Object.entries(preview.set).map(([title, value]) => (
-              <span key={title}>
-                {title}
-                <b>{parameter(value)}</b>
-              </span>
-            ))}
+            <span>
+              {searchedParameters(preview.set, rows ?? [])
+                .map(({ title, value }) =>
+                  typeof value === 'number'
+                    ? t('preview.parameter', { title, value: parameter(value, title) })
+                    : parameter(value, title),
+                )
+                .join(t('preview.separator'))}
+            </span>
             <span>{t('preview.unchanged')}</span>
           </div>
         </Banner>

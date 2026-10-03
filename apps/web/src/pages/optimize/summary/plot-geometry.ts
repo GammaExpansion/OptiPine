@@ -22,6 +22,34 @@ export function scale(domain: readonly [number, number], start: number, end: num
   return (value: number) => start + ((value - domain[0]) / (domain[1] - domain[0])) * (end - start);
 }
 
+/** Expand to round 1/2/2.5/5 ticks. Zero is an exact tick whenever the domain crosses it. */
+export function roundAxis(
+  bounds: readonly [number, number],
+  intervals = 4,
+  integer = false,
+): { bounds: [number, number]; ticks: number[] } {
+  let [low, high] = bounds;
+  if (!Number.isFinite(low) || !Number.isFinite(high) || high < low) [low, high] = [0, 1];
+  if (high === low) {
+    const padding = Math.max(1, Math.abs(low) * 0.01);
+    low -= padding;
+    high += padding;
+  }
+  const raw = Math.max(integer ? 1 : 0, (high - low) / Math.max(1, intervals));
+  const power = 10 ** Math.floor(Math.log10(raw));
+  const step =
+    ([1, 2, 2.5, 5, 10].find(
+      (value) => value * power >= raw && (!integer || Number.isInteger(value * power)),
+    ) ?? 10) * power;
+  const first = Math.floor(low / step);
+  const last = Math.ceil(high / step);
+  // Multiplication (instead of accumulation) and significant digits avoid decimal tick drift.
+  const ticks = Array.from({ length: last - first + 1 }, (_, index) =>
+    Number(((first + index) * step).toPrecision(12)),
+  );
+  return { bounds: [ticks[0], ticks.at(-1)!], ticks };
+}
+
 /** Preserve local extrema while bounding the drawing work to two points per CSS pixel. */
 export function envelope(
   values: readonly number[],

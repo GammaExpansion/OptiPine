@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { CellValues } from '../../../workflows/optimize-views.ts';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { formatNumber } from '../../../i18n/translate.ts';
+import { useOptimizationStore } from '../../../state/optimization.ts';
 import { valueLabel } from './map-labels.ts';
 import styles from './MapPanel.module.css';
 
@@ -18,6 +19,9 @@ export function CellValuesTable({
   validated: boolean;
 }) {
   const { t, text } = useI18n();
+  const rows = useOptimizationStore((state) => state.views?.searchRows);
+  const xRow = rows?.find((row) => row.descriptor.title === x);
+  const yRow = rows?.find((row) => row.descriptor.title === y);
   const [start, setStart] = useState(0);
   const visible = 10;
   const from = Math.min(start, Math.max(0, values.values.length - visible));
@@ -53,10 +57,10 @@ export function CellValuesTable({
                 <td>
                   {showY
                     ? t('optimize.map.pair', {
-                        x: text(valueLabel(value.x)),
-                        y: text(valueLabel(value.y)),
+                        x: text(valueLabel(value.x, xRow)),
+                        y: text(valueLabel(value.y, yRow)),
                       })
-                    : text(valueLabel(value.x))}
+                    : text(valueLabel(value.x, xRow))}
                 </td>
                 <td data-sign={Math.sign(value.inSample ?? 0)}>{number(value.inSample)}</td>
                 {validated && (

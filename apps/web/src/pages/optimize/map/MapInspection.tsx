@@ -17,6 +17,8 @@ export function BinInspection() {
   const select = useOptimizationStore((state) => state.actions.select);
   const opened = useBinInspection();
   const map = views?.map;
+  const rowFor = (title: string | null) =>
+    views?.searchRows.find((row) => row.descriptor.title === title);
   const detail = useMemo(
     () => (map && opened?.map === map.panel ? binDetail(map, opened.cell) : undefined),
     [map, opened],
@@ -35,8 +37,8 @@ export function BinInspection() {
           {t('optimize.map.cellTitle', {
             x: map.x,
             y: map.y ?? '',
-            xValue: text(rangeLabel(cell.xValues ?? [cell.x])),
-            yValue: text(rangeLabel(cell.yValues?.length ? cell.yValues : [cell.y])),
+            xValue: text(rangeLabel(cell.xValues ?? [cell.x], rowFor(map.x))),
+            yValue: text(rangeLabel(cell.yValues?.length ? cell.yValues : [cell.y], rowFor(map.y))),
           })}
         </span>
         <IconButton
@@ -49,6 +51,7 @@ export function BinInspection() {
         <div className={styles.detailMap}>
           <HeatmapCanvas
             map={detail.localMap}
+            searchRows={views?.searchRows}
             showValues
             framed={detail.mergedCells}
             selection={views?.selection?.row.parameters}
@@ -75,7 +78,9 @@ export function CurveInspection() {
   const selection = useOptimizationStore((state) => state.views?.selection);
   const validated = useOptimizationStore((state) => state.views?.mode === 'in-out');
   const inspected = useCurveInspection();
+  const rows = useOptimizationStore((state) => state.views?.searchRows);
   if (!curve) return null;
+  const row = rows?.find((row) => row.descriptor.title === curve.input);
   const active =
     inspected?.view === curve
       ? inspected.index
@@ -87,7 +92,7 @@ export function CurveInspection() {
     <section className={styles.inspection} aria-label={t('optimize.map.curveValues')}>
       <div className={styles.detailHeading}>
         <h3>
-          {t('optimize.map.layer', { title: curve.input, value: text(valueLabel(point?.x)) })}
+          {t('optimize.map.layer', { title: curve.input, value: text(valueLabel(point?.x, row)) })}
         </h3>
       </div>
       <dl className={styles.curveFacts} aria-live="polite">
@@ -109,7 +114,7 @@ export function CurveInspection() {
           <dt>{t('optimize.map.nearPeak')}</dt>
           <dd>
             {curve.nearPeak
-              ? text(rangeLabel([curve.nearPeak.from, curve.nearPeak.to]))
+              ? text(rangeLabel([curve.nearPeak.from, curve.nearPeak.to], row))
               : t('optimize.map.na')}
           </dd>
         </div>

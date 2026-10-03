@@ -21,8 +21,8 @@ const noRows: LeaderboardRow[] = [];
 
 export function LeaderboardPanel() {
   const { t } = useI18n();
-  const format = useResultFormat();
   const views = useOptimizationStore((state) => state.views);
+  const format = useResultFormat(views?.searchRows);
   const settings = useOptimizationStore((state) => state.viewSettings);
   const actions = useOptimizationStore((state) => state.actions);
   const failures = useOptimizationStore((state) => state.results?.failures.length ?? 0);
@@ -62,7 +62,7 @@ export function LeaderboardPanel() {
       ...layout.visible.map((title): ColumnDef<LeaderboardRow> => ({
         id: `input:${title}`,
         header: title,
-        cell: ({ row }) => format.parameter(row.original.parameters[title]),
+        cell: ({ row }) => format.parameter(row.original.parameters[title], title),
       })),
       ...(layout.hidden.length
         ? [
@@ -82,7 +82,7 @@ export function LeaderboardPanel() {
                     {layout.hidden.map((title) => (
                       <div key={title}>
                         <dt>{title}</dt>
-                        <dd>{format.parameter(row.original.parameters[title])}</dd>
+                        <dd>{format.parameter(row.original.parameters[title], title)}</dd>
                       </div>
                     ))}
                   </dl>

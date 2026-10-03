@@ -274,6 +274,8 @@ export interface TopEquity {
 
 /** Everything the results area shows, for the live run or the latest results. */
 export interface ResultsViews {
+  /** Input order and precision belong to the displayed run, including while settings are outdated. */
+  readonly searchRows: SearchSetup['rows'];
   /** A run is still streaming: these are not results yet (O8). */
   readonly inProgress: boolean;
   /** Validation None ranks by full-range figures, which only measure fit (R3). */
@@ -571,7 +573,22 @@ export class OptimizationSession implements Observable<OptimizationState> {
   // ----- view settings: never a re-run
 
   #setView(change: Partial<ViewSettings>): void {
-    this.#viewSettings = { ...this.#viewSettings, ...change };
+    const previous = this.#viewSettings;
+    const next = { ...previous, ...change };
+    this.#viewSettings = next;
+    // Ready curves must belong to the current ranking, even while its analysis is pending.
+    if (
+      previous.objective !== next.objective ||
+      previous.direction !== next.direction ||
+      !sameJson(previous.filters, next.filters)
+    ) {
+      this.#topRequest?.abort();
+      this.#topRequest = null;
+      this.#topKey = null;
+      this.#topEquity = this.#results
+        ? { ...idleEquity, status: 'running', resultsId: this.#results.id }
+        : idleEquity;
+    }
     this.#publish();
     this.#requestView();
   }
@@ -1001,9 +1018,12 @@ export class OptimizationSession implements Observable<OptimizationState> {
 
   /** Nothing to compute: an error from a request since replaced no longer applies. */
   #upToDate(): void {
-    if (this.#analysisError === null) return;
-    this.#analysisError = null;
-    this.#publish();
+    if (this.#analysisError !== null) {
+      this.#analysisError = null;
+      this.#publish();
+    }
+    // A ranking change undone before its reply can reuse this analysis, but needs curves again.
+    this.#requestTopEquity();
   }
 
   #requestPlan(): void {
@@ -1198,6 +1218,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
     if (memo && memo.key.every((part, index) => part === key[index])) return memo.value;
     const ranked = this.#ranked(slot, mode, space);
     const value: ResultsViews = {
+      searchRows: (live ? live.snapshot : results!.computedWith).search.rows,
       inProgress: !!live,
       unvalidated: mode === 'none',
       mode,

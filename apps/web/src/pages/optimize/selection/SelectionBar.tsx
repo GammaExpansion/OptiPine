@@ -4,11 +4,13 @@ import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { useOptimizationStore } from '../../../state/optimization.ts';
 import { useParameterActions } from '../../backtest/preview/useParameterActions.ts';
 import { useResultFormat } from '../leaderboard/useResultFormat.ts';
+import { searchedParameters } from '../../../workflows/optimize-parameters.ts';
 import styles from './SelectionBar.module.css';
 
 export function SelectionBar() {
   const { t } = useI18n();
-  const { number, parameter } = useResultFormat();
+  const rows = useOptimizationStore((state) => state.views?.searchRows);
+  const { number, parameter } = useResultFormat(rows);
   const selection = useOptimizationStore((state) => state.views?.selection);
   const inProgress = useOptimizationStore((state) => state.run.status === 'running');
   const actions = useParameterActions();
@@ -19,10 +21,10 @@ export function SelectionBar() {
       <strong className={styles.rank}>{t('optimize.leaderboard.set', { rank: row.rank })}</strong>
       <div className={styles.details}>
         <div className={styles.parameters}>
-          {Object.entries(row.parameters).map(([title, value]) => (
+          {searchedParameters(row.parameters, rows ?? []).map(({ title, value }) => (
             <span key={title}>
               <span>{title}</span>
-              <b>{parameter(value)}</b>
+              <b>{parameter(value, title)}</b>
             </span>
           ))}
         </div>

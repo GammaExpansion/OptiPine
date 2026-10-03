@@ -1,7 +1,8 @@
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import type { DistributionView } from '../../../workflows/optimize-views.ts';
 import { useResultFormat } from '../leaderboard/useResultFormat.ts';
-import { scale } from './plot-geometry.ts';
+import { axisLabel } from './axis-label.ts';
+import { roundAxis, scale } from './plot-geometry.ts';
 import { usePlotSize } from './usePlotSize.ts';
 import styles from './Summary.module.css';
 
@@ -12,8 +13,10 @@ export function DistributionChart({ view }: { view: DistributionView }) {
   const width = measuredWidth || 1040;
   const height = measuredHeight || 180;
   const top = Math.max(1, ...view.inSample.counts, ...(view.outOfSample?.counts ?? []));
-  const x = scale([view.start, view.start + view.bins * view.width], 66, width - 64);
-  const y = scale([0, top], height - 28, 20);
+  const xAxis = roundAxis([view.start, view.start + view.bins * view.width]);
+  const yAxis = roundAxis([0, top], 2, true);
+  const x = scale(xAxis.bounds, 66, width - 64);
+  const y = scale(yAxis.bounds, height - 28, 20);
   const outPath = `M ${x(view.start)} ${y(0)}${
     view.outOfSample?.counts
       .map((count, index) => ` V ${y(count)} H ${x(view.start + (index + 1) * view.width)}`)
@@ -28,17 +31,11 @@ export function DistributionChart({ view }: { view: DistributionView }) {
         height="100%"
         viewBox={`0 0 ${width} ${height}`}
       >
-        {(top === 1 ? [0, 1] : [0, 0.5, 1]).map((part) => (
-          <g key={part}>
-            <line
-              x1={66}
-              x2={width - 64}
-              y1={y(top * part)}
-              y2={y(top * part)}
-              stroke="var(--divider)"
-            />
-            <text x={58} y={y(top * part) + 4} textAnchor="end">
-              {number(Math.round(top * part))}
+        {yAxis.ticks.map((value) => (
+          <g key={value}>
+            <line x1={66} x2={width - 64} y1={y(value)} y2={y(value)} stroke="var(--divider)" />
+            <text x={58} y={y(value) + 4} textAnchor="end">
+              {axisLabel(value, false)}
             </text>
           </g>
         ))}
@@ -47,7 +44,7 @@ export function DistributionChart({ view }: { view: DistributionView }) {
             key={index}
             x={x(view.start + index * view.width) + 1}
             y={y(count)}
-            width={Math.max(1, (width - 130) / view.bins - 2)}
+            width={Math.max(1, x(view.start + view.width) - x(view.start) - 2)}
             height={y(0) - y(count)}
             fill={view.start + index * view.width < 0 ? 'var(--heat-2)' : 'var(--heat-6)'}
           >
@@ -82,9 +79,9 @@ export function DistributionChart({ view }: { view: DistributionView }) {
             />
           ),
         )}
-        {[0, 0.25, 0.5, 0.75, 1].map((part) => (
-          <text key={part} x={66 + (width - 130) * part} y={height - 9} textAnchor="middle">
-            {number(view.start + view.bins * view.width * part)}
+        {xAxis.ticks.map((value) => (
+          <text key={value} x={x(value)} y={height - 9} textAnchor="middle">
+            {axisLabel(value)}
           </text>
         ))}
         <text x={66} y={12}>

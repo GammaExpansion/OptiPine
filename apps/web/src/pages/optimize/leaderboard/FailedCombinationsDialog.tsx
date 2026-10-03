@@ -24,8 +24,8 @@ const kindLabels: Record<Diagnostic['kind'], MessageId> = {
 
 export function FailedCombinationsDialog() {
   const { t } = useI18n();
-  const { parameter } = useResultFormat();
   const results = useOptimizationStore((state) => state.results);
+  const { parameter } = useResultFormat(results?.computedWith.search.rows);
   const setDialogOpen = useUiStore((state) => state.setDialogOpen);
   const navigation = useParameterActions();
   const close = () => setDialogOpen('failedCombinations', false);
@@ -92,7 +92,7 @@ export function FailedCombinationsDialog() {
                 {Object.entries(failure.parameters).map(([title, value]) => (
                   <div key={title}>
                     {title}
-                    <b> {parameter(value)}</b>
+                    <b> {parameter(value, title)}</b>
                   </div>
                 ))}
               </td>

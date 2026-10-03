@@ -1,5 +1,4 @@
 import { expect, test, type Page } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
 import type { FeedDataset } from '@pine/market-data';
 import { syntheticBars } from '../src/charts-dev/synthetic.ts';
 import '../src/i18n/catalogs.ts';
@@ -50,36 +49,6 @@ async function selectedFrame(page: Page) {
     return false;
   });
 }
-
-test('capture Optimize and preview reference boards with local fonts', async ({ page }, info) => {
-  await page.route('**/*', (route) =>
-    new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort(),
-  );
-  for (const language of ['en', 'zh']) {
-    for (const board of ['R1', 'R2', 'R2b', 'R3', 'R5', 'R9', 'R10', 'R11', 'O8', 'B16', 'B17']) {
-      const source = (
-        await readFile(
-          new URL(
-            `../../../docs/web-mock-terminal/artboards/${board}${language === 'en' ? '-en' : ''}.dc.html`,
-            import.meta.url,
-          ),
-          'utf8',
-        )
-      )
-        .replace(/<link[^>]+fonts\.googleapis\.com[^>]*>/g, '')
-        .replace(/<script[^>]+support\.js[^>]*><\/script>/g, '')
-        .replace(
-          /position: absolute; left: -\d+px; top: 0px/g,
-          'position: absolute; left: 0px; top: 0px',
-        );
-      await page.goto('/');
-      await page.setContent(source);
-      await page.addStyleTag({ url: '/src/styles/fonts.css?direct' });
-      await page.evaluate(() => document.fonts.ready);
-      await page.screenshot({ path: info.outputPath(`${board}-reference-${language}.png`) });
-    }
-  }
-});
 
 for (const language of ['en', 'zh'] as const) {
   test(`Trend Breakout integrates live views, selection, filters and apply (${language})`, async ({
@@ -194,8 +163,25 @@ for (const language of ['en', 'zh'] as const) {
     const board = page.getByTestId('optimize-leaderboard');
     await expect(board).toContainText(t('optimize.leaderboard.pass', { passing: 240, total: 240 }));
     await expect(board.getByRole('row')).toHaveCount(14);
+    await expect(board.getByRole('cell', { name: '1.50', exact: true }).first()).toBeVisible();
+    const parameters = page.getByRole('region', { name: t('optimize.selection.label') });
+    await expect(parameters).toContainText(/Length18Multiplier1\.50Source/);
+    await expect(parameters).not.toContainText('Trail %');
+    await expect(
+      page
+        .getByRole('img', { name: t('optimize.sensitivity.spark', { title: 'Multiplier' }) })
+        .locator('title'),
+    ).toContainText('1.50');
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({ path: info.outputPath(`R1-${language}.png`) });
+
+    const mapCanvas = page.getByTestId('parameter-map');
+    await mapCanvas.focus();
+    await mapCanvas.press('Home');
+    await mapCanvas.press('ArrowDown');
+    await expect(page.getByRole('tooltip')).toContainText('1.50');
+    await page.screenshot({ path: info.outputPath(`R6-${language}.png`) });
+    await mapCanvas.press('Escape');
 
     await board
       .getByRole('button', { name: t('optimize.leaderboard.select', { rank: 2 }), exact: true })
@@ -236,10 +222,18 @@ for (const language of ['en', 'zh'] as const) {
     const scatter = page.getByRole('img', { name: t('optimize.summary.scatter'), exact: true });
     const dot = await scatter.evaluate(async (element) => {
       const path = '/src/pages/optimize/summary/plot-geometry.ts';
-      const { extent, scale, nearestPoint } = await import(/* @vite-ignore */ path);
+      const { extent, scale, nearestPoint, roundAxis } = await import(/* @vite-ignore */ path);
       const scatter = (window as unknown as Hooks).optimization().views!.scatter!;
-      const x = scale(extent([scatter.inSample], true), 66, element.clientWidth - 64);
-      const y = scale(extent([scatter.outOfSample], true), element.clientHeight - 28, 20);
+      const x = scale(
+        roundAxis(extent([scatter.inSample], true)).bounds,
+        66,
+        element.clientWidth - 64,
+      );
+      const y = scale(
+        roundAxis(extent([scatter.outOfSample], true), 3).bounds,
+        element.clientHeight - 28,
+        20,
+      );
       const index = scatter.rank.findIndex((rank) => rank === 1);
       const point = { x: x(scatter.inSample[index]), y: y(scatter.outOfSample[index]) };
       const points = Array.from(scatter.inSample, (value, at) => ({
@@ -354,6 +348,9 @@ for (const language of ['en', 'zh'] as const) {
       .toBe('done');
     await expect(page.getByTestId('price-chart')).toBeVisible();
     await expect(page.getByRole('table', { name: t('report.returns'), exact: true })).toBeVisible();
+    const banner = page.getByRole('status').filter({ hasText: t('preview.unchanged') });
+    await expect(banner).toContainText(/Length \d+, Multiplier \d+\.\d{2}, (close|hl2|ohlc4), /);
+    await expect(banner).not.toContainText('Trail %');
     await page.screenshot({ path: info.outputPath(`B16-${language}.png`) });
     expect(
       await page.evaluate(() =>

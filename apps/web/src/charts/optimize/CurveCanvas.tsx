@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import type { SearchRow } from '../../workflows/optimize-setup.ts';
 import type { CurveView } from '../../workflows/optimize-views.ts';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { formatNumber } from '../../i18n/translate.ts';
@@ -10,10 +11,12 @@ import styles from './canvas.module.css';
 export function CurveCanvas({
   curve,
   active,
+  searchRow,
   onInspect,
   onSelect,
 }: {
   curve: CurveView;
+  searchRow?: SearchRow;
   active: number;
   onInspect: (index: number) => void;
   onSelect: (index: number) => void;
@@ -103,7 +106,7 @@ export function CurveCanvas({
         Math.ceil(curve.points.length / Math.max(2, Math.floor(width / 70))),
       );
       for (let index = 0; index < curve.points.length; index += stride)
-        ctx.fillText(text(valueLabel(curve.points[index].x)), x(index), height - 18);
+        ctx.fillText(text(valueLabel(curve.points[index].x, searchRow)), x(index), height - 18);
     };
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(draw);
@@ -115,7 +118,7 @@ export function CurveCanvas({
       observer.disconnect();
       cancelAnimationFrame(frame);
     };
-  }, [curve, active, text]);
+  }, [curve, active, text, searchRow]);
   return (
     <div ref={host} className={styles.viewport} style={{ height: 210 }}>
       <canvas

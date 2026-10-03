@@ -1,5 +1,34 @@
 import { expect, test } from 'vitest';
-import { envelope, extent, nearestPoint, scale } from './plot-geometry.ts';
+import { envelope, extent, nearestPoint, roundAxis, scale } from './plot-geometry.ts';
+
+test('round axes enclose data, label zero, and handle negative, fractional and empty ranges', () => {
+  expect(roundAxis([-1177, 9805])).toEqual({
+    bounds: [-5000, 10000],
+    ticks: [-5000, 0, 5000, 10000],
+  });
+  expect(roundAxis([-10000, 20000]).ticks).toEqual([-10000, 0, 10000, 20000]);
+  expect(roundAxis([0, 1], 2, true).ticks).toEqual([0, 1]);
+  expect(roundAxis([0, 5], 2, true).ticks).toEqual([0, 5]);
+  expect(roundAxis([0, 23], 2, true).ticks).toEqual([0, 20, 40]);
+  expect(roundAxis([0.1, 0.3]).ticks).toEqual([0.1, 0.15, 0.2, 0.25, 0.3]);
+  for (const bounds of [
+    [-9805, -1177],
+    [1177, 9805],
+    [0, 0],
+    [5, 5],
+    [NaN, Infinity],
+  ] as const) {
+    const axis = roundAxis(bounds);
+    expect(axis.ticks.length).toBeGreaterThan(1);
+    expect(axis.ticks.length).toBeLessThanOrEqual(7);
+    expect(axis.bounds.every(Number.isFinite)).toBe(true);
+    expect(new Set(axis.ticks).size).toBe(axis.ticks.length);
+    if (bounds.every(Number.isFinite)) {
+      expect(axis.bounds[0]).toBeLessThanOrEqual(bounds[0]);
+      expect(axis.bounds[1]).toBeGreaterThanOrEqual(bounds[1]);
+    }
+  }
+});
 
 test('bounds ignore missing values and keep zero and constant series plottable', () => {
   expect(extent([[NaN, Infinity]])).toEqual([0, 1]);

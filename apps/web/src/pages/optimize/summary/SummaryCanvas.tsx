@@ -5,7 +5,8 @@ import { getOptimizationStore } from '../../../state/optimization.ts';
 import type { TopEquity } from '../../../workflows/optimize-session.ts';
 import { leaderboardPageSize, type ScatterView } from '../../../workflows/optimize-views.ts';
 import { useResultFormat } from '../leaderboard/useResultFormat.ts';
-import { envelope, extent, nearestPoint, scale } from './plot-geometry.ts';
+import { envelope, extent, nearestPoint, roundAxis, scale } from './plot-geometry.ts';
+import { axisLabel } from './axis-label.ts';
 import { usePlotSize } from './usePlotSize.ts';
 import styles from './Summary.module.css';
 
@@ -28,13 +29,17 @@ export function SummaryCanvas({ chart }: { chart: Chart }) {
   const [hover, setHover] = useState<number | null>(null);
   const helpId = useId();
   const geometry = useMemo(() => {
+    const xAxis =
+      chart.kind === 'scatter' ? roundAxis(extent([chart.scatter.inSample], true)) : null;
     const xBounds =
       chart.kind === 'scatter'
-        ? extent([chart.scatter.inSample], true)
+        ? xAxis!.bounds
         : ([0, Math.max(1, chart.equity.times.length - 1)] as [number, number]);
+    const yAxis =
+      chart.kind === 'scatter' ? roundAxis(extent([chart.scatter.outOfSample], true), 3) : null;
     const yBounds =
       chart.kind === 'scatter'
-        ? extent([chart.scatter.outOfSample], true)
+        ? yAxis!.bounds
         : extent(chart.equity.curves.flatMap((curve) => (curve.equity ? [curve.equity] : [])));
     const x = scale(xBounds, chart.kind === 'equity' ? 8 : 66, Math.max(67, width - 64));
     const y = scale(yBounds, Math.max(35, height - 28), 20);
@@ -45,7 +50,7 @@ export function SummaryCanvas({ chart }: { chart: Chart }) {
             y: y(chart.scatter.outOfSample[index]),
           }))
         : [];
-    return { x, y, xBounds, yBounds, points };
+    return { x, y, xBounds, yBounds, points, xTicks: xAxis?.ticks, yTicks: yAxis?.ticks };
   }, [chart, width, height]);
   useEffect(() => setHover(null), [chart]);
   useEffect(() => {
@@ -59,7 +64,7 @@ export function SummaryCanvas({ chart }: { chart: Chart }) {
     context.scale(ratio, ratio);
     const css = getComputedStyle(node);
     const color = (token: string) => css.getPropertyValue(token).trim();
-    const { x, y, yBounds, xBounds, points } = geometry;
+    const { x, y, yBounds, xBounds, points, xTicks, yTicks } = geometry;
     context.font = `11px ${css.fontFamily}`;
     const line = (
       x1: number,
@@ -79,26 +84,31 @@ export function SummaryCanvas({ chart }: { chart: Chart }) {
       context.setLineDash([]);
     };
     context.textAlign = chart.kind === 'equity' ? 'left' : 'right';
-    for (let tick = 0; tick <= 3; tick++) {
-      const value = yBounds[0] + ((yBounds[1] - yBounds[0]) * tick) / 3;
+    for (const value of yTicks ??
+      Array.from({ length: 4 }, (_, tick) => yBounds[0] + ((yBounds[1] - yBounds[0]) * tick) / 3)) {
       line(chart.kind === 'equity' ? 8 : 66, y(value), width - 64, y(value), color('--divider'));
       context.fillStyle = color('--caption');
       context.fillText(
-        formatNumber(value, { maximumFractionDigits: 0 }),
+        chart.kind === 'scatter'
+          ? axisLabel(value)
+          : formatNumber(value, { maximumFractionDigits: 0 }),
         chart.kind === 'equity' ? width - 58 : 58,
         y(value) + 4,
       );
     }
     context.textAlign = 'center';
-    for (let tick = 0; tick <= 4; tick++) {
-      const value = xBounds[0] + ((xBounds[1] - xBounds[0]) * tick) / 4;
-      let label = formatNumber(value, { maximumFractionDigits: 0 });
+    const horizontalTicks =
+      xTicks ??
+      Array.from({ length: 5 }, (_, tick) => xBounds[0] + ((xBounds[1] - xBounds[0]) * tick) / 4);
+    for (const [tick, value] of horizontalTicks.entries()) {
+      let label = axisLabel(value);
       if (chart.kind === 'equity') {
         const time = chart.equity.times[Math.round(value)];
         label = time === undefined ? '' : formatDate(time * 1000);
       }
       context.fillStyle = color('--caption');
-      context.textAlign = tick === 0 ? 'left' : tick === 4 ? 'right' : 'center';
+      context.textAlign =
+        tick === 0 ? 'left' : tick === horizontalTicks.length - 1 ? 'right' : 'center';
       context.fillText(label, x(value), height - 9);
     }
     if (chart.kind === 'equity') {

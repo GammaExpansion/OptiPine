@@ -351,6 +351,7 @@ export const en = {
     'Space picks up an axis marker. Arrow keys move to another input, Enter confirms, Escape cancels.',
   'optimize.sensitivity.marker': 'Move {axis} axis from {title}',
   'optimize.sensitivity.spark': '{title}: mean objective and interquartile spread, shared scale',
+  'optimize.sensitivity.value': '{value}: mean {mean}, spread {from}–{to}',
   'optimize.sensitivity.picked':
     'Picked up {axis} from {title}. Use arrow keys to move; Enter confirms; Escape cancels.',
   'optimize.sensitivity.target': '{title} is the target for {axis}. Enter confirms.',
@@ -808,6 +809,8 @@ export const en = {
   'optimize.selection.apply': 'Apply to inputs',
   'optimize.selection.wait': 'Wait for the optimization to finish',
   'preview.title': 'Previewing the parameters of optimization result {set}',
+  'preview.parameter': '{title} {value}',
+  'preview.separator': ', ',
   'preview.failed': 'failed set',
   'preview.unchanged': 'Current inputs are unchanged.',
   'preview.back': 'Back to optimization',
