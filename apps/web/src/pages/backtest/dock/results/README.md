@@ -1,0 +1,85 @@
+# Backtest results
+
+`ReportTab.tsx`, `EquityTab.tsx` and `TradesTab.tsx` read the displayed run through Backtest store
+selectors. `model.ts` caches the existing `strategyReport`, `equitySummary` and `tradeRows`
+outputs by immutable result. A preview replaces the main result, including while it has no result.
+Figures always use the result's dataset and initial capital, even after current settings change.
+The workflow keeps the previous complete result through cancellation and failure; the tabs follow
+that contract and never show partial output.
+
+`formatting.ts` only controls presentation: en-US grouping, the Unicode minus, fixed decimals,
+units, zero signs and missing-value dashes. It returns catalog messages. Report labels use the
+English board's short metric names in both languages, per WEB.md section 6. Only net profit and
+open P&L get profit/loss colors in the report, as in B1. `ResultFrame` shows the B9 amber notice,
+dims retained figures and calls the existing restore-inputs action.
+
+Trades uses TanStack Table 8 and TanStack Virtual 3. Thirty-pixel rows, eight overscan rows on each
+side and a sticky header bound the mounted DOM. The grid owns keyboard focus: arrows select,
+Home/End jump, Enter focuses the selected trade. Hover, leave, scroll, filtering and unmount update
+the shared selection store. A new row collection clears the local selection and scroll position.
+Side and P&L filters call `filterTrades`; export downloads the filtered list using `tradesCsv`,
+translated headers and sides, and a UTF-8 BOM for spreadsheet applications. Prices/P&L use two
+decimals, quantities four, matching B2. CSV retains workflow precision.
+
+## Visual review and integration
+
+Reviewed B1, B2, B5 and B6 at 1440 × 900 in English and Chinese, with the app's local fonts on
+both the reference and implementation. The browser tests save each screen and all eight reference
+boards under `apps/web/test-results/`. Report/table labels fit their cells and the page has no
+horizontal overflow. Smaller widths use stacked report groups and contained table scrolling.
+
+Differences and remaining integration points:
+
+- Synthetic engine results naturally differ from the boards' sample values and curves. The
+  Report's six figures, three groups, signs, colors and spacing follow B1. Chinese report metric
+  labels stay English as WEB.md requires, unlike the Chinese reference's translated metrics.
+- The header, price chart and sidebar remain the other tasks' scaffold in this branch. B6 tests
+  assert the selection store's trade ID; chart movement is the ChartArea owner's integration.
+- `Dock.tsx` is outside this task's ownership. Its existing maximize/restore controls work for all
+  three tabs. It has neither a result-download slot nor a Trades count, so export lives at the right
+  of the Trades filter row and the dock tab itself has no count. An orchestrator can compose the
+  download action in Dock using `tradeExport`/`downloadCsv` without duplicating CSV logic.
+- Equity composes its facts into `EquityCharts.afterToolbar`, matching B5's toolbar/facts/charts
+  order. Flexible equity/drawdown panes fill the remaining height without vertical scrolling at
+  1440 × 900. The full range is applied after measuring both panes, including initially hidden or
+  zero-width mounts. Resize fits the full range until the user changes it; then it preserves that
+  view through resize, units, language and tab switches. A new result fits again. Equity enables
+  attribution when maximized; the integrated PriceChart supplies it otherwise. The shared dock
+  still owns maximize/restore; the chart toolbar's corner control resets zoom.
+- `workflows/report.ts` now exports `reportCsv(report, headers)`. `ReportCsvHeaders` supplies the
+  four column headers (`metric`, `all`, `long`, `short`) and four section titles (`keyFigures`,
+  `returns`, `trades`, `risk`). Canonical engine metric names stay English. Secondary key figures
+  are separate metric rows, except side breakdowns in Long/Short. Percentages carry `%`, loss
+  magnitudes print negative, absent/nonfinite cells stay empty, and CSV quoting/precision use the
+  shared helpers. Report download wiring is intentionally deferred until the dock action slot lands.
+
+## Verification
+
+From the repository root:
+
+```sh
+npm run build
+npm run typecheck --workspaces
+npm run test --workspace @pine/web
+npm run format:check
+npm run e2e --workspace @pine/web
+```
+
+The adjacent Vitest tests exercise formatting, missing values, zero trades, both languages,
+preview selection, outdated inputs and restoration, filtering, translated CSV, resource cleanup,
+and row hover/click/keyboard actions. `e2e/results.spec.ts` installs deterministic synthetic bars
+through the stores on the suite's dev server, fixes wall-clock time, runs the actual engine Worker,
+and blocks market/external requests. It checks all tabs, Amount/Percent, maximize/restore, filtered
+CSV downloads, B9/B12 and 10,000 actual engine trades. The performance test scrolls across all
+10,000 rows, records long tasks (50 ms or more), checks a bounded DOM and keyboard navigation to
+both ends. Its `scroll-performance.json` is saved with the screenshots.
+
+The Equity regression loads Trend Breakout with `loadExample` on the dev server. `/api/market`
+is intercepted with recorded BTCUSDT hourly OHLCV from the golden `M_time__btcusdt_60` fixture;
+external requests remain blocked. The clock is fixed at 2026-09-01, giving 17,520 bars from
+2024-09-01 through 2026-08-31. In both languages it checks 730 daily cells, 24 monthly labels,
+toolbar/facts order, no scrolling, hidden/zero-width initialization, resizing, shared zoom,
+unit/language/tab persistence, reset, and fitting a new run. Fresh `equity-example-en.png` and
+`equity-example-zh.png` show that actual example run; its values differ from the B5 sample.
+Node tests next to the report workflow cover CSV sections, secondary figures, translated headers,
+English metric names, escaping, percentage/loss formatting and missing values.
