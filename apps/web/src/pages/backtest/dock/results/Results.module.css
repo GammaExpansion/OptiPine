@@ -178,9 +178,6 @@
   border-radius: 12px;
   background: var(--panel);
 }
-.export {
-  margin-left: auto;
-}
 .tradeScroll {
   flex: 1;
   min-height: 0;

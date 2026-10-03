@@ -1,6 +1,9 @@
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { useBacktestStore } from '../../../state/backtest.ts';
 import type { KeyFigure } from '../../../workflows/report.ts';
+import { IconButton } from '../../../components/IconButton.tsx';
+import { DockActions } from './DockActions.tsx';
+import { downloadCsv, reportExport } from './results/export.ts';
 import { displayedResult, reportFor } from './results/model.ts';
 import { metricMessage, metricStyles, numberMessage, metricTone } from './results/formatting.ts';
 import { ResultFrame } from './results/ResultFrame.tsx';
@@ -28,11 +31,20 @@ function FigureDetail({ figure }: { figure: KeyFigure }) {
 }
 
 export function ReportTab() {
-  const { t, text } = useI18n();
+  const { t, text, language } = useI18n();
   const result = useBacktestStore(displayedResult);
   const report = result && reportFor(result);
   return (
     <ResultFrame>
+      {report && (
+        <DockActions>
+          <IconButton
+            icon="download"
+            label={t('report.export')}
+            onClick={() => downloadCsv(reportExport(report, language), t('report.filename'))}
+          />
+        </DockActions>
+      )}
       <div className={styles.report}>
         <div className={styles.figures}>
           {report?.keyFigures.map((figure) => (

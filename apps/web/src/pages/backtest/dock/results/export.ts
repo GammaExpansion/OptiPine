@@ -1,10 +1,24 @@
 import { translateId, type Language } from '../../../../i18n/translate.ts';
+import { reportCsv, type StrategyReport } from '../../../../workflows/report.ts';
 import {
   tradeCsvColumns,
   tradesCsv,
   type TradeCsvColumn,
   type TradeRow,
 } from '../../../../workflows/trades.ts';
+
+export function reportExport(report: StrategyReport, language: Language): string {
+  return reportCsv(report, {
+    metric: translateId('report.metric', language),
+    all: translateId('report.all', language),
+    long: translateId('report.long', language),
+    short: translateId('report.short', language),
+    keyFigures: translateId('report.keyFigures', language),
+    returns: translateId('report.returns', language),
+    trades: translateId('report.trades', language),
+    risk: translateId('report.risk', language),
+  });
+}
 
 /** The workflow owns CSV escaping and values; this boundary supplies the localized columns. */
 export function tradeExport(rows: readonly TradeRow[], language: Language): string {

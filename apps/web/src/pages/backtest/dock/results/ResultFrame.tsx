@@ -3,7 +3,8 @@ import { Button } from '../../../../components/Button.tsx';
 import { Icon } from '../../../../components/Icon.tsx';
 import { useI18n } from '../../../../i18n/I18nProvider.tsx';
 import { useBacktestStore } from '../../../../state/backtest.ts';
-import { displayedResult } from './model.ts';
+import { shownResult } from '../../states/chart-view.ts';
+import { EmptyResults } from './EmptyResults.tsx';
 import styles from './Results.module.css';
 
 export function ResultFrame({
@@ -14,11 +15,11 @@ export function ResultFrame({
   empty?: boolean;
 }) {
   const { t } = useI18n();
-  const result = useBacktestStore(displayedResult);
+  const result = useBacktestStore(shownResult);
   const outdated = useBacktestStore((state) => (state.preview ? null : state.outdated));
   const restore = useBacktestStore((state) => state.actions.restoreResultInputs);
   const stale = Boolean(outdated?.reasons.length);
-  if (!result || empty) return <div className={styles.empty}>{t('backtest.resultsHint')}</div>;
+  if (!result || empty) return <EmptyResults />;
   return (
     <section className={styles.frame} data-outdated={stale}>
       {stale && (

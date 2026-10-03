@@ -1,10 +1,10 @@
-import type { BacktestResult, BacktestState } from '../../../../workflows/backtest.ts';
+import type { BacktestResult } from '../../../../workflows/backtest.ts';
 import { equitySummary, type EquityInput } from '../../../../workflows/equity.ts';
 import { strategyReport } from '../../../../workflows/report.ts';
 import { tradeRows } from '../../../../workflows/trades.ts';
 
-/** Preview results replace the main result, including while the preview is still empty. */
-export const displayedResult = (state: BacktestState) => (state.preview ?? state).result;
+// Use the chart area's selection rule for previews and failed compiles as well as normal runs.
+export { shownResult as displayedResult } from '../../states/chart-view.ts';
 
 /** Cache by the immutable run so selection and language changes never rebuild financial data. */
 const reports = new WeakMap<BacktestResult, ReturnType<typeof strategyReport>>();

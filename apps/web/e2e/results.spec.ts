@@ -1,5 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { parseCsv } from '@pine/market-data';
 import { strategySource, syntheticBars } from '../src/workflows/test-support.ts';
 import type { Language } from '../src/i18n/translate.ts';
@@ -89,7 +89,11 @@ async function runReady(page: Page) {
     await getBacktestStore().getState().actions.run();
     const state = getBacktestStore().getState();
     if (state.run.status !== 'done') throw new Error(JSON.stringify(state.run));
-    return { trades: state.result!.output.trades.length, metrics: state.result!.output.metrics };
+    return {
+      trades: state.result!.output.trades.length,
+      metrics: state.result!.output.metrics,
+      firstEntry: state.result!.output.trades[0]?.entryTime,
+    };
   });
 }
 
@@ -116,6 +120,55 @@ async function checkTextFits(page: Page) {
   expect(await page.evaluate(() => document.body.scrollWidth)).toBe(1440);
 }
 
+async function checkDockAction(page: Page, action: Locator) {
+  await expect(action).toHaveCount(1);
+  const button = (await action.boundingBox())!;
+  const tabs = (await page.getByRole('tablist').boundingBox())!;
+  expect(button.y).toBeGreaterThanOrEqual(tabs.y);
+  expect(button.y + button.height).toBeLessThanOrEqual(tabs.y + tabs.height);
+  await expect(page.getByRole('tabpanel').getByRole('button', { name: /CSV/ })).toHaveCount(0);
+}
+
+test('S1 keeps result calculations, charts and table chunks out of the initial bundle', async ({
+  page,
+}, info) => {
+  const requested: Promise<{ file: string; bytes: number }>[] = [];
+  page.on('response', (response) => {
+    const file = new URL(response.url()).pathname;
+    if (file.endsWith('.js'))
+      requested.push(response.body().then((body) => ({ file, bytes: body.length })));
+  });
+  await page.goto('/');
+  // S1 starts on Pine code. Its existing editor chunk is included in the browser total.
+  await expect(page.getByRole('textbox', { name: 'Pine code editor' })).toBeVisible();
+  for (const name of ['Equity', 'Trades', 'Report']) {
+    await page.getByRole('tab', { name, exact: true }).click();
+    await expect(page.getByText('Run a backtest to see results here.')).toBeVisible();
+  }
+  await page.waitForLoadState('networkidle');
+  const scripts = await Promise.all(requested);
+  expect(
+    scripts.some(({ file }) =>
+      /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-)/.test(file),
+    ),
+  ).toBe(false);
+  const bytes = scripts.reduce((total, script) => total + script.bytes, 0);
+  expect(bytes).toBeGreaterThan(0);
+  expect(bytes).toBeLessThan(870000);
+  const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
+  const entryFiles = new Set(
+    [...html.matchAll(/(?:src|href)="([^"\s]+\.js)"/g)].map((match) => match[1]),
+  );
+  const entryBytes = scripts
+    .filter(({ file }) => entryFiles.has(file))
+    .reduce((total, script) => total + script.bytes, 0);
+  expect(entryBytes).toBeLessThan(565000);
+  await writeFile(
+    info.outputPath('s1-bundle.json'),
+    JSON.stringify({ scripts, entryBytes, bytes }, null, 2),
+  );
+});
+
 for (const language of ['en', 'zh'] as const) {
   test(`B1 B2 B5 B6: real result, filters, export and focus (${language})`, async ({
     page,
@@ -124,8 +177,22 @@ for (const language of ['en', 'zh'] as const) {
     page.on('pageerror', (error) => errors.push(error.message));
     const result = await install(page, language);
     const label = (en: string, zh: string) => (language === 'en' ? en : zh);
-    await expect(page.getByRole('table')).toHaveCount(3);
+    await expect(page.getByRole('tabpanel').getByRole('table')).toHaveCount(3);
     await expect(page.getByText('Net profit', { exact: true })).toHaveCount(2);
+    const reportAction = page.getByRole('button', {
+      name: label('Export report CSV', '导出报告 CSV'),
+    });
+    await checkDockAction(page, reportAction);
+    const reportDownload = page.waitForEvent('download');
+    await reportAction.click();
+    const reportFile = await reportDownload;
+    expect(reportFile.suggestedFilename()).toBe('report.csv');
+    const reportCsv = await readFile((await reportFile.path())!, 'utf8');
+    expect(reportCsv).toContain(
+      label('Key figures,,,\r\nMetric,All,Long,Short', '关键指标,,,\r\n指标,全部,多头,空头'),
+    );
+    expect(reportCsv).toContain('Net profit,');
+    expect(reportCsv).toContain('Average profit / average loss,');
     await page.screenshot({ path: info.outputPath(`B1-${language}.png`) });
     await checkTextFits(page);
     await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 1440);
@@ -145,7 +212,18 @@ for (const language of ['en', 'zh'] as const) {
     ).toBeVisible();
     await page.getByRole('button', { name: label('Restore panel', '还原面板') }).click();
 
-    await page.getByRole('tab', { name: label('Trades', '成交'), exact: true }).click();
+    await page
+      .getByRole('tab', { name: language === 'en' ? /^Trades \d+$/ : /^成交 \d+$/ })
+      .click();
+    const tradeAction = page.getByRole('button', {
+      name: label('Export trades CSV', '导出成交 CSV'),
+    });
+    await checkDockAction(page, tradeAction);
+    await expect(reportAction).toHaveCount(0);
+    await page.getByRole('button', { name: label('Collapse panel', '收起面板') }).click();
+    await expect(tradeAction).toHaveCount(0);
+    await page.getByRole('button', { name: label('Expand panel', '展开面板') }).click();
+    await checkDockAction(page, tradeAction);
     const grid = page.getByRole('grid');
     await expect(grid).toHaveAttribute('aria-rowcount', String(result.trades + 1));
     await expect(page.locator('[data-trade]').first()).toHaveAttribute(
@@ -156,15 +234,56 @@ for (const language of ['en', 'zh'] as const) {
     await checkTextFits(page);
     const row = page.locator('[data-trade]').nth(2);
     const number = Number(await row.getAttribute('data-trade'));
+    const chart = page.getByTestId('price-chart');
+    const canvas = chart.locator('canvas').first();
+    const amberPixels = () =>
+      canvas.evaluate((canvas: HTMLCanvasElement) => {
+        const { data } = canvas.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height);
+        let count = 0;
+        for (let i = 0; i < data.length; i += 4)
+          if (data[i] > 220 && data[i + 1] > 130 && data[i + 1] < 190 && data[i + 2] < 90) count++;
+        return count;
+      });
+    const beforeHover = await amberPixels();
     await row.hover();
     await expect.poll(() => selection(page)).toEqual({ hover: number });
+    await expect(page.getByTestId('trade-detail')).toContainText(`#${number}`);
+    await expect.poll(amberPixels).toBeGreaterThan(beforeHover + 10);
+    await page.getByRole('tab', { name: label('Report', '报告'), exact: true }).hover();
+    await expect(page.getByTestId('trade-detail')).toHaveCount(0);
+    await expect.poll(amberPixels).toBe(beforeHover);
     await row.click();
     await expect.poll(async () => (await selection(page)).focus).toBe(number);
+    await expect(chart).toHaveAttribute('data-focused-trade', String(number));
     await expect(row).toHaveAttribute('data-focused', 'true');
     await page.screenshot({ path: info.outputPath(`B6-${language}.png`) });
     await grid.press('ArrowDown');
     await grid.press('Enter');
     await expect.poll(async () => (await selection(page)).focus).toBe(number - 1);
+    await expect(chart).toHaveAttribute('data-focused-trade', String(number - 1));
+
+    // Trade #1 lies outside the initial recent window. Clicking it must move the real candles,
+    // not just publish a selection or show a tooltip for an offscreen trade.
+    await grid.press('End');
+    const first = page.locator('[data-trade="1"]');
+    await first.hover();
+    await expect(page.getByTestId('trade-detail').locator('strong')).toContainText('#1 ');
+    await expect.poll(amberPixels).toBe(0);
+    const beforeFocus = await canvas.evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL());
+    await first.click();
+    await expect(chart).toHaveAttribute('data-focused-trade', '1');
+    await expect
+      .poll(() => canvas.evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL()))
+      .not.toBe(beforeFocus);
+    await expect.poll(amberPixels).toBeGreaterThan(10);
+    const entryDate = new Date(result.firstEntry! * 1000)
+      .toISOString()
+      .slice(0, 10)
+      .split('-')
+      .reverse()
+      .join('/');
+    await expect(chart.locator('div').first()).toContainText(entryDate);
+    await page.screenshot({ path: info.outputPath(`B6-first-trade-${language}.png`) });
 
     await page.getByRole('radio', { name: label('Short', '空'), exact: true }).click();
     await page.getByRole('combobox', { name: label('P&L filter', '盈亏筛选') }).click();
@@ -370,18 +489,37 @@ for (const language of ['en', 'zh'] as const) {
   });
 }
 
-test('B9 outdated results remain visible, and B12 shows zero trades', async ({ page }) => {
+test('B9 outdated results remain visible, and B12 shows zero trades', async ({ page }, info) => {
   await install(page);
   const figure = await page.getByRole('table', { name: 'Returns' }).innerText();
-  await page.evaluate(async () => {
-    const path = '/src/state/backtest.ts';
-    const { getBacktestStore } = (await import(path)) as typeof import('../src/state/backtest.ts');
-    getBacktestStore().getState().actions.setInput('Length', 10);
-  });
-  await expect(page.getByRole('status')).toContainText('Current results use Length 5.');
+  const length = page.getByRole('spinbutton', { name: 'Length', exact: true });
+  await length.fill('10');
+  const notice = page.getByRole('status').filter({ hasText: 'Current results use Length 5.' });
+  await expect(notice).toHaveCount(1);
+  await expect(notice).toBeVisible();
+  await expect(page.getByRole('tabpanel').getByRole('status')).toHaveCount(1);
+  await expect(page.getByText('Current results use Length 5.', { exact: true })).toHaveCount(1);
+  await expect(page.getByText('Results outdated', { exact: true })).toHaveCount(1);
+  await expect(page.getByLabel('Last run')).toHaveText('Results outdated');
+  await expect(page.locator('[data-outdated="true"] [data-dimmed="true"]')).toHaveCSS(
+    'opacity',
+    '0.4',
+  );
+  const changedDot = page
+    .locator('label')
+    .filter({ hasText: /^Length$/ })
+    .locator('span');
+  await expect(changedDot).toBeVisible();
+  await expect(changedDot).toHaveCSS('width', '6px');
+  await expect(changedDot).toHaveCSS('background-color', 'rgb(242, 163, 58)');
+  await expect(page.getByText('Default 5', { exact: true })).toBeVisible();
+  await page.screenshot({ path: info.outputPath('B9-integrated-en.png') });
   expect(await page.getByRole('table', { name: 'Returns' }).innerText()).toBe(figure);
   await page.getByRole('button', { name: 'Restore result inputs' }).click();
-  await expect(page.getByRole('status')).toHaveCount(0);
+  await expect(notice).toHaveCount(0);
+  await expect(changedDot).toHaveCount(0);
+  await expect(page.getByLabel('Last run')).toContainText('2,000 bars');
+  await expect(page.locator('[data-dimmed="true"]')).toHaveCount(0);
   await install(
     page,
     'en',
@@ -394,7 +532,7 @@ test('B9 outdated results remain visible, and B12 shows zero trades', async ({ p
       .getByRole('row')
       .filter({ hasText: 'Total trades' }),
   ).toHaveText('Total trades000');
-  await page.getByRole('tab', { name: 'Trades', exact: true }).click();
+  await page.getByRole('tab', { name: /^Trades 0$/ }).click();
   await expect(page.getByText('No trades in the selected range')).toBeVisible();
 });
 
@@ -402,7 +540,7 @@ test('10,000 engine trades scroll with bounded DOM and no long tasks', async ({ 
   test.setTimeout(90000);
   const result = await install(page, 'en', 10001, rapid);
   expect(result.trades).toBe(10000);
-  await page.getByRole('tab', { name: 'Trades', exact: true }).click();
+  await page.getByRole('tab', { name: /^Trades \d+$/ }).click();
   const grid = page.getByRole('grid');
   await expect(grid).toHaveAttribute('aria-rowcount', '10001');
   await expect(page.locator('[data-trade="10000"]')).toBeVisible();

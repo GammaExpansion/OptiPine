@@ -14,6 +14,7 @@ import { displayedResult, tradesFor } from './results/model.ts';
 import { ResultFrame } from './results/ResultFrame.tsx';
 import { TradeTable } from './results/TradeTable.tsx';
 import { downloadCsv, tradeExport } from './results/export.ts';
+import { DockActions } from './DockActions.tsx';
 import styles from './results/Results.module.css';
 
 const noRows: readonly TradeRow[] = [];
@@ -27,6 +28,13 @@ export function TradesTab() {
   const list = useMemo(() => filterTrades(rows, { side, pnl }), [rows, side, pnl]);
   return (
     <ResultFrame>
+      <DockActions>
+        <IconButton
+          icon="download"
+          label={t('trades.export')}
+          onClick={() => downloadCsv(tradeExport(list.rows, language), t('trades.filename'))}
+        />
+      </DockActions>
       <div className={styles.tradeToolbar}>
         <SegmentedControl
           small
@@ -51,12 +59,6 @@ export function TradesTab() {
         <span className={styles.caption}>
           {t('trades.counts', { closed: list.closedCount, open: list.openCount })}
         </span>
-        <IconButton
-          className={styles.export}
-          icon="download"
-          label={t('trades.export')}
-          onClick={() => downloadCsv(tradeExport(list.rows, language), t('trades.filename'))}
-        />
       </div>
       {list.rows.length ? (
         <TradeTable rows={list.rows} key={`${result?.finishedAt}-${side}-${pnl}`} />

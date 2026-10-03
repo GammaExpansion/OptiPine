@@ -3,6 +3,7 @@
 `ReportTab.tsx`, `EquityTab.tsx` and `TradesTab.tsx` read the displayed run through Backtest store
 selectors. `model.ts` caches the existing `strategyReport`, `equitySummary` and `tradeRows`
 outputs by immutable result. A preview replaces the main result, including while it has no result.
+Result selection uses the chart area's `shownResult`, including hiding obsolete output after a failed compile.
 Figures always use the result's dataset and initial capital, even after current settings change.
 The workflow keeps the previous complete result through cancellation and failure; the tabs follow
 that contract and never show partial output.
@@ -33,12 +34,15 @@ Differences and remaining integration points:
 - Synthetic engine results naturally differ from the boards' sample values and curves. The
   Report's six figures, three groups, signs, colors and spacing follow B1. Chinese report metric
   labels stay English as WEB.md requires, unlike the Chinese reference's translated metrics.
-- The header, price chart and sidebar remain the other tasks' scaffold in this branch. B6 tests
-  assert the selection store's trade ID; chart movement is the ChartArea owner's integration.
-- `Dock.tsx` is outside this task's ownership. Its existing maximize/restore controls work for all
-  three tabs. It has neither a result-download slot nor a Trades count, so export lives at the right
-  of the Trades filter row and the dock tab itself has no count. An orchestrator can compose the
-  download action in Dock using `tradeExport`/`downloadCsv` without duplicating CSV logic.
+- The real price chart and right panel are integrated. B6 checks amber canvas marks on hover,
+  clearing hover, focus and scrolling to the oldest trade outside the initial recent window. B9
+  checks one dock notice, dimmed results, the header status and the input's changed dot together.
+  Header market-data controls remain the data task's integration point.
+- Report and Trades render their download icons through `DockActions`, before maximize/collapse
+  in the dock bar. B2 has no second download icon in its filter row. Trades exports the current
+  filtered list; Report exports the displayed run, including an outdated or preview result.
+  The portal follows the active tab and disappears while the dock is collapsed. The Trades tab
+  count is the integrated dock's count of closed trades.
 - Equity composes its facts into `EquityCharts.afterToolbar`, matching B5's toolbar/facts/charts
   order. Flexible equity/drawdown panes fill the remaining height without vertical scrolling at
   1440 × 900. The full range is applied after measuring both panes, including initially hidden or
@@ -51,7 +55,27 @@ Differences and remaining integration points:
   `returns`, `trades`, `risk`). Canonical engine metric names stay English. Secondary key figures
   are separate metric rows, except side breakdowns in Long/Short. Percentages carry `%`, loss
   magnitudes print negative, absent/nonfinite cells stay empty, and CSV quoting/precision use the
-  shared helpers. Report download wiring is intentionally deferred until the dock action slot lands.
+  shared helpers. `reportExport` supplies catalog headers; both downloads include a UTF-8 BOM.
+
+## Loading and bundle review
+
+`Dock.tsx` loads each tab lazily. Report, Equity and Trades load only once a displayed result exists;
+`EmptyResults` keeps S1 and empty previews free of charts, TanStack and engine reporting imports.
+Code and Issues load when selected. Their loading boundary leaves an empty area while importing.
+
+Production builds before and after integration, in decimal kB of minified JavaScript:
+
+| Measure                          |   Before |  After |
+| -------------------------------- | -------: | -----: |
+| Index chunk                      |   641.42 | 306.56 |
+| Entry plus module preloads       |   855.31 | 564.64 |
+| Full default S1 browser requests | 1,155.70 | 868.27 |
+
+Entry/preload JavaScript stays close to the roughly 562 kB reference budget. S1 defaults to Pine code,
+so the actual browser also loads the existing 300.40 kB CodeMirror editor. These measurements count
+that separately and exclude CSS/fonts/Workers. After splitting, Report is 1.99 kB, Equity 12.19 kB
+and Trades 75.93 kB, plus shared lazy chunks (including the 185.92 kB chart library). The production
+browser regression checks both budgets and confirms empty result tabs do not fetch result chunks.
 
 ## Verification
 
@@ -70,7 +94,7 @@ preview selection, outdated inputs and restoration, filtering, translated CSV, r
 and row hover/click/keyboard actions. `e2e/results.spec.ts` installs deterministic synthetic bars
 through the stores on the suite's dev server, fixes wall-clock time, runs the actual engine Worker,
 and blocks market/external requests. It checks all tabs, Amount/Percent, maximize/restore, filtered
-CSV downloads, B9/B12 and 10,000 actual engine trades. The performance test scrolls across all
+both dock CSV downloads, B6 chart hover/focus, integrated B9/B12 and 10,000 actual engine trades. The performance test scrolls across all
 10,000 rows, records long tasks (50 ms or more), checks a bounded DOM and keyboard navigation to
 both ends. Its `scroll-performance.json` is saved with the screenshots.
 

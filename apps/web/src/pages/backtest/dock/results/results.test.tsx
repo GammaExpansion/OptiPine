@@ -14,6 +14,7 @@ import { filterTrades } from '../../../../workflows/trades.ts';
 import { ReportTab } from '../ReportTab.tsx';
 import { EquityTab } from '../EquityTab.tsx';
 import { TradesTab } from '../TradesTab.tsx';
+import { DockActionsHost } from '../DockActions.tsx';
 import { displayedResult, equityFor, reportFor, tradesFor } from './model.ts';
 
 vi.mock('../../../../charts/EquityCharts.tsx', () => ({
@@ -68,12 +69,43 @@ test('result adapters preserve workflow outputs and identities across input chan
   expect(equity.summary.endingEquity).toBe(result.output.equity!.at(-1));
   getBacktestStore().getState().actions.setInput('Length', 7);
   expect(displayedResult(getBacktestStore().getState())).toBe(result);
+  expect(
+    displayedResult({
+      ...getBacktestStore().getState(),
+      compile: { status: 'failed', diagnostics: [], error: null },
+    }),
+  ).toBeNull();
   expect(tradesFor(result)).toBe(trades);
   expect(reportFor(result)).toBe(report);
   expect(equityFor(result)).toBe(equity);
   const indicator = { ...result, initialCapital: null };
   expect(equityFor(indicator)).toBeNull();
   expect(equityFor({ ...result, output: { ...result.output, equity: undefined } })).toBeNull();
+});
+
+test('CSV actions belong to the active tab dock host and disappear when collapsed', async () => {
+  await run();
+  const host = document.createElement('div');
+  document.body.append(host);
+  const dock = (tab: ReactNode, collapsed = false) => (
+    <I18nProvider>
+      <DockActionsHost.Provider value={collapsed ? null : host}>{tab}</DockActionsHost.Provider>
+    </I18nProvider>
+  );
+  try {
+    const view = render(dock(<ReportTab />));
+    expect(within(host).getByRole('button', { name: 'Export report CSV' })).toBeVisible();
+    expect(within(view.container).queryByRole('button', { name: /Export/ })).toBeNull();
+    view.rerender(dock(<TradesTab />));
+    expect(within(host).queryByRole('button', { name: 'Export report CSV' })).toBeNull();
+    expect(within(host).getByRole('button', { name: 'Export trades CSV' })).toBeVisible();
+    expect(within(view.container).queryByRole('button', { name: /Export/ })).toBeNull();
+    view.rerender(dock(<TradesTab />, true));
+    expect(host).toBeEmptyDOMElement();
+    view.unmount();
+  } finally {
+    host.remove();
+  }
 });
 
 test('report renders all groups, keeps English metric names in Chinese, and restores stale inputs', async () => {

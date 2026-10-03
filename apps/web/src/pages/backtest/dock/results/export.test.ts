@@ -1,6 +1,7 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import type { TradeRow } from '../../../../workflows/trades.ts';
-import { downloadCsv, tradeExport } from './export.ts';
+import { strategyReport } from '../../../../workflows/report.ts';
+import { downloadCsv, reportExport, tradeExport } from './export.ts';
 
 const trade: TradeRow = {
   number: 1,
@@ -19,6 +20,16 @@ const trade: TradeRow = {
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
+});
+test('report export translates section and column headers but keeps metric names English', () => {
+  const report = strategyReport({ 'Performance/Net profit/All USD': 123.45 });
+  const en = reportExport(report, 'en');
+  const zh = reportExport(report, 'zh');
+  expect(en).toContain('Key figures,,,\r\nMetric,All,Long,Short\r\nNet profit,123.45,,');
+  expect(zh).toContain('关键指标,,,\r\n指标,全部,多头,空头\r\nNet profit,123.45,,');
+  for (const section of ['Returns', 'Trades', 'Risk']) expect(en).toContain(`${section},,,\r\n`);
+  for (const section of ['收益', '交易', '风险']) expect(zh).toContain(`${section},,,\r\n`);
+  expect(zh).toContain('Average profit / average loss,,,');
 });
 test('the workflow exports translated headers and sides, including an open trade', () => {
   const en = tradeExport([trade], 'en').split('\r\n');

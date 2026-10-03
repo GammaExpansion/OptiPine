@@ -1,9 +1,11 @@
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { I18nProvider } from '../../i18n/I18nProvider.tsx';
-import { openScript } from '../../state/backtest.ts';
+import { getBacktestStore, openScript } from '../../state/backtest.ts';
+import { getMarketDataStore } from '../../state/marketData.ts';
 import { replaceServices } from '../../state/services.ts';
-import { fakeServices } from '../../state/test-support.ts';
+import { fakeServices, testInput } from '../../state/test-support.ts';
+import { strategySource } from '../../workflows/test-support.ts';
 import { defaultPaneSizes, uiStore, type DockTab } from '../../state/ui.ts';
 import { BacktestPage } from './BacktestPage.tsx';
 import { ChartArea } from './ChartArea.tsx';
@@ -37,7 +39,7 @@ afterEach(() => {
   restore();
 });
 
-test('the page composes independent chart, sidebar and active dock slots', () => {
+test('the page composes independent slots and defers result tabs until a result exists', async () => {
   render(
     <I18nProvider>
       <BacktestPage />
@@ -45,12 +47,24 @@ test('the page composes independent chart, sidebar and active dock slots', () =>
   );
   expect(ChartArea).toHaveBeenCalled();
   expect(Sidebar).toHaveBeenCalled();
-  expect(CodeTab).toHaveBeenCalled();
+  await waitFor(() => expect(CodeTab).toHaveBeenCalled());
   expect(ReportTab).not.toHaveBeenCalled();
-  const slots = { report: ReportTab, equity: EquityTab, trades: TradesTab, issues: IssuesTab };
+  const results = { report: ReportTab, equity: EquityTab, trades: TradesTab };
+  for (const [tab, component] of Object.entries(results)) {
+    act(() => uiStore.getState().setDockTab(tab as DockTab));
+    expect(component).not.toHaveBeenCalled();
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('Run a backtest to see results here.');
+  }
+  act(() => {
+    openScript({ source: strategySource, fileName: 'test.pine', origin: { kind: 'file' } });
+    getMarketDataStore().getState().actions.useCsv(testInput, 'synthetic.csv');
+  });
+  await waitFor(() => expect(getBacktestStore().getState().readiness.ok).toBe(true));
+  await act(() => getBacktestStore().getState().actions.run());
+  const slots = { ...results, issues: IssuesTab };
   for (const [tab, component] of Object.entries(slots)) {
     act(() => uiStore.getState().setDockTab(tab as DockTab));
-    expect(component).toHaveBeenCalled();
+    await waitFor(() => expect(component).toHaveBeenCalled());
     expect(screen.getAllByRole('tabpanel')).toHaveLength(1);
   }
 });
