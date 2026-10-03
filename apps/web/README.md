@@ -42,6 +42,12 @@ formatting is always en-US; dates use UTC and take a Date or milliseconds, so co
 seconds before calling `formatDate`. Components use `I18nProvider` and `useI18n`. The AST test scans
 all `src/**/*.tsx` for literal JSX copy and accessible text attributes.
 
+Each language's catalog is a chunk of its own. An app entry awaits `loadActiveCatalog()` (the stored
+or browser language) before its first render, and `I18nProvider` fetches the other catalog the
+first time the language switches to it, keeping the current language on screen until it arrives.
+Tests and the dev pages import `src/i18n/catalogs.ts`, which registers both; keys stay in `en.ts`
+and `zh.ts`.
+
 Visual review at 1440 × 900: S1 follows the reference's 48 px header, 430 px chart, 36 px dock bar
 and 336 px sidebar, with a sidebar collapse control revealed on hover or keyboard focus. O1 uses
 the same empty-results area and sidebar sections, but leaves the absent script's search rows,

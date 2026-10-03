@@ -12,9 +12,23 @@ test('production app loads without errors or third-party requests and remembers 
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(message.text());
   });
+  const scripts: string[] = [];
   page.on('request', (request) => {
     if (!request.url().startsWith('http://127.0.0.1:5174/')) external.push(request.url());
+    else if (request.url().endsWith('.js')) scripts.push(new URL(request.url()).pathname);
   });
+  // The root's text when it first has any, before a catalog could still change.
+  await page.addInitScript(() => {
+    new MutationObserver((_, observer) => {
+      const text = document.getElementById('root')?.textContent;
+      if (!text) return;
+      Object.assign(window, { firstText: text });
+      observer.disconnect();
+    }).observe(document, { childList: true, subtree: true });
+  });
+  const firstText = () => page.evaluate(() => (window as { firstText?: string }).firstText ?? '');
+  const catalogs = () =>
+    scripts.flatMap((file) => /^\/assets\/(en|zh)-/.exec(file)?.slice(1, 2) ?? []);
   await page.goto('/');
   await page.evaluate(() => document.fonts.ready);
   await expect(page.getByRole('heading', { name: 'Run backtest' })).toBeVisible();
@@ -24,10 +38,22 @@ test('production app loads without errors or third-party requests and remembers 
   ).toHaveAccessibleDescription('Open a script and select market data first');
   expect(await page.locator('body').evaluate((body) => body.scrollWidth)).toBe(1440);
   await page.screenshot({ path: testInfo.outputPath('S1-en.png') });
+  expect(await firstText()).toContain('Open script');
+  // One catalog loads with the page; the other when the language first switches to it.
+  expect(catalogs()).toEqual(['en']);
   await page.getByRole('radio', { name: '中', exact: true }).click();
   await expect(page.getByRole('button', { name: '打开脚本' })).toBeVisible();
+  scripts.length = 0;
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
+  expect(await firstText()).toContain('打开脚本');
+  expect(await firstText()).not.toContain('Open script');
+  expect(catalogs()).toEqual(['zh']);
+  await page.getByRole('radio', { name: 'EN', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Open script' })).toBeVisible();
+  await page.getByRole('radio', { name: '中', exact: true }).click();
+  await expect(page.getByRole('button', { name: '打开脚本' })).toBeVisible();
+  expect(catalogs()).toEqual(['zh', 'en']);
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: testInfo.outputPath('S1-zh.png') });
   expect(errors).toEqual([]);

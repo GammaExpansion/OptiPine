@@ -4,7 +4,8 @@ import { marketDataMessageIds } from '@pine/market-data';
 import { optimizerMessageIds } from '@pine/optimizer';
 import { workerMessageIds } from '@pine/workers';
 import { workflowMessageIds, workflowMessage } from '../workflows/messages.ts';
-import { catalogs, translate } from './translate.ts';
+import { catalogs } from './catalogs.ts';
+import { translate } from './translate.ts';
 
 test('catalogs have identical keys and placeholders', () => {
   assert.deepEqual(Object.keys(catalogs.en).sort(), Object.keys(catalogs.zh).sort());

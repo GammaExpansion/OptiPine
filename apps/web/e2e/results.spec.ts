@@ -129,7 +129,7 @@ async function checkDockAction(page: Page, action: Locator) {
   await expect(page.getByRole('tabpanel').getByRole('button', { name: /CSV/ })).toHaveCount(0);
 }
 
-test('S1 keeps results, dialogs and the script menu out of the initial bundle', async ({
+test('S1 keeps results, dialogs, the script menu, Optimize and Chinese out of the first load', async ({
   page,
 }, info) => {
   const requested: Promise<{ file: string; bytes: number }>[] = [];
@@ -148,14 +148,15 @@ test('S1 keeps results, dialogs and the script menu out of the initial bundle', 
   await page.waitForLoadState('networkidle');
   const scripts = await Promise.all(requested);
   const lazy =
-    /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|ScriptMenuContent)/;
+    /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|ScriptMenuContent|OptimizePage|\/zh-)/;
   expect(scripts.map(({ file }) => file).filter((file) => lazy.test(file))).toEqual([]);
-  // Measured with the data dialogs merged: 888,441 bytes in all, 584,742 in the entry. The budgets
-  // leave about 6 KB, less than the script menu (14 KB) or the market data dialog (19 KB) would
-  // add if either loaded with the page again.
+  // Measured with the Optimize setup merged and one catalog per language: 859,707 bytes in all,
+  // 43,619 of them the English catalog, which loads before the first render, and 512,394 in the
+  // entry. The budgets leave about 6 KB, less than the script menu (14 KB), the market data
+  // dialog (19 KB) or the Chinese catalog (43 KB) would add if any loaded with the page again.
   const bytes = scripts.reduce((total, script) => total + script.bytes, 0);
   expect(bytes).toBeGreaterThan(0);
-  expect(bytes).toBeLessThan(895000);
+  expect(bytes).toBeLessThan(866000);
   const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
   const entryFiles = new Set(
     [...html.matchAll(/(?:src|href)="([^"\s]+\.js)"/g)].map((match) => match[1]),
@@ -163,7 +164,7 @@ test('S1 keeps results, dialogs and the script menu out of the initial bundle', 
   const entryBytes = scripts
     .filter(({ file }) => entryFiles.has(file))
     .reduce((total, script) => total + script.bytes, 0);
-  expect(entryBytes).toBeLessThan(591000);
+  expect(entryBytes).toBeLessThan(518500);
   await writeFile(
     info.outputPath('s1-bundle.json'),
     JSON.stringify({ scripts, entryBytes, bytes }, null, 2),

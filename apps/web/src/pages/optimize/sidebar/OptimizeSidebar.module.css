@@ -1,0 +1,422 @@
+.sidebar {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.sections {
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+/* O8: the settings rest while a run goes. */
+.sections[data-running] {
+  opacity: 0.5;
+}
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.secondary {
+  color: var(--secondary);
+}
+.caption {
+  color: var(--caption);
+}
+.hint {
+  color: var(--caption);
+  margin-top: -4px;
+}
+.error,
+.rowError {
+  font-size: 12px;
+  color: var(--danger-text);
+}
+
+/* Search ranges (O1, O4–O6): checkbox and name, then the values indented under the name. */
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.rowHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 20px;
+}
+.title,
+.muted {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.muted {
+  color: var(--secondary);
+}
+.count,
+.countError {
+  color: var(--secondary);
+  font-variant-numeric: tabular-nums;
+}
+.countError {
+  color: var(--loss);
+}
+.fixed {
+  font-size: 12px;
+  color: var(--caption);
+}
+.fixedSelect {
+  width: 96px;
+  height: 28px;
+  font-size: 12.5px;
+}
+.indent,
+.range,
+.rowError,
+.rowNote {
+  padding-left: 25px;
+}
+.rowNote {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--caption);
+}
+.range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stepLabel {
+  margin-left: 6px;
+}
+.w36 {
+  width: 36px;
+}
+.w42 {
+  width: 42px;
+}
+.w52 {
+  width: 52px;
+}
+.w60 {
+  width: 60px;
+}
+.w68 {
+  width: 68px;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.more {
+  color: var(--secondary);
+}
+.more[data-state='open'] {
+  border-color: var(--amber-border);
+  background: var(--amber-background);
+  color: var(--amber-text);
+}
+/* O4's value list. */
+.listHeading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--caption);
+}
+.listHeading strong {
+  font-weight: 400;
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+}
+.list label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  cursor: pointer;
+}
+.listHint {
+  margin-top: 10px;
+  max-width: 220px;
+  font-size: 12px;
+  color: var(--caption);
+}
+.sampling {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.seedLabel {
+  margin-left: 10px;
+}
+
+/* Validation (O1–O3). */
+.wide > * {
+  display: flex;
+  width: 100%;
+  height: 32px;
+}
+.wide button {
+  flex: 1;
+}
+.share {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+.percent {
+  width: 32px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+/* The knob splits the track: IS to its left, OOS in amber to its right. */
+.slider {
+  flex: 1;
+  min-width: 0;
+  height: 16px;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+.slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--control-border) var(--split),
+    var(--primary) var(--split)
+  );
+}
+.slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--control-border) var(--split),
+    var(--primary) var(--split)
+  );
+}
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--text);
+  border: 3px solid var(--primary);
+}
+.slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text);
+  border: 3px solid var(--primary);
+}
+.slider:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.warning {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--caption);
+}
+.months {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.gap {
+  margin-left: 6px;
+}
+.between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Ranking and filters (O7). */
+.objective {
+  height: 32px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  background: var(--field);
+  color: var(--caption);
+}
+.objective > span {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.objective[data-state='open'] {
+  border-color: var(--primary);
+}
+.objectiveMenu {
+  width: var(--radix-popover-trigger-width);
+  padding: 4px;
+}
+.direction {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 6px 10px 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--control-border);
+}
+.objectives {
+  display: flex;
+  flex-direction: column;
+}
+.groupHeading {
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  color: var(--caption);
+}
+.objectiveItem {
+  min-height: 30px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  outline: none;
+}
+.objectiveItem:hover,
+.objectiveItem[aria-checked='true'] {
+  background: var(--menu-highlight);
+}
+.objectiveItem:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+.objectiveItem svg {
+  color: var(--link);
+}
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 12.5px;
+  color: var(--secondary);
+  font-variant-numeric: tabular-nums;
+  margin-top: -6px;
+}
+
+/* The run block pinned at the foot (O1, O8). */
+.block,
+.running {
+  flex: none;
+  border-top: 1px solid var(--divider);
+  padding: 14px 16px 16px;
+}
+.block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.numbers {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.runCount {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--secondary);
+}
+.runCount strong {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+}
+.runCaption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  font-size: 12px;
+  color: var(--caption);
+}
+.runCaption span {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+}
+.runCaption button {
+  font-size: 12px;
+}
+.runError {
+  color: var(--danger-text);
+}
+.start {
+  height: 36px;
+  padding: 0 16px;
+}
+.running {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.progressHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.progressHead strong {
+  font-weight: 600;
+}
+.progressHead .percent {
+  margin-left: auto;
+  width: auto;
+}
+.progressFoot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.cancel {
+  height: 28px;
+  margin-left: auto;
+}

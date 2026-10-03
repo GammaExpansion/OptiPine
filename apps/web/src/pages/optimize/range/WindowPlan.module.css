@@ -1,0 +1,60 @@
+.plan {
+  flex: none;
+  border-bottom: 1px solid var(--divider);
+}
+.heading {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.heading h2 {
+  font-size: 13px;
+  font-weight: 600;
+}
+.heading span {
+  color: var(--secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* O3: window names in a 40 px column, the lanes up to 68 px from the right edge. */
+.chart {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 68px;
+}
+.ids {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11.5px;
+  color: var(--caption);
+}
+.ids li {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+}
+.lanes {
+  width: 100%;
+  display: block;
+  overflow: visible;
+}
+.lanes text {
+  fill: var(--caption);
+  font-size: 11px;
+}
+.inSample {
+  fill: none;
+  stroke: #2c3742;
+}
+.outOfSample {
+  fill: none;
+  stroke: var(--spinner-track);
+}
