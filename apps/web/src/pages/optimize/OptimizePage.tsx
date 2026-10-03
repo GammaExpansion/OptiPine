@@ -4,9 +4,11 @@
  * - setup: this composition and its splits, `range/DataRangeBar` at the top of the main column,
  *   `states/` (the O1 empty results; R5 dims the whole results area here, so the panels below do
  *   not dim themselves), the right panel `sidebar/` with the run block at its foot, and
- *   `filters/`, the shared trigger of R10's add-condition popover;
+ *   `filters/AddConditionTrigger`, the + Condition that both the leaderboard and the right panel
+ *   use to open R10's popover;
  * - summary and leaderboard: `summary/SummaryPanel`, `leaderboard/LeaderboardPanel` (left, under
- *   the summary) and `selection/SelectionBar` along the bottom of the main column;
+ *   the summary), `selection/SelectionBar` along the bottom of the main column, and
+ *   `filters/ConditionPopover`, the body of R10's popover;
  * - map and sensitivity: `map/MapPanel` over `sensitivity/SensitivityPanel` (right, under the
  *   summary).
  *

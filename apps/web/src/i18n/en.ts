@@ -567,6 +567,7 @@ export const en = {
   'optimize.setup.leaderboardSize': 'Leaderboard {size} px',
   'optimize.setup.resizeMap': 'Resize parameter map and sensitivity',
   'optimize.setup.mapSize': 'Parameter map {size} px',
+  'optimize.setup.addCondition': 'Add condition',
   'common.unavailable': '—',
   searchIntegerRequired: '{title} must be an integer.',
   searchNumberRequired: '{title} must be a number.',

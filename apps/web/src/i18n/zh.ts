@@ -554,6 +554,7 @@ export const zh = {
   'optimize.setup.leaderboardSize': '排行 {size} px',
   'optimize.setup.resizeMap': '调整参数图与影响度高度',
   'optimize.setup.mapSize': '参数图 {size} px',
+  'optimize.setup.addCondition': '添加条件',
   'common.unavailable': '—',
   searchIntegerRequired: '{title} 必须为整数。',
   searchNumberRequired: '{title} 必须为数字。',
