@@ -10,6 +10,7 @@ import type {
 } from './ast.ts';
 import { qualifiedName } from './ast.ts';
 import { CompileError } from './lexer.ts';
+import { PlotDependencies } from './plot-dependencies.ts';
 
 type Qualifier = 'const' | 'input' | 'simple' | 'series';
 interface ValueType {
@@ -214,6 +215,7 @@ variables('size', 'auto tiny small normal large huge', 'string', 'const');
 
 export class Checker {
   program: Program;
+  plotDependencies: PlotDependencies;
   scopes: Scope[] = [new Map()];
   functions = new Map<
     string,
@@ -227,6 +229,7 @@ export class Checker {
   loopDepth = 0;
   constructor(program: Program) {
     this.program = program;
+    this.plotDependencies = new PlotDependencies(program);
   }
   fail(kind: Diagnostic['kind'], node: Node, message: string): never {
     throw new CompileError(kind, node.line, message, node.column);
@@ -593,6 +596,10 @@ export class Checker {
     let name = qualifiedName(node.callee) ?? '';
     let callArgs = node.args;
     const args = callArgs.map((arg) => this.expression(arg.value));
+    if (['plot', 'plotshape', 'plotchar'].includes(name))
+      node.plotQualifiers = args.map((arg, i) =>
+        this.plotDependencies.mutable(callArgs[i].value) ? 'series' : arg.qualifier,
+      );
     const named = new Set<string>();
     for (const arg of node.args)
       if (arg.name) {

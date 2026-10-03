@@ -33,7 +33,7 @@ import { compile, describe, run, runWithEquity, sweep } from '@pine/engine';
 
 ### RunResult
 
-- `plots`: `{ title, values, overlay }` per plot, one value per bar. `overlay` is true when the plot
+- `plots`: `{ title, values, overlay, style?, colors? }` per plot, one value per bar. `overlay` is true when the plot
   is drawn over the price chart: the script declares `overlay = true`, or the plot call sets
   `force_overlay = true`; otherwise the plot belongs in its own pane.
 - `trades` and `metrics`: strategy fills and the TradingView report metrics, keyed as
@@ -46,6 +46,36 @@ import { compile, describe, run, runWithEquity, sweep } from '@pine/engine';
   (the script's `bar_index`), including tick and order-fill recalculations. Compilation,
   setup and final-report failures have no `bar`. `runWithEquity` and `sweep` preserve it.
 - `warnings`: side effects the engine deliberately ignores, such as drawing calls.
+
+### Plot declarations
+
+`PlotOutput.style` preserves resolved arguments of `plot()`, `plotshape()` and `plotchar()`:
+
+| Field       | Meaning                                                                                                                                                                                                                                                                                       |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`      | `plot`, `shape` or `char`, independent of the series value type.                                                                                                                                                                                                                              |
+| `style`     | `plot.style_*` suffix: `line`, `linebr`, `stepline`, `steplinebr`, `histogram`, `columns`, `circles`, `cross`, `area`, `areabr`; or `shape.*` suffix: `triangleup`, `triangledown`, `arrowup`, `arrowdown`, `circle`, `square`, `diamond`, `cross`, `xcross`, `flag`, `labelup`, `labeldown`. |
+| `linewidth` | Positive declared pixel width for `plot()`.                                                                                                                                                                                                                                                   |
+| `color`     | Constant colour normalized to lowercase `#rrggbb` or `#rrggbbaa`, with transparency applied; `null` means Pine `na` (invisible). Named colours respect the script's Pine version.                                                                                                             |
+| `location`  | `abovebar`, `belowbar`, `absolute`, `top` or `bottom`. Absolute placement uses the numeric plot value, including zero.                                                                                                                                                                        |
+| `size`      | `auto`, `tiny`, `small`, `normal`, `large` or `huge` for shapes/characters.                                                                                                                                                                                                                   |
+| `text`      | Constant `plotshape()` text, unchanged.                                                                                                                                                                                                                                                       |
+| `char`      | Constant `plotchar()` character, including an explicitly empty string.                                                                                                                                                                                                                        |
+
+Only supplied, resolved, run-invariant arguments (`const`, `input` or `simple`) become scalar
+fields. Omitted, unknown or series-qualified non-colour arguments are left out; the engine does not
+guess declaration defaults. Colours from literals (including hex alpha), `color.new()` and
+`color.rgb()` retain their transparency. `color.new(na, ...)` stays invisible.
+
+For a series-qualified colour argument, `PlotOutput.colors` holds one normalized colour or `null`
+per input bar and `style.color` is absent. Qualification comes from compilation and mutable
+dependencies (including conditional reassignments and captured aliases), even if a particular
+history happens to have the same colour on every bar. Constant colours never allocate this array;
+all other style fields are stored once, keeping Worker clones small. Recalculations overwrite the
+current bar's colour together with its value. If a series colour cannot be resolved, the whole
+colour array is omitted rather than treating an unknown value as `na`.
+Older callers may supply plots without metadata; numeric values, ordering and overlay placement
+retain their existing contracts.
 
 ### describe
 

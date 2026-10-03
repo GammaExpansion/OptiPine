@@ -1,4 +1,4 @@
-import type { MarketBar, PlotOutput } from '@pine/engine';
+import type { MarketBar, PlotOutput, PlotShape, PlotLocation, PlotSize } from '@pine/engine';
 import { message, type Message } from '@pine/messages';
 import type { DailyPnl, PeriodReturn } from '../workflows/equity.ts';
 import type { TradeRow } from '../workflows/trades.ts';
@@ -43,31 +43,95 @@ export function linePoints(times: readonly number[], values: readonly unknown[])
   });
 }
 
+export interface PlotMarker {
+  time: number;
+  value: number;
+  location: PlotLocation;
+  shape?: PlotShape;
+  char?: string;
+  text?: string;
+  color: string;
+  size?: PlotSize;
+  radius?: number;
+}
+
+/** Explicit na hides a plot; only an absent colour uses declaration-order fallback. */
+export function declaredColor(plot: PlotOutput, index: number, bar?: number): string {
+  const color =
+    bar !== undefined && plot.colors && bar in plot.colors ? plot.colors[bar] : plot.style?.color;
+  return color === null ? 'transparent' : (color ?? plotColor(index));
+}
+
 export function mapPlots(bars: readonly MarketBar[], plots: readonly PlotOutput[]) {
   const times = bars.map((bar) => bar.time);
   return plots.map((plot, index) => {
-    const boolean = plot.values.some((value) => typeof value === 'boolean');
+    const style = plot.style;
+    const markerPlot = style
+      ? style.kind !== 'plot'
+      : plot.values.some((value) => typeof value === 'boolean');
+    const kind = markerPlot
+      ? 'markers'
+      : style?.style === 'histogram' ||
+          style?.style === 'columns' ||
+          style?.style === 'circles' ||
+          style?.style === 'cross'
+        ? style.style
+        : style?.style === 'area' || style?.style === 'areabr'
+          ? 'area'
+          : 'line';
+    const location = style?.location ?? 'abovebar';
+    const points = linePoints(
+      times,
+      markerPlot && location !== 'absolute' ? bars.map((bar) => bar.close) : plot.values,
+    ).map((point, i) => ({
+      ...point,
+      ...(point.value === undefined
+        ? {}
+        : {
+            color:
+              (kind === 'line' || kind === 'area') && point.color === 'transparent'
+                ? 'transparent'
+                : declaredColor(plot, index, i),
+          }),
+    }));
+    const markers: PlotMarker[] =
+      markerPlot || kind === 'cross'
+        ? bars.flatMap((bar, i) => {
+            const value = plot.values[i];
+            const absolute = kind === 'cross' || location === 'absolute';
+            const active = absolute
+              ? typeof value === 'number' && Number.isFinite(value)
+              : value === true ||
+                (typeof value === 'number' && Number.isFinite(value) && value !== 0);
+            if (!active) return [];
+            return [
+              {
+                time: bar.time,
+                value: absolute ? (value as number) : location === 'belowbar' ? bar.low : bar.high,
+                location: absolute ? 'absolute' : location,
+                color: declaredColor(plot, index, i),
+                ...(style?.kind === 'char'
+                  ? { char: style.char ?? '' }
+                  : {
+                      shape: (kind === 'cross' ? 'cross' : (style?.style ?? 'circle')) as PlotShape,
+                    }),
+                text: style?.text,
+                size: style?.size,
+                ...(kind === 'cross' ? { radius: style?.linewidth ?? 1 } : {}),
+              },
+            ];
+          })
+        : [];
     return {
       title: plot.title,
-      color: plotColor(index),
+      color: declaredColor(plot, index),
       pane: plot.overlay ? 0 : 1,
-      kind: boolean ? ('markers' as const) : ('line' as const),
-      // A hidden zero line anchors boolean markers in a pane without affecting price scaling.
-      points: linePoints(times, boolean ? times.map(() => 0) : plot.values),
-      markers: boolean
-        ? times.flatMap((time, i) =>
-            plot.values[i] === true
-              ? [
-                  {
-                    time,
-                    position: 'aboveBar' as const,
-                    shape: 'circle' as const,
-                    color: plotColor(index),
-                  },
-                ]
-              : [],
-          )
-        : [],
+      kind,
+      linewidth: style?.linewidth ?? 1,
+      stepped: style?.style === 'stepline' || style?.style === 'steplinebr',
+      absolute: location === 'absolute' || kind === 'cross',
+      points,
+      markers,
     };
   });
 }
