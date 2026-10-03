@@ -6,6 +6,7 @@ import { I18nProvider } from '../src/i18n/I18nProvider.tsx';
 import { Shell } from '../src/shell/Shell.tsx';
 import { createAnalysisWorker, createEngineWorker } from '../src/workers/factories.ts';
 import '../src/styles/base.css';
+import { backtestHooks } from './backtest-hooks.ts';
 
 createRoot(document.getElementById('root')!).render(
   <I18nProvider>
@@ -66,4 +67,4 @@ async function checkWorkers() {
 }
 
 // Test-only entry: this promise never exists in the normal app or its production output.
-Object.assign(window, { workerCheck: checkWorkers() });
+Object.assign(window, { workerCheck: checkWorkers(), backtestHooks });
