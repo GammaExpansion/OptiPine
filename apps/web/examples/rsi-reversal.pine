@@ -1,0 +1,36 @@
+//@version=6
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 GammaExpansion
+// Original OptiPine example: buy a recovery out of oversold territory, long only.
+strategy("RSI Reversal", overlay = false,
+     initial_capital = 100000,
+     default_qty_type = strategy.percent_of_equity,
+     default_qty_value = 95,
+     commission_type = strategy.commission.percent,
+     commission_value = 0.1)
+
+length   = input.int(14, "RSI length", minval = 2, maxval = 100)
+oversold = input.float(30.0, "Oversold", minval = 10.0, maxval = 45.0, step = 1.0)
+src      = input.source(close, "Source")
+midline  = input.bool(true, "Exit at midline")
+stop     = input.float(3.0, "Stop %", minval = 0.5, maxval = 20.0, step = 0.5, group = "Risk")
+
+rsi = ta.rsi(src, length)
+exitLevel = midline ? 50.0 : 100.0 - oversold
+buySignal = ta.crossover(rsi, oversold) and strategy.position_size == 0
+sellSignal = ta.crossover(rsi, exitLevel) and strategy.position_size > 0
+
+if buySignal
+    strategy.entry("L", strategy.long)
+if sellSignal
+    strategy.close("L")
+if strategy.position_size > 0
+    strategy.exit("L stop", "L", stop = strategy.position_avg_price * (1 - stop / 100))
+
+plot(rsi, "RSI", color = color.teal, linewidth = 2)
+plot(oversold, "Oversold", color = color.gray)
+plot(exitLevel, "Exit level", color = color.gray)
+plotshape(buySignal, "Buy", style = shape.triangleup,
+     location = location.belowbar, color = color.lime, size = size.tiny, force_overlay = true)
+plotshape(sellSignal, "Sell", style = shape.triangledown,
+     location = location.abovebar, color = color.red, size = size.tiny, force_overlay = true)

@@ -1,0 +1,31 @@
+//@version=6
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 GammaExpansion
+// Original OptiPine example: follow a bullish moving-average cross, long only.
+strategy("MA Cross", overlay = true,
+     initial_capital = 100000,
+     default_qty_type = strategy.percent_of_equity,
+     default_qty_value = 95,
+     commission_type = strategy.commission.percent,
+     commission_value = 0.1)
+
+fastLength = input.int(50, "Fast length", minval = 5, maxval = 100)
+slowLength = input.int(200, "Slow length", minval = 101, maxval = 500)
+kind       = input.string("EMA", "Average type", options = ["EMA", "SMA"])
+rising     = input.bool(true, "Require rising slow MA")
+stop       = input.float(5.0, "Stop %", minval = 0.5, maxval = 20.0, step = 0.5, group = "Risk")
+
+fast = kind == "EMA" ? ta.ema(close, fastLength) : ta.sma(close, fastLength)
+slow = kind == "EMA" ? ta.ema(close, slowLength) : ta.sma(close, slowLength)
+buySignal = ta.crossover(fast, slow) and (not rising or slow > slow[1])
+sellSignal = ta.crossunder(fast, slow)
+
+if buySignal
+    strategy.entry("L", strategy.long)
+if sellSignal
+    strategy.close("L")
+if strategy.position_size > 0
+    strategy.exit("L stop", "L", stop = strategy.position_avg_price * (1 - stop / 100))
+
+plot(fast, "Fast MA", color = color.teal, linewidth = 2)
+plot(slow, "Slow MA", color = color.orange, linewidth = 2)
