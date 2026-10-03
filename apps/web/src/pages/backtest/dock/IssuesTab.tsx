@@ -12,7 +12,7 @@ import {
   type Issue,
   type IssueCategory,
 } from '../../../workflows/backtest.ts';
-import { PineEditor } from '../code/PineEditor.tsx';
+import { LazyPineEditor } from '../code/LazyPineEditor.tsx';
 import { useCodeAnnotations } from '../code/useCodeAnnotations.ts';
 import empty from './EmptyTab.module.css';
 import styles from './IssuesTab.module.css';
@@ -118,7 +118,7 @@ export function IssuesTab() {
         </div>
       </div>
       {line !== null && (
-        <PineEditor
+        <LazyPineEditor
           className={styles.excerpt}
           readOnly
           source={source}

@@ -1,7 +1,7 @@
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { getBacktestStore, openScript, useBacktestStore } from '../../../state/backtest.ts';
 import { useSelectionStore } from '../../../state/selection.ts';
-import { PineEditor } from '../code/PineEditor.tsx';
+import { LazyPineEditor } from '../code/LazyPineEditor.tsx';
 import { useCodeAnnotations, useSettledCompile } from '../code/useCodeAnnotations.ts';
 import { DockActions } from './DockActions.tsx';
 import styles from './CodeTab.module.css';
@@ -55,7 +55,7 @@ export function CodeTab() {
       <DockActions>
         <CompileStatus />
       </DockActions>
-      <PineEditor
+      <LazyPineEditor
         className={styles.code}
         keepAs={getBacktestStore()}
         source={source}

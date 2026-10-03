@@ -28,6 +28,21 @@ const kept = new WeakMap<object, Kept>();
 
 const ignore = () => {};
 
+export type PineEditorProps = {
+  source: string;
+  annotations: Annotations;
+  label: string;
+  emptyText: string;
+  readOnly?: boolean;
+  reveal?: RevealRequest | null;
+  /** Select the revealed line and focus the editor; otherwise only scroll to it. */
+  selectOnReveal?: boolean;
+  /** The owner whose editor state outlives this component; omit for a fresh state per mount. */
+  keepAs?: object;
+  className?: string;
+} & Partial<EditorHandlers>;
+
+/** CodeMirror over the Pine tokenizer; import it through LazyPineEditor, outside the main chunk. */
 export function PineEditor({
   source,
   annotations,
@@ -41,19 +56,7 @@ export function PineEditor({
   onRun = ignore,
   onDropFile = ignore,
   className,
-}: {
-  source: string;
-  annotations: Annotations;
-  label: string;
-  emptyText: string;
-  readOnly?: boolean;
-  reveal?: RevealRequest | null;
-  /** Select the revealed line and focus the editor; otherwise only scroll to it. */
-  selectOnReveal?: boolean;
-  /** The owner whose editor state outlives this component; omit for a fresh state per mount. */
-  keepAs?: object;
-  className?: string;
-} & Partial<EditorHandlers>) {
+}: PineEditorProps) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
   const handlers = useRef<{ current: EditorHandlers }>({

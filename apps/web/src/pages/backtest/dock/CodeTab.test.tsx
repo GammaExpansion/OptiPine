@@ -18,10 +18,16 @@ import { CodeTab } from './CodeTab.tsx';
 useBacktestTestServices();
 const editor = () =>
   EditorView.findFromDOM(screen.getByRole('textbox', { name: 'Pine code editor' }))!;
+/** The editor loads lazily; wait for it after each render. */
+async function renderCodeTab() {
+  const view = renderInEnglish(<CodeTab />);
+  await screen.findByRole('textbox', { name: 'Pine code editor' });
+  return view;
+}
 const line = (number: number) => document.querySelectorAll('.cm-line')[number - 1];
 
 test('the empty editor shows the placeholder, and typing starts a pasted script', async () => {
-  renderInEnglish(<CodeTab />);
+  await renderCodeTab();
   expect(screen.getByText('Paste strategy code here, or drop a .pine file')).toBeInTheDocument();
   act(() => editor().dispatch({ changes: { from: 0, insert: strategySource } }));
   expect(getBacktestStore().getState()).toMatchObject({
@@ -34,7 +40,7 @@ test('the empty editor shows the placeholder, and typing starts a pasted script'
 
 test('editing recompiles in the background and each input shows its current value', async () => {
   await loadScript();
-  renderInEnglish(<CodeTab />);
+  await renderCodeTab();
   expect(screen.getByText('Current 5')).toBeInTheDocument();
   expect(screen.getByText('Current 1.00')).toBeInTheDocument();
   expect(screen.getByText('Current close')).toBeInTheDocument();
@@ -56,7 +62,7 @@ test('editing recompiles in the background and each input shows its current valu
 test('Go to line opens the tab, selects the line and keeps it after switching tabs', async () => {
   await loadScript(failingSource);
   await runBacktest();
-  const view = renderInEnglish(<CodeTab />);
+  const view = await renderCodeTab();
   expect(line(14)).toHaveClass('cm-line-er');
   act(() => getSelectionStore().getState().revealCodeLine(14));
   expect(uiStore.getState().dockTab).toBe('code');
@@ -67,7 +73,7 @@ test('Go to line opens the tab, selects the line and keeps it after switching ta
   ]);
   act(() => editor().dispatch({ changes: { from: 0, insert: '// note\n' } }));
   view.unmount();
-  renderInEnglish(<CodeTab />);
+  await renderCodeTab();
   expect(editor().state.doc.line(1).text).toBe('// note');
   // The request was handled before; remounting does not reveal it again.
   expect(editor().state.selection.main.from).not.toBe(editor().state.doc.line(14).from);
@@ -75,7 +81,7 @@ test('Go to line opens the tab, selects the line and keeps it after switching ta
 
 test('Ctrl + Enter in the editor runs a ready backtest', async () => {
   await loadScript();
-  renderInEnglish(<CodeTab />);
+  await renderCodeTab();
   fireEvent.keyDown(screen.getByRole('textbox', { name: 'Pine code editor' }), {
     key: 'Enter',
     ctrlKey: true,
@@ -86,7 +92,7 @@ test('Ctrl + Enter in the editor runs a ready backtest', async () => {
 
 test('dropping a .pine file opens it as the script; other files are ignored', async () => {
   await loadScript();
-  renderInEnglish(<CodeTab />);
+  await renderCodeTab();
   // jsdom's File has no text(); the editor reads only the name and the text.
   const file = (name: string, text: string) => ({ name, text: async () => text }) as File;
   const drop = (dropped: File) =>

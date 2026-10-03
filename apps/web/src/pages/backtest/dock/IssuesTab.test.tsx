@@ -27,7 +27,7 @@ test('a compile error lists its line and column, with the code beside it (B10)',
   expect(row).toHaveTextContent('Line 3, column 23');
   expect(row).toHaveTextContent('lenght');
   expect(screen.getByText('Fix the errors to run.')).toBeInTheDocument();
-  expect(screen.getByRole('textbox', { name: 'Code around line 3' })).toHaveAttribute(
+  expect(await screen.findByRole('textbox', { name: 'Code around line 3' })).toHaveAttribute(
     'contenteditable',
     'false',
   );
