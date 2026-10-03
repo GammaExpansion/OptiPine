@@ -1,0 +1,94 @@
+.charts-dev {
+  min-height: 900px;
+}
+.charts-dev header {
+  height: 48px;
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--divider);
+  background: var(--panel);
+}
+.charts-dev header strong {
+  color: var(--primary);
+  font-size: 15px;
+}
+.charts-dev-status {
+  margin-left: auto;
+  color: var(--caption);
+}
+.charts-dev main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 336px;
+}
+.charts-dev-main {
+  min-width: 0;
+}
+.charts-dev-price {
+  height: 430px;
+}
+.charts-dev-dock {
+  height: 36px;
+  padding: 8px 12px;
+  border-block: 1px solid var(--divider);
+  background: var(--panel);
+  text-decoration: underline;
+  text-decoration-color: var(--primary);
+  text-underline-offset: 11px;
+}
+.charts-dev-controls {
+  border-left: 1px solid var(--divider);
+  background: var(--panel);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 852px;
+}
+.charts-dev-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: var(--secondary);
+}
+.charts-dev-controls select,
+.charts-dev-controls input,
+.charts-dev-controls button {
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  background: var(--field);
+  padding: 7px 10px;
+  color: var(--text);
+  font: inherit;
+}
+.charts-dev-controls > button {
+  background: var(--primary);
+  color: var(--primary-text);
+  font-weight: 600;
+}
+.charts-dev-controls button:disabled {
+  opacity: 0.4;
+}
+.charts-dev-controls p {
+  color: var(--caption);
+  font-size: 12px;
+}
+.charts-dev-controls h2 {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+.charts-dev-actions {
+  display: flex;
+  gap: 8px;
+}
+.charts-dev-trades {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.charts-dev-trades button:hover {
+  background: var(--hover);
+  border-color: var(--primary);
+}
