@@ -276,7 +276,10 @@ export interface ResultsViews {
   /** Validation None ranks by full-range figures, which only measure fit (R3). */
   readonly unvalidated: boolean;
   readonly mode: ValidationResultMode;
-  /** Sets in the analysis, of `combinations`. */
+  /**
+   * Sets in the analysis, of `combinations`: those with a result on the range they are ranked by
+   * (the IS range for IS / OOS, whose OOS results follow).
+   */
   readonly completed: number;
   readonly combinations: number;
   readonly failed: number;
@@ -353,7 +356,7 @@ interface AnalysisSlot {
   /** The view request it answers, from `viewKey`. */
   readonly key: string;
   readonly draft: FilterCondition | null;
-  /** Trials in the analysis. */
+  /** Trials in the analysis, both ranges counted, to tell whether a newer snapshot exists. */
   readonly completed: number;
   /** The results it belongs to, or the live run. */
   readonly runId: number;
@@ -1171,7 +1174,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
       inProgress: !!live,
       unvalidated: mode === 'none',
       mode,
-      completed: slot.completed,
+      completed: slot.analysis.trials.length,
       combinations: live ? live.combinations : results!.combinations,
       failed: live ? live.failures.size : results!.failures.length,
       pending:

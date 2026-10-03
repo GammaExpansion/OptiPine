@@ -261,7 +261,22 @@ test('trials stream into a buffer; subscribers see a snapshot at most every 250 
   assert.deepEqual(outside.common.bars, split.outOfSample);
   assert.equal(outside.common.realtimeTail, true);
   assert.deepEqual(outside.parameters, run.parameters);
-  emit(outside, 0, 8);
+  const phase = h.session.getState().run;
+  assert.deepEqual(phase.status === 'running' && [phase.progress.phase, phase.progress.completed], [
+    'out',
+    8,
+  ]);
+  emit(outside, 0, 3);
+  h.timers.advance(250);
+  await h.analysis.answerAll();
+  state = h.session.getState();
+  // Every set has its IS result; three have their OOS result so far.
+  assert.equal(state.views?.completed, 8);
+  assert.equal(
+    state.views?.leaderboard.rows.filter((row) => row.outOfSample?.netProfit !== null).length,
+    3,
+  );
+  emit(outside, 3, 8);
   outside.resolve();
   await settle();
   state = h.session.getState();
@@ -270,7 +285,7 @@ test('trials stream into a buffer; subscribers see a snapshot at most every 250 
   await h.analysis.answerAll();
   await running;
   state = h.session.getState();
-  assert.deepEqual(state.run, { status: 'done', startedAt: 1_000, finishedAt: 1_500 });
+  assert.deepEqual(state.run, { status: 'done', startedAt: 1_000, finishedAt: 1_750 });
   assert.equal(state.views?.inProgress, false);
   assert.equal(state.views?.completed, 8);
   assert.equal(state.results?.mode, 'in-out');
