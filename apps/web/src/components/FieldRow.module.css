@@ -1,0 +1,39 @@
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--secondary);
+  font-size: 12.5px;
+}
+.hint {
+  font-size: 12px;
+  color: var(--caption);
+  text-align: right;
+}
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.error {
+  color: var(--danger-text);
+  font-size: 12px;
+}
+.inline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+.inline .heading {
+  align-items: flex-start;
+  flex-direction: column;
+}

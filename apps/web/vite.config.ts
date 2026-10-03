@@ -19,7 +19,8 @@ function marketProxy(): Plugin {
 export default defineConfig(({ mode }) => ({
   plugins: [react(), marketProxy()],
   build: {
-    // Additional entries exercise production bundling without shipping the test/dev workbenches.
+    // Test and dev entries exercise production bundling without shipping the harness, sheet or chart
+    // workbench.
     outDir: mode === 'e2e' ? '.e2e-dist' : 'dist',
     rollupOptions: {
       input:
@@ -27,6 +28,7 @@ export default defineConfig(({ mode }) => ({
           ? {
               app: fileURLToPath(new URL('./index.html', import.meta.url)),
               harness: fileURLToPath(new URL('./e2e/harness.html', import.meta.url)),
+              sheet: fileURLToPath(new URL('./sheet.html', import.meta.url)),
               charts: fileURLToPath(new URL('./charts.html', import.meta.url)),
             }
           : undefined,

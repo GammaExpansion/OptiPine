@@ -4,6 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   runWalkForward,
+  planWalkForwardBounds,
   planWalkForwardWindows,
   finalizeWalkForward,
   selectWalkForwardTrial,
@@ -52,6 +53,31 @@ test('UTC calendar month plans handle leap February and anchored windows', () =>
   assert.equal(anchored[1].inSampleStart, rolling[0].inSampleStart);
   assert.equal(anchored[1].inSampleBars.length, 91);
   assert.equal(anchored[1].outOfSampleStart, rolling[1].outOfSampleStart);
+});
+
+test('bounds plan the same windows from bar times alone', () => {
+  const times = bars.map((bar) => bar.time);
+  for (const mode of ['rolling', 'anchored'] as const) {
+    const windows = planWalkForwardWindows(bars, { ...config, mode });
+    const bounds = planWalkForwardBounds(times, { ...config, mode });
+    assert.deepEqual(
+      bounds,
+      windows.map(({ inSampleBars: _in, outOfSampleBars: _out, ...rest }) => rest),
+    );
+    for (const [index, window] of windows.entries()) {
+      assert.deepEqual(
+        window.inSampleBars,
+        bars.slice(bounds[index].inSampleStartIndex, bounds[index].inSampleEndIndex),
+      );
+      assert.equal('inSampleBars' in bounds[index], false);
+    }
+  }
+  assert.throws(
+    () => planWalkForwardBounds([times[1], times[0]], config),
+    raises('walkForwardTimesInvalid'),
+  );
+  assert.deepEqual(planWalkForwardBounds([], { ...config, inSampleLength: 2 }), []);
+  assert.throws(() => planWalkForwardBounds([], { ...config, inSampleLength: 0 }));
 });
 
 test('invalid month ranges and overlapping OOS windows fail explicitly', () => {

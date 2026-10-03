@@ -4,6 +4,7 @@ import styles from './SegmentedControl.module.css';
 export interface Segment {
   value: string;
   label: string;
+  disabled?: boolean;
 }
 export function SegmentedControl({
   label,
@@ -32,7 +33,12 @@ export function SegmentedControl({
       disabled={disabled}
     >
       {options.map((option) => (
-        <ToggleGroup.Item className={styles.item} key={option.value} value={option.value}>
+        <ToggleGroup.Item
+          className={styles.item}
+          key={option.value}
+          value={option.value}
+          disabled={option.disabled}
+        >
           {option.label}
         </ToggleGroup.Item>
       ))}

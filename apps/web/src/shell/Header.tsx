@@ -31,7 +31,12 @@ export function Header({
         onChange={setPage}
         options={[
           { value: 'backtest', label: t('shell.backtest') },
-          { value: 'optimize', label: t('shell.optimize'), disabled: !canOptimize },
+          {
+            value: 'optimize',
+            label: t('shell.optimize'),
+            disabled: !canOptimize,
+            disabledReason: t('shell.runMissing'),
+          },
         ]}
       />
       <div className={styles.divider} />
@@ -72,12 +77,12 @@ export function Header({
         <Button
           variant="primary"
           disabled
-          aria-describedby="run-missing"
+          disabledReason={t('shell.runMissing')}
           aria-keyshortcuts="Control+Enter"
+          icon={<Icon name="play" size={11} />}
+          shortcut={t('shell.shortcut')}
         >
-          <Icon name="play" size={11} />
           <span>{t('shell.runBacktest')}</span>
-          <kbd>{t('shell.shortcut')}</kbd>
         </Button>
       )}
       <SegmentedControl

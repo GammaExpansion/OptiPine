@@ -28,9 +28,11 @@ tab bar. These minimums and the edge width are scaffold choices where the design
 
 The Node test launcher expands workflows, i18n and example test globs with `node:fs`, tolerating
 missing directories. Vitest covers shell and store behavior and the Node server. Playwright builds
-the production app plus a separate `.e2e-dist` build with `e2e/harness.html`. That entry imports the
-real Worker factories and clients, checks describe/run, analysis and optimization, and renders the
-shell with Optimize enabled for layout tests. Neither the entry nor its promise is in `dist/`.
+the production app plus a separate `.e2e-dist` build with `e2e/harness.html` and `sheet.html`.
+The harness imports the real Worker factories and clients, checks describe/run, analysis and
+optimization, and renders the shell with Optimize enabled for layout tests. The component sheet
+covers keyboard behavior, both languages at three viewport sizes, and G5 layout comparisons using
+the same self-hosted fonts. Neither test entry is in `dist/`.
 The test setup owns and closes the production, preview and dev servers on ports 5174–5176 directly,
 avoiding platform-specific shell process cleanup.
 

@@ -44,6 +44,13 @@ export const workflowMessageIds = [
   'backtest.property.orderDelay',
   'marketData.dateInvalid',
   'marketData.rangeEmpty',
+  'optimize.inputNotSearchable',
+  'optimize.gridSwitchedToRandom',
+  'optimize.sampleCountPositive',
+  'optimize.filterValueInvalid',
+  'optimize.fixErrors',
+  'optimize.running',
+  'optimize.walkForwardUnavailable',
 ] as const;
 export type WorkflowMessageId = (typeof workflowMessageIds)[number];
 
