@@ -14,7 +14,6 @@ import {
   type SearchSpace,
   type Slice,
   type TrialResult,
-  type WalkForwardBounds,
 } from '@pine/optimizer';
 import {
   AnalysisRun,
@@ -91,6 +90,9 @@ import {
 } from './optimize-views.ts';
 import { propertyIds, propertySettings, type PropertyOverrides } from './properties.ts';
 import { createStore, type Observable, type Store } from './store.ts';
+import { windowPlan, type WalkForwardView, type WindowPlan } from './walk-forward.ts';
+
+export type { WindowPlan } from './walk-forward.ts';
 
 /** The parts of `OptimizationWorkerPool` the session uses, so tests can pass a fake. */
 export interface OptimizationPool {
@@ -215,20 +217,6 @@ export interface OptimizationResults {
 
 export type OptimizationOutdatedReason = 'source' | 'ranges' | 'validation' | 'properties' | 'data';
 
-export interface WindowPlan {
-  readonly index: number;
-  /** Half-open month boundaries in Unix seconds, as @pine/optimizer plans them. */
-  readonly inSampleStart: number;
-  readonly inSampleEnd: number;
-  readonly outOfSampleStart: number;
-  readonly outOfSampleEnd: number;
-  readonly inSampleBars: number;
-  readonly outOfSampleBars: number;
-  /** The final window's OOS range ends early with the data. */
-  readonly partial: boolean;
-  readonly gapBefore: boolean;
-}
-
 /** The walk-forward windows (O3), planned and validated by the analysis job `plan`. */
 export type WalkForwardPlanState =
   | { readonly status: 'idle' }
@@ -327,6 +315,8 @@ export interface OptimizationState {
   /** The analysis Worker failed on the latest request. */
   readonly analysisError: Text | null;
   readonly topEquity: TopEquity;
+  /** The walk-forward run or results on display (W1–W6); null when the results are not walk-forward. */
+  readonly walkForward: WalkForwardView | null;
 }
 
 export interface OptimizationSessionOptions {
@@ -387,20 +377,6 @@ const idleEquity: TopEquity = {
   times: [],
   splitIndex: null,
 };
-
-function windowPlan(plan: WalkForwardBounds): WindowPlan {
-  return {
-    index: plan.index,
-    inSampleStart: plan.inSampleStart,
-    inSampleEnd: plan.inSampleEnd,
-    outOfSampleStart: plan.outOfSampleStart,
-    outOfSampleEnd: plan.outOfSampleEnd,
-    inSampleBars: plan.inSampleEndIndex - plan.inSampleStartIndex,
-    outOfSampleBars: plan.outOfSampleEndIndex - plan.outOfSampleStartIndex,
-    partial: !!plan.partial,
-    gapBefore: plan.gapBefore,
-  };
-}
 
 /**
  * The Optimize page without walk-forward runs: search ranges, validation, ranking and filters
@@ -1281,6 +1257,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
       views: this.#views(),
       analysisError: this.#analysisError,
       topEquity: this.#topEquity,
+      walkForward: null,
     };
   }
 

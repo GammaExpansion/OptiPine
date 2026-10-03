@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import type { OptimizationState } from '../../workflows/optimize-session.ts';
-import { resultsOutdated, showsResults } from './page-view.ts';
+import { resultsOutdated, showsResults, showsWalkForward } from './page-view.ts';
 
 const results = {} as NonNullable<OptimizationState['results']>;
 const running = { status: 'running' } as OptimizationState['run'];
@@ -19,4 +19,11 @@ test('results are dimmed as outdated only while no run shows its live views (R5)
   expect(resultsOutdated({ results, run: done, outdated: { reasons: [] } })).toBe(false);
   expect(resultsOutdated({ results, run: done, outdated: { reasons: ['ranges'] } })).toBe(true);
   expect(resultsOutdated({ results, run: running, outdated: { reasons: ['ranges'] } })).toBe(false);
+});
+
+test('walk-forward results or a walk-forward run lay out W1 instead of R1', () => {
+  expect(showsWalkForward({ walkForward: null })).toBe(false);
+  expect(
+    showsWalkForward({ walkForward: {} as NonNullable<OptimizationState['walkForward']> }),
+  ).toBe(true);
 });

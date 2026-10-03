@@ -42,6 +42,8 @@ const windows: WindowPlan[] = Array.from({ length: 6 }, (_, index) => ({
   inSampleEnd: day(2024, 1 + 3 * index),
   outOfSampleStart: day(2024, 1 + 3 * index),
   outOfSampleEnd: day(2024, 4 + 3 * index),
+  inSampleStartIndex: 0,
+  outOfSampleStartIndex: 0,
   inSampleBars: 0,
   outOfSampleBars: 0,
   partial: false,
