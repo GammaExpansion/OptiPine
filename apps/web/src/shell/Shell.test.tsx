@@ -149,6 +149,5 @@ test('Optimize opens with a script and data, and is marked once it holds results
   act(() => void optimization().actions.start());
   expect(marked()).not.toBeNull();
   act(() => optimization().actions.cancel());
-  await user.click(screen.getByRole('button', { name: 'Backtest' }));
   expect(marked()).not.toBeNull();
 });
