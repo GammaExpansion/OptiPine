@@ -4,6 +4,7 @@ import { runWithEquity } from '@pine/engine';
 import { serializeError } from '@pine/messages';
 import { workerMessage } from '@pine/workers';
 import { BacktestSession, backtestIssues, type DatasetInput } from './backtest.ts';
+import type { ParameterOrigin } from './inputs.ts';
 import { workflowMessage } from './messages.ts';
 import { engineHarness, settle, strategySource, syntheticBars } from './test-support.ts';
 
@@ -434,4 +435,135 @@ test('clearing the script empties the panel and blocks the run', async () => {
   assert.deepEqual(state.inputs, []);
   assert.deepEqual(state.properties, []);
   assert.deepEqual(state.readiness.reasons, [workflowMessage('backtest.noScript')]);
+});
+
+const origin: ParameterOrigin = { kind: 'rank', optimizationId: 1, trialId: 'trial-1', rank: 1 };
+const set = { Length: 9, Multiplier: 1.25, Source: 'close' };
+
+test('a preview runs a set without changing the current inputs or result (B16)', async () => {
+  const ready = await completedRun();
+  const { session } = ready;
+  const current = session.getState().result;
+  const previewing = session.preview(set, origin);
+  let state = session.getState();
+  assert.equal(state.preview?.run.status, 'running');
+  assert.deepEqual(state.preview?.origin, origin);
+  assert.deepEqual(state.preview?.changes, [
+    { title: 'Length', current: 5, preview: 9 },
+    { title: 'Multiplier', current: 1, preview: 1.25 },
+  ]);
+  ready.tick(300);
+  await ready.answerAll();
+  await previewing;
+  state = session.getState();
+  const expected = runWithEquity(strategySource, { ...dataset, inputs: set, settings: {} });
+  assert.deepEqual(state.preview?.result?.output, expected);
+  assert.deepEqual({ ...state.preview?.result?.computedWith.inputs }, set);
+  assert.deepEqual(
+    state.inputs.map((item) => item.value),
+    [5, 1, 'close'],
+  );
+  assert.equal(state.result, current);
+  assert.deepEqual(state.outdated?.reasons, []);
+
+  session.backToOptimization();
+  state = session.getState();
+  assert.equal(state.preview, null);
+  assert.equal(state.result, current);
+});
+
+test('setting the preview as current adopts its result and keeps defaults visible (B17)', async () => {
+  const ready = await completedRun();
+  const { session } = ready;
+  const before = session.getState();
+  const previewing = session.preview(set, origin);
+  await ready.answerAll();
+  await previewing;
+  const previewed = session.getState().preview!.result;
+  const requests = ready.workers.reduce((count, worker) => count + worker.requests.length, 0);
+  await session.setPreviewAsCurrent();
+  let state = session.getState();
+  assert.equal(
+    ready.workers.reduce((count, worker) => count + worker.requests.length, 0),
+    requests,
+  );
+  assert.equal(state.preview, null);
+  assert.equal(state.result, previewed);
+  assert.deepEqual(state.applied, { origin });
+  assert.deepEqual(state.outdated?.reasons, []);
+  const length = state.inputs[0];
+  assert.deepEqual(
+    [length.value, length.changed, length.descriptor.defaultValue, length.origin],
+    [9, true, 5, origin],
+  );
+
+  session.undoApply();
+  state = session.getState();
+  assert.equal(state.applied, null);
+  assert.equal(state.result, before.result);
+  assert.deepEqual(
+    state.inputs.map((item) => [item.value, item.origin]),
+    [
+      [5, null],
+      [1, null],
+      ['close', null],
+    ],
+  );
+});
+
+test('applying a set from the selection bar re-runs the backtest; an edit ends undo', async () => {
+  const ready = await completedRun();
+  const { session } = ready;
+  const applying = session.applyParameters(set, origin);
+  assert.equal(session.getState().run.status, 'running');
+  await ready.answerAll();
+  await applying;
+  let state = session.getState();
+  assert.equal(state.run.status, 'done');
+  assert.deepEqual({ ...state.result?.computedWith.inputs }, set);
+  assert.deepEqual(state.applied, { origin });
+  session.setInput('Length', 11);
+  state = session.getState();
+  assert.equal(state.applied, null);
+  assert.equal(state.inputs[0].origin, null);
+  assert.deepEqual(state.inputs[1].origin, origin);
+  session.undoApply();
+  assert.equal(session.getState().inputs[0].value, 11);
+});
+
+test('a failed combination opened as a preview shows its diagnostics in Issues (R11)', async () => {
+  const ready = await completedRun();
+  const { session } = ready;
+  session.setSource(
+    strategySource.replace('plot(basis', 'if length == 9\n    runtime.error("nine")\nplot(basis'),
+  );
+  await ready.answerAll();
+  const failed: ParameterOrigin = { kind: 'failed', optimizationId: 1, trialId: 'trial-9' };
+  const previewing = session.preview(set, failed);
+  await ready.answerAll();
+  await previewing;
+  const state = session.getState();
+  assert.equal(state.preview?.run.status, 'failed');
+  assert.equal(state.run.status, 'done');
+  assert.deepEqual(
+    backtestIssues(state).map((issue) => [issue.category, issue.line, issue.text]),
+    [['runtimeError', 12, 'nine']],
+  );
+  session.backToOptimization();
+  assert.deepEqual(backtestIssues(session.getState()), []);
+});
+
+test('cancel stops a running preview; a new preview replaces the open one', async () => {
+  const ready = await completedRun();
+  const { session } = ready;
+  const first = session.preview(set, origin);
+  const worker = ready.worker();
+  const second = session.preview({ Length: 7 }, { ...origin, rank: 2, trialId: 'trial-2' });
+  await first;
+  assert.equal(worker.terminated, true);
+  assert.equal(session.getState().preview?.set.Length, 7);
+  session.cancel();
+  await second;
+  assert.equal(session.getState().preview?.run.status, 'cancelled');
+  assert.equal(session.getState().run.status, 'done');
 });
