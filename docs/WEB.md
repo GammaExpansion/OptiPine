@@ -155,7 +155,12 @@ appear there and that single-set details live on the Backtest page.
   or drop, with the full list behind "N more" (O4). A row left with one value fixes that input. When
   the grid exceeds 20,000 combinations the search switches to random sampling, says so, and shows
   the sample count (default 2,000) and seed (O5). A range that cannot be searched is marked on its
-  row, and the run is blocked until it is fixed (O6).
+  row, and the run is blocked until it is fixed (O6). A new numeric row spans half to twice the
+  input's current value within its declared bounds, on its step through that value; a step that
+  would list more than 50 values there becomes 2, 5, 10… times itself. Zero and time inputs start
+  at their value. New rows are searched in declaration order while the grid stays within 20,000
+  combinations, so the first run is a whole grid; a row that would exceed it starts fixed with its
+  range filled in (O1). A row keeps its range once it is edited or a run has used it.
 - **Validation.** **None**, **IS / OOS** with the OOS share (default 30%), or **Walk-forward** with
   IS months, OOS months, step months, and an IS start that rolls forward or stays anchored
   (defaults 12, 3 and 3, rolling). With None, the panel warns that ranks only measure fit (O2).

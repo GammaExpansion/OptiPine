@@ -58,7 +58,10 @@ test('Cancel stops the run and keeps the last complete results', async () => {
 test('failed combinations are counted after a run and open their list (R11)', async () => {
   const user = userEvent.setup();
   await loadScript(`${strategySource}if length == 3 and bar_index == 40\n    runtime.error("x")\n`);
-  act(() => optimization().actions.setRange('Length', { from: 2, to: 4, step: 1 }));
+  act(() => {
+    optimization().actions.setRange('Length', { from: 2, to: 4, step: 1 });
+    optimization().actions.setSearched('Multiplier', false);
+  });
   renderInEnglish(<RunBlock />);
   await runOptimization();
   expect(optimization().results?.failures).toHaveLength(3);

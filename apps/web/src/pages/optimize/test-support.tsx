@@ -20,12 +20,15 @@ export const optimization = () => getOptimizationStore().getState();
 
 /**
  * The test strategy with the 120 synthetic bars, ready to optimize a small grid: Length 2–4 by
- * Source close, hl2 and ohlc4, nine combinations over IS / OOS.
+ * Source close, hl2 and ohlc4 with Multiplier fixed, nine combinations over IS / OOS.
  */
 export async function loadOptimization() {
   await loadScript();
   await waitFor(() => expect(getBacktestStore().getState().compile.status).toBe('compiled'));
-  act(() => optimization().actions.setRange('Length', { from: 2, to: 4, step: 1 }));
+  act(() => {
+    optimization().actions.setRange('Length', { from: 2, to: 4, step: 1 });
+    optimization().actions.setSearched('Multiplier', false);
+  });
   await waitFor(() => expect(optimization().readiness.ok).toBe(true));
 }
 

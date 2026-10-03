@@ -56,6 +56,7 @@ async function harness(source = strategySource, threads = 3) {
   });
   session.setRange('Length', { from: 3, to: 6 });
   session.setValueKept('Source', 'ohlc4', false);
+  session.setSearched('Multiplier', false);
   session.removeFilter(0);
   session.removeFilter(0);
   const states: OptimizationState[] = [];
@@ -159,6 +160,29 @@ test('the setup follows the Backtest page and blocks the run with reasons (O1, O
   );
   await h.session.start();
   assert.equal(h.analysis.requests.length, 0);
+});
+
+test('default ranges follow the current values until a run takes them (O1, B17)', async () => {
+  const engine = engineHarness();
+  const backtest = new BacktestSession(engine.client);
+  backtest.setSource(strategySource);
+  await engine.answerAll();
+  backtest.setDataset(dataset);
+  const pool = new FakePool();
+  const session = new OptimizationSession(backtest, pool, new FakeAnalysis(), { threads: 2 });
+  const multiplier = () =>
+    session.getState().search.rows.find((row) => row.descriptor.title === 'Multiplier')!.draft;
+  assert.deepEqual(multiplier()?.values, { kind: 'range', from: 0.5, to: 2, step: 0.25 });
+  backtest.setInput('Multiplier', 2);
+  assert.deepEqual(multiplier()?.values, { kind: 'range', from: 1, to: 4, step: 0.25 });
+  void session.start();
+  session.cancel();
+  // Applying a set from the results writes the inputs; the ranges the run took stay.
+  const key = session.getState().search.key;
+  backtest.setInput('Multiplier', 1.5);
+  assert.deepEqual(multiplier()?.values, { kind: 'range', from: 1, to: 4, step: 0.25 });
+  assert.equal(session.getState().search.key, key);
+  session.dispose();
 });
 
 test('the estimate uses the measured cost of a backtest, then of the last optimization', async () => {
@@ -799,6 +823,7 @@ test('a real run on the Worker pool ranks what the engine computes, and cancel e
   });
   session.setRange('Length', { from: 3, to: 6 });
   session.setValueKept('Source', 'ohlc4', false);
+  session.setSearched('Multiplier', false);
   session.removeFilter(0);
   session.removeFilter(0);
   session.addFilter({ metric: 'netProfit', operator: '>=', value: 10_000 });

@@ -53,6 +53,7 @@ async function harness(walkForward: { anchored?: boolean } = {}) {
   });
   session.setRange('Length', { from: 3, to: 6 });
   session.setValueKept('Source', 'ohlc4', false);
+  session.setSearched('Multiplier', false);
   session.removeFilter(0);
   session.removeFilter(0);
   session.setValidation({
@@ -564,6 +565,7 @@ test('a real walk-forward run on the Worker pool reruns each chosen set as the s
   });
   session.setRange('Length', { from: 3, to: 5 });
   session.setValueKept('Source', 'ohlc4', false);
+  session.setSearched('Multiplier', false);
   session.setValidation({
     mode: 'walk-forward',
     walkForward: { inSampleMonths: 2, outOfSampleMonths: 1, stepMonths: 1 },

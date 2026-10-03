@@ -489,7 +489,10 @@ export class OptimizationSession implements Observable<OptimizationState> {
   readonly #store: Store<OptimizationState>;
   readonly #unsubscribe: () => void;
 
-  /** Search-range drafts by input title, with the declaration they were made for. */
+  /**
+   * Search-range drafts by input title, with the declaration they were made for: those the user
+   * edited, and the defaults a run took. A row without one follows the input's current value.
+   */
   readonly #drafts = new Map<string, { descriptor: InputDescriptor; draft: SearchDraft }>();
   #draftsVersion = 0;
   #sampling: SamplingSettings = { method: 'grid', count: defaultSampleCount, seed: defaultSeed };
@@ -907,8 +910,15 @@ export class OptimizationSession implements Observable<OptimizationState> {
     if (barRuns > 0) this.#measured = { source, perBarMs: workerMs / barRuns };
   }
 
-  /** The pool's run terminates reproductions; an unfinished Top 20 or rechoice starts over later. */
+  /**
+   * The pool's run terminates reproductions; an unfinished Top 20 or rechoice starts over later.
+   * The default ranges the run takes stay as they are, so applying one of its sets to the inputs
+   * does not move them and outdate the results.
+   */
   #beforeRun(): void {
+    for (const row of this.getState().search.rows)
+      if (row.draft)
+        this.#drafts.set(row.descriptor.title, { descriptor: row.descriptor, draft: row.draft });
     this.#topRequest?.abort();
     if (this.#topEquity.status === 'running') this.#topEquity = idleEquity;
     this.#reselection?.abort.abort();
@@ -1784,12 +1794,11 @@ export class OptimizationSession implements Observable<OptimizationState> {
     const memo = this.#searchMemo;
     if (memo && memo.key.every((part, index) => part === key[index])) return memo.value;
     const descriptors = backtest.description?.inputs ?? [];
-    const drafts = new Map(
-      descriptors.map((descriptor) => [
-        descriptor.title,
-        keepSearchDraft(descriptor, this.#drafts.get(descriptor.title)),
-      ]),
-    );
+    const drafts = new Map<string, SearchDraft>();
+    for (const descriptor of descriptors) {
+      const draft = keepSearchDraft(descriptor, this.#drafts.get(descriptor.title));
+      if (draft) drafts.set(descriptor.title, draft);
+    }
     const value = searchSetup(descriptors, drafts, inputValues(backtest.inputs), this.#sampling);
     this.#searchMemo = { key, value };
     return value;

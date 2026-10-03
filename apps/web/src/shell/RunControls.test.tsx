@@ -106,6 +106,7 @@ test('the header links failed combinations to their list and says when sets were
   act(() => {
     uiStore.setState({ page: 'optimize' });
     optimization().actions.setRange('Length', { from: 2, to: 4, step: 1 });
+    optimization().actions.setSearched('Multiplier', false);
     optimization().actions.setSampling({ method: 'random', count: 5 });
   });
   renderInEnglish(<RunControls />);
