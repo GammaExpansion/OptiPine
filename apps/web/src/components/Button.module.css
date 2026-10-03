@@ -1,0 +1,50 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  white-space: nowrap;
+  flex: none;
+}
+.secondary {
+  border: 1px solid var(--control-border);
+  font-weight: 500;
+}
+.secondary:hover,
+.toolbar:hover {
+  background: var(--hover);
+}
+.primary {
+  background: var(--primary);
+  color: var(--primary-text);
+  font-weight: 600;
+}
+.primary:hover {
+  background: var(--primary-hover);
+}
+.primary:disabled,
+.primary[aria-disabled='true'] {
+  background: var(--disabled-action);
+  color: var(--disabled-text);
+}
+.toolbar {
+  height: 30px;
+  padding: 0 10px;
+  color: var(--secondary);
+}
+.toolbar:disabled {
+  opacity: 0.45;
+}
+.link {
+  padding: 0;
+  height: auto;
+  color: var(--link);
+  font-weight: 400;
+}
+.link:hover {
+  color: var(--link-hover);
+}

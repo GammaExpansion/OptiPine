@@ -1,0 +1,40 @@
+.header {
+  height: var(--header-height);
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px 0 16px;
+  border-bottom: 1px solid var(--divider);
+  background: var(--canvas);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 600;
+  font-size: 15px;
+  white-space: nowrap;
+  padding-right: 6px;
+}
+.divider {
+  width: 1px;
+  height: 22px;
+  background: var(--divider);
+  flex: none;
+}
+.spacer {
+  flex: 1;
+}
+.facts {
+  font-size: 12px;
+  color: var(--caption);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 1380px) {
+  .facts {
+    white-space: normal;
+    min-width: 100px;
+  }
+}

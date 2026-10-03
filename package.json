@@ -14,10 +14,11 @@
     "packages/market-data",
     "packages/workers",
     "packages/golden",
-    "apps/cli"
+    "apps/cli",
+    "apps/web"
   ],
   "scripts": {
-    "build": "npm run build --workspace @pine/engine && npm run build --workspace @pine/messages && npm run build --workspace @pine/optimizer && npm run build --workspace @pine/market-data && npm run build --workspace @pine/workers && npm run build --workspace @pine/golden && npm run build --workspace @pine/cli",
+    "build": "npm run build --workspace @pine/engine && npm run build --workspace @pine/messages && npm run build --workspace @pine/optimizer && npm run build --workspace @pine/market-data && npm run build --workspace @pine/workers && npm run build --workspace @pine/golden && npm run build --workspace @pine/cli && npm run build --workspace @pine/web",
     "typecheck": "npm run build && npm run typecheck --workspaces",
     "test": "npm run build && npm run test --workspaces",
     "golden": "node apps/cli/dist/main.js run",

@@ -1,0 +1,41 @@
+.code {
+  height: 100%;
+  background: var(--code-background);
+  padding-top: 10px;
+  font-family: var(--font-code);
+  font-size: 12.5px;
+  line-height: 19px;
+}
+.line {
+  display: flex;
+  height: 19px;
+  border-left: 2px solid transparent;
+  white-space: pre;
+  background: rgb(255 255 255 / 3.5%);
+}
+.number {
+  width: 46px;
+  flex: none;
+  text-align: right;
+  padding-right: 14px;
+  color: var(--code-caption);
+  font-variant-numeric: tabular-nums;
+}
+.placeholder {
+  color: var(--code-caption);
+}
+.placeholder i {
+  display: inline-block;
+  width: 1.5px;
+  height: 15px;
+  background: var(--text);
+  vertical-align: -3px;
+}
+.empty {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel);
+  color: var(--caption);
+}

@@ -691,6 +691,8 @@ class Interpreter {
     }
   }
   run(): RunResult {
+    // Setup and final reporting have no bar, even though the loop index still has a value.
+    let activeBar: number | undefined;
     try {
       if (this.broker && this.input.strategyClosePending && this.input.bars.length < 2)
         throw Object.assign(
@@ -700,6 +702,7 @@ class Interpreter {
           },
         );
       for (this.index = 0; this.index < this.input.bars.length; this.index++) {
+        activeBar = this.index;
         this.steps = 0;
         this.clock.setIndex(this.index);
         const historicalTicks =
@@ -756,6 +759,7 @@ class Interpreter {
         this.broker?.endBar(onFill);
         this.journal = undefined;
       }
+      activeBar = undefined;
       return {
         plots: [...this.plots.values()],
         ...(this.broker?.result() ?? { trades: [], metrics: {} }),
@@ -767,7 +771,14 @@ class Interpreter {
       return {
         plots: [...this.plots.values()],
         ...(this.broker?.result() ?? { trades: [], metrics: {} }),
-        diagnostics: [{ kind: diagnosticKind(err), line: this.activeLine, message: err.message }],
+        diagnostics: [
+          {
+            kind: diagnosticKind(err),
+            line: this.activeLine,
+            ...(activeBar === undefined ? {} : { bar: activeBar }),
+            message: err.message,
+          },
+        ],
         warnings: [...this.warnings.values()],
       };
     }

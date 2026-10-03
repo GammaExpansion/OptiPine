@@ -1,0 +1,36 @@
+.tabs {
+  display: flex;
+  gap: 18px;
+  align-self: stretch;
+  padding: 0 6px;
+  flex: none;
+}
+.tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 2px;
+  height: 48px;
+  font-size: 14px;
+  color: var(--secondary);
+  position: relative;
+  white-space: nowrap;
+}
+.tab:hover {
+  color: var(--text);
+}
+.tab[aria-current='page'] {
+  color: var(--text);
+  font-weight: 600;
+}
+.tab[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--primary);
+}
+.tab:disabled {
+  opacity: 0.4;
+}

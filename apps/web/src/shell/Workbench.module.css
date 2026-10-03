@@ -1,0 +1,31 @@
+.workbench {
+  flex: 1;
+  min-height: 0;
+}
+.main,
+.column {
+  height: 100%;
+  min-width: 0;
+}
+.sidebar {
+  height: 100%;
+  position: relative;
+  background: var(--panel);
+  border-left: 1px solid var(--divider);
+}
+.collapse {
+  position: absolute;
+  top: 12px;
+  right: 4px;
+  z-index: 2;
+  width: 20px;
+  opacity: 0;
+}
+.sidebar:hover .collapse,
+.collapse:focus-visible,
+.edge {
+  opacity: 1;
+}
+.edge {
+  right: 5px;
+}

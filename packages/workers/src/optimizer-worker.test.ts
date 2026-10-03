@@ -391,7 +391,7 @@ test('runtime diagnostics stay on their trial and contribute to error facts', as
   );
   assert.equal(result.trials[0].diagnostics.length, 0);
   assert.deepEqual(result.trials[1].diagnostics, [
-    { kind: 'runtime', line: 5, message: 'trial failed' },
+    { kind: 'runtime', line: 5, bar: 0, message: 'trial failed' },
   ]);
   assert.equal(result.errorCount, 1);
   assert.equal(result.workers, 1, 'one remaining trial reuses the calibration worker');
