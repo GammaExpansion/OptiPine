@@ -63,12 +63,17 @@
 .equity {
   background: var(--panel);
   min-width: 0;
+  min-height: 0;
+  height: 342px;
+  display: flex;
+  flex-direction: column;
 }
 .toolbar {
   display: flex;
   align-items: center;
   gap: 14px;
   height: 36px;
+  flex: none;
   padding: 0 12px;
   font-size: 12px;
   color: var(--secondary);
@@ -131,22 +136,27 @@
 }
 .equityBody {
   position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 2.8fr) minmax(0, 1fr) 73px 43px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
   padding-top: 6px;
   background: var(--canvas);
 }
 .equityCanvas {
-  height: 140px;
+  min-height: 0;
   margin-left: 28px;
 }
 .drawdownCanvas {
-  height: 50px;
+  min-height: 0;
   margin-left: 28px;
 }
 .drawdownShade {
   position: absolute;
   z-index: 2;
   top: 6px;
-  height: 190px;
+  bottom: 116px;
   background: color-mix(in srgb, var(--loss) 6%, transparent);
   pointer-events: none;
 }
@@ -155,7 +165,7 @@
   left: 50%;
   transform: translateX(-50%);
   display: block;
-  margin-top: 116px;
+  top: 61%;
   text-align: center;
   white-space: nowrap;
   color: var(--loss);

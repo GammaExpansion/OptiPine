@@ -7,6 +7,11 @@ import { fakeServices } from '../state/test-support.ts';
 import { I18nProvider } from '../i18n/I18nProvider.tsx';
 import { defaultPaneSizes, uiStorageKey, uiStore } from '../state/ui.ts';
 import { Shell } from './Shell.tsx';
+import {
+  loadOptimization,
+  optimization,
+  runOptimization,
+} from '../pages/optimize/test-support.tsx';
 
 let restoreServices: () => void;
 beforeEach(() => {
@@ -55,7 +60,7 @@ test('ready workspaces switch pages with the keyboard and restore the backtest d
   expect(uiStore.getState().dockTab).toBe('report');
   screen.getByRole('button', { name: 'Optimize' }).focus();
   await user.keyboard('{Enter}');
-  expect(screen.getByRole('heading', { name: 'No optimization has run yet' })).toBeVisible();
+  expect(await screen.findByRole('heading', { name: 'No optimization has run yet' })).toBeVisible();
   expect(screen.queryByRole('tab', { name: 'Report' })).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Backtest' }));
   expect(screen.getByRole('tab', { name: 'Report' })).toHaveAttribute('aria-selected', 'true');
@@ -109,7 +114,40 @@ test('dock tabs select empty results and issues without exposing an editor workf
     </I18nProvider>,
   );
   await user.click(screen.getByRole('tab', { name: /Issues/ }));
-  expect(screen.getByRole('tabpanel')).toHaveTextContent('No issues');
+  expect(await within(screen.getByRole('tabpanel')).findByText('No issues')).toBeVisible();
   await user.click(screen.getByRole('tab', { name: 'Trades' }));
   expect(screen.getByRole('tabpanel')).toHaveTextContent('Run a backtest to see results here.');
+});
+
+test('Optimize opens with a script and data, and is marked once it holds results', async () => {
+  const user = userEvent.setup();
+  await user.pointer({ coords: { clientX: 500, clientY: 500 } });
+  render(
+    <I18nProvider>
+      <Shell />
+    </I18nProvider>,
+  );
+  const optimize = () => screen.getByRole('button', { name: 'Optimize' });
+  expect(optimize()).toBeDisabled();
+  await loadOptimization();
+  expect(optimize()).toBeEnabled();
+  await user.click(optimize());
+  expect(await screen.findByRole('heading', { name: 'No optimization has run yet' })).toBeVisible();
+  const marked = () => optimize().querySelector('[aria-hidden="true"]');
+  expect(marked()).toBeNull();
+  // A first run has no results yet (O8).
+  let run!: Promise<void>;
+  act(() => {
+    run = optimization().actions.start();
+  });
+  expect(marked()).toBeNull();
+  await act(() => run);
+  expect(marked()).not.toBeNull();
+  // Outdated results stay marked (R5), and so do they during the next run.
+  act(() => optimization().actions.setRange('Length', { to: 5 }));
+  expect(marked()).not.toBeNull();
+  act(() => void optimization().actions.start());
+  expect(marked()).not.toBeNull();
+  act(() => optimization().actions.cancel());
+  expect(marked()).not.toBeNull();
 });

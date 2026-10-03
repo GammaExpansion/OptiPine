@@ -1,5 +1,6 @@
 import type { RunResult } from '@pine/engine';
 import { metricRows, type MetricRow, type MetricValue } from '@pine/optimizer';
+import { csvNumber, csvText } from './csv.ts';
 
 type Part = 'value' | 'percent';
 
@@ -147,4 +148,70 @@ export function strategyReport(metrics: RunResult['metrics']): StrategyReport {
     ],
     groups: groupSpecs.map(([id, specs]) => ({ id, rows: specs.map(row) })),
   };
+}
+
+/** The caller translates section titles and column headers; metric names stay engine English. */
+export type ReportCsvHeaders = Readonly<
+  Record<'metric' | 'all' | 'long' | 'short' | 'keyFigures' | ReportGroup['id'], string>
+>;
+
+/**
+ * Four columns per section, in report order. Key-figure details get separate metric rows except
+ * side breakdowns, which occupy Long/Short. Percentages carry %, loss magnitudes print negative,
+ * and absent/nonfinite cells stay empty. Numeric precision follows the other workflow exports.
+ */
+export function reportCsv(report: StrategyReport, headers: ReportCsvHeaders): string {
+  const lines: string[][] = [];
+  const section = (id: 'keyFigures' | ReportGroup['id']) => {
+    if (lines.length) lines.push(['', '', '', '']);
+    lines.push(
+      [headers[id], '', '', ''],
+      [headers.metric, headers.all, headers.long, headers.short],
+    );
+  };
+  const cell = (value: MetricValue | undefined, show: Part, loss: boolean): string => {
+    if (value == null) return '';
+    if (typeof value === 'string') return value;
+    if (!Number.isFinite(value)) return '';
+    return csvNumber(loss ? -Math.abs(value) : value) + (show === 'percent' ? '%' : '');
+  };
+  const row = (
+    id: string,
+    show: Part,
+    loss: boolean,
+    all: MetricValue | undefined,
+    long?: MetricValue,
+    short?: MetricValue,
+  ) => {
+    lines.push([
+      id.slice(id.indexOf('/') + 1),
+      cell(all, show, loss),
+      cell(long, show, loss),
+      cell(short, show, loss),
+    ]);
+  };
+  section('keyFigures');
+  for (const figure of report.keyFigures) {
+    const detail = figure.detail;
+    row(
+      figure.id,
+      figure.show,
+      figure.loss,
+      figure.value,
+      detail.kind === 'sides' ? detail.long : undefined,
+      detail.kind === 'sides' ? detail.short : undefined,
+    );
+    if (detail.kind === 'percent') row(figure.id, 'percent', figure.loss, detail.value);
+    else if (detail.kind === 'metric') row(detail.id, 'value', false, detail.value);
+    else if (detail.kind === 'wonLost') {
+      row('Trades analysis/Total winners', 'value', false, detail.won);
+      row('Trades analysis/Total losers', 'value', false, detail.lost);
+    }
+  }
+  for (const group of report.groups) {
+    section(group.id);
+    for (const metric of group.rows)
+      row(metric.id, metric.show, metric.loss, metric.all, metric.long, metric.short);
+  }
+  return csvText(lines);
 }
