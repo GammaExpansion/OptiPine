@@ -10,18 +10,18 @@ import { errorText, type Message, type Text } from '@pine/messages';
 import {
   splitBars,
   type AnalysisAxis,
-  type OptimizerAnalysis,
-  type OptimizerAnalysisInput,
+  type OptimizerSummary,
   type SearchSpace,
   type Slice,
-  type TrialRecord,
   type TrialResult,
-  type WalkForwardPlan,
+  type WalkForwardBounds,
 } from '@pine/optimizer';
 import {
+  AnalysisRun,
   OptimizationCompileError,
   WorkerCancelledError,
   type AnalysisClient,
+  type AnalysisRunView,
   type OptimizationOptions,
   type OptimizationProgress,
   type OptimizationResult,
@@ -64,6 +64,7 @@ import {
   draftPreview,
   failedCombination,
   filterDiagnosis,
+  leadingSets,
   leaderboardView,
   mapView,
   medianCurve,
@@ -71,6 +72,7 @@ import {
   scatterView,
   selectionOf,
   sensitivityView,
+  summaryRequest,
   topEquityCount,
   type CurveView,
   type DistributionView,
@@ -300,8 +302,8 @@ export interface ResultsViews {
   /** One searched input (R8). */
   readonly curve: CurveView | null;
   readonly sensitivity: SensitivityView;
-  /** For cell hover (`cellValues`) and bin detail (`binDetail`). */
-  readonly analysis: OptimizerAnalysis;
+  /** The analysis Worker's summary, for cell hover (`cellValues`). */
+  readonly summary: OptimizerSummary;
 }
 
 export interface OptimizationState {
@@ -344,15 +346,20 @@ interface LiveRun {
   readonly ranges: readonly { phase: FailedRange; bars: readonly MarketBar[] }[];
   phase: OptimizationPhase;
   combinations: number;
-  /** Trials outside any UI state; snapshots read them (WEB.md 3.2). */
-  readonly trials: { in: OptimizationTrial[]; out: OptimizationTrial[] };
+  /**
+   * The trials, outside any UI state (WEB.md 3.2): each reaches the analysis Worker once, with the
+   * next snapshot's view.
+   */
+  readonly analysis: AnalysisRun;
   readonly failures: Map<string, FailedCombination>;
   /** The pool's latest progress for the running range. */
   progress: OptimizationProgress | null;
 }
 
 interface AnalysisSlot {
-  readonly analysis: OptimizerAnalysis;
+  readonly summary: OptimizerSummary;
+  /** The run's trials its positions index. */
+  readonly trials: readonly OptimizationTrial[];
   /** The view request it answers, from `viewKey`. */
   readonly key: string;
   readonly draft: FilterCondition | null;
@@ -381,7 +388,7 @@ const idleEquity: TopEquity = {
   splitIndex: null,
 };
 
-function windowPlan(plan: WalkForwardPlan): WindowPlan {
+function windowPlan(plan: WalkForwardBounds): WindowPlan {
   return {
     index: plan.index,
     inSampleStart: plan.inSampleStart,
@@ -439,8 +446,8 @@ export class OptimizationSession implements Observable<OptimizationState> {
   #live: LiveRun | null = null;
   #snapshotTimer: unknown = null;
   #results: OptimizationResults | null = null;
-  /** The results' trial records, sent with each later view request. */
-  #records: TrialRecord[] = [];
+  /** The results' trials, held in the analysis Worker for every later view. */
+  #resultsRun: AnalysisRun | null = null;
   #resultsAnalysis: AnalysisSlot | null = null;
   #liveAnalysis: AnalysisSlot | null = null;
   #analysisError: Text | null = null;
@@ -487,11 +494,12 @@ export class OptimizationSession implements Observable<OptimizationState> {
     return this.#store.subscribe(listener);
   }
 
-  /** Stop listening to the Backtest page and stop any run. */
+  /** Stop listening to the Backtest page, stop any run and release the analysis Worker's runs. */
   dispose(): void {
     this.#unsubscribe();
     this.cancel();
     this.#topRequest?.abort();
+    this.#resultsRun?.close();
   }
 
   #publish(): void {
@@ -600,7 +608,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
    */
   setAxis(role: keyof MapAxes, title: string | null): void {
     if (title === null && role !== 'z') return;
-    const shown = this.getState().views?.analysis.axes ?? {};
+    const shown = this.getState().views?.summary.axes ?? {};
     const chosen = this.#viewSettings.axes ?? {};
     const axes: { x?: string; y?: string; z?: string } = {
       x: chosen.x ?? shown.x,
@@ -673,7 +681,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
         : [{ phase: 'all', bars }],
       phase: 'preparing',
       combinations: sampling.combinations,
-      trials: { in: [], out: [] },
+      analysis: new AnalysisRun(this.#analysis),
       failures: new Map(),
       progress: null,
     };
@@ -685,8 +693,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
     this.#viewSettings = { ...this.#viewSettings, selectedTrialId: null, page: 0 };
     this.#run = { status: 'running', startedAt, progress: this.#progress(live) };
     this.#publish();
-    let records: TrialRecord[];
-    let analysis: OptimizerAnalysis;
+    let summary: OptimizerSummary;
     let key: string;
     let draft: FilterCondition | null;
     const elapsed = { workerMs: 0, workers: 0 };
@@ -733,14 +740,9 @@ export class OptimizationSession implements Observable<OptimizationState> {
       this.#clearSnapshot();
       this.#run = { status: 'running', startedAt, progress: this.#progress(live) };
       this.#publish();
-      records = await this.#analysis.request('records', {
-        groups: this.#groups(live),
-        objective: objectiveMetric(this.#viewSettings.objective),
-      });
-      if (this.#live !== live) return;
       key = this.#viewKey();
       draft = this.#validDraft();
-      analysis = await this.#analysis.request('view', this.#viewInput(records, space, mode));
+      summary = await live.analysis.view(this.#viewInput(space, mode), this.#summaryRequest(true));
       if (this.#live !== live) return;
       if (sets.length && bars.length)
         this.#measured = {
@@ -750,6 +752,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
     } catch (error) {
       if (this.#live !== live) return;
       this.#endLive();
+      live.analysis.close();
       const finishedAt = this.#now();
       this.#run =
         error instanceof WorkerCancelledError
@@ -779,8 +782,16 @@ export class OptimizationSession implements Observable<OptimizationState> {
       finishedAt,
       workers: elapsed.workers,
     };
-    this.#records = records;
-    this.#resultsAnalysis = { analysis, key, draft, completed: records.length, runId: live.id };
+    this.#resultsRun?.close();
+    this.#resultsRun = live.analysis;
+    this.#resultsAnalysis = {
+      summary,
+      trials: live.analysis.trials,
+      key,
+      draft,
+      completed: summary.total,
+      runId: live.id,
+    };
     this.#curves.clear();
     this.#topEquity = idleEquity;
     this.#run = { status: 'done', startedAt, finishedAt };
@@ -790,8 +801,10 @@ export class OptimizationSession implements Observable<OptimizationState> {
   /** Stop every Worker at once; the previous results stay (WEB.md 3.1). */
   cancel(): void {
     const run = this.#run;
-    if (!this.#live || run.status !== 'running') return;
+    const live = this.#live;
+    if (!live || run.status !== 'running') return;
     this.#endLive();
+    live.analysis.close();
     this.#pool.cancel();
     this.#run = { status: 'cancelled', startedAt: run.startedAt, finishedAt: this.#now() };
     this.#afterLive();
@@ -812,7 +825,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
 
   #receive(live: LiveRun, phase: FailedRange, trial: OptimizationTrial): void {
     if (this.#live !== live) return;
-    (phase === 'out' ? live.trials.out : live.trials.in).push(trial);
+    live.analysis.append(phase === 'out' ? 1 : 0, [trial]);
     if (!live.failures.has(trial.trialId)) {
       const failure = failedCombination(trial, phase);
       if (failure) live.failures.set(trial.trialId, failure);
@@ -839,7 +852,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
   }
 
   #progress(live: LiveRun): RunProgress {
-    const completed = live.trials.in.length + live.trials.out.length;
+    const completed = live.analysis.count(0) + live.analysis.count(1);
     const progress = live.progress;
     let remainingMs = progress?.remainingMs ?? null;
     // While the IS range runs, the OOS range is still ahead: it costs in proportion to its bars.
@@ -861,12 +874,6 @@ export class OptimizationSession implements Observable<OptimizationState> {
     };
   }
 
-  #groups(live: LiveRun): OptimizationTrial[][] {
-    return live.mode === 'none'
-      ? [live.trials.in.slice()]
-      : [live.trials.in.slice(), live.trials.out.slice()];
-  }
-
   // ----- analysis requests
 
   /** Identifies a view request: everything in it but the trials. */
@@ -874,6 +881,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
     const settings = this.#viewSettings;
     return JSON.stringify([
       objectiveMetric(settings.objective),
+      settings.objective === 'neighbourhoodMean',
       settings.direction,
       settings.filters,
       this.#validDraft(),
@@ -889,27 +897,28 @@ export class OptimizationSession implements Observable<OptimizationState> {
     return draft && !filterValueError(draft.value) ? draft : null;
   }
 
-  #viewInput(
-    trials: TrialRecord[],
-    space: SearchSpace,
-    mode: ValidationResultMode,
-  ): OptimizerAnalysisInput {
+  #viewInput(space: SearchSpace, mode: ValidationResultMode): AnalysisRunView {
     const settings = this.#viewSettings;
     const draft = this.#validDraft();
     return {
-      trials,
       resultSpace: space,
       mode,
       resultMode: mode,
       objective: objectiveMetric(settings.objective),
       direction: settings.direction,
       constraints: settings.filters.map(metricConstraint),
+      ...(settings.objective === 'neighbourhoodMean' ? { rankBy: 'neighborhood' as const } : {}),
       ...(settings.axes ? { axes: settings.axes, preserveAxisOrientation: true } : {}),
       slices: settings.slices,
       neighborhood: settings.smooth,
       ...(settings.selectedTrialId === null ? {} : { selectedTrialId: settings.selectedTrialId }),
       ...(draft ? { constraintDraft: metricConstraint(draft) } : {}),
     };
+  }
+
+  /** Columns for the views' figures and filters; full maps only once results are complete. */
+  #summaryRequest(fullMaps: boolean) {
+    return summaryRequest(this.#viewSettings.filters, fullMaps);
   }
 
   /**
@@ -938,35 +947,39 @@ export class OptimizationSession implements Observable<OptimizationState> {
     const draft = this.#validDraft();
     try {
       if (live) {
-        const completed = live.trials.in.length + live.trials.out.length;
+        const completed = live.analysis.count(0) + live.analysis.count(1);
         const current = this.#liveAnalysis;
         if (!completed || (current?.key === key && current.completed === completed))
           return this.#upToDate();
-        const records = await this.#analysis.request('records', {
-          groups: this.#groups(live),
-          objective: objectiveMetric(this.#viewSettings.objective),
-        });
-        if (this.#live !== live) return;
-        const analysis = await this.#analysis.request(
-          'view',
-          this.#viewInput(records, live.space, live.mode),
+        const summary = await live.analysis.view(
+          this.#viewInput(live.space, live.mode),
+          this.#summaryRequest(false),
         );
         // A snapshot with the same settings is progress; one with older settings is dropped.
         if (this.#live !== live || key !== this.#viewKey()) return;
-        this.#liveAnalysis = { analysis, key, draft, completed, runId: live.id };
-      } else if (results) {
+        this.#liveAnalysis = {
+          summary,
+          trials: live.analysis.trials,
+          key,
+          draft,
+          completed,
+          runId: live.id,
+        };
+      } else if (results && this.#resultsRun) {
+        const run = this.#resultsRun;
         const current = this.#resultsAnalysis;
         if (current?.key === key && current.runId === results.id) return this.#upToDate();
-        const analysis = await this.#analysis.request(
-          'view',
-          this.#viewInput(this.#records, results.space, results.mode),
+        const summary = await run.view(
+          this.#viewInput(results.space, results.mode),
+          this.#summaryRequest(true),
         );
         if (this.#results !== results || this.#live || key !== this.#viewKey()) return;
         this.#resultsAnalysis = {
-          analysis,
+          summary,
+          trials: run.trials,
           key,
           draft,
-          completed: this.#records.length,
+          completed: summary.total,
           runId: results.id,
         };
       } else return;
@@ -1009,8 +1022,9 @@ export class OptimizationSession implements Observable<OptimizationState> {
       let plan: WalkForwardPlanState;
       try {
         // Without data the job still validates the settings: it plans no window.
+        const bars = this.#backtest.getState().dataset?.input.bars ?? [];
         const windows = await this.#analysis.request('plan', {
-          bars: this.#backtest.getState().dataset?.input.bars ?? [],
+          times: bars.map((bar) => bar.time),
           config: walkForwardConfig(this.#validation.walkForward),
         });
         plan = { status: 'planned', windows: windows.map(windowPlan) };
@@ -1041,8 +1055,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
     if (this.#live || !results || !slot || slot.runId !== results.id) return;
     // An analysis for older filters would pick other sets; the one on its way decides.
     if (slot.key !== this.#viewKey()) return;
-    const ranked = this.#ranked(slot, results.mode, results.space).ranked;
-    const top = ranked.slice(0, topEquityCount);
+    const top = leadingSets(this.#ranked(slot, results.mode, results.space), topEquityCount);
     const key = JSON.stringify([results.id, top.map((trial) => trial.trialId)]);
     if (this.#topEquity.status !== 'idle' && key === this.#topKey) return;
     this.#topRequest?.abort();
@@ -1056,7 +1069,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
 
   async #reproduce(
     results: OptimizationResults,
-    top: readonly TrialRecord[],
+    top: ReturnType<typeof leadingSets>,
     request: AbortController,
   ): Promise<void> {
     const { source, sourceRevision, dataset, properties, inSampleBars } = results.computedWith;
@@ -1069,7 +1082,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
           const output = await this.#pool.reproduce(
             source,
             common,
-            { inputs: trial.parameters as Record<string, LiteralValue> },
+            { inputs: trial.parameters },
             sourceRevision,
             request.signal,
           );
@@ -1118,7 +1131,14 @@ export class OptimizationSession implements Observable<OptimizationState> {
       title: axis.title,
       values: axis.values,
     }));
-    const value = rankResults(slot.analysis, mode, settings.objective, settings.direction, axes);
+    const value = rankResults(
+      slot.summary,
+      slot.trials,
+      mode,
+      settings.objective,
+      settings.direction,
+      axes,
+    );
     this.#rankedMemo = { slot, settings, value };
     return value;
   }
@@ -1165,7 +1185,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
     const mode = live ? live.mode : results?.mode;
     if (!slot || !space || !mode || (!live && slot.runId !== results?.id)) return null;
     const settings = this.#viewSettings;
-    const completed = live ? live.trials.in.length + live.trials.out.length : null;
+    const completed = live ? live.analysis.count(0) + live.analysis.count(1) : null;
     const key = [slot, settings, completed];
     const memo = this.#viewsMemo;
     if (memo && memo.key.every((part, index) => part === key[index])) return memo.value;
@@ -1174,13 +1194,11 @@ export class OptimizationSession implements Observable<OptimizationState> {
       inProgress: !!live,
       unvalidated: mode === 'none',
       mode,
-      completed: slot.analysis.trials.length,
+      completed: slot.summary.total,
       combinations: live ? live.combinations : results!.combinations,
       failed: live ? live.failures.size : results!.failures.length,
-      pending:
-        slot.key !== this.#viewKey() ||
-        (!!live && slot.completed !== live.trials.in.length + live.trials.out.length),
-      mapError: slot.analysis.error ?? null,
+      pending: slot.key !== this.#viewKey() || (completed !== null && slot.completed !== completed),
+      mapError: slot.summary.error ?? null,
       leaderboard: leaderboardView(ranked, settings.page),
       selection: selectionOf(ranked, settings.selectedTrialId, live ? live.id : results!.id),
       scatter: scatterView(ranked, settings.page),
@@ -1193,7 +1211,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
       map: mapView(ranked, settings.surface, settings.slices),
       curve: curveView(ranked),
       sensitivity: sensitivityView(ranked),
-      analysis: slot.analysis,
+      summary: slot.summary,
     };
     this.#viewsMemo = { key, value };
     return value;

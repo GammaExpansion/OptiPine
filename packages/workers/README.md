@@ -6,11 +6,12 @@ fresh one; late replies from an old Worker or an old source revision are discard
 
 ## Clients
 
-| Export                   | Purpose                                                                                                                                                                                            |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `EngineWorkerClient`     | `describe` and `run` in one Worker, correlated by request id. `setSourceRevision` rejects pending work with `WorkerStaleError`; `cancel` rejects it with `WorkerCancelledError`.                   |
-| `OptimizationWorkerPool` | `optimize(source, common, parameterSets, options)` calibrates on one trial, then grows to `hardwareConcurrency - 1` Workers with chunks of about one second each. Trials stream through `onTrial`. |
-| `AnalysisWorkerClient`   | Typed jobs for the heavy `@pine/optimizer` computations: `view`, `plan`, `records`, `parameters`, `choose`, `finalize` and `stability`.                                                            |
+| Export                   | Purpose                                                                                                                                                                                                                                                                           |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EngineWorkerClient`     | `describe` and `run` in one Worker, correlated by request id. `setSourceRevision` rejects pending work with `WorkerStaleError`; `cancel` rejects it with `WorkerCancelledError`.                                                                                                  |
+| `OptimizationWorkerPool` | `optimize(source, common, parameterSets, options)` calibrates on one trial, then grows to `hardwareConcurrency - 1` Workers with chunks of about one second each. Trials stream through `onTrial`.                                                                                |
+| `AnalysisWorkerClient`   | Typed jobs for the heavy `@pine/optimizer` computations: `view`, `plan` (window bounds and bar indices from bar times), `records`, `parameters`, `choose`, `finalize` and `stability`, and the run jobs behind `AnalysisRun`.                                                     |
+| `AnalysisRun`            | One optimization run held in the analysis Worker: `append` keeps trials as they arrive, `view` sends only those not sent yet and answers with `summarizeOptimizerAnalysis`'s summary, whose positions index `trials`; a restarted Worker is sent the run again. `close` drops it. |
 
 Each client takes a factory that creates the Worker. The Worker entry module is one call:
 
@@ -30,10 +31,11 @@ const client = new EngineWorkerClient(
 const description = await client.describe(source);
 ```
 
-`serveAnalysisWorker` does the same for the analysis client. `handleEngineWorkerRequest`,
-`handleOptimizationWorkerRequest` and `handleAnalysisRequest` are the dispatchers behind them,
-and the protocol types describe every message. A factory may return any object with
-`postMessage`, `terminate` and the three handlers, which is how the tests run without a browser.
+`serveAnalysisWorker` does the same for the analysis client, with an `AnalysisRuns` store for the
+runs its Worker holds. `handleEngineWorkerRequest`, `handleOptimizationWorkerRequest` and
+`handleAnalysisRequest` are the dispatchers behind them, and the protocol types describe every
+message. A factory may return any object with `postMessage`, `terminate` and the three handlers,
+which is how the tests run without a browser.
 
 Errors cross the Worker boundary with `serializeError` / `restoreError` from
 [@pine/messages](../messages/README.md); the ids this package emits are in `workerMessageIds`.

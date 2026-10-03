@@ -2,6 +2,7 @@ import { codedError, message, type Coded, type Message, type MessageValues } fro
 
 /** Every message id this package emits. A UI that translates them should cover this list. */
 export const workerMessageIds = [
+  'analysisRunUnknown',
   'analysisWorkerClosed',
   'analysisWorkerCrashed',
   'analysisWorkerResponseMismatch',

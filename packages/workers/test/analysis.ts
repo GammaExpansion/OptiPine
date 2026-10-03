@@ -1,5 +1,5 @@
 import { AnalysisWorkerClient } from '../src/analysis-client.ts';
-import { handleAnalysisRequest } from '../src/analysis-dispatcher.ts';
+import { AnalysisRuns, handleAnalysisRequest } from '../src/analysis-dispatcher.ts';
 import type {
   AnalysisRequest,
   AnalysisResponse,
@@ -29,12 +29,13 @@ export class ControlledAnalysisWorker implements AnalysisWorkerTransport {
 }
 
 export class LocalAnalysisWorker extends ControlledAnalysisWorker {
+  readonly runs = new AnalysisRuns();
   override postMessage(message: AnalysisRequest): void {
     super.postMessage(message);
     const request = this.requests.at(-1)!;
     queueMicrotask(() => {
       if (this.terminated) return;
-      this.respond(handleAnalysisRequest(request));
+      this.respond(handleAnalysisRequest(request, this.runs));
     });
   }
 }

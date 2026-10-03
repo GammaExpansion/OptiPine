@@ -34,7 +34,8 @@ export interface WalkForwardConfig {
   neighborhood?: boolean;
   axes?: readonly AnalysisAxis[];
 }
-export interface WalkForwardPlan {
+/** A window's calendar bounds and the bar indices they fall on, without the bars. */
+export interface WalkForwardBounds {
   index: number;
   /** Half-open calendar boundaries, in Unix seconds. */
   inSampleStart: number;
@@ -43,13 +44,16 @@ export interface WalkForwardPlan {
   outOfSampleEnd: number;
   plannedOutOfSampleEnd?: number;
   partial?: boolean;
+  /** Half-open bar index ranges. */
   inSampleStartIndex: number;
   inSampleEndIndex: number;
   outOfSampleStartIndex: number;
   outOfSampleEndIndex: number;
+  gapBefore: boolean;
+}
+export interface WalkForwardPlan extends WalkForwardBounds {
   inSampleBars: readonly MarketBar[];
   outOfSampleBars: readonly MarketBar[];
-  gapBefore: boolean;
 }
 export interface WalkForwardExecution extends WalkForwardPlan {
   trials: TrialRecord[];
@@ -137,54 +141,56 @@ const addMonths = (time: number, months: number): number => {
   const date = new Date(time * 1000);
   return Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1) / 1000;
 };
-function lowerBound(bars: readonly MarketBar[], time: number): number {
+function lowerBound(times: readonly number[], time: number): number {
   let from = 0,
-    to = bars.length;
+    to = times.length;
   while (from < to) {
     const middle = Math.floor((from + to) / 2);
-    if (bars[middle].time < time) from = middle + 1;
+    if (times[middle] < time) from = middle + 1;
     else to = middle;
   }
   return from;
 }
 
-/** The first observed UTC month starts the plan; a final observed OOS segment is retained. */
-export function planWalkForwardWindows(
-  bars: readonly MarketBar[],
+/**
+ * The windows over bars that open at `times` (ascending, Unix seconds), as calendar bounds and
+ * indices into `times`: a caller that holds the bars need not send or receive them. The first
+ * observed UTC month starts the plan; a final observed OOS segment is retained.
+ */
+export function planWalkForwardBounds(
+  times: readonly number[],
   config: WalkForwardConfig,
-): WalkForwardPlan[] {
+): WalkForwardBounds[] {
   validate(config);
-  if (!bars.length) return [];
-  bars.forEach((bar, index) => {
+  if (!times.length) return [];
+  times.forEach((time, index) => {
     if (
-      !finite(bar.time) ||
-      !Number.isFinite(new Date(bar.time * 1000).valueOf()) ||
-      (index && bar.time <= bars[index - 1].time)
+      !finite(time) ||
+      !Number.isFinite(new Date(time * 1000).valueOf()) ||
+      (index && time <= times[index - 1])
     )
       throw optimizerError('walkForwardTimesInvalid');
   });
-  const durations = bars
+  const durations = times
     .slice(1)
-    .map((bar, index) => bar.time - bars[index].time)
+    .map((time, index) => time - times[index])
     .sort((a, b) => a - b);
   const interval = durations.length ? durations[Math.floor(durations.length / 2)] : 0;
-  const coverageEnd = bars.at(-1)!.time + interval;
-  const beginning = monthStart(bars[0].time);
-  const windows: WalkForwardPlan[] = [];
+  const coverageEnd = times.at(-1)! + interval;
+  const beginning = monthStart(times[0]);
+  const windows: WalkForwardBounds[] = [];
   for (let offset = 0; ; offset += config.step) {
     const inSampleStart = config.mode === 'anchored' ? beginning : addMonths(beginning, offset);
     const inSampleEnd = addMonths(beginning, offset + config.inSampleLength);
     const outOfSampleStart = inSampleEnd;
     const plannedOutOfSampleEnd = addMonths(outOfSampleStart, config.outOfSampleLength);
-    if (outOfSampleStart > bars.at(-1)!.time) break;
+    if (outOfSampleStart > times.at(-1)!) break;
     const outOfSampleEnd = Math.min(plannedOutOfSampleEnd, coverageEnd);
-    const inSampleStartIndex = lowerBound(bars, inSampleStart),
-      inSampleEndIndex = lowerBound(bars, inSampleEnd);
+    const inSampleStartIndex = lowerBound(times, inSampleStart),
+      inSampleEndIndex = lowerBound(times, inSampleEnd);
     const outOfSampleStartIndex = inSampleEndIndex,
-      outOfSampleEndIndex = lowerBound(bars, outOfSampleEnd);
-    const inSampleBars = bars.slice(inSampleStartIndex, inSampleEndIndex),
-      outOfSampleBars = bars.slice(outOfSampleStartIndex, outOfSampleEndIndex);
-    if (!inSampleBars.length || !outOfSampleBars.length)
+      outOfSampleEndIndex = lowerBound(times, outOfSampleEnd);
+    if (inSampleEndIndex === inSampleStartIndex || outOfSampleEndIndex === outOfSampleStartIndex)
       throw optimizerError('windowMissingBars', { window: windows.length + 1 });
     windows.push({
       index: windows.length,
@@ -198,12 +204,25 @@ export function planWalkForwardWindows(
       inSampleEndIndex,
       outOfSampleStartIndex,
       outOfSampleEndIndex,
-      inSampleBars,
-      outOfSampleBars,
       gapBefore: windows.length > 0 && outOfSampleStart > windows.at(-1)!.outOfSampleEnd,
     });
   }
   return windows;
+}
+
+/** `planWalkForwardBounds` over `bars`, with each window's IS and OOS bars. */
+export function planWalkForwardWindows(
+  bars: readonly MarketBar[],
+  config: WalkForwardConfig,
+): WalkForwardPlan[] {
+  return planWalkForwardBounds(
+    bars.map((bar) => bar.time),
+    config,
+  ).map((window) => ({
+    ...window,
+    inSampleBars: bars.slice(window.inSampleStartIndex, window.inSampleEndIndex),
+    outOfSampleBars: bars.slice(window.outOfSampleStartIndex, window.outOfSampleEndIndex),
+  }));
 }
 
 /** Neighbourhood selection retunes each window using its observed trial surface. */
