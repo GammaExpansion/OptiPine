@@ -17,7 +17,10 @@ export function SummaryPanel() {
   const error = useOptimizationStore((state) => state.analysisError);
   const [choice, setChoice] = useState('equity');
   const live = run.status === 'running';
-  const view = choice === 'scatter' && views?.unvalidated ? 'equity' : choice;
+  // Reproduction is available after completion. Show the snapshot histogram while it runs,
+  // then return to the chosen equity view without changing the user's preference.
+  const available = choice === 'scatter' && views?.unvalidated ? 'equity' : choice;
+  const view = live && available === 'equity' ? 'distribution' : available;
   const working = equity.status === 'running';
   const legend = (label: string, kind: string) => (
     <span className={styles.legendItem}>
@@ -83,7 +86,7 @@ export function SummaryPanel() {
           value={view}
           onChange={setChoice}
           options={[
-            { value: 'equity', label: t('optimize.summary.equity') },
+            { value: 'equity', label: t('optimize.summary.equity'), disabled: live },
             {
               value: 'scatter',
               label: t('optimize.summary.scatter'),
@@ -107,7 +110,7 @@ export function SummaryPanel() {
       <div className={styles.body}>
         {view === 'equity' ? (
           <>
-            {!live && equity.status === 'ready' && (
+            {!live && equity.status === 'ready' && equity.curves.length > 0 && (
               <SummaryCanvas chart={{ kind: 'equity', equity }} />
             )}
             {(live || working || !equity.curves.length) && (

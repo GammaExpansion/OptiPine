@@ -25,7 +25,7 @@ import { Toast, ToastProvider, useToast } from '../components/Toast.tsx';
 import { ToggleSwitch } from '../components/ToggleSwitch.tsx';
 import { Tooltip } from '../components/Tooltip.tsx';
 import { useI18n } from '../i18n/I18nProvider.tsx';
-import type { MessageId } from '../i18n/en.ts';
+import type { MessageId } from '../i18n/translate.ts';
 import { useUiStore } from '../state/ui.ts';
 import menu from '../styles/menu.module.css';
 import { SheetDialogs } from './SheetDialogs.tsx';

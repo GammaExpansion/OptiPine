@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
-import { en } from '../i18n/en.ts';
+import { catalogs } from '../i18n/catalogs.ts';
 import { Checkbox } from './Checkbox.tsx';
 import { FieldRow } from './FieldRow.tsx';
 import { NumberField, type NumberFieldProps } from './NumberField.tsx';
 import { TextInput } from './TextInput.tsx';
 import { ToggleSwitch } from './ToggleSwitch.tsx';
+
+const { en } = catalogs;
 
 const labels = {
   label: en['sheet.numeric'],

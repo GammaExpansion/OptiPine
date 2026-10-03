@@ -88,8 +88,8 @@ export function ConditionPopover({ close }: { close: () => void }) {
             value={raw}
             onChange={setRaw}
             stepper={false}
-            decrementLabel={t('sheet.decrease')}
-            incrementLabel={t('sheet.increase')}
+            decrementLabel={t('inputs.decrease', { title: t('optimize.leaderboard.value') })}
+            incrementLabel={t('inputs.increase', { title: t('optimize.leaderboard.value') })}
             error={error ? text(error) : undefined}
           />
         </label>

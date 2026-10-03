@@ -28,7 +28,7 @@ export function DistributionChart({ view }: { view: DistributionView }) {
         height="100%"
         viewBox={`0 0 ${width} ${height}`}
       >
-        {[0, 0.5, 1].map((part) => (
+        {(top === 1 ? [0, 1] : [0, 0.5, 1]).map((part) => (
           <g key={part}>
             <line
               x1={66}

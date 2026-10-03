@@ -209,8 +209,16 @@ export function SummaryCanvas({ chart }: { chart: Chart }) {
           );
         }}
         onMouseLeave={() => setHover(null)}
-        onClick={() => {
-          if (scatter && point !== null) selectScatterRank(scatter.rank[point]);
+        onClick={(event) => {
+          if (!scatter) return;
+          // Clicks can arrive before the hover update renders, including touch activation.
+          const bounds = event.currentTarget.getBoundingClientRect();
+          const hit = nearestPoint(
+            geometry.points,
+            event.clientX - bounds.left,
+            event.clientY - bounds.top,
+          );
+          if (hit !== null) selectScatterRank(scatter.rank[hit]);
         }}
         onKeyDown={(event) => {
           if (!scatter) return;

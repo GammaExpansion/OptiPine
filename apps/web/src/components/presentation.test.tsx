@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
-import { en } from '../i18n/en.ts';
+import { catalogs } from '../i18n/catalogs.ts';
 import { Banner } from './Banner.tsx';
 import { Button } from './Button.tsx';
 import { EmptyState } from './EmptyState.tsx';
@@ -11,6 +11,8 @@ import { ProgressBar } from './ProgressBar.tsx';
 import { SectionHeading } from './SectionHeading.tsx';
 import { Table } from './Table.tsx';
 import { Tag } from './Tag.tsx';
+
+const { en } = catalogs;
 
 test('progress reports bounded determinate values and omits a value for unknown progress', () => {
   const view = render(<ProgressBar label={en['sheet.optimizing']} value={62} />);

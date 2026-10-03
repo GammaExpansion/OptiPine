@@ -64,14 +64,18 @@ export function SensitivityPanel() {
   if (map?.map && bin?.map === map.panel) return <BinInspection />;
 
   return (
-    <section ref={root} className={styles.panel} aria-label={t('optimize.sensitivity.title')}>
+    <section
+      ref={root}
+      className={styles.panel}
+      aria-label={t('optimize.sensitivity.title')}
+      aria-busy={inProgress}
+    >
       <h2>{t('optimize.sensitivity.title')}</h2>
       <p id={help} className={styles.srOnly}>
         {t('optimize.sensitivity.keyboard')}
       </p>
-      {inProgress ? (
-        <p className={styles.waiting}>{t('optimize.sensitivity.inProgress')}</p>
-      ) : (
+      {inProgress && <p className={styles.waiting}>{t('optimize.summary.inProgress')}</p>}
+      {view && (
         <div className={styles.rows}>
           {view?.rows.map((row, index) => (
             <div
@@ -86,6 +90,7 @@ export function SensitivityPanel() {
                 {(row.role === 'x' || row.role === 'y') && (
                   <button
                     type="button"
+                    disabled={inProgress}
                     className={styles.marker}
                     data-axis-marker={row.role}
                     data-dragging={(!!pointer && move?.role === row.role) || undefined}

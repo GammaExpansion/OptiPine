@@ -1,11 +1,13 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
-import { en } from '../i18n/en.ts';
+import { catalogs } from '../i18n/catalogs.ts';
 import { Button } from './Button.tsx';
 import { IconButton } from './IconButton.tsx';
 import { ToastProvider, useToast } from './Toast.tsx';
 import { Tooltip } from './Tooltip.tsx';
+
+const { en } = catalogs;
 
 afterEach(() => vi.useRealTimers());
 test('disabled reason is available on keyboard focus, while clicks and keys remain inert', async () => {

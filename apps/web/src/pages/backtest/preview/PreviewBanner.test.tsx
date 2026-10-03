@@ -43,7 +43,7 @@ test('preview leaves inputs and result intact, Back restores Optimize, Apply and
   );
   await user.click(screen.getByRole('button', { name: 'View backtest' }));
   await waitFor(() => expect(backtest().preview?.run.status).toBe('done'));
-  expect(screen.getByText('Current inputs are unchanged.')).toBeVisible();
+  expect(await screen.findByText('Current inputs are unchanged.')).toBeVisible();
   expect(backtest().inputs).toBe(beforeInputs);
   expect(backtest().result).toBe(beforeResult);
   await user.click(screen.getByRole('button', { name: 'Back to optimization' }));

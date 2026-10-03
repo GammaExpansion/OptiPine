@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test } from 'vitest';
 import { getOptimizationStore } from '../../../state/optimization.ts';
@@ -12,6 +12,7 @@ import {
 } from '../test-support.tsx';
 import { SummaryPanel } from './SummaryPanel.tsx';
 import { selectScatterRank } from './SummaryCanvas.tsx';
+import { extent, nearestPoint, scale } from './plot-geometry.ts';
 
 useOptimizeTestServices();
 
@@ -86,7 +87,8 @@ test('live snapshots are explicitly provisional; reproduction and errors remain 
   );
   renderInEnglish(<SummaryPanel />);
   expect(screen.getByText(/In progress/)).toBeVisible();
-  expect(screen.getByText('Equity curves will appear when the run finishes.')).toBeVisible();
+  expect(screen.getByRole('img', { name: 'Distribution' })).toBeVisible();
+  expect(screen.getByRole('radio', { name: 'Top 20 equity' })).toBeDisabled();
   expect(screen.queryByRole('img', { name: 'Top 20 equity' })).toBeNull();
   act(() =>
     store.setState({
@@ -121,4 +123,26 @@ test('scatter resolves ranks on another leaderboard page through store actions',
   expect(optimization().viewSettings.page).toBe(1);
   act(() => selectScatterRank(0));
   expect(optimization().viewSettings.page).toBe(1);
+});
+
+test('a scatter click selects its hit without a preceding hover render', async () => {
+  await results();
+  renderInEnglish(<SummaryPanel />);
+  await userEvent.setup().click(screen.getByRole('radio', { name: 'IS vs OOS' }));
+  const scatter = optimization().views!.scatter!;
+  // ResizeObserver is inert in this test environment, so the canvas uses its minimum geometry.
+  const x = scale(extent([scatter.inSample], true), 66, 67);
+  const y = scale(extent([scatter.outOfSample], true), 35, 20);
+  const points = Array.from(scatter.inSample, (value, index) => ({
+    x: x(value),
+    y: y(scatter.outOfSample[index]),
+  }));
+  const point = points[scatter.rank.indexOf(2)];
+  const rank = scatter.rank[nearestPoint(points, point.x, point.y)!];
+  fireEvent.click(screen.getByRole('img', { name: 'IS vs OOS' }), {
+    clientX: point.x,
+    clientY: point.y,
+  });
+  await waitFor(() => expect(optimization().views?.selection?.row.rank).toBe(rank));
+  expect(optimization().views?.selection?.explicit).toBe(true);
 });

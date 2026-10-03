@@ -106,6 +106,14 @@
   flex-direction: column;
   justify-content: center;
 }
+.empty > :first-child {
+  min-height: 0;
+  padding: 0;
+}
+.empty h2 {
+  margin: 0;
+  font-size: 14px;
+}
 .diagnosis {
   display: grid;
   margin-top: 16px;
@@ -132,6 +140,9 @@
   margin: 4px 0 0;
   color: var(--secondary);
   font-size: 12px;
+}
+.diagnosis .loss {
+  color: var(--loss);
 }
 .condition {
   width: 292px;

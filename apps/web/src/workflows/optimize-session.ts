@@ -65,6 +65,7 @@ import {
   failedCombination,
   filterDiagnosis,
   leadingSets,
+  leaderboardPageSize,
   leaderboardView,
   mapView,
   medianCurve,
@@ -636,9 +637,15 @@ export class OptimizationSession implements Observable<OptimizationState> {
     this.#setView({ surface });
   }
 
-  /** Select a leaderboard row (3.3): the map moves to the set; null returns to #1. */
+  /** Select a set (3.3): reveal its leaderboard page and move the map; null returns to #1. */
   select(trialId: string | null): void {
-    this.#setView({ selectedTrialId: trialId });
+    this.#viewSettings = { ...this.#viewSettings, selectedTrialId: trialId };
+    const selection = this.#views()?.selection;
+    this.#setView(
+      selection?.explicit
+        ? { page: Math.floor((selection.row.rank - 1) / leaderboardPageSize) }
+        : {},
+    );
   }
 
   setPage(page: number): void {

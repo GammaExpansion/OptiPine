@@ -2,8 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import type { OptimizationStoreState } from '../src/state/optimization.ts';
 import type { BacktestHooks } from './backtest-hooks.ts';
 
-// The setup controls are another task's slots. This dev harness configures and starts the real
-// session through its stores; every result interaction below uses the visible UI.
+// Small synthetic grids isolate result edge cases; the integrated example test uses setup UI.
 test.use({ baseURL: 'http://127.0.0.1:5176' });
 type SummaryWindow = Window & {
   backtestHooks: BacktestHooks;
@@ -70,14 +69,16 @@ async function open(page: Page, language: 'en' | 'zh' = 'en', script = source, n
   await page
     .getByRole('button', { name: language === 'en' ? 'Optimize' : '优化', exact: true })
     .click();
-  await page.evaluate(() =>
-    (window as unknown as SummaryWindow).summaryOptimization().actions.start(),
-  );
+  await page
+    .getByRole('button', { name: language === 'en' ? 'Start' : '开始优化', exact: true })
+    .click();
   await expect
-    .poll(() =>
-      page.evaluate(
-        () => (window as unknown as SummaryWindow).summaryOptimization().topEquity.status,
-      ),
+    .poll(
+      () =>
+        page.evaluate(
+          () => (window as unknown as SummaryWindow).summaryOptimization().topEquity.status,
+        ),
+      { timeout: 30_000 },
     )
     .toBe('ready');
   await page.evaluate(() => document.fonts.ready);
@@ -138,7 +139,10 @@ for (const language of ['en', 'zh'] as const) {
     await expect(popover).toContainText(en ? 'Would exclude 0 more sets.' : '将额外排除 0 组。');
     await page.screenshot({ path: info.outputPath(`R10-${language}.png`) });
     await popover.getByRole('button', { name: en ? 'Add' : '添加', exact: true }).click();
-    await page.getByRole('button', { name: en ? /Remove Net profit/ : /移除 净利润/ }).click();
+    await page
+      .getByTestId('optimize-leaderboard')
+      .getByRole('button', { name: en ? /Remove Net profit/ : /移除 净利润/ })
+      .click();
     await expect(page.getByText(en ? '9 / 9 pass' : '9 / 9 符合')).toBeVisible();
     await add.click();
     popover = page.getByRole('dialog', { name: en ? 'Add condition' : '添加条件' });
@@ -210,7 +214,10 @@ for (const language of ['en', 'zh'] as const) {
   }, info) => {
     const errors = await open(page, language, failing);
     const en = language === 'en';
-    await page.getByRole('button', { name: en ? '3 failed' : '3 组报错' }).click();
+    await page
+      .getByRole('banner')
+      .getByRole('button', { name: en ? '3 failed' : '3 组报错' })
+      .click();
     const dialog = page.getByRole('dialog', { name: en ? '3 failed' : '3 组报错' });
     await expect(dialog.getByText('Stopped on purpose')).toHaveCount(3);
     await expect(dialog).toContainText(en ? 'bar 5' : '第 5 根 K 线');

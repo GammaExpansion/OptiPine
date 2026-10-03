@@ -710,6 +710,23 @@ test('the selection gives the set to preview or apply on the Backtest page (3.3,
   assert.deepEqual({ ...previewed.result?.computedWith.inputs }, { ...second.parameters });
 });
 
+test('selecting a set reveals its page, including reselecting it after browsing away', async () => {
+  const h = await harness();
+  h.session.setRange('Length', { from: 3, to: 20 });
+  const results = await complete(h);
+  h.session.setPage(1);
+  const row = h.session.getState().views!.leaderboard.rows[0];
+  assert.equal(row.rank, 14);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    h.session.setPage(0);
+    h.session.select(row.trialId);
+    assert.equal(h.session.getState().views!.leaderboard.page, 1);
+    assert.equal(h.session.getState().views!.selection!.row.trialId, row.trialId);
+    await h.analysis.answerAll();
+  }
+  assert.equal(h.session.getState().results, results);
+});
+
 test('axes follow the user, swapping when an input takes another axis (R4, R12)', async () => {
   const h = await harness();
   await complete(h);
