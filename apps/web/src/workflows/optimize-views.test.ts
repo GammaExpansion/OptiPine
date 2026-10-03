@@ -451,3 +451,22 @@ test('the median curve takes each bar from the curves that reach it', () => {
     [2, 2, 6.5, 7],
   );
 });
+
+test('the distribution takes a sample larger than an argument list', () => {
+  const trials = Array.from({ length: 300_000 }, (_, index) => ({
+    trialId: String(index),
+    parameters: {},
+    valid: true,
+    excluded: false,
+    objectiveValue: null,
+    inSampleValue: null,
+    outOfSampleValue: null,
+    inSampleMetrics: { 'Performance/Net profit/All USD': index - 100_000 },
+  }));
+  const analysis = { trials, ranked: [], neighbors: {} } as unknown as OptimizerAnalysis;
+  const view = distributionView(rankResults(analysis, 'none', 'netProfit', 'maximize', []));
+  assert.equal(view.inSample.sets, 300_000);
+  assert.equal(view.inSample.profitable, 199_999);
+  assert.equal(view.start, -100_000);
+  assert.equal(view.width, 10_000);
+});

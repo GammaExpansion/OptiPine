@@ -349,9 +349,14 @@ export function distributionView(results: RankedResults): DistributionView {
     const outOfSample = results.readers.netProfit(outOfSampleMetrics(trial));
     if (outOfSample !== null) outValues.push(outOfSample);
   }
-  const all = [...inValues, ...outValues];
-  const low = all.length ? Math.min(...all) : 0;
-  const high = all.length ? Math.max(...all) : 0;
+  // A loop rather than Math.min(...values): a large random sample exceeds the argument limit.
+  let low = Infinity;
+  let high = -Infinity;
+  for (const value of [inValues, outValues].flat()) {
+    low = Math.min(low, value);
+    high = Math.max(high, value);
+  }
+  if (low > high) low = high = 0;
   const width = binWidth(high - low);
   const start = Math.floor(low / width) * width;
   const bins = Math.floor((high - start) / width + 1e-9) + 1;
