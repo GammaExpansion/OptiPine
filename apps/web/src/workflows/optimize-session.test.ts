@@ -517,6 +517,29 @@ test('Top 20 equity reruns the leading sets over the whole range; a newer rankin
   assert.equal(h.session.getState().topEquity.status, 'ready');
 });
 
+test('diagnostics identify the current analysis and Top 20 requests', async () => {
+  const h = await harness();
+  await complete(h);
+  let diagnostics = h.session.getDiagnostics();
+  const state = h.session.getState();
+  assert.equal(diagnostics.topEquity.status, 'running');
+  assert.equal(diagnostics.topEquity.requestActive, true);
+  assert.equal(typeof diagnostics.topEquity.key, 'string');
+  assert.equal(typeof diagnostics.viewKey, 'string');
+  assert.equal(typeof diagnostics.analysisKey, 'string');
+  assert.equal(diagnostics.leaderboardFirstTrialId, state.views!.leaderboard.rows[0].trialId);
+  assert.equal(diagnostics.run.status, 'done');
+  assert.equal(diagnostics.lastAnalysisRequestAt, 1_000);
+  assert.equal(diagnostics.lastReproductionRequestAt, 1_000);
+  const requestKey = diagnostics.topEquity.key;
+
+  await finishEquity(h);
+  diagnostics = h.session.getDiagnostics();
+  assert.equal(diagnostics.topEquity.status, 'ready');
+  assert.equal(diagnostics.topEquity.requestActive, false);
+  assert.equal(diagnostics.topEquity.key, requestKey);
+});
+
 test('Top 20 ready always belongs to the current objective, direction and filters', async () => {
   const h = await harness();
   await complete(h);

@@ -6,15 +6,22 @@ import { translateId } from '../src/i18n/translate.ts';
 import type { BacktestStoreState } from '../src/state/backtest.ts';
 import type { OptimizationStoreState } from '../src/state/optimization.ts';
 import { origins } from './ports.ts';
+import { waitForTopEquity, workerWaitTimeout } from './optimize-waits.ts';
 
 test.use({ baseURL: origins.dev });
+const emulatedHardwareConcurrency = Number(process.env.E2E_HARDWARE_CONCURRENCY ?? 3);
+const cpuThrottleRate = Number(process.env.E2E_CPU_THROTTLE ?? 0);
 type Hooks = Window & {
   optimization: () => OptimizationStoreState;
   backtest: () => BacktestStoreState;
 };
 
 const settled = (page: Page) =>
-  page.waitForFunction(() => !(window as unknown as Hooks).optimization().views?.pending);
+  page.waitForFunction(
+    () => !(window as unknown as Hooks).optimization().views?.pending,
+    undefined,
+    { timeout: workerWaitTimeout },
+  );
 const identity = (page: Page) =>
   page.evaluate(() => {
     const state = (window as unknown as Hooks).optimization();
@@ -91,10 +98,19 @@ for (const language of ['en', 'zh'] as const) {
         await route.abort();
       } else await route.continue();
     });
-    await page.addInitScript((language) => {
-      localStorage.setItem('optipine.ui', JSON.stringify({ state: { language }, version: 1 }));
-      Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 3 });
-    }, language);
+    if (cpuThrottleRate > 0) {
+      const cdp = await page.context().newCDPSession(page);
+      await cdp.send('Emulation.setCPUThrottlingRate', { rate: cpuThrottleRate });
+    }
+    await page.addInitScript(
+      ({ language, hardwareConcurrency }) => {
+        localStorage.setItem('optipine.ui', JSON.stringify({ state: { language }, version: 1 }));
+        Object.defineProperty(navigator, 'hardwareConcurrency', {
+          get: () => hardwareConcurrency,
+        });
+      },
+      { language, hardwareConcurrency: emulatedHardwareConcurrency },
+    );
     await page.goto('/');
     await page.evaluate(async () => {
       const load = (path: string) => import(/* @vite-ignore */ path);
@@ -134,17 +150,21 @@ for (const language of ['en', 'zh'] as const) {
       )
       .toBe(240);
     await right.getByRole('button', { name: t('optimize.start'), exact: true }).click();
-    await page.waitForFunction(() => {
-      const state = (window as unknown as Hooks).optimization();
-      return (
-        state.run.status === 'running' &&
-        state.views &&
-        state.views.completed >= 24 &&
-        state.views.leaderboard.rows.length > 0 &&
-        state.views.sensitivity.rows.length > 0 &&
-        state.views.map?.panel.cells.some((cell) => cell.value !== null)
-      );
-    });
+    await page.waitForFunction(
+      () => {
+        const state = (window as unknown as Hooks).optimization();
+        return (
+          state.run.status === 'running' &&
+          state.views &&
+          state.views.completed >= 24 &&
+          state.views.leaderboard.rows.length > 0 &&
+          state.views.sensitivity.rows.length > 0 &&
+          state.views.map?.panel.cells.some((cell) => cell.value !== null)
+        );
+      },
+      undefined,
+      { timeout: workerWaitTimeout },
+    );
     await expect(
       page.getByRole('img', { name: t('optimize.summary.distribution'), exact: true }),
     ).toBeVisible();
@@ -153,12 +173,7 @@ for (const language of ['en', 'zh'] as const) {
     ).toBeDisabled();
     await expect(page.locator('[data-sensitivity-row]')).toHaveCount(4);
     await page.screenshot({ path: info.outputPath(`O8-${language}.png`) });
-    await expect
-      .poll(
-        () => page.evaluate(() => (window as unknown as Hooks).optimization().topEquity.status),
-        { timeout: 60_000 },
-      )
-      .toBe('ready');
+    await waitForTopEquity(page, info);
     await settled(page);
     const originalRun = await identity(page);
     const board = page.getByTestId('optimize-leaderboard');
@@ -276,9 +291,7 @@ for (const language of ['en', 'zh'] as const) {
     );
     expect(scores).toEqual([...scores].sort((a, b) => a - b));
     await page.getByRole('radio', { name: t('optimize.summary.equity'), exact: true }).click();
-    await expect
-      .poll(() => page.evaluate(() => (window as unknown as Hooks).optimization().topEquity.status))
-      .toBe('ready');
+    await waitForTopEquity(page, info);
     expect(
       await page.evaluate(() => {
         const state = (window as unknown as Hooks).optimization();
@@ -344,8 +357,12 @@ for (const language of ['en', 'zh'] as const) {
     );
     await page.getByRole('button', { name: t('optimize.selection.backtest'), exact: true }).click();
     await expect(page.getByText(t('preview.unchanged'))).toBeVisible();
+    // GitHub runners are several times slower than a dev machine; a 2-thread pool reproduces 20 sets serially.
     await expect
-      .poll(() => page.evaluate(() => (window as unknown as Hooks).backtest().preview?.run.status))
+      .poll(
+        () => page.evaluate(() => (window as unknown as Hooks).backtest().preview?.run.status),
+        { timeout: workerWaitTimeout },
+      )
       .toBe('done');
     await expect(page.getByTestId('price-chart')).toBeVisible();
     await expect(page.getByRole('table', { name: t('report.returns'), exact: true })).toBeVisible();
@@ -360,8 +377,11 @@ for (const language of ['en', 'zh'] as const) {
     ).toEqual(inputs);
     await page.getByRole('button', { name: t('preview.back'), exact: true }).click();
     await page.getByRole('button', { name: t('optimize.selection.apply'), exact: true }).click();
+    // GitHub runners are several times slower than a dev machine; a 2-thread pool reproduces 20 sets serially.
     await expect
-      .poll(() => page.evaluate(() => (window as unknown as Hooks).backtest().run.status))
+      .poll(() => page.evaluate(() => (window as unknown as Hooks).backtest().run.status), {
+        timeout: workerWaitTimeout,
+      })
       .toBe('done');
     await expect(page.getByRole('button', { name: t('preview.undo'), exact: true })).toBeVisible();
     await page.screenshot({ path: info.outputPath(`B17-${language}.png`) });

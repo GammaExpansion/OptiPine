@@ -332,6 +332,21 @@ export interface OptimizationState {
   readonly topEquity: TopEquity;
 }
 
+/** Internal state captured when a Worker-backed view or Top 20 request is still pending. */
+export interface OptimizationDiagnostics {
+  readonly topEquity: {
+    readonly status: TopEquity['status'];
+    readonly key: string | null;
+    readonly requestActive: boolean;
+  };
+  readonly viewKey: string;
+  readonly analysisKey: string | null;
+  readonly leaderboardFirstTrialId: string | null;
+  readonly run: OptimizationRunState;
+  readonly lastAnalysisRequestAt: number | null;
+  readonly lastReproductionRequestAt: number | null;
+}
+
 export interface OptimizationSessionOptions {
   /** Workers for a run: one per CPU thread minus one (`availableWorkerCount`). */
   threads: number;
@@ -463,6 +478,8 @@ export class OptimizationSession implements Observable<OptimizationState> {
   #topRequest: AbortController | null = null;
   /** The results and sets of the Top 20 request running or done. */
   #topKey: string | null = null;
+  #lastAnalysisRequestAt: number | null = null;
+  #lastReproductionRequestAt: number | null = null;
   readonly #curves = new Map<string, { equity: readonly number[] | null; error: Text | null }>();
 
   #searchMemo: { key: readonly unknown[]; value: SearchSetup } | null = null;
@@ -491,6 +508,24 @@ export class OptimizationSession implements Observable<OptimizationState> {
 
   getState(): OptimizationState {
     return this.#store.getState();
+  }
+
+  /** A read-only snapshot for diagnosing a slow or stuck Worker-backed view in end-to-end tests. */
+  getDiagnostics(): OptimizationDiagnostics {
+    const state = this.getState();
+    return {
+      topEquity: {
+        status: state.topEquity.status,
+        key: this.#topKey,
+        requestActive: state.topEquity.status === 'running' && this.#topRequest !== null,
+      },
+      viewKey: this.#viewKey(),
+      analysisKey: this.#resultsAnalysis?.key ?? this.#liveAnalysis?.key ?? null,
+      leaderboardFirstTrialId: state.views?.leaderboard.rows[0]?.trialId ?? null,
+      run: state.run,
+      lastAnalysisRequestAt: this.#lastAnalysisRequestAt,
+      lastReproductionRequestAt: this.#lastReproductionRequestAt,
+    };
   }
 
   subscribe(listener: (state: OptimizationState) => void): () => void {
@@ -766,6 +801,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
       this.#publish();
       key = this.#viewKey();
       draft = this.#validDraft();
+      this.#lastAnalysisRequestAt = this.#now();
       summary = await live.analysis.view(this.#viewInput(space, mode), this.#summaryRequest(true));
       if (this.#live !== live) return;
       if (sets.length && bars.length)
@@ -975,6 +1011,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
         const current = this.#liveAnalysis;
         if (!completed || (current?.key === key && current.completed === completed))
           return this.#upToDate();
+        this.#lastAnalysisRequestAt = this.#now();
         const summary = await live.analysis.view(
           this.#viewInput(live.space, live.mode),
           this.#summaryRequest(false),
@@ -993,6 +1030,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
         const run = this.#resultsRun;
         const current = this.#resultsAnalysis;
         if (current?.key === key && current.runId === results.id) return this.#upToDate();
+        this.#lastAnalysisRequestAt = this.#now();
         const summary = await run.view(
           this.#viewInput(results.space, results.mode),
           this.#summaryRequest(true),
@@ -1089,6 +1127,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
     const request = new AbortController();
     this.#topRequest = request;
     this.#topKey = key;
+    this.#lastReproductionRequestAt = this.#now();
     this.#topEquity = { ...idleEquity, status: 'running', resultsId: results.id };
     this.#publish();
     void this.#reproduce(results, top, request);
@@ -1106,6 +1145,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
       while (queue.length && !request.signal.aborted) {
         const trial = queue.shift()!;
         try {
+          this.#lastReproductionRequestAt = this.#now();
           const output = await this.#pool.reproduce(
             source,
             common,
