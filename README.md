@@ -128,7 +128,8 @@ npm run golden              # run every TradingView fixture
 npm run check               # the regression gate CI enforces
 ```
 
-- [Engine design](docs/DESIGN.md) and [compatibility notes](docs/COMPATIBILITY_NOTES.md)
+- [Engine design](docs/DESIGN.md), [compatibility notes](docs/COMPATIBILITY_NOTES.md) and the
+  [web interface design](docs/WEB.md)
 - [How fixtures are collected](packages/golden/fixtures/docs/collecting-golden-sop.md) and the
   [fixture documentation](packages/golden/fixtures/README.md)
 - Pull requests are welcome. A change in engine behaviour needs a fixture with native TradingView

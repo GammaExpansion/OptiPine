@@ -85,7 +85,7 @@ const index = {
     { id: 'zh', name: '中文' },
     { id: 'en', name: 'English' },
   ],
-  title: 'Pine Optimizer · 行情终端全屏设计',
+  title: 'OptiPine · Market terminal',
 };
 fs.writeFileSync(indexPath, JSON.stringify(index, null, 2) + '\n');
 const kb = Math.round(

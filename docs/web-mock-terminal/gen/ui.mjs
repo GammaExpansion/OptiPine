@@ -216,7 +216,7 @@ export function header({
   const tfSeg = `<div class="seg" role="group" aria-label="周期"${data && !data.fixed ? '' : ' style="opacity: 0.45"'}>${tfs.map((s, k) => `<button${data && k === data.tf ? ' class="on"' : ''}>${s}</button>`).join('')}</div>`;
   const range = `<button class="tb num"${data ? '' : ' style="opacity: 0.45"'}>${I.cal()}<span>${data ? data.range : '日期范围'}</span></button>`;
   return `<header style="height: 48px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 12px 0 16px; border-bottom: 1px solid #23272d; background: #0e1013">
-<div style="display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 15px; white-space: nowrap; padding-right: 6px">${I.logo()}<span>Pine Optimizer</span></div>
+<div style="display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 15px; white-space: nowrap; padding-right: 6px">${I.logo()}<span>OptiPine</span></div>
 <div style="width: 1px; height: 22px; background: #23272d"></div>
 ${modeNav}
 ${scriptBtn}

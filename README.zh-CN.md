@@ -119,7 +119,7 @@ npm run golden              # 跑完整的 TradingView fixture 套件
 npm run check               # CI 执行的同一道回归门禁
 ```
 
-- [引擎设计](docs/DESIGN.md) 与 [兼容性说明](docs/COMPATIBILITY_NOTES.md)
+- [引擎设计](docs/DESIGN.md)、[兼容性说明](docs/COMPATIBILITY_NOTES.md) 与 [Web 界面设计](docs/WEB.md)
 - [fixture 采集流程](packages/golden/fixtures/docs/collecting-golden-sop.md) 与
   [fixture 文档](packages/golden/fixtures/README.md)
 - 欢迎提交 PR。改变引擎行为需要附带 TradingView 原生导出的 fixture；期望值不手改，也不为了
