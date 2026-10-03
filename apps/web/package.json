@@ -23,6 +23,7 @@
     "@pine/workers": "0.1.0",
     "@radix-ui/react-tabs": "^1.1.21",
     "@radix-ui/react-toggle-group": "^1.1.19",
+    "lightweight-charts": "^5.2.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-resizable-panels": "^4.14.2",
