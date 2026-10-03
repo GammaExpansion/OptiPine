@@ -266,6 +266,14 @@
   height: 24px;
   color: var(--secondary);
 }
+.actionHeading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 @media (max-width: 1100px) {
   .reportGroups {
     grid-template-columns: 1fr;
