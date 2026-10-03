@@ -2,3 +2,11 @@
   display: block;
   flex: none;
 }
+.spinner {
+  animation: spin 900ms linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

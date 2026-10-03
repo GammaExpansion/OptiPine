@@ -14,8 +14,8 @@
   border: 1px solid var(--control-border);
   font-weight: 500;
 }
-.secondary:hover,
-.toolbar:hover {
+.secondary:hover:not(:disabled):not([aria-disabled='true']),
+.toolbar:hover:not(:disabled):not([aria-disabled='true']) {
   background: var(--hover);
 }
 .primary {
@@ -23,13 +23,8 @@
   color: var(--primary-text);
   font-weight: 600;
 }
-.primary:hover {
+.primary:hover:not(:disabled):not([aria-disabled='true']) {
   background: var(--primary-hover);
-}
-.primary:disabled,
-.primary[aria-disabled='true'] {
-  background: var(--disabled-action);
-  color: var(--disabled-text);
 }
 .toolbar {
   height: 30px;
@@ -45,6 +40,50 @@
   color: var(--link);
   font-weight: 400;
 }
-.link:hover {
+.link:hover:not(:disabled):not([aria-disabled='true']) {
   color: var(--link-hover);
+}
+.neutral {
+  color: var(--text);
+}
+.primary.neutral {
+  color: var(--primary-text);
+}
+.toolbar.neutral {
+  color: var(--secondary);
+}
+.link.neutral {
+  color: var(--link);
+}
+.amber {
+  color: var(--link);
+}
+.danger {
+  color: var(--danger-text);
+}
+.primary.danger {
+  background: var(--loss);
+  color: var(--danger-ink);
+}
+.primary.amber {
+  color: var(--primary-text);
+}
+.primary.danger:hover:not(:disabled):not([aria-disabled='true']) {
+  background: var(--danger-text);
+}
+.link.neutral:hover:not(:disabled):not([aria-disabled='true']) {
+  color: var(--link-hover);
+}
+.button:disabled,
+.button[aria-disabled='true'] {
+  cursor: default;
+}
+.button:disabled:not(.primary),
+.button[aria-disabled='true']:not(.primary) {
+  opacity: 0.45;
+}
+.button.primary:disabled,
+.button.primary[aria-disabled='true'] {
+  background: var(--disabled-action);
+  color: var(--disabled-text);
 }

@@ -1,0 +1,5 @@
+.content {
+  padding: 14px;
+  max-height: var(--radix-popover-content-available-height);
+  overflow-y: auto;
+}

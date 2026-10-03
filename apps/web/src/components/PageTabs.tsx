@@ -1,3 +1,4 @@
+import { DisabledReason } from './DisabledReason.tsx';
 import styles from './PageTabs.module.css';
 
 export function PageTabs<T extends string>({
@@ -8,22 +9,36 @@ export function PageTabs<T extends string>({
 }: {
   label: string;
   value: T;
-  options: readonly { value: T; label: string; disabled?: boolean }[];
+  options: readonly {
+    value: T;
+    label: string;
+    disabled?: boolean;
+    disabledReason?: string;
+    changed?: boolean;
+  }[];
   onChange: (value: T) => void;
 }) {
   return (
     <nav className={styles.tabs} aria-label={label}>
       {options.map((option) => (
-        <button
-          type="button"
+        <DisabledReason
           key={option.value}
-          className={styles.tab}
-          aria-current={value === option.value ? 'page' : undefined}
-          disabled={option.disabled}
-          onClick={() => onChange(option.value)}
+          reason={option.disabled ? option.disabledReason : undefined}
         >
-          {option.label}
-        </button>
+          {(descriptionId) => (
+            <button
+              type="button"
+              className={styles.tab}
+              aria-current={value === option.value ? 'page' : undefined}
+              disabled={option.disabled}
+              aria-describedby={descriptionId}
+              onClick={() => onChange(option.value)}
+            >
+              {option.label}
+              {option.changed && <span className={styles.dot} aria-hidden="true" />}
+            </button>
+          )}
+        </DisabledReason>
       ))}
     </nav>
   );

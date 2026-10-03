@@ -1,0 +1,12 @@
+.anchor {
+  width: 100%;
+  min-width: 0;
+}
+.results {
+  width: var(--radix-popover-trigger-width);
+  max-height: min(260px, var(--radix-popover-content-available-height));
+  overflow-y: auto;
+}
+.label {
+  font-weight: 500;
+}
