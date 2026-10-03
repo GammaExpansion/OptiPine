@@ -50,8 +50,9 @@
   color: var(--caption);
   font-size: 12px;
 }
+/* G1: the size beside the grip, over the pane the handle resizes. */
 .right .tip {
-  right: 12px;
+  left: 14px;
   top: 28%;
 }
 .chart .tip {
@@ -60,5 +61,36 @@
 }
 .handle[data-dragging] .tip,
 .handle:focus-visible .tip {
+  display: flex;
+}
+.grip {
+  display: none;
+  position: absolute;
+  z-index: 1;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: var(--primary);
+  color: var(--primary-text);
+  pointer-events: none;
+}
+.right .grip {
+  left: -8px;
+  top: calc(28% + 2px);
+  width: 16px;
+  height: 36px;
+}
+.chart .grip {
+  left: calc(50% - 18px);
+  top: -8px;
+  width: 36px;
+  height: 16px;
+}
+.chart .grip svg {
+  transform: rotate(90deg);
+}
+.handle:hover .grip,
+.handle:focus-visible .grip,
+.handle[data-dragging] .grip {
   display: flex;
 }

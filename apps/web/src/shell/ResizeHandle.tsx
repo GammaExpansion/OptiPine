@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Separator } from 'react-resizable-panels';
+import { Icon } from '../components/Icon.tsx';
 import { useI18n } from '../i18n/I18nProvider.tsx';
 import type { MessageId } from '../i18n/translate.ts';
 import styles from './ResizeHandle.module.css';
@@ -17,7 +18,7 @@ const axisLabels: Record<'right' | 'chart', ResizeLabels> = {
 
 /**
  * A drag handle between two panes (G1): `right` separates side-by-side panes, `chart` stacked
- * ones. Other splits than the right panel and the chart name their panes with `labels`.
+ * ones. Hovering, focusing or dragging it shows the line, its grip and the pane's size. Other splits than the right panel and the chart name their panes with `labels`.
  */
 export function ResizeHandle({
   axis,
@@ -54,6 +55,9 @@ export function ResizeHandle({
       onDoubleClick={onReset}
       onPointerDown={() => setDragging(true)}
     >
+      <span className={styles.grip} aria-hidden="true">
+        <Icon name="grip" size={12} />
+      </span>
       <span className={styles.tip}>
         {t(labels.size, { size: Math.round(size) })}
         <span>{t('layout.resetHint')}</span>
