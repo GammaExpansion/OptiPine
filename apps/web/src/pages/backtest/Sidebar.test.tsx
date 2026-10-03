@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { expect, test } from 'vitest';
 import { getBacktestStore } from '../../state/backtest.ts';
 import { uiStore } from '../../state/ui.ts';
@@ -58,17 +58,15 @@ test('a draft such as "2." stays as typed and settles formatted on blur', async 
   expect(multiplier).toHaveValue('2.00');
 });
 
-test('an outdated result says what it used and restores it (B9)', async () => {
+test('an outdated result leaves the panel to the changed input’s dot and default (B9)', async () => {
   await loadScript();
-  renderInEnglish(<Sidebar />);
+  const view = renderInEnglish(<Sidebar />);
   await runBacktest();
-  expect(screen.queryByRole('status')).not.toBeInTheDocument();
   act(() => getBacktestStore().getState().actions.setInput('Length', 9));
-  const notice = screen.getByRole('status');
-  expect(notice).toHaveTextContent('Current results use Length 5.');
-  expect(notice).toHaveTextContent('They update after the next run.');
-  fireEvent.click(within(notice).getByRole('button', { name: 'Reset to 5' }));
-  expect(getBacktestStore().getState().outdated?.reasons).toEqual([]);
+  expect(getBacktestStore().getState().outdated?.reasons).toEqual(['inputs']);
+  expect(screen.getByText('Default 5')).toBeInTheDocument();
+  expect(screen.getByText('Length').querySelector('span')).toBeInTheDocument();
+  expect(view.container).not.toHaveTextContent('Current results use');
   expect(screen.queryByRole('status')).not.toBeInTheDocument();
 });
 

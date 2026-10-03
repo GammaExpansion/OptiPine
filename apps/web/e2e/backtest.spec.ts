@@ -62,14 +62,11 @@ test('an edited input marks the result outdated until the next run (B9)', async 
   await length.fill('28');
   await expect(facts(page)).toHaveText('Results outdated');
   await expect(page.getByText('Default 20')).toBeVisible();
-  await expect(page.getByRole('status').filter({ hasText: 'Current results use' })).toHaveText(
-    /Current results use Length 20\..*They update after the next run\..*Reset to 20/,
-  );
   await page.screenshot({ path: info.outputPath('B9-en.png') });
   await run(page).click();
   await expect(facts(page)).toHaveText(/^20,488 bars/);
   expect((await state(page)).outdated).toEqual([]);
-  await expect(page.getByText('Current results use')).toHaveCount(0);
+  await expect(page.getByText('Default 20')).toBeVisible();
   expect(errors).toEqual([]);
 });
 

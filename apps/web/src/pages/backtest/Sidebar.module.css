@@ -127,14 +127,3 @@
   font-size: 12px;
   color: var(--caption);
 }
-.notice > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 6px;
-}
-.next {
-  color: var(--secondary);
-}
-.restore {
-  font-size: 12.5px;
-}

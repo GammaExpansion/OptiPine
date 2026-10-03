@@ -1,7 +1,6 @@
 import type { InputDescriptor, LiteralValue } from '@pine/engine';
 import { message, type MessageValues, type Text } from '@pine/messages';
 import type { MessageId } from '../../../i18n/translate.ts';
-import type { InputChange, Outdated } from '../../../workflows/backtest.ts';
 import type { InputField } from '../../../workflows/inputs.ts';
 
 const text = (id: MessageId, values?: MessageValues) => message(id, values);
@@ -139,50 +138,4 @@ export function inputSections(
     else sections.push({ group, fields: [field] });
   }
   return sections;
-}
-
-export interface OutdatedNotice {
-  /** What the result was computed with, one sentence per reason (B9). */
-  readonly sentences: readonly Text[];
-  /** The label of the way back to the result's input values; null when inputs did not change. */
-  readonly restore: Text | null;
-}
-
-/** The right panel's B9 notice for an outdated result; null while the result is current. */
-export function outdatedNotice(
-  outdated: Outdated | null,
-  fields: readonly InputField[],
-): OutdatedNotice | null {
-  if (!outdated?.reasons.length) return null;
-  const valueOf = (change: InputChange) => {
-    const field = fields.find((item) => item.descriptor.title === change.title);
-    return field
-      ? inputValueText(field.descriptor, change.computed)
-      : String(change.computed ?? '');
-  };
-  const restorable = outdated.inputs.filter((change) => change.computed !== undefined);
-  const sentences: Text[] = [];
-  for (const reason of outdated.reasons) {
-    if (reason !== 'inputs') sentences.push(text(`inputs.outdated.${reason}`));
-    else if (restorable.length)
-      sentences.push(
-        text('inputs.outdatedInputs', {
-          values: {
-            kind: 'message-group',
-            parts: restorable.map((change) =>
-              text('inputs.valueOf', { title: change.title, value: valueOf(change) }),
-            ),
-            separator: text('inputs.separator'),
-          },
-        }),
-      );
-  }
-  return {
-    sentences,
-    restore: !restorable.length
-      ? null
-      : restorable.length === 1
-        ? text('inputs.restoreValue', { value: valueOf(restorable[0]) })
-        : text('inputs.restoreValues'),
-  };
 }

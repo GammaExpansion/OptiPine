@@ -10,7 +10,6 @@ import {
   inputHint,
   inputSections,
   inputValueText,
-  outdatedNotice,
   parseInputText,
   selectValues,
   sourceSeries,
@@ -109,33 +108,4 @@ test('sections follow declaration order and start where the group changes', () =
     ['Risk', ['Trail %', 'ATR length']],
     ['Session', ['Trade window', 'Direction', 'Start date']],
   ]);
-});
-
-test('the B9 notice states what the result used and offers the way back', () => {
-  expect(outdatedNotice(null, fields)).toBeNull();
-  expect(outdatedNotice({ reasons: [], inputs: [] }, fields)).toBeNull();
-  const one = outdatedNotice(
-    { reasons: ['inputs'], inputs: [{ title: 'Multiplier', computed: 2, current: 2.5 }] },
-    fields,
-  )!;
-  expect(one.sentences.map(en)).toEqual(['Current results use Multiplier 2.00.']);
-  expect(en(one.restore)).toBe('Reset to 2.00');
-  const several = outdatedNotice(
-    {
-      reasons: ['source', 'inputs', 'data'],
-      inputs: [
-        { title: 'Length', computed: 20, current: 28 },
-        { title: 'Use trailing stop', computed: false, current: true },
-        { title: 'New', computed: undefined, current: 1 },
-      ],
-    },
-    fields,
-  )!;
-  expect(several.sentences.map((sentence) => translate(sentence, 'zh'))).toEqual([
-    '当前结果基于修改前的脚本。',
-    '当前结果基于 Length 20，Use trailing stop 关。',
-    '当前结果基于之前的行情数据。',
-  ]);
-  expect(en(several.restore)).toBe('Reset to these values');
-  expect(outdatedNotice({ reasons: ['properties'], inputs: [] }, fields)!.restore).toBeNull();
 });
