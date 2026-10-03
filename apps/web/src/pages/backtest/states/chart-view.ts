@@ -28,16 +28,33 @@ export type ChartView =
     };
 
 /**
- * What the chart area shows. The displayed run and result are the open preview's while there is
- * one (B16). A failed compile shows the data alone (B10): the result no longer matches the script.
- * A failed run keeps the previous result, as every result view does (WEB.md 3.1).
+ * The result the page shows: the open preview's while there is one (B16), and none after a failed
+ * compile, which it no longer matches (B10). A failed run keeps the previous result (WEB.md 3.1).
+ */
+export function shownResult(
+  state: Pick<BacktestState, 'compile' | 'result' | 'preview'>,
+): BacktestResult | null {
+  return state.compile.status === 'failed' ? null : (state.preview ?? state).result;
+}
+
+/** The count beside the Trades tab: the shown result's closed trades (B1); null without one. */
+export function closedTradeCount(
+  state: Pick<BacktestState, 'compile' | 'result' | 'preview'>,
+): number | null {
+  const trades = shownResult(state)?.output.trades;
+  return trades ? trades.filter((trade) => trade.exitBar !== null).length : null;
+}
+
+/**
+ * What the chart area shows: the shown result on its own bars, or the data alone, and the note
+ * of the displayed run.
  */
 export function chartView(
   state: Pick<BacktestState, 'source' | 'dataset' | 'compile' | 'run' | 'result' | 'preview'>,
 ): ChartView {
   if (!state.source.trim() || !state.dataset) return { kind: 'firstLaunch' };
-  const { run, result: shown } = state.preview ?? state;
-  const result = state.compile.status === 'failed' ? null : shown;
+  const { run } = state.preview ?? state;
+  const result = shownResult(state);
   let note: ChartNote | null = null;
   if (run.status === 'failed') {
     const { diagnostics, bar, error } = run.failure;

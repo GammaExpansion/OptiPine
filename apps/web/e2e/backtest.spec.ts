@@ -58,6 +58,7 @@ test('an edited input marks the result outdated until the next run (B9)', async 
   await run(page).click();
   await expect(facts(page)).toHaveText(/^20,488 bars, \d+\.\d s$/);
   await expect(page.getByTestId('price-chart')).toBeVisible();
+  await expect(page.getByRole('tab', { name: /^Trades \d+$/ })).toBeVisible();
   const length = page.getByRole('spinbutton', { name: 'Length' });
   await length.fill('28');
   await expect(facts(page)).toHaveText('Results outdated');

@@ -4,10 +4,28 @@ import { getBacktestStore } from '../../state/backtest.ts';
 import { uiStore } from '../../state/ui.ts';
 import { Dock } from './Dock.tsx';
 import { DockActions, DockActionsHost } from './dock/DockActions.tsx';
-import { loadScript, renderInEnglish, useBacktestTestServices } from './states/test-support.tsx';
+import {
+  loadScript,
+  renderInEnglish,
+  runBacktest,
+  useBacktestTestServices,
+} from './states/test-support.tsx';
 
 useBacktestTestServices();
 const bar = () => screen.getByRole('tablist').parentElement!;
+
+test('Trades counts the shown result’s closed trades (B1), and nothing without a result', async () => {
+  await loadScript();
+  renderInEnglish(<Dock>{null}</Dock>);
+  expect(screen.getByRole('tab', { name: 'Trades' })).toBeInTheDocument();
+  await runBacktest();
+  const trades = getBacktestStore().getState().result!.output.trades;
+  const closed = trades.filter((trade) => trade.exitBar !== null).length;
+  expect(trades.length).toBe(closed + 1);
+  expect(screen.getByRole('tab', { name: `Trades ${closed}` })).toBeInTheDocument();
+  act(() => getBacktestStore().getState().actions.setSource('//@version=6\nplot(missing)'));
+  await waitFor(() => expect(screen.getByRole('tab', { name: 'Trades' })).toBeInTheDocument());
+});
 
 test('the Pine code tab states its compile in the dock bar (B3)', async () => {
   await loadScript();

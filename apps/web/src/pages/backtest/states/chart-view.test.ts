@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import type { BacktestResult, BacktestState } from '../../../workflows/backtest.ts';
-import { chartView, timeframeLabel, tradeContext } from './chart-view.ts';
+import { chartView, closedTradeCount, timeframeLabel, tradeContext } from './chart-view.ts';
 
 const bars = [
   { time: 1, open: 1, high: 2, low: 0.5, close: 1.5, volume: 1 },
@@ -86,4 +86,15 @@ test('Pine timeframes read as the legend shows them', () => {
   expect(
     ['1', '15', '60', '240', '90', 'D', '1D', 'W', '3M', '30S', ''].map(timeframeLabel),
   ).toEqual(['1m', '15m', '1h', '4h', '90m', '1D', '1D', '1W', '3M', '30s', '']);
+});
+
+test('the Trades count is the shown result’s closed trades', () => {
+  const trades = [{ exitBar: 3 }, { exitBar: 9 }, { exitBar: null }];
+  expect(closedTradeCount(state({ result: result(trades) }))).toBe(2);
+  expect(closedTradeCount(state({}))).toBeNull();
+  expect(closedTradeCount(state({ result: result(trades), compile: { status: 'failed' } }))).toBe(
+    null,
+  );
+  const preview = { run: { status: 'done' }, result: result([]) };
+  expect(closedTradeCount(state({ preview, result: result(trades) }))).toBe(0);
 });

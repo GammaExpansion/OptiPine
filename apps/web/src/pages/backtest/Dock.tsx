@@ -16,12 +16,14 @@ import { CodeTab } from './dock/CodeTab.tsx';
 import { IssuesTab } from './dock/IssuesTab.tsx';
 import { DockActionsHost } from './dock/DockActions.tsx';
 import actionStyles from './dock/DockActions.module.css';
+import { closedTradeCount } from './states/chart-view.ts';
 
 const dockTabs: DockTab[] = ['report', 'equity', 'trades', 'code', 'issues'];
 
 export function Dock({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const issueCount = useBacktestStore((state) => backtestIssues(state).length);
+  const tradeCount = useBacktestStore(closedTradeCount);
   const codeLine = useSelectionStore((state) => state.codeLine);
   const [actionsHost, setActionsHost] = useState<HTMLElement | null>(null);
   const tab = useUiStore((state) => state.dockTab);
@@ -103,6 +105,7 @@ export function Dock({ children }: { children: ReactNode }) {
             value,
             label: t(`dock.${value}`),
             ...(value === 'issues' ? { count: issueCount, bad: issueCount > 0 } : {}),
+            ...(value === 'trades' && tradeCount !== null ? { count: tradeCount } : {}),
           }))}
           onChange={(value) => setTab(value as DockTab)}
           collapsed={dockCollapsed}
