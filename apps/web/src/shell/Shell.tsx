@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { PropertiesDialog } from '../dialogs/properties/PropertiesDialog.tsx';
 import { BacktestPage } from '../pages/backtest/BacktestPage.tsx';
 import { OptimizePage } from '../pages/optimize/OptimizePage.tsx';
 import { useBacktestStore } from '../state/backtest.ts';
@@ -18,7 +19,7 @@ export function Shell({ canOptimize }: { canOptimize?: boolean }) {
     <div className={styles.shell}>
       <Header canOptimize={canOptimize ?? hasWorkspace} />
       {page === 'backtest' ? <BacktestPage /> : <OptimizePage />}
-      <DialogsRoot />
+      <DialogsRoot slots={{ properties: PropertiesDialog }} />
     </div>
   );
 }
