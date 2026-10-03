@@ -1,0 +1,279 @@
+.frame,
+.content {
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+}
+.content {
+  flex: 1;
+}
+.content[data-dimmed='true'] {
+  opacity: 0.4;
+}
+.empty {
+  height: 100%;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  color: var(--secondary);
+  text-align: center;
+}
+.empty strong {
+  color: var(--text);
+  font-size: 15px;
+}
+.secondary {
+  color: var(--secondary);
+}
+.caption {
+  color: var(--caption);
+}
+.frame [data-tone='profit'] {
+  color: var(--profit);
+}
+.frame [data-tone='loss'] {
+  color: var(--loss);
+}
+.frame [data-tone='amber'] {
+  color: var(--primary);
+}
+.frame [data-tone='muted'] {
+  color: var(--caption);
+}
+.outdated {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  flex-wrap: wrap;
+  min-height: 36px;
+  padding: 4px 16px;
+  font-size: 12.5px;
+  color: var(--amber-text);
+  background: var(--amber-background);
+  border-bottom: 1px solid var(--amber-tag);
+}
+.outdated button {
+  margin-left: auto;
+}
+.report,
+.equity {
+  min-height: 0;
+  overflow: auto;
+  font-variant-numeric: tabular-nums;
+}
+.equity {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+.figures {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border-bottom: 1px solid var(--divider);
+}
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 16px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.figure:not(:last-child) {
+  border-right: 1px solid var(--row-border);
+}
+.figure strong {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+.reportGroups {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 28px;
+  padding: 14px 16px;
+}
+.reportGroups table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.reportGroups th,
+.reportGroups td {
+  font-size: 12.5px;
+  text-align: right;
+  font-weight: 400;
+  padding: 0 0 0 8px;
+  height: 25px;
+  white-space: nowrap;
+}
+.reportGroups thead th {
+  color: var(--caption);
+  font-size: 12px;
+  font-weight: 500;
+  padding-bottom: 6px;
+}
+.reportGroups th:first-child {
+  text-align: left;
+  padding-left: 0;
+  color: var(--secondary);
+  white-space: normal;
+}
+.reportGroups thead th:first-child {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+.reportGroups tbody th,
+.reportGroups td {
+  border-top: 1px solid var(--row-border);
+}
+.facts {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  min-height: 50px;
+  flex: none;
+  align-items: center;
+  border-bottom: 1px solid var(--row-border);
+}
+.fact {
+  padding: 4px 14px;
+  border-left: 1px solid var(--row-border);
+  font-size: 11.5px;
+  overflow-wrap: anywhere;
+}
+.fact > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 6px;
+}
+.fact strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+.tradeToolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  flex: none;
+  padding: 6px 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.tradeToolbar .pnlFilter {
+  min-width: 96px;
+  width: auto;
+  height: 24px;
+  font-size: 12px;
+  border-radius: 12px;
+  background: var(--panel);
+}
+.tradeScroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  contain: strict;
+  font-variant-numeric: tabular-nums;
+}
+.tradeScroll:focus-visible {
+  outline: 1px solid var(--primary);
+  outline-offset: -1px;
+}
+.tradeTable {
+  min-width: 1030px;
+}
+.tradeHeader,
+.tradeRow {
+  display: flex;
+  width: 100%;
+  height: 30px;
+  align-items: center;
+}
+.tradeHeader {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  color: var(--caption);
+  background: var(--panel);
+  border-bottom: 1px solid var(--divider);
+  font-size: 12px;
+}
+.tradeRows {
+  position: relative;
+}
+.tradeRow {
+  position: absolute;
+  top: 0;
+  border-bottom: 1px solid var(--row-border);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.tradeHeader > div,
+.tradeRow > div {
+  padding: 0 8px;
+  min-width: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+.tradeHeader > div:first-child,
+.tradeRow > div:first-child {
+  padding-left: 12px;
+  color: var(--caption);
+}
+.tradeTable [data-column='number'],
+.tradeTable [data-column='side'],
+.tradeTable [data-column='entryTime'],
+.tradeTable [data-column='exitTime'] {
+  text-align: left;
+}
+.tradeRow:hover {
+  background: var(--hover);
+}
+.tradeRow[data-focused='true'],
+.tradeScroll:focus .tradeRow[aria-selected='true'] {
+  background: var(--current-row);
+}
+.tradeRow[data-focused='true'] > div:first-child,
+.tradeRow[data-focused='true'] .locate {
+  color: var(--primary);
+}
+.side {
+  font-weight: 600;
+}
+.open {
+  padding: 1px 6px;
+  font-size: 11px;
+  border-radius: 3px;
+  background: var(--amber-tag);
+  color: var(--link);
+}
+.locate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--secondary);
+}
+@media (max-width: 1100px) {
+  .reportGroups {
+    grid-template-columns: 1fr;
+  }
+  .figures {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .facts {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
