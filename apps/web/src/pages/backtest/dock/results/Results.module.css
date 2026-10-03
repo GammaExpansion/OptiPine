@@ -277,3 +277,16 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+/* G3: a phone's key figures in two columns. */
+@media (max-width: 767px) {
+  .figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .figure {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--row-border);
+  }
+  .figure:nth-child(2n) {
+    border-right: 0;
+  }
+}

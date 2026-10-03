@@ -3,7 +3,6 @@ import {
   AreaSeries,
   LineStyle,
   createChart,
-  createSeriesMarkers,
   type IChartApi,
   type ISeriesApi,
   type Logical,
@@ -22,6 +21,7 @@ import { CalendarStrip } from './CalendarStrip.tsx';
 import { MonthlyReturns } from './MonthlyReturns.tsx';
 import type { CalendarHandle } from './svg.ts';
 import { drawdownTickLabels, priceFormat } from './formatting.ts';
+import { pointLabelPrimitive } from './pointLabelPrimitive.ts';
 import styles from './Charts.module.css';
 
 export interface EquityChartsProps {
@@ -141,20 +141,17 @@ export function EquityCharts({
         axisLabelVisible: false,
         title: t('charts.peak'),
       });
-      createSeriesMarkers(
-        eq,
-        [
+      eq.attachPrimitive(
+        pointLabelPrimitive(
+          equity,
+          eq,
           {
             time: peak.time as UTCTimestamp,
-            position: 'atPriceTop',
-            price: peakValue,
-            shape: 'circle',
-            size: 0.6,
-            color: theme.secondary,
+            value: peakValue,
             text: t('charts.peakValue', { value: format(peakValue) }),
           },
-        ],
-        { autoScale: false },
+          { color: theme.secondary, background: theme.canvas, font: theme.font },
+        ),
       );
     }
     const axis = dateAxis(localDates(input.times, input.timezone));

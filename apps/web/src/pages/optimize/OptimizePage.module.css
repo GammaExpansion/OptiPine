@@ -39,3 +39,26 @@
 .map {
   border-bottom: 1px solid var(--divider);
 }
+/* G4: one tab row; each tab holds one region, given the whole height to lay out as it needs. */
+.phone {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.region {
+  height: 100%;
+  overflow-y: auto;
+}
+.region[data-outdated] {
+  opacity: 0.45;
+}
+.settings {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.settings > :last-child {
+  flex: 1;
+  min-height: 0;
+}

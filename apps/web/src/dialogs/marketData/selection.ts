@@ -17,13 +17,18 @@ export interface Selection {
   toDate: string;
 }
 export const selectionKey = 'optipine.marketSelection';
-export function selectionFrom(request: FeedRequest): Selection {
+export function selectionFrom(request: FeedRequest, now: number): Selection {
   const dates = rangeDates(request);
+  const presets: RangePreset[] = ['1M', '1Y', '2Y', 'All'];
+  const preset = presets.find((value) => {
+    const range = presetRange(value, request.feed, request.timeframe, now);
+    return range.from === request.from && range.to === request.to;
+  });
   return {
     feed: request.feed,
     symbol: request.symbol,
     timeframe: request.timeframe,
-    preset: 'Custom',
+    preset: preset ?? 'Custom',
     fromDate: dates.from,
     toDate: dates.to,
   };
@@ -55,12 +60,15 @@ export function selectionRequest(
 }
 /** Restored selections are untrusted; provider validation still runs before fetching. */
 export function restoreSelection(raw: string | null, now: number): Selection {
-  const initial = selectionFrom({
-    feed: 'binance',
-    symbol: 'BTCUSDT',
-    timeframe: '60',
-    ...presetRange('2Y', 'binance', '60', now),
-  });
+  const initial = selectionFrom(
+    {
+      feed: 'binance',
+      symbol: 'BTCUSDT',
+      timeframe: '60',
+      ...presetRange('2Y', 'binance', '60', now),
+    },
+    now,
+  );
   initial.preset = '2Y';
   try {
     const saved: unknown = JSON.parse(raw ?? 'null');

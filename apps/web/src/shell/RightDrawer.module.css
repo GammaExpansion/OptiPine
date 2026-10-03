@@ -1,0 +1,27 @@
+/* G2: the right panel over the page, under the header, from the window's right edge. */
+.drawer {
+  position: fixed;
+  z-index: 30;
+  top: var(--header-height);
+  right: 0;
+  bottom: 0;
+  width: min(336px, 100vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-left: 1px solid var(--divider);
+  box-shadow: -18px 0 36px rgb(0 0 0 / 50%);
+  outline: none;
+}
+.drawer > :last-child {
+  flex: 1;
+  min-height: 0;
+}
+.title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

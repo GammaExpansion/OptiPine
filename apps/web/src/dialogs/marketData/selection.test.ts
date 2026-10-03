@@ -1,8 +1,27 @@
 ﻿import { expect, test } from 'vitest';
 import { selectionFrom, selectionRequest, restoreSelection } from './selection.ts';
-import { exampleRequest } from '../../workflows/market-data.ts';
+import { exampleRequest, presetRange } from '../../workflows/market-data.ts';
 import { previewPoints } from './preview-points.ts';
 const now = Date.UTC(2026, 9, 3, 14, 37);
+
+test('detects matching request presets without treating similar dates as the same range', () => {
+  for (const preset of ['1M', '1Y', '2Y', 'All'] as const) {
+    const request = { ...exampleRequest(now), ...presetRange(preset, 'binance', '60', now) };
+    expect(selectionFrom(request, now).preset).toBe(preset);
+    expect(selectionRequest(selectionFrom(request, now), now).request).toMatchObject({
+      from: request.from,
+      to: request.to,
+    });
+    expect(selectionFrom({ ...request, from: request.from + 3600 }, now).preset).toBe('Custom');
+  }
+  expect(selectionFrom(exampleRequest(now), now + 3600000).preset).toBe('Custom');
+  const limited = {
+    ...exampleRequest(now),
+    timeframe: '1',
+    ...presetRange('1M', 'binance', '1', now),
+  };
+  expect(selectionFrom(limited, now).preset).toBe('1M');
+});
 
 test('ranges use workflow limits and custom errors', () => {
   const initial = restoreSelection(null, now);
@@ -17,10 +36,10 @@ test('ranges use workflow limits and custom errors', () => {
   expect(selectionRequest({ ...initial, symbol: 'bad/symbol' }, now).error).toMatchObject({
     id: 'feedInvalidRequest',
   });
-  expect(selectionFrom(exampleRequest(now))).toMatchObject({
+  expect(selectionFrom(exampleRequest(now), now)).toMatchObject({
     fromDate: '2024-10-03',
     toDate: '2026-10-03',
-    preset: 'Custom',
+    preset: '2Y',
   });
 });
 

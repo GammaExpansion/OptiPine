@@ -9,6 +9,7 @@ import { useOptimizationPresence, useOptimizationStore } from '../state/optimiza
 import { getServices } from '../state/services.ts';
 import { useUiStore } from '../state/ui.ts';
 import { clockText, optimizeStatus, windowCount, type OptimizeStatus } from './optimize-status.ts';
+import { useLayout } from './useLayout.ts';
 import { disabledReason, runStatus, type RunStatus } from './run-status.ts';
 import header from './Header.module.css';
 import styles from './RunControls.module.css';
@@ -94,6 +95,7 @@ function StatusText({ status }: { status: RunStatus }) {
 /** The Backtest page's run status and main action (G5 run status, B1, B8–B12). */
 function BacktestRunControls() {
   const { t, text } = useI18n();
+  const layout = useLayout();
   const state = useBacktestStore(
     useShallow((store) => ({
       compile: store.compile,
@@ -114,7 +116,11 @@ function BacktestRunControls() {
       </div>
       {status.kind === 'running' ? (
         <>
-          <Button icon={<Icon name="stop" size={11} />} onClick={state.actions.cancel}>
+          <Button
+            className={header.run}
+            icon={<Icon name="stop" size={11} />}
+            onClick={state.actions.cancel}
+          >
             {t('run.cancel')}
           </Button>
           <div className={styles.progress} role="progressbar" aria-label={t('run.progress')} />
@@ -122,14 +128,23 @@ function BacktestRunControls() {
       ) : (
         <Button
           variant="primary"
+          className={header.run}
           disabled={reason !== null}
           disabledReason={reason ? text(reason) : undefined}
           aria-keyshortcuts="Control+Enter"
           icon={<Icon name="play" size={11} />}
-          shortcut={t('shell.shortcut')}
+          shortcut={layout === 'desktop' ? t('shell.shortcut') : undefined}
           onClick={() => void state.actions.run()}
         >
-          <span>{t('shell.runBacktest')}</span>
+          {/* A phone's header says Run (G3); a tablet's says it below 1024 px. */}
+          {layout === 'phone' ? (
+            <span>{t('shell.run')}</span>
+          ) : (
+            <>
+              <span className={header.runLong}>{t('shell.runBacktest')}</span>
+              {layout === 'tablet' && <span className={header.runShort}>{t('shell.run')}</span>}
+            </>
+          )}
         </Button>
       )}
     </>
@@ -222,7 +237,7 @@ function OptimizeRunControls() {
         <OptimizeStatusText status={status} />
       </div>
       {status.kind === 'running' && (
-        <Button icon={<Icon name="stop" size={11} />} onClick={state.cancel}>
+        <Button className={header.run} icon={<Icon name="stop" size={11} />} onClick={state.cancel}>
           {t('run.cancel')}
         </Button>
       )}

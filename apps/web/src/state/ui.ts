@@ -4,7 +4,14 @@ import { createJSONStorage, persist, type StateStorage } from 'zustand/middlewar
 import { defaultLanguage, type Language } from '../i18n/translate.ts';
 
 export type Page = 'backtest' | 'optimize';
-export type DockTab = 'report' | 'equity' | 'trades' | 'code' | 'issues';
+/** The Backtest page's result tabs; `inputs` is the phone's tab for the right panel (G3). */
+export type DockTab = 'report' | 'equity' | 'trades' | 'inputs' | 'code' | 'issues';
+/**
+ * The Optimize page's tabs on a phone (G4): R1's regions, or W1's (Windows, Stability) while
+ * walk-forward is on display; Settings holds the right panel.
+ */
+export type OptimizeTab =
+  'summary' | 'leaderboard' | 'map' | 'sensitivity' | 'windows' | 'stability' | 'settings';
 export type Dialog = 'script' | 'marketData' | 'dateRange' | 'properties' | 'failedCombinations';
 /** Pane sizes in pixels, kept per page; each page reads the fields of its own panes. */
 export interface PaneSizes {
@@ -28,8 +35,13 @@ export interface UiState {
   paneSizes: Record<Page, PaneSizes>;
   openDialogs: Dialog[];
   language: Language;
+  /** The right panel shows as a drawer over the page on a tablet (G2). */
+  drawerOpen: boolean;
+  optimizeTab: OptimizeTab;
   setPage: (page: Page) => void;
   setDockTab: (tab: DockTab) => void;
+  setDrawerOpen: (open: boolean) => void;
+  setOptimizeTab: (tab: OptimizeTab) => void;
   setPaneSizes: (page: Page, sizes: Partial<PaneSizes>) => void;
   setDialogOpen: (dialog: Dialog, open: boolean) => void;
   setLanguage: (language: Language) => void;
@@ -103,8 +115,13 @@ export function createUiStore(
         },
         openDialogs: [],
         language: defaultLanguage(locale),
-        setPage: (page) => set({ page }),
+        drawerOpen: false,
+        optimizeTab: 'summary',
+        // The drawer belongs to the page it was opened on.
+        setPage: (page) => set({ page, drawerOpen: false }),
         setDockTab: (dockTab) => set({ dockTab }),
+        setDrawerOpen: (drawerOpen) => set({ drawerOpen }),
+        setOptimizeTab: (optimizeTab) => set({ optimizeTab }),
         setPaneSizes: (page, sizes) =>
           set((state) => ({
             paneSizes: {

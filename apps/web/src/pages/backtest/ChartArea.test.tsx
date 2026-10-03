@@ -61,7 +61,12 @@ test.each(['script', 'data'] as const)(
     act(load[first === 'script' ? 'data' : 'script']);
     // ResultChart loads lazily; compilation can finish before that chunk renders.
     await waitFor(() =>
-      expect(chart.props).toMatchObject({ symbol: 'BTCUSDT 1h', plots: [], trades: [] }),
+      expect(chart.props).toMatchObject({
+        symbol: 'BTCUSDT',
+        timeframe: '1h',
+        plots: [],
+        trades: [],
+      }),
     );
     expect(chart.props!.bars).toHaveLength(120);
     expect(screen.queryByRole('heading', { name: 'Run backtest' })).not.toBeInTheDocument();
@@ -126,4 +131,32 @@ test('a failed compile shows the data alone (B10)', async () => {
   act(() => getBacktestStore().getState().actions.setSource('//@version=6\nplot(missing)'));
   await vi.waitFor(() => expect(getBacktestStore().getState().compile.status).toBe('failed'));
   expect(chart.props).toMatchObject({ plots: [], trades: [] });
+});
+
+test('only outdated or running results dim trade overlays, including running previews', async () => {
+  await loadScript();
+  renderInEnglish(<ChartArea />);
+  await runBacktest();
+  const store = getBacktestStore();
+  const trades = chart.props!.trades;
+  expect(chart.props!.dimMarkers).toBe(false);
+  act(() => store.getState().actions.setInput('Length', 7));
+  expect(chart.props!.dimMarkers).toBe(true);
+  expect(chart.props!.trades).toBe(trades);
+  act(() => store.getState().actions.restoreResultInputs());
+  expect(chart.props!.dimMarkers).toBe(false);
+  act(() => store.setState({ run: { status: 'running', startedAt: 0 } }));
+  expect(chart.props!.dimMarkers).toBe(true);
+  await act(() =>
+    store
+      .getState()
+      .actions.preview(
+        { Length: 8 },
+        { kind: 'rank', rank: 1, optimizationId: 1, trialId: 'trial-1' },
+      ),
+  );
+  expect(chart.props!.dimMarkers).toBe(false);
+  const preview = store.getState().preview!;
+  act(() => store.setState({ preview: { ...preview, run: { status: 'running', startedAt: 0 } } }));
+  expect(chart.props!.dimMarkers).toBe(true);
 });

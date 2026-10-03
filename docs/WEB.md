@@ -258,7 +258,8 @@ pane size, double-clicking resets it, panes stop at a minimum, and sizes are rem
 (G1). The right panel defaults to 336 px. From 768 to 1279 px wide the right panel becomes a drawer
 (G2). Below 768 px each page is a single column with tabs: Report, Equity, Trades, Inputs, Code and
 Issues on Backtest (G3); Summary, Leaderboard, Parameter map, Sensitivity and Settings on Optimize,
-with leaderboard rows as cards (G4). The component sheet is G5.
+with leaderboard rows as cards, or Summary, Windows, Stability and Settings for walk-forward
+results (G4). The component sheet is G5.
 
 ## 3. Behavior
 

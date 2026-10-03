@@ -22,6 +22,7 @@ export function tradePrimitive(
   let ends: number[] = [];
   let lastTime = 0;
   let selected: TradeRow | null = null;
+  let opacity = 1;
   let requestUpdate = () => {};
   const renderer: IPrimitivePaneRenderer = {
     draw(target) {
@@ -49,11 +50,12 @@ export function tradePrimitive(
           const active = selected?.number === trade.number;
           const color = trade.pnl >= 0 ? colors.profit : colors.loss;
           ctx.save();
+          ctx.globalAlpha = opacity;
           if (active) {
             ctx.fillStyle = colors.primary;
-            ctx.globalAlpha = 0.07;
+            ctx.globalAlpha = 0.07 * opacity;
             ctx.fillRect(x1, 0, Math.max(2, x2 - x1), mediaSize.height);
-            ctx.globalAlpha = 1;
+            ctx.globalAlpha = opacity;
           }
           ctx.strokeStyle = active ? colors.primary : color;
           ctx.lineWidth = active ? 2 : 1;
@@ -95,6 +97,10 @@ export function tradePrimitive(
   };
   return {
     primitive,
+    setDimmed(dimmed: boolean) {
+      opacity = dimmed ? 0.4 : 1;
+      requestUpdate();
+    },
     setData(value: readonly TradeRow[], end: number) {
       trades = [...value].sort((a, b) => a.entryTime - b.entryTime);
       starts = trades.map((trade) => trade.entryTime);

@@ -70,7 +70,14 @@ test('the header marks an outdated result, a failed run and a failed compile', a
   await waitFor(() => expect(runButton()).toBeEnabled());
   await runBacktest();
   expect(screen.getByText('Run failed')).toBeInTheDocument();
+  // Compilation reports every independent error: without a declaration this script has two.
   act(() => getBacktestStore().getState().actions.setSource('//@version=6\nplot(missing)'));
+  await waitFor(() => expect(screen.getByText('2 compile errors')).toBeInTheDocument());
+  act(() =>
+    getBacktestStore()
+      .getState()
+      .actions.setSource('//@version=6\nindicator("One error")\nplot(missing)'),
+  );
   await waitFor(() => expect(screen.getByText('1 compile error')).toBeInTheDocument());
   expect(runButton()).toHaveAccessibleDescription('Fix the compile errors to run');
 });
