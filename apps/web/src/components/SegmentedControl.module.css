@@ -1,0 +1,32 @@
+.group {
+  display: inline-flex;
+  height: 30px;
+  padding: 2px;
+  gap: 2px;
+  background: var(--panel);
+  border: 1px solid var(--divider);
+  border-radius: 5px;
+  flex: none;
+}
+.item {
+  padding: 0 10px;
+  border-radius: 3px;
+  font-size: 12.5px;
+  color: var(--secondary);
+  white-space: nowrap;
+  text-align: center;
+}
+.item[data-state='on'] {
+  background: var(--selected);
+  color: var(--text);
+}
+.group:has(.item:disabled) {
+  opacity: 0.45;
+}
+.small {
+  height: 26px;
+}
+.small .item {
+  font-size: 12px;
+  padding: 0 9px;
+}

@@ -44,6 +44,17 @@ you optimize is the one you would see on the chart.
 - **Market data included.** Binance spot and perpetuals and Yahoo Finance through a small Node
   proxy, plus CSV files.
 
+## Running the app
+
+The first browser scaffold is in `apps/web`: a bilingual shell with resizable panes. Script loading,
+market selection and run controls will be connected in later phases.
+
+After `npm ci && npm run build`, run `npm run dev -w @pine/web` for development, or
+`npm run start -w @pine/web` to serve the build at `http://127.0.0.1:5174` (`HOST` and `PORT`
+override the production address). Dev, preview and production include `/api/market`.
+Run `npm run test -w @pine/web` without a browser; install Chromium with
+`npx playwright install chromium`, then run `npm run e2e -w @pine/web` for browser smoke tests.
+
 ## Quick start
 
 Requires [Node.js](https://nodejs.org) 24.5 or newer.

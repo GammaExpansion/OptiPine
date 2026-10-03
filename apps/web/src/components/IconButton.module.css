@@ -1,0 +1,14 @@
+.button {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  color: var(--secondary);
+  flex: none;
+}
+.button:hover {
+  background: var(--hover);
+  color: var(--text);
+}
