@@ -478,6 +478,7 @@ export const zh = {
   'properties.computed': '由脚本计算',
   'properties.shared': '回测与优化共用',
   'properties.back': '返回参数',
+  'properties.backSettings': '返回设置',
   'properties.groupGeneral': '常规',
   'properties.groupExecution': '细分与执行',
   'properties.groupBroker': '经纪商模拟',

@@ -490,6 +490,7 @@ export const en = {
   'properties.computed': 'Set by the script',
   'properties.shared': 'Shared by backtest and optimization',
   'properties.back': 'Back to inputs',
+  'properties.backSettings': 'Back to settings',
   'properties.groupGeneral': 'General',
   'properties.groupExecution': 'Detalization and execution',
   'properties.groupBroker': 'Broker emulator',

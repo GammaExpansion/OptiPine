@@ -194,6 +194,10 @@ export function PropertiesDialog() {
   const width = useUiStore((state) =>
     Math.max(state.paneSizes[state.page].right, defaultPaneSizes.right),
   );
+  // The panel lies over the inputs on Backtest and over the optimization settings on Optimize.
+  const back = useUiStore((state) =>
+    state.page === 'optimize' ? 'properties.backSettings' : 'properties.back',
+  );
   const label = (id: PropertyId) => t(`backtest.property.${id}`);
   const overridden = fields.filter((item) => item.overridden).length;
   const number = (id: NumericId, size: Width, suffix?: string) => {
@@ -221,7 +225,7 @@ export function PropertiesDialog() {
           onInteractOutside={(event) => event.preventDefault()}
         >
           <div className={styles.header}>
-            <IconButton icon="left" label={t('properties.back')} onClick={close} tooltip={false} />
+            <IconButton icon="left" label={t(back)} onClick={close} tooltip={false} />
             <Primitive.Title className={styles.title}>{t('backtest.properties')}</Primitive.Title>
             <Primitive.Description className={styles.description}>
               {t('properties.shared')}
