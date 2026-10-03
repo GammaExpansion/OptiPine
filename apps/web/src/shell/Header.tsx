@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
-import { Button } from '../components/Button.tsx';
 import { Icon } from '../components/Icon.tsx';
 import { PageTabs } from '../components/PageTabs.tsx';
 import { SegmentedControl } from '../components/SegmentedControl.tsx';
 import { useI18n } from '../i18n/I18nProvider.tsx';
 import { useUiStore } from '../state/ui.ts';
+import { HeaderData } from './HeaderData.tsx';
+import { RunControls } from './RunControls.tsx';
 import styles from './Header.module.css';
 
 export function Header({
@@ -40,51 +41,9 @@ export function Header({
         ]}
       />
       <div className={styles.divider} />
-      <Button variant="toolbar">
-        <Icon name="file" />
-        {t('shell.openScript')}
-        <Icon name="chevron" size={12} />
-      </Button>
-      <Button variant="toolbar">
-        {t('shell.selectData')}
-        <Icon name="chevron" size={12} />
-      </Button>
-      <SegmentedControl
-        label={t('shell.timeframe')}
-        value=""
-        disabled
-        options={[
-          { value: '15', label: t('shell.15m') },
-          { value: '60', label: t('shell.1h') },
-          { value: '240', label: t('shell.4h') },
-          { value: 'D', label: t('shell.1D') },
-        ]}
-      />
-      <Button variant="toolbar" disabled>
-        <Icon name="calendar" />
-        {t('shell.dateRange')}
-      </Button>
+      <HeaderData />
       <div className={styles.spacer} />
-      <div className={styles.facts} aria-label={t('shell.facts')}>
-        {facts ??
-          (page === 'backtest' ? (
-            <span id="run-missing">{t('shell.runMissing')}</span>
-          ) : (
-            t('optimize.empty')
-          ))}
-      </div>
-      {page === 'backtest' && (
-        <Button
-          variant="primary"
-          disabled
-          disabledReason={t('shell.runMissing')}
-          aria-keyshortcuts="Control+Enter"
-          icon={<Icon name="play" size={11} />}
-          shortcut={t('shell.shortcut')}
-        >
-          <span>{t('shell.runBacktest')}</span>
-        </Button>
-      )}
+      <RunControls facts={facts} />
       <SegmentedControl
         label={t('shell.language')}
         value={language}

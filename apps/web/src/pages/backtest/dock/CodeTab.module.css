@@ -31,11 +31,3 @@
   background: var(--text);
   vertical-align: -3px;
 }
-.empty {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--panel);
-  color: var(--caption);
-}

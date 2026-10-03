@@ -1,15 +1,24 @@
+import { useEffect } from 'react';
+import { BacktestPage } from '../pages/backtest/BacktestPage.tsx';
+import { OptimizePage } from '../pages/optimize/OptimizePage.tsx';
+import { useBacktestStore } from '../state/backtest.ts';
 import { useUiStore } from '../state/ui.ts';
+import { DialogsRoot } from './DialogsRoot.tsx';
 import { Header } from './Header.tsx';
-import { Workbench } from './Workbench.tsx';
+import { installShortcuts } from './shortcuts.ts';
 import styles from './Shell.module.css';
 
-/** The workspace will provide readiness when script and data workflows are connected. */
-export function Shell({ canOptimize = false }: { canOptimize?: boolean }) {
+export function Shell({ canOptimize }: { canOptimize?: boolean }) {
   const page = useUiStore((state) => state.page);
+  const hasWorkspace = useBacktestStore(
+    (state) => state.compile.status === 'compiled' && state.dataset !== null,
+  );
+  useEffect(() => installShortcuts(), []);
   return (
     <div className={styles.shell}>
-      <Header canOptimize={canOptimize} />
-      <Workbench key={page} page={page} />
+      <Header canOptimize={canOptimize ?? hasWorkspace} />
+      {page === 'backtest' ? <BacktestPage /> : <OptimizePage />}
+      <DialogsRoot />
     </div>
   );
 }
