@@ -36,6 +36,7 @@ it('culls offscreen trades but retains a long overlapping trade, and redraws on 
   trades[0] = { ...trades[0], exitTime: 65 };
   overlay.setData(trades, 101);
   const context = {
+    globalAlpha: 1,
     save: vi.fn(),
     restore: vi.fn(),
     fillRect: vi.fn(),
@@ -68,4 +69,15 @@ it('culls offscreen trades but retains a long overlapping trade, and redraws on 
   overlay.primitive.detached!();
   overlay.select(trades[1]);
   expect(requestUpdate).toHaveBeenCalledTimes(3);
+  const stroke = vi.spyOn(context, 'stroke').mockImplementation(() => {
+    expect(context.globalAlpha).toBe(0.4);
+  });
+  overlay.setDimmed(true);
+  draw();
+  expect(stroke).toHaveBeenCalled();
+  stroke.mockImplementation(() => {
+    expect(context.globalAlpha).toBe(1);
+  });
+  overlay.setDimmed(false);
+  draw();
 });

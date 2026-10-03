@@ -57,6 +57,11 @@
   height: 28px;
   font-size: 12.5px;
 }
+/* The enclosing field supplies the single amber focus border (G5). */
+.input:focus-visible,
+.step:focus-visible {
+  outline: none;
+}
 .compact .input:only-child {
   text-align: left;
   padding: 0 8px;

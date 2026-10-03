@@ -584,6 +584,7 @@ export const en = {
   'report.separator': ', ',
   'report.rerun': 'They update after the next run.',
   'report.restoreInputs': 'Restore result inputs',
+  'report.restoreInputValue': 'Reset to {value}',
   'report.export': 'Export report CSV',
   'report.filename': 'report.csv',
   'report.metric': 'Metric',

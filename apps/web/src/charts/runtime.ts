@@ -6,6 +6,7 @@ import {
   type ChartOptions,
   type IChartApi,
   type Time,
+  type TickMarkFormatter,
 } from 'lightweight-charts';
 
 export function chartTheme(element: HTMLElement) {
@@ -25,7 +26,7 @@ export function chartTheme(element: HTMLElement) {
 }
 
 export function timeFormat(timezone: string) {
-  return new Intl.DateTimeFormat('en-GB', {
+  const date = new Intl.DateTimeFormat('en-GB', {
     timeZone: timezone,
     year: 'numeric',
     month: '2-digit',
@@ -34,9 +35,47 @@ export function timeFormat(timezone: string) {
     minute: '2-digit',
     hourCycle: 'h23',
   });
+  return {
+    format(value: number) {
+      const parts = Object.fromEntries(
+        date.formatToParts(value).map(({ type, value }) => [type, value]),
+      );
+      return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`;
+    },
+  };
 }
 
-export function chartOptions(element: HTMLElement, timezone: string): DeepPartial<ChartOptions> {
+/** The library clips scrollable edge ticks; omit labels whose complete text cannot fit. */
+export function keepTimeLabelsInside(chart: IChartApi, format: TickMarkFormatter) {
+  const scale = chart.timeScale();
+  const options = chart.options();
+  const measure = document.createElement('canvas').getContext('2d')!;
+  measure.font = `600 ${options.layout.fontSize}px ${options.layout.fontFamily}`;
+  const refresh = () =>
+    chart.applyOptions({
+      timeScale: {
+        tickMarkFormatter: (time: Time, kind: TickMarkType, locale: string) => {
+          const label = format(time, kind, locale);
+          const x = scale.timeToCoordinate(time);
+          if (label === null || x === null) return label;
+          const half = measure.measureText(label).width / 2 + 2;
+          return x < half || x + half > scale.width() ? '' : label;
+        },
+      },
+    });
+  scale.subscribeVisibleLogicalRangeChange(refresh);
+  scale.subscribeSizeChange(refresh);
+  refresh();
+  return () => {
+    scale.unsubscribeVisibleLogicalRangeChange(refresh);
+    scale.unsubscribeSizeChange(refresh);
+  };
+}
+
+export function chartOptions(
+  element: HTMLElement,
+  timezone: string,
+): DeepPartial<ChartOptions> & { timeScale: { tickMarkFormatter: TickMarkFormatter } } {
   const theme = chartTheme(element);
   const format = timeFormat(timezone);
   const date = new Intl.DateTimeFormat('en-US', {
@@ -80,7 +119,7 @@ export function chartOptions(element: HTMLElement, timezone: string): DeepPartia
       locale: 'en-US',
       timeFormatter: (time: Time) => format.format(Number(time) * 1000),
     },
-  };
+  } satisfies DeepPartial<ChartOptions>;
 }
 
 /** Keyboard zoom uses the same logical range as pointer zoom, with no data updates. */

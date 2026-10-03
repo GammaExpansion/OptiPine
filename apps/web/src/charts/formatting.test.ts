@@ -1,7 +1,32 @@
 import { describe, expect, it } from 'vitest';
-import { drawdownTickLabels, priceFormat, tickLabels } from './formatting.ts';
+import {
+  barChange,
+  drawdownTickLabels,
+  priceFormat,
+  priceTickLabels,
+  tickLabels,
+} from './formatting.ts';
 
 describe('chart price formatting', () => {
+  it('measures signed bar change from the previous close and handles an absent denominator', () => {
+    expect(barChange(99.79, 100)).toBe('−0.21');
+    expect(barChange(101, 100)).toBe('+1.00');
+    expect(barChange(100, 100)).toBe('+0.00');
+    expect(barChange(100, undefined)).toBeNull();
+    expect(barChange(100, 0)).toBeNull();
+  });
+  it('hides only price ticks whose pixels collide with the last-price badge', () => {
+    const values = [84000, 85000, 86000];
+    const labels = tickLabels(values, 2);
+    expect(priceTickLabels(values, labels, (value) => value / 10, 84868)).toEqual([
+      '84,000',
+      '',
+      '86,000',
+    ]);
+    expect(priceTickLabels(values, labels, (value) => value / 100, 84868)).toEqual(['', '', '']);
+    expect(priceTickLabels(values, labels, () => null, 84868)).toEqual(labels);
+    expect(priceTickLabels(values, labels, (value) => value, undefined)).toEqual(labels);
+  });
   it('groups coarse price ticks while retaining mintick precision for exact labels', () => {
     const format = priceFormat(0.01);
     expect(format.tickmarksFormatter([97_000, 96_000, 95_000])).toEqual([

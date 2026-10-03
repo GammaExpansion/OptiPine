@@ -33,8 +33,8 @@ export function MarketDataDialog() {
   const actions = useMarketDataStore((state) => state.actions);
   const [now] = useState(getServices().now);
   const [selection, setSelection] = useState<Selection>(() => {
-    if ('request' in current) return selectionFrom(current.request);
-    if (origin?.kind === 'provider') return selectionFrom(origin.request);
+    if ('request' in current) return selectionFrom(current.request, now);
+    if (origin?.kind === 'provider') return selectionFrom(origin.request, now);
     try {
       return restoreSelection(localStorage.getItem(selectionKey), now);
     } catch {

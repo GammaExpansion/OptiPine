@@ -1,7 +1,7 @@
 # Backtest charts
 
 `PriceChart.tsx` takes immutable `bars`, engine `plots`, workflow `trades: TradeRow[]`, `symbol`,
-`timezone`, optional `mintick` and `hoveredTrade`. Give its parent a height (minimum 240 px).
+`timezone`, optional `timeframe`, `mintick`, `hoveredTrade` and `dimMarkers`. Give its parent a height (minimum 240 px).
 An `I18nProvider` and the shared style tokens are required. Keep result arrays stable between renders:
 one `setData` call per series loads a result, while pointer movement, trade hover and focus update the
 chart directly. React never reconciles candles, plot points, calendar cells or monthly labels.
@@ -52,11 +52,20 @@ accept a `CalendarViewport` with the parent chart's width and calendar-day proje
 - Candle bodies are hollow green and solid red, as in B1. Long/short entries use green/red arrows;
   exits use circles. Dashed trade spans show percentage P&L. A focused or hovered trade has outlined
   endpoints and an amber span; details stay at the upper right to remain readable near either edge.
+  `dimMarkers` draws trade markers, spans and highlights at 40% opacity without reloading the series
+  or resetting zoom. B8/B9 set it while the displayed run is running or outdated.
+- B1's legend has no date. Only the symbol is bold; the optional timeframe is regular. OHLC is followed
+  by the signed percentage change from the preceding close (a dash for the first bar or a zero prior close).
+  Lower-pane legends have a canvas-colour backdrop. The equity peak dot stays at its data coordinate,
+  while its text is clamped inside the pane and hidden when the point is offscreen.
 - Calendar weeks start Monday. Missing days remain neutral. Intensity scales to the largest absolute
   daily value in the selected unit. Monthly/yearly returns come unchanged from the workflow. Very
   narrow monthly labels are hidden to prevent overlap; each rendered label retains a native tooltip.
 - Real UTC instants stay on the chart axis. Only displayed labels use the symbol's IANA timezone,
   avoiding duplicate timestamps during a daylight-saving fold. All financial numbers use en-US.
+  Crosshair and trade dates use `YYYY-MM-DD HH:mm` in both languages. Time tick labels that cannot
+  fit inside the visible width are omitted on pan/zoom/resize; ticks within 16 px of the last-price
+  badge are omitted to avoid overlapping text.
   Price ticks use only the decimals needed by their grid; last-price, crosshair, OHLC and trade prices
   retain mintick precision. Equity ticks use grouping; drawdown ticks use compact thousands at 1,000
   and above, retaining enough precision to distinguish adjacent ticks.

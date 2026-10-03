@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { parseCsv } from '@pine/market-data';
+import { installMarketFixtures } from './market-fixtures.ts';
 import { strategySource, syntheticBars } from '../src/workflows/test-support.ts';
 import type { Language } from '../src/i18n/translate.ts';
 
@@ -277,13 +277,8 @@ for (const language of ['en', 'zh'] as const) {
       .poll(() => canvas.evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL()))
       .not.toBe(beforeFocus);
     await expect.poll(amberPixels).toBeGreaterThan(10);
-    const entryDate = new Date(result.firstEntry! * 1000)
-      .toISOString()
-      .slice(0, 10)
-      .split('-')
-      .reverse()
-      .join('/');
-    await expect(chart.locator('div').first()).toContainText(entryDate);
+    const entryDate = new Date(result.firstEntry! * 1000).toISOString().slice(0, 10);
+    await expect(page.getByTestId('trade-detail')).toContainText(entryDate);
     await page.screenshot({ path: info.outputPath(`B6-first-trade-${language}.png`) });
 
     await page.getByRole('radio', { name: label('Short', '空'), exact: true }).click();
@@ -306,51 +301,7 @@ for (const language of ['en', 'zh'] as const) {
 }
 
 async function loadRecordedExample(page: Page, language: Language) {
-  const now = new Date('2026-09-01T00:00:00Z');
-  await page.clock.setFixedTime(now);
-  // Official TradingView BTCUSDT hourly OHLCV; plot columns are ignored by parseCsv.
-  const recorded = parseCsv(
-    await readFile(
-      new URL(
-        '../../../packages/golden/fixtures/indicator/v6/M_time__btcusdt_60/data.csv',
-        import.meta.url,
-      ),
-      'utf8',
-    ),
-  );
-  let requests = 0;
-  await page.route('**/api/market/bars?*', async (route) => {
-    requests++;
-    const query = new URL(route.request().url()).searchParams;
-    expect(query.get('symbol')).toBe('BTCUSDT');
-    expect(query.get('timeframe')).toBe('60');
-    const from = Number(query.get('from'));
-    const to = Number(query.get('to'));
-    await route.fulfill({
-      json: {
-        input: {
-          bars: recorded.bars.filter((bar) => bar.time >= from && bar.time < to),
-          timeframe: '60',
-          syminfo: {
-            tickerid: 'BINANCE:BTCUSDT',
-            ticker: 'BTCUSDT',
-            prefix: 'BINANCE',
-            type: 'crypto',
-            currency: 'USDT',
-            basecurrency: 'BTC',
-            timezone: 'Etc/UTC',
-            mintick: 0.01,
-            mincontract: 0.00001,
-            pointvalue: 1,
-            session: 'regular',
-            session_hours: '0000-0000:1234567',
-          },
-        },
-        fetchedAt: now.getTime(),
-        profileEstimated: false,
-      },
-    });
-  });
+  const requests = await installMarketFixtures(page);
   await page.goto(app);
   await page.evaluate(async (language) => {
     const backtestPath = '/src/state/backtest.ts';
@@ -363,8 +314,117 @@ async function loadRecordedExample(page: Page, language: Language) {
     uiStore.getState().setDockTab('report');
     await loadExample('trend-breakout');
   }, language);
-  expect(requests).toBe(1);
+  expect(requests.filter((url) => url.pathname.endsWith('/bars'))).toHaveLength(1);
   return runReady(page);
+}
+
+for (const language of ['en', 'zh'] as const) {
+  test(`Backtest polish: legends, focus, staleness and range preset (${language})`, async ({
+    page,
+  }, info) => {
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await loadRecordedExample(page, language);
+    const label = (en: string, zh: string) => (language === 'en' ? en : zh);
+    const chart = page.getByTestId('price-chart');
+    const legend = chart.locator(':scope > div').first();
+    await expect(page.getByRole('tabpanel').getByRole('table')).toHaveCount(3);
+    await expect(chart).toHaveAttribute('data-markers-dimmed', 'false');
+    await expect(legend.locator('strong')).toHaveText('BTCUSDT');
+    await expect(legend.locator('strong')).toHaveCSS('font-weight', '600');
+    await expect(legend.getByText('1h', { exact: true })).toHaveCSS('font-weight', '400');
+    await expect(legend).not.toContainText('2026');
+    const change = await page.evaluate(async () => {
+      const path = '/src/state/backtest.ts';
+      const { getBacktestStore } = (await import(
+        path
+      )) as typeof import('../src/state/backtest.ts');
+      const bars = getBacktestStore().getState().result!.computedWith.dataset.input.bars;
+      const value = (bars.at(-1)!.close / bars.at(-2)!.close - 1) * 100;
+      return `${value < 0 ? '−' : '+'}${Math.abs(value).toFixed(2)}%`;
+    });
+    await expect(legend).toContainText(change);
+    const capture = async (name: string) => {
+      await page.mouse.move(1400, 880);
+      await page.evaluate(() => document.fonts.ready);
+      await page.screenshot({ path: info.outputPath(`${name}-${language}.png`) });
+    };
+    await capture('B1-polish');
+
+    const length = page.getByRole('spinbutton', { name: 'Length', exact: true });
+    // Zoom first: a staleness update must preserve the user's chart view.
+    await chart.getByRole('group').press('+');
+    const candles = chart.locator('canvas').first();
+    const candlePixels = () => candles.evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL());
+    await page.mouse.move(1400, 880);
+    const before = await candlePixels();
+    await length.fill('30');
+    await expect(chart).toHaveAttribute('data-markers-dimmed', 'true');
+    await expect(length).toHaveCSS('outline-style', 'none');
+    await expect(length.locator('..')).toHaveCSS('border-width', '1px');
+    await expect(length.locator('..')).toHaveCSS('border-color', 'rgb(242, 163, 58)');
+    const reset = page.getByRole('button', {
+      name: label('Reset to 20', '恢复为 20'),
+      exact: true,
+    });
+    await expect(reset).toBeVisible();
+    await expect.poll(candlePixels).not.toBe(before);
+    await capture('B9-polish');
+    await reset.click();
+    await expect(chart).toHaveAttribute('data-markers-dimmed', 'false');
+    await expect(length).toHaveValue('20');
+    await expect.poll(candlePixels).toBe(before);
+
+    const release = await page.evaluateHandle(async () => {
+      const path = '/src/state/services.ts';
+      const backtestPath = '/src/state/backtest.ts';
+      const { getServices } = (await import(path)) as typeof import('../src/state/services.ts');
+      const { getBacktestStore } = (await import(
+        backtestPath
+      )) as typeof import('../src/state/backtest.ts');
+      const engine = getServices().engine;
+      const original = engine.run.bind(engine);
+      let resume!: () => void;
+      const gate = new Promise<void>((resolve) => {
+        resume = resolve;
+      });
+      engine.run = async (...args) => {
+        engine.run = original;
+        const result = await original(...args);
+        await gate;
+        return result;
+      };
+      void getBacktestStore().getState().actions.run();
+      return resume;
+    });
+    await expect(chart).toHaveAttribute('data-markers-dimmed', 'true');
+    await expect(page.locator('[data-dimmed="true"]')).toHaveCSS('opacity', '0.4');
+    await capture('B8-polish');
+    await release.evaluate((resume) => resume());
+    await release.dispose();
+    await expect(chart).toHaveAttribute('data-markers-dimmed', 'false');
+
+    await page.evaluate(async () => {
+      const path = '/src/state/ui.ts';
+      const { uiStore } = (await import(path)) as typeof import('../src/state/ui.ts');
+      uiStore.getState().setDialogOpen('marketData', true);
+    });
+    await expect(
+      page.getByRole('dialog').getByRole('button', { name: label('2Y', '2年'), exact: true }),
+    ).toHaveAttribute('aria-pressed', 'true');
+    await page.keyboard.press('Escape');
+    await page.evaluate(async () => {
+      const path = '/src/state/backtest.ts';
+      const { loadExample } = (await import(path)) as typeof import('../src/state/backtest.ts');
+      await loadExample('rsi-reversal');
+    });
+    await runReady(page);
+    const lower = chart.locator(':scope > div').nth(1);
+    await expect(lower).toContainText('RSI');
+    await expect(lower).toHaveCSS('background-color', 'rgb(14, 16, 19)');
+    await capture('B7-polish');
+    expect(errors).toEqual([]);
+  });
 }
 
 for (const language of ['en', 'zh'] as const) {
@@ -395,10 +455,12 @@ for (const language of ['en', 'zh'] as const) {
         const cells = svg.querySelectorAll('rect');
         const width = Number(svg.querySelector('svg')!.getAttribute('width'));
         const x = (index: number) => Number(cells[index].getAttribute('x')) / width;
-        return { first: x(0), week: x(7) - x(0) };
+        return { first: x(0), week: x(14) - x(7) };
       });
+    // The final three-day month is too narrow for a label, but its data remains present.
+    await expect(monthlyReturns.locator('svg > text[y="13"]')).toHaveCount(25);
     await expect(months).toHaveCount(24);
-    await expect(calendar.locator('rect')).toHaveCount(730);
+    await expect(calendar.locator('rect')).toHaveCount(731);
     await expect
       .poll(async () => Number(await calendar.locator('rect').first().getAttribute('width')))
       .toBeLessThan(10);
@@ -427,8 +489,8 @@ for (const language of ['en', 'zh'] as const) {
     await checkTextFits(page);
     await page.screenshot({ path: info.outputPath(`equity-example-${language}.png`) });
     const recording = JSON.stringify({
-      from: '2024-09-01',
-      to: '2026-09-01',
+      from: '2024-10-03T14:00:00Z',
+      to: '2026-10-03T14:00:00Z',
       bars: 17520,
       trades: result.trades,
     });
@@ -516,7 +578,7 @@ test('B9 outdated results remain visible, and B12 shows zero trades', async ({ p
   await expect(page.getByText('Default 5', { exact: true })).toBeVisible();
   await page.screenshot({ path: info.outputPath('B9-integrated-en.png') });
   expect(await page.getByRole('table', { name: 'Returns' }).innerText()).toBe(figure);
-  await page.getByRole('button', { name: 'Restore result inputs' }).click();
+  await page.getByRole('button', { name: 'Reset to 5' }).click();
   await expect(notice).toHaveCount(0);
   await expect(changedDot).toHaveCount(0);
   await expect(page.getByLabel('Last run')).toContainText('2,000 bars');
@@ -593,7 +655,7 @@ test('capture B1 B2 B5 B6 references in both languages with local fonts', async 
   page,
 }, info) => {
   for (const language of ['en', 'zh'] as const) {
-    for (const board of ['Main', 'B2', 'B5', 'B6']) {
+    for (const board of ['Main', 'B2', 'B5', 'B6', 'B7', 'B8', 'B9', 'G5']) {
       const source = (
         await readFile(
           new URL(
