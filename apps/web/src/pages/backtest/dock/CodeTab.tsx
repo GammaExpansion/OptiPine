@@ -2,7 +2,8 @@ import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { getBacktestStore, openScript, useBacktestStore } from '../../../state/backtest.ts';
 import { useSelectionStore } from '../../../state/selection.ts';
 import { PineEditor } from '../code/PineEditor.tsx';
-import { useCodeAnnotations } from '../code/useCodeAnnotations.ts';
+import { useCodeAnnotations, useSettledCompile } from '../code/useCodeAnnotations.ts';
+import { DockActions } from './DockActions.tsx';
 import styles from './CodeTab.module.css';
 
 /** Typing into the empty editor starts a script of its own; later edits recompile it. */
@@ -23,6 +24,26 @@ async function openDroppedFile(file: File) {
   openScript({ source: await file.text(), fileName: file.name, origin: { kind: 'file' } });
 }
 
+/** B3's "v6 compiled" in the dock bar, or that the script is compiling or failed to compile. */
+function CompileStatus() {
+  const { t } = useI18n();
+  const compile = useSettledCompile();
+  if (compile.status === 'empty') return null;
+  const version = compile.status === 'compiled' ? compile.description.version : undefined;
+  return (
+    <span className={styles.status} data-state={compile.status}>
+      <span className={styles.dot} />
+      {compile.status === 'compiling'
+        ? t('code.compiling')
+        : compile.status === 'failed'
+          ? t('code.failed')
+          : version
+            ? t('code.compiled', { version })
+            : t('code.compiledPlain')}
+    </span>
+  );
+}
+
 /** The Pine code tab (B3, B4, B10): editing recompiles in the background. */
 export function CodeTab() {
   const { t } = useI18n();
@@ -30,18 +51,23 @@ export function CodeTab() {
   const codeLine = useSelectionStore((state) => state.codeLine);
   const annotations = useCodeAnnotations(true);
   return (
-    <PineEditor
-      className={styles.code}
-      keepAs={getBacktestStore()}
-      source={source}
-      annotations={annotations}
-      label={t('code.editor')}
-      emptyText={t('backtest.codePlaceholder')}
-      reveal={codeLine}
-      selectOnReveal
-      onChange={editSource}
-      onRun={runIfReady}
-      onDropFile={openDroppedFile}
-    />
+    <>
+      <DockActions>
+        <CompileStatus />
+      </DockActions>
+      <PineEditor
+        className={styles.code}
+        keepAs={getBacktestStore()}
+        source={source}
+        annotations={annotations}
+        label={t('code.editor')}
+        emptyText={t('backtest.codePlaceholder')}
+        reveal={codeLine}
+        selectOnReveal
+        onChange={editSource}
+        onRun={runIfReady}
+        onDropFile={openDroppedFile}
+      />
+    </>
   );
 }

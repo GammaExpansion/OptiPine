@@ -89,15 +89,19 @@ test('a compile error shows in the code and in Issues, and editing fixes it (B10
   );
   const editor = page.getByRole('textbox', { name: 'Pine code editor' });
   await expect(editor.locator('.cm-line-er')).toContainText('lenght');
+  await expect(page.getByText('Compile failed', { exact: true })).toBeVisible();
   await editor.locator('.cm-squiggle').dblclick();
   await page.keyboard.type('length');
   await expect(run(page)).toBeEnabled();
+  await expect(page.getByText('v6 compiled')).toBeVisible();
   await expect(editor.locator('.cm-line-er')).toHaveCount(0);
   await expect(page.getByRole('tab', { name: /^Issues/ })).toHaveText('Issues0');
   expect(errors).toEqual([]);
 });
 
-test('a runtime error shows B11, and Go to line selects the line', async ({ page }, info) => {
+test('a runtime error shows B11, and Go to line opens the dock and selects the line', async ({
+  page,
+}, info) => {
   const errors = await open(page, failing);
   await run(page).click();
   await expect(page.getByRole('heading', { name: 'Run failed, no results' })).toBeVisible();
@@ -106,7 +110,10 @@ test('a runtime error shows B11, and Go to line selects the line', async ({ page
   ).toBeVisible();
   await expect(facts(page)).toHaveText('Run failed');
   await page.screenshot({ path: info.outputPath('B11-en.png') });
+  await page.getByRole('button', { name: 'Collapse panel', exact: true }).click();
+  await expect(page.locator('#dock')).toHaveCSS('height', '36px');
   await page.getByRole('button', { name: 'Go to line 24' }).click();
+  await expect(page.locator('#chart')).toHaveCSS('height', '430px');
   const editor = page.getByRole('textbox', { name: 'Pine code editor' });
   await expect(editor).toBeFocused();
   await expect(editor.locator('.cm-activeLine')).toHaveText(

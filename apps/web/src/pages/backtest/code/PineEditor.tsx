@@ -121,12 +121,25 @@ export function PineEditor({
     relocalize(view.current!, label, emptyText);
   }, [label, emptyText]);
 
+  // A request made while the editor is hidden, inside a collapsed dock, waits until it shows:
+  // a hidden editor can neither scroll nor take focus.
   useEffect(() => {
     const previous = revealed.current;
     if (!reveal || (previous && previous.line === reveal.line && previous.seq === reveal.seq))
       return;
-    revealed.current = reveal;
-    revealLine(view.current!, reveal.line, selectOnReveal);
+    const element = host.current!;
+    const apply = () => {
+      if (element.closest('[hidden]')) return false;
+      revealed.current = reveal;
+      revealLine(view.current!, reveal.line, selectOnReveal);
+      return true;
+    };
+    if (apply()) return;
+    const observer = new ResizeObserver(() => {
+      if (apply()) observer.disconnect();
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
   }, [reveal, selectOnReveal]);
 
   return <div ref={host} className={className} />;

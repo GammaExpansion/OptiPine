@@ -3,3 +3,26 @@
   min-height: 0;
   background: var(--code-background);
 }
+/* B3: the compile status at the right of the dock bar. */
+.status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 8px;
+  font-size: 12px;
+  color: var(--caption);
+  white-space: nowrap;
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--profit);
+}
+.status[data-state='compiling'] .dot {
+  background: var(--primary);
+}
+.status[data-state='failed'] .dot {
+  background: var(--loss);
+}
