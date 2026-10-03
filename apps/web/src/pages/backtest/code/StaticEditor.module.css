@@ -1,0 +1,51 @@
+/*
+ * The empty editor as CodeMirror draws it with pineTheme (editor.ts): 12.5 / 19 px code, a 48 px
+ * line-number gutter, 10 px above the first line, and line 1 marked as the active line.
+ */
+.static {
+  position: relative;
+  display: flex;
+  font-family: var(--font-code);
+  font-size: 12.5px;
+  line-height: 19px;
+  color: var(--text);
+}
+.static::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  height: 19px;
+  background: rgb(255 255 255 / 3.5%);
+  pointer-events: none;
+}
+.gutter {
+  flex: none;
+  box-sizing: border-box;
+  min-width: 48px;
+  padding: 10px 14px 0 0;
+  border-left: 2px solid transparent;
+  text-align: right;
+  color: var(--code-caption);
+  font-variant-numeric: tabular-nums;
+}
+.text {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  caret-color: var(--text);
+  white-space: pre;
+}
+.text::placeholder {
+  color: var(--code-caption);
+  opacity: 1;
+}
