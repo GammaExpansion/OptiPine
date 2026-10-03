@@ -4,6 +4,7 @@ import { defaultPaneSizes, uiStore } from '../../state/ui.ts';
 import { OptimizePage } from './OptimizePage.tsx';
 import {
   loadOptimization,
+  loadWalkForward,
   optimization,
   renderInEnglish,
   runOptimization,
@@ -41,4 +42,26 @@ test('results lay out R1 in remembered splits, and dim when settings change (R5)
   expect(results).toHaveAttribute('data-outdated');
   fireEvent.doubleClick(screen.getByRole('separator', { name: 'Resize summary and results' }));
   expect(uiStore.getState().paneSizes.optimize.summary).toBe(defaultPaneSizes.summary);
+});
+
+test('walk-forward results lay out W1 and stay so, dimmed, when validation changes (R5)', async () => {
+  await loadWalkForward();
+  renderInEnglish(<OptimizePage />);
+  await runOptimization();
+  expect(optimization().walkForward?.windows.map((row) => row.status)).toHaveLength(4);
+  expect(separators()).toEqual([
+    'Resize stitched equity and windows',
+    'Resize window table and stability',
+    'Resize right panel',
+  ]);
+  expect(document.getElementById('optimize-wfSummary')).toBeInTheDocument();
+  const results = document.querySelector('[data-results]')!;
+  expect(results).not.toHaveAttribute('data-outdated');
+  act(() => optimization().actions.setValidation({ mode: 'in-out' }));
+  expect(results).toHaveAttribute('data-outdated');
+  expect(document.getElementById('optimize-wfSummary')).toBeInTheDocument();
+  fireEvent.doubleClick(
+    screen.getByRole('separator', { name: 'Resize stitched equity and windows' }),
+  );
+  expect(uiStore.getState().paneSizes.optimize.wfSummary).toBe(defaultPaneSizes.wfSummary);
 });

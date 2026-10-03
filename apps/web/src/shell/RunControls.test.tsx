@@ -13,6 +13,7 @@ import {
 import { strategySource } from '../workflows/test-support.ts';
 import {
   loadOptimization,
+  loadWalkForward,
   optimization,
   runOptimization,
 } from '../pages/optimize/test-support.tsx';
@@ -112,4 +113,17 @@ test('the header links failed combinations to their list and says when sets were
   expect(facts()).toHaveTextContent('5 random in 0:00');
   fireEvent.click(screen.getByRole('button', { name: /\d failed/ }));
   expect(uiStore.getState().openDialogs).toEqual(['failedCombinations']);
+});
+
+test('a walk-forward run states its window, then the windows it took (W4, W1)', async () => {
+  await loadWalkForward();
+  act(() => uiStore.setState({ page: 'optimize' }));
+  renderInEnglish(<RunControls />);
+  let run!: Promise<void>;
+  act(() => {
+    run = optimization().actions.start();
+  });
+  expect(facts()).toHaveTextContent('Window 1 / 4');
+  await act(() => run);
+  expect(facts()).toHaveTextContent(/^4 windows in 0:00$/);
 });
