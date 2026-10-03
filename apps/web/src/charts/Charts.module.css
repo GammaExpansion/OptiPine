@@ -1,0 +1,190 @@
+.price {
+  position: relative;
+  height: 100%;
+  min-height: 240px;
+  background: var(--canvas);
+  overflow: hidden;
+}
+.chart {
+  position: absolute;
+  inset: 32px 0 0;
+}
+.legend,
+.paneLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: center;
+  padding: 6px 12px;
+  color: var(--secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.legend {
+  height: 32px;
+  align-content: center;
+}
+.legend > span:first-child {
+  font-weight: 600;
+  color: var(--text);
+}
+.paneLegend {
+  position: absolute;
+  margin-top: 32px;
+  z-index: 2;
+}
+.tradeDetail {
+  position: absolute;
+  z-index: 3;
+  top: 64px;
+  right: 92px;
+  width: 275px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 6px;
+  background: var(--hover);
+  box-shadow: 0 14px 36px rgb(0 0 0 / 35%);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.tradeDetail > span {
+  font-size: 12px;
+}
+.profit {
+  color: var(--profit);
+}
+.loss {
+  color: var(--loss);
+}
+.equity {
+  background: var(--panel);
+  min-width: 0;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 36px;
+  padding: 0 12px;
+  font-size: 12px;
+  color: var(--secondary);
+  white-space: nowrap;
+}
+.toolbar > span:not(.hint)::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 2px;
+}
+.equityKey::before {
+  background: var(--primary);
+  height: 2px !important;
+}
+.drawdownKey::before {
+  background: color-mix(in srgb, var(--loss) 45%, transparent);
+}
+.maxKey::before {
+  background: color-mix(in srgb, var(--loss) 16%, transparent);
+}
+.profitKey::before {
+  background: var(--profit);
+}
+.lossKey::before {
+  background: var(--loss);
+}
+.hint {
+  color: var(--caption);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.unit {
+  display: flex;
+  margin-left: auto;
+  flex-shrink: 0;
+  height: 26px;
+  padding: 2px;
+  gap: 2px;
+  border: 1px solid var(--divider);
+  border-radius: 5px;
+}
+.unit > button {
+  padding: 0 9px;
+  border-radius: 3px;
+  color: var(--secondary);
+}
+.unit > button[aria-pressed='true'] {
+  color: var(--text);
+  background: var(--selected);
+}
+.reset {
+  width: 26px;
+  height: 26px;
+  font-size: 18px;
+  flex-shrink: 0;
+  text-align: center;
+}
+.equityBody {
+  position: relative;
+  padding-top: 6px;
+  background: var(--canvas);
+}
+.equityCanvas {
+  height: 140px;
+  margin-left: 28px;
+}
+.drawdownCanvas {
+  height: 50px;
+  margin-left: 28px;
+}
+.drawdownShade {
+  position: absolute;
+  z-index: 2;
+  top: 6px;
+  height: 190px;
+  background: color-mix(in srgb, var(--loss) 6%, transparent);
+  pointer-events: none;
+}
+.drawdownShade > span {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: block;
+  margin-top: 116px;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--loss);
+  font-size: 11px;
+}
+.calendar {
+  display: block;
+  width: 100%;
+  height: 65px;
+  margin-top: 8px;
+}
+.months {
+  display: block;
+  width: 100%;
+  height: 43px;
+}
+.chart:focus-visible,
+.equityCanvas:focus-visible,
+.drawdownCanvas:focus-visible,
+.calendar:focus-visible {
+  outline: 1px solid var(--primary);
+  outline-offset: -1px;
+}
+@media (max-width: 900px) {
+  .hint,
+  .maxKey {
+    display: none;
+  }
+  .toolbar {
+    gap: 8px;
+  }
+}
