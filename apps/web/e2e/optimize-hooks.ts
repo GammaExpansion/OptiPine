@@ -12,6 +12,7 @@ export const optimizeHooks = {
       resultsId: state.results?.id ?? null,
       combinations: state.results?.combinations ?? null,
       outdated: state.outdated?.reasons ?? null,
+      windows: state.walkForward?.windows.map((window) => window.status) ?? null,
     };
   },
 };

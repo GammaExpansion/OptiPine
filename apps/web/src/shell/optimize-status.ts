@@ -7,17 +7,21 @@ import type {
 
 type StatusState = Pick<OptimizationState, 'run' | 'results' | 'outdated'>;
 
-/** How far a run has come (O8): the sets done in the range running, of `combinations`. */
+/**
+ * How far a run has come (O8): the sets done in the range running, of `combinations`. For
+ * walk-forward, the window running and its sets (W4).
+ */
 export interface ProgressView {
   readonly phase: OptimizationPhase;
   readonly done: number;
   readonly combinations: number;
-  /** Of every backtest the run takes, both ranges counted, from 0 to 100. */
+  /** Of every backtest the run takes, both ranges counted, from 0 to 100; of the window's. */
   readonly percent: number;
+  readonly window: RunProgress['window'];
 }
 
 export function progressView(progress: RunProgress): ProgressView {
-  const { phase, combinations, completed, total } = progress;
+  const { phase, combinations, completed, total, window } = progress;
   const done =
     phase === 'preparing'
       ? 0
@@ -36,6 +40,7 @@ export function progressView(progress: RunProgress): ProgressView {
         : total
           ? Math.min(100, Math.floor((completed / total) * 100))
           : 0,
+    window,
   };
 }
 
@@ -53,6 +58,8 @@ export type OptimizeStatus =
       readonly failed: number;
       /** The sets were sampled at random rather than taken from the grid (R4). */
       readonly random: boolean;
+      /** Walk-forward: the windows the run took (W1); null otherwise. */
+      readonly windows: number | null;
     }
   | { readonly kind: 'idle' };
 
@@ -72,7 +79,15 @@ export function optimizeStatus({ run, results, outdated }: StatusState): Optimiz
     durationMs: results.durationMs,
     failed: results.failures.length,
     random: results.computedWith.search.sampling?.method === 'random',
+    windows: results.windows,
   };
+}
+
+/** "6 windows", or "1 window". */
+export function windowCount(count: number): Message {
+  return count === 1
+    ? message('optimize.setup.window')
+    : message('optimize.setup.windows', { count });
 }
 
 /** A run's length as the header and the run block state it: 2:31, 10:09 or 1:02:05. */

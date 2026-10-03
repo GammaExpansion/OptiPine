@@ -20,7 +20,7 @@
  * The panels mount while there are results or a run fills them, and read the optimization store
  * themselves; none takes props. Dialog slots mount once at shell/DialogsRoot.
  */
-import { useOptimizationStore } from '../../state/optimization.ts';
+import { useOptimizationLoaded, useOptimizationStore } from '../../state/optimization.ts';
 import { Workbench } from '../../shell/Workbench.tsx';
 import { LeaderboardPanel } from './leaderboard/LeaderboardPanel.tsx';
 import { MapPanel } from './map/MapPanel.tsx';
@@ -137,6 +137,9 @@ function OptimizeMain() {
   );
 }
 
+/** Mounting the page loads the optimization side; its panels render once it exists. */
 export function OptimizePage() {
+  const loaded = useOptimizationLoaded();
+  if (!loaded) return null;
   return <Workbench page="optimize" main={<OptimizeMain />} sidebar={<OptimizeSidebar />} />;
 }

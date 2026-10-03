@@ -16,7 +16,7 @@ npm run format:check
 npm run e2e --workspace @pine/web
 ```
 
-The main Playwright suite runs `e2e/sheet.spec.ts` against the e2e preview on port 5175, using
+The Playwright suite runs `e2e/sheet.spec.ts` against the e2e preview (5175 by default), using
 the same setup and teardown as the app smoke tests. CI checks English and Chinese at 1440 × 1120,
 1024 × 768 and 390 × 844, and exercises keyboard selection, symbol suggestions, focus trapping,
 Escape, popovers and toast actions. The G5 check renders the reference with the built app's
