@@ -116,6 +116,7 @@ test('report renders all groups, keeps English metric names in Chinese, and rest
     </I18nProvider>,
   );
   expect(screen.getAllByRole('table')).toHaveLength(3);
+  expect(screen.getByRole('region', { name: 'Report' })).toHaveAttribute('tabindex', '0');
   expect(
     within(screen.getByRole('table', { name: 'Returns' })).getByText('Net profit'),
   ).toBeVisible();
@@ -239,6 +240,7 @@ test('trade hover, click and keyboard Enter call selection actions with workflow
   fireEvent.click(row);
   expect(focus).toHaveBeenLastCalledWith(rows[0].number);
   const grid = screen.getByRole('grid');
+  expect(within(grid).getByRole('columnheader', { name: 'Locate' })).toHaveTextContent('Locate');
   fireEvent.keyDown(grid, { key: 'ArrowDown' });
   fireEvent.keyDown(grid, { key: 'Enter' });
   expect(focus).toHaveBeenLastCalledWith(rows[1].number);

@@ -110,6 +110,36 @@ test('a dialog without description emits no missing-description warning and clos
   await user.click(screen.getByRole('button', { name: en['sheet.close'] }));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
+
+test('a conditionally mounted dialog returns focus to an external opener without a Radix trigger', async () => {
+  const user = userEvent.setup();
+  function Harness() {
+    const [open, setOpen] = useState(false);
+    return (
+      <>
+        <Button onClick={() => setOpen(true)}>{en['sheet.allSettings']}</Button>
+        {open && (
+          <Dialog
+            open
+            onOpenChange={setOpen}
+            title={en['sheet.properties']}
+            closeLabel={en['sheet.close']}
+          >
+            <TextInput aria-label={en['sheet.length']} />
+          </Dialog>
+        )}
+      </>
+    );
+  }
+  render(<Harness />);
+  const opener = screen.getByRole('button', { name: en['sheet.allSettings'] });
+  await user.tab();
+  await user.keyboard('{Enter}');
+  expect(screen.getByRole('button', { name: en['sheet.close'] })).toHaveFocus();
+  await user.keyboard('{Escape}');
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(opener).toHaveFocus();
+});
 test('popover exposes content, dismisses outside and returns focus after Escape', async () => {
   const user = userEvent.setup();
   render(

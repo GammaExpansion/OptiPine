@@ -128,7 +128,12 @@ export function PineEditor({
   }, [annotations]);
 
   useEffect(() => {
-    relocalize(view.current!, label, emptyText);
+    const editor = view.current!;
+    relocalize(editor, label, emptyText);
+    // A long contenteditable extends beyond the viewport; its scroll area needs its own stop.
+    editor.scrollDOM.tabIndex = 0;
+    editor.scrollDOM.setAttribute('role', 'region');
+    editor.scrollDOM.setAttribute('aria-label', label);
   }, [label, emptyText]);
 
   // A request made while the editor is hidden, inside a collapsed dock, waits until it shows:

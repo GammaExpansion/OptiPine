@@ -85,6 +85,9 @@ export function SymbolSearch({
           setOpen(true);
         }}
         onKeyDown={(event) => {
+          // Remove suggestions before native Tab moves focus; removing them during blur can
+          // make the dialog's focus scope recover to the dialog instead of the next control.
+          if (event.key === 'Tab') setOpen(false);
           if (event.key === 'Escape' && open) {
             event.preventDefault();
             event.stopPropagation();
