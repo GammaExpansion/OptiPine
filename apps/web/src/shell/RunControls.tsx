@@ -5,7 +5,7 @@ import { Icon } from '../components/Icon.tsx';
 import { useI18n } from '../i18n/I18nProvider.tsx';
 import { formatNumber } from '../i18n/translate.ts';
 import { useBacktestStore } from '../state/backtest.ts';
-import { useOptimizationStore } from '../state/optimization.ts';
+import { useOptimizationPresence, useOptimizationStore } from '../state/optimization.ts';
 import { getServices } from '../state/services.ts';
 import { useUiStore } from '../state/ui.ts';
 import { clockText, optimizeStatus, windowCount, type OptimizeStatus } from './optimize-status.ts';
@@ -232,5 +232,8 @@ function OptimizeRunControls() {
 
 export function RunControls() {
   const page = useUiStore((state) => state.page);
-  return page === 'backtest' ? <BacktestRunControls /> : <OptimizeRunControls />;
+  // The Optimize page loads the optimization side as it opens; its status follows.
+  const loaded = useOptimizationPresence((presence) => presence.loaded);
+  if (page === 'backtest') return <BacktestRunControls />;
+  return loaded ? <OptimizeRunControls /> : null;
 }

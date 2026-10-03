@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { expect, test } from 'vitest';
 import { getBacktestStore, openScript } from '../state/backtest.ts';
 import { getMarketDataStore } from '../state/marketData.ts';
+import { getServices } from '../state/services.ts';
 import { testInput } from '../state/test-support.ts';
 import { uiStore } from '../state/ui.ts';
 import {
@@ -103,6 +104,7 @@ test('on the Optimize page the header states the run, with Cancel and no main ac
 
 test('the header links failed combinations to their list and says when sets were sampled', async () => {
   await loadScript(`${strategySource}if length == 3 and bar_index == 40\n    runtime.error("x")\n`);
+  await act(() => getServices().loadOptimization());
   act(() => {
     uiStore.setState({ page: 'optimize' });
     optimization().actions.setRange('Length', { from: 2, to: 4, step: 1 });

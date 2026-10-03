@@ -3,6 +3,7 @@ import { beforeEach, expect } from 'vitest';
 import { getBacktestStore } from '../../state/backtest.ts';
 import { getMarketDataStore } from '../../state/marketData.ts';
 import { getOptimizationStore } from '../../state/optimization.ts';
+import { getServices } from '../../state/services.ts';
 import { testInput } from '../../state/test-support.ts';
 import { uiStore } from '../../state/ui.ts';
 import { syntheticBars } from '../../workflows/test-support.ts';
@@ -10,10 +11,16 @@ import { loadScript, useBacktestTestServices } from '../backtest/states/test-sup
 
 export { renderInEnglish } from '../backtest/states/test-support.tsx';
 
-/** Fresh services with in-process Workers and the English Optimize page for every test. */
+/**
+ * Fresh services with in-process Workers, their optimization side loaded, and the English Optimize
+ * page for every test.
+ */
 export function useOptimizeTestServices() {
   useBacktestTestServices();
-  beforeEach(() => uiStore.setState({ page: 'optimize' }));
+  beforeEach(async () => {
+    uiStore.setState({ page: 'optimize' });
+    await getServices().loadOptimization();
+  });
 }
 
 export const optimization = () => getOptimizationStore().getState();
@@ -25,6 +32,7 @@ export const optimization = () => getOptimizationStore().getState();
 export async function loadOptimization() {
   await loadScript();
   await waitFor(() => expect(getBacktestStore().getState().compile.status).toBe('compiled'));
+  await act(() => getServices().loadOptimization());
   act(() => {
     optimization().actions.setRange('Length', { from: 2, to: 4, step: 1 });
     optimization().actions.setSearched('Multiplier', false);

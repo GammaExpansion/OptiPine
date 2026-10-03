@@ -2,7 +2,7 @@ import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 import { cleanup } from '@testing-library/react';
-import { replaceServices } from '../state/services.ts';
+import { getServices, replaceServices } from '../state/services.ts';
 import { fakeServices } from '../state/test-support.ts';
 import { I18nProvider } from '../i18n/I18nProvider.tsx';
 import { defaultPaneSizes, uiStorageKey, uiStore } from '../state/ui.ts';
@@ -58,9 +58,12 @@ test('ready workspaces switch pages with the keyboard and restore the backtest d
   );
   await user.click(screen.getByRole('tab', { name: 'Report' }));
   expect(uiStore.getState().dockTab).toBe('report');
+  // The Backtest page never loads the optimization side; opening Optimize does.
+  expect(getServices().optimization).toBeNull();
   screen.getByRole('button', { name: 'Optimize' }).focus();
   await user.keyboard('{Enter}');
   expect(await screen.findByRole('heading', { name: 'No optimization has run yet' })).toBeVisible();
+  expect(getServices().optimization).not.toBeNull();
   expect(screen.queryByRole('tab', { name: 'Report' })).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Backtest' }));
   expect(screen.getByRole('tab', { name: 'Report' })).toHaveAttribute('aria-selected', 'true');
