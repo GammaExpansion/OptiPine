@@ -2,17 +2,19 @@ import { createRoot } from 'react-dom/client';
 import { AnalysisWorkerClient, EngineWorkerClient, OptimizationWorkerPool } from '@pine/workers';
 import type { RunInput } from '@pine/engine';
 import { generateSearchSpace } from '@pine/optimizer';
-import { I18nProvider } from '../src/i18n/I18nProvider.tsx';
+import { I18nProvider, loadActiveCatalog } from '../src/i18n/I18nProvider.tsx';
 import { Shell } from '../src/shell/Shell.tsx';
 import { createAnalysisWorker, createEngineWorker } from '../src/workers/factories.ts';
 import '../src/styles/base.css';
 import { backtestHooks } from './backtest-hooks.ts';
 import { optimizeHooks } from './optimize-hooks.ts';
 
-createRoot(document.getElementById('root')!).render(
-  <I18nProvider>
-    <Shell canOptimize />
-  </I18nProvider>,
+void loadActiveCatalog().then(() =>
+  createRoot(document.getElementById('root')!).render(
+    <I18nProvider>
+      <Shell canOptimize />
+    </I18nProvider>,
+  ),
 );
 
 const source = `//@version=6

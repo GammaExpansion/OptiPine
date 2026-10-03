@@ -2,6 +2,7 @@ import { StrictMode, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { EngineWorkerClient } from '@pine/workers';
 import type { EquityRunResult, MarketBar } from '@pine/engine';
+import '../i18n/catalogs.ts';
 import { I18nProvider, useI18n } from '../i18n/I18nProvider.tsx';
 import { useUiStore } from '../state/ui.ts';
 import { createEngineWorker } from '../workers/factories.ts';
