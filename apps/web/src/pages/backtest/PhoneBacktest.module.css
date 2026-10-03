@@ -1,0 +1,11 @@
+/* G3: the chart with its legend over one tab row, in a single column. */
+.page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.chart {
+  height: 320px;
+  flex: none;
+}

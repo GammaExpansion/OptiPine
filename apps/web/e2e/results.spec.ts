@@ -3,10 +3,11 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { installMarketFixtures } from './market-fixtures.ts';
 import { strategySource, syntheticBars } from '../src/workflows/test-support.ts';
 import type { Language } from '../src/i18n/translate.ts';
+import { origins } from './ports.ts';
 
 // Use the dev server so tests can install synthetic input through the public stores without
 // adding production globals or another shared Vite entry. The actual run uses the real Worker.
-const app = 'http://127.0.0.1:5176';
+const app = origins.dev;
 const rapid = `//@version=6
 strategy("Ten thousand trades", initial_capital=1000000, default_qty_value=1, margin_long=0, margin_short=0)
 if bar_index % 2 == 0
@@ -139,7 +140,7 @@ test('S1 keeps results, dialogs, the script menu, Optimize and Chinese out of th
       requested.push(response.body().then((body) => ({ file, bytes: body.length })));
   });
   await page.goto('/');
-  // S1 starts on Pine code. Its existing editor chunk is included in the browser total.
+  // S1 starts on Pine code: an empty look-alike of the editor, without CodeMirror's chunk.
   await expect(page.getByRole('textbox', { name: 'Pine code editor' })).toBeVisible();
   for (const name of ['Equity', 'Trades', 'Report']) {
     await page.getByRole('tab', { name, exact: true }).click();
@@ -148,26 +149,32 @@ test('S1 keeps results, dialogs, the script menu, Optimize and Chinese out of th
   await page.waitForLoadState('networkidle');
   const scripts = await Promise.all(requested);
   const lazy =
-    /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|ScriptMenuContent|OptimizePage|\/zh-)/;
+    /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|ScriptMenuContent|OptimizePage|PineEditor|RightDrawer|\/zh-)/;
   expect(scripts.map(({ file }) => file).filter((file) => lazy.test(file))).toEqual([]);
-  // Measured with the Optimize setup merged and one catalog per language: 859,707 bytes in all,
-  // 43,619 of them the English catalog, which loads before the first render, and 512,394 in the
-  // entry. The budgets leave about 6 KB, less than the script menu (14 KB), the market data
-  // dialog (19 KB) or the Chinese catalog (43 KB) would add if any loaded with the page again.
-  const bytes = scripts.reduce((total, script) => total + script.bytes, 0);
-  expect(bytes).toBeGreaterThan(0);
-  expect(bytes).toBeLessThan(866000);
+  // Measured with the editor deferred until there is something to edit and the tablet and phone
+  // layouts: 523,229 bytes of code, without CodeMirror's 300,480, 519,022 of them in the entry,
+  // and the English catalog's 47,894. The code budgets leave about 6 KB, less than the script menu
+  // (14 KB) or the market data dialog (19 KB) would add if either loaded with the page again.
+  const catalog = /\/en-[^/]*\.js$/;
+  const sum = (files: typeof scripts) => files.reduce((total, script) => total + script.bytes, 0);
+  const code = sum(scripts.filter(({ file }) => !catalog.test(file)));
+  expect(code).toBeGreaterThan(0);
+  expect(code).toBeLessThan(529_500);
+  // The catalog grows with the copy of every feature. It is checked on its own, about 6 KB over
+  // its size, so new copy never pushes the code over its budget; a catalog that outgrows this
+  // budget is a reason to look at what it carries, then to raise the budget.
+  const catalogBytes = sum(scripts.filter(({ file }) => catalog.test(file)));
+  expect(catalogBytes).toBeGreaterThan(0);
+  expect(catalogBytes).toBeLessThan(54_000);
   const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
   const entryFiles = new Set(
     [...html.matchAll(/(?:src|href)="([^"\s]+\.js)"/g)].map((match) => match[1]),
   );
-  const entryBytes = scripts
-    .filter(({ file }) => entryFiles.has(file))
-    .reduce((total, script) => total + script.bytes, 0);
-  expect(entryBytes).toBeLessThan(518500);
+  const entryBytes = sum(scripts.filter(({ file }) => entryFiles.has(file)));
+  expect(entryBytes).toBeLessThan(525_000);
   await writeFile(
     info.outputPath('s1-bundle.json'),
-    JSON.stringify({ scripts, entryBytes, bytes }, null, 2),
+    JSON.stringify({ scripts, entryBytes, code, catalogBytes }, null, 2),
   );
 });
 

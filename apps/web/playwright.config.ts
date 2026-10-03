@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+import { origins } from './e2e/ports.ts';
 
 export default defineConfig({
   testDir: './e2e',
@@ -8,7 +9,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 2 : undefined,
   use: {
-    baseURL: 'http://127.0.0.1:5174',
+    baseURL: origins.production,
     viewport: { width: 1440, height: 900 },
     locale: 'en-US',
     trace: 'retain-on-failure',
