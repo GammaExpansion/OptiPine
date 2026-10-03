@@ -5,3 +5,7 @@ node_modules/
 package-lock.json
 packages/market-data/test/fixtures/
 docs/web-mock-terminal/artboards/
+**/.e2e-dist/
+**/test-results/
+**/playwright-report/
+.npm/

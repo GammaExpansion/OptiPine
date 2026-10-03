@@ -39,6 +39,17 @@ OptiPine 直接运行你的 Pine 源码。提供一个 v5 或 v6 策略和行情
 - **自带行情数据。** 经由一个小型 Node 代理获取 Binance 现货与永续、Yahoo Finance 行情，并支持
   CSV 文件。
 
+## 运行应用
+
+浏览器应用的第一阶段骨架位于 `apps/web`：双语外壳与可调整大小的面板。脚本加载、行情选择及
+运行按钮将在后续阶段接入。
+
+执行 `npm ci && npm run build` 后，用 `npm run dev -w @pine/web` 启动开发服务，或用
+`npm run start -w @pine/web` 在 `http://127.0.0.1:5174` 运行构建产物（可通过 `HOST` 和
+`PORT` 覆盖生产地址）。开发、预览及生产服务均包含 `/api/market`。
+`npm run test -w @pine/web` 无需浏览器；执行 `npx playwright install chromium` 安装 Chromium
+后，可用 `npm run e2e -w @pine/web` 运行浏览器冒烟测试。
+
 ## 快速开始
 
 需要 [Node.js](https://nodejs.org) 24.5 或更新版本。

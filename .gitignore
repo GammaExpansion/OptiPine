@@ -5,6 +5,9 @@ dist/
 
 # Test output and local golden runs
 coverage/
+test-results/
+playwright-report/
+.e2e-dist/
 .golden/
 
 # Local tool state, npm cache and diagnostic logs
