@@ -2,12 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { describe, type InputDescriptor } from '@pine/engine';
 import {
+  applyInputValues,
   inputFields,
   inputValues,
   resetInputValues,
   setInputValue,
   stepInputValue,
   validateInputValue,
+  type ParameterOrigin,
 } from './inputs.ts';
 import { workflowMessage } from './messages.ts';
 
@@ -182,4 +184,47 @@ test('the stepper moves by the declared step within the range, without drift', (
   for (let i = 0; i < 30; i++) value = stepInputValue(tenth, value, 1);
   assert.equal(value, 3);
   assert.equal(stepInputValue(byTitle('Length'), Number.NaN, 1), 21);
+});
+
+test('an applied set notes its origin until the input is edited, reset or dropped (B17)', () => {
+  const origin: ParameterOrigin = { kind: 'rank', optimizationId: 3, trialId: 'a1', rank: 1 };
+  let fields = applyInputValues(
+    inputFields(inputs),
+    { Length: 28, 'ATR length': 5, Missing: 1, Source: 'close' },
+    origin,
+  );
+  const pick = (title: string) => fields.find((item) => item.descriptor.title === title)!;
+  assert.deepEqual(
+    [pick('Length').value, pick('Length').changed, pick('Length').origin],
+    [28, true, origin],
+  );
+  assert.equal(pick('Length').descriptor.defaultValue, 20);
+  assert.deepEqual([pick('Source').changed, pick('Source').origin], [false, origin]);
+  assert.equal(pick('ATR length').value, undefined);
+  assert.equal(pick('ATR length').origin, null);
+  assert.equal(pick('Multiplier').origin, null);
+
+  const recompiled = inputFields(
+    describe(`//@version=6
+strategy("Inputs")
+a = input.int(20, "Length", minval=5, maxval=200)
+c = input.source(close, "Source")
+`).inputs,
+    fields,
+  );
+  assert.deepEqual(
+    recompiled.map((item) => [item.value, item.origin]),
+    [
+      [28, origin],
+      ['close', origin],
+    ],
+  );
+
+  fields = setInputValue(fields, 'Length', 30);
+  assert.equal(pick('Length').origin, null);
+  fields = resetInputValues(fields);
+  assert.equal(
+    fields.some((item) => item.origin),
+    false,
+  );
 });

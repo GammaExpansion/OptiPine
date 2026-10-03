@@ -4,11 +4,13 @@ import { errorText, type Message, type Text } from '@pine/messages';
 import { metricValue, type TrialResult } from '@pine/optimizer';
 import { WorkerCancelledError, WorkerStaleError } from '@pine/workers';
 import {
+  applyInputValues,
   inputFields,
   inputValues,
   resetInputValues,
   setInputValue,
   type InputField,
+  type ParameterOrigin,
 } from './inputs.ts';
 import { workflowMessage } from './messages.ts';
 import {
@@ -135,6 +137,36 @@ export interface Readiness {
   readonly reasons: readonly Message[];
 }
 
+/** One value of a previewed set that differs from the current input (the B16 banner). */
+export interface PreviewChange {
+  readonly title: string;
+  /** Undefined when the current inputs have no value for it. */
+  readonly current: LiteralValue | undefined;
+  readonly preview: LiteralValue;
+}
+
+/**
+ * A parameter set run on the Backtest page without changing the current inputs (B16). While it is
+ * open, the page shows its run and result; the current inputs, run and result stay as they were.
+ */
+export interface Preview {
+  /** The set as the optimization ran it: every input it overrode, keyed by title. */
+  readonly set: Readonly<Record<string, LiteralValue>>;
+  readonly origin: ParameterOrigin;
+  /** The inputs the preview runs: the current inputs with the set written in. */
+  readonly inputs: readonly InputField[];
+  /** The set's values that differ from the current inputs, in declaration order. */
+  readonly changes: readonly PreviewChange[];
+  readonly run: RunState;
+  readonly result: BacktestResult | null;
+  readonly readiness: Readiness;
+}
+
+/** The parameter set last written into the inputs (B17), until an input is edited. */
+export interface AppliedSet {
+  readonly origin: ParameterOrigin;
+}
+
 export interface BacktestState {
   readonly source: string;
   readonly sourceRevision: number;
@@ -155,9 +187,16 @@ export interface BacktestState {
   /** Null without a result. */
   readonly outdated: Outdated | null;
   readonly readiness: Readiness;
+  readonly preview: Preview | null;
+  /** Set by applying a parameter set; cleared when inputs are edited, reset or rebuilt. */
+  readonly applied: AppliedSet | null;
 }
 
-type BaseState = Omit<BacktestState, 'properties' | 'outdated' | 'readiness'>;
+type PreviewBase = Pick<Preview, 'set' | 'origin' | 'run' | 'result'>;
+type BaseState = Omit<BacktestState, 'properties' | 'outdated' | 'readiness' | 'preview'> & {
+  readonly preview: PreviewBase | null;
+};
+type RunTarget = 'main' | 'preview';
 
 const sameProperties = (a: PropertyOverrides, b: PropertyOverrides): boolean =>
   propertyIds.every((id) => Object.is(a[id], b[id]));
@@ -182,7 +221,11 @@ function outdatedOf(state: BaseState): Outdated | null {
   return { reasons, inputs };
 }
 
-function readinessOf(state: BaseState, properties: readonly PropertyField[]): Readiness {
+function readinessOf(
+  state: BaseState,
+  properties: readonly PropertyField[],
+  inputs: readonly InputField[],
+): Readiness {
   const reasons: Message[] = [];
   if (!state.source.trim()) reasons.push(workflowMessage('backtest.noScript'));
   else if (state.compile.status === 'compiling')
@@ -190,7 +233,7 @@ function readinessOf(state: BaseState, properties: readonly PropertyField[]): Re
   else if (state.compile.status === 'failed')
     reasons.push(workflowMessage('backtest.compileFailed'));
   if (!state.dataset) reasons.push(workflowMessage('backtest.noData'));
-  for (const item of state.inputs)
+  for (const item of inputs)
     if (item.error)
       reasons.push(workflowMessage('backtest.inputInvalid', { title: item.descriptor.title }));
   for (const field of properties)
@@ -198,8 +241,32 @@ function readinessOf(state: BaseState, properties: readonly PropertyField[]): Re
       reasons.push(
         workflowMessage('backtest.propertyInvalid', { property: propertyLabel(field.id) }),
       );
-  if (state.run.status === 'running') reasons.push(workflowMessage('backtest.running'));
+  if (state.run.status === 'running' || state.preview?.run.status === 'running')
+    reasons.push(workflowMessage('backtest.running'));
   return { ok: reasons.length === 0, reasons };
+}
+
+function previewOf(
+  state: BaseState,
+  base: PreviewBase,
+  properties: readonly PropertyField[],
+): Preview {
+  const inputs = applyInputValues(state.inputs, base.set, base.origin);
+  const changes: PreviewChange[] = [];
+  inputs.forEach((item, index) => {
+    const current = state.inputs[index].value;
+    if (item.origin && item.value !== undefined && !Object.is(item.value, current))
+      changes.push({ title: item.descriptor.title, current, preview: item.value });
+  });
+  return {
+    set: base.set,
+    origin: base.origin,
+    inputs,
+    changes,
+    run: base.run,
+    result: base.result,
+    readiness: readinessOf(state, properties, inputs),
+  };
 }
 
 function derive(state: BaseState): BacktestState {
@@ -210,7 +277,8 @@ function derive(state: BaseState): BacktestState {
     ...state,
     properties,
     outdated: outdatedOf(state),
-    readiness: readinessOf(state, properties),
+    readiness: readinessOf(state, properties, state.inputs),
+    preview: state.preview && previewOf(state, state.preview, properties),
   };
 }
 
@@ -230,7 +298,8 @@ export interface BacktestSessionOptions {
 
 /**
  * One Backtest page: the script and its compile, input values, property overrides, the dataset,
- * and the latest run (WEB.md 3.1). Every change produces a new state object.
+ * the latest run (WEB.md 3.1), and a parameter set previewed from the optimization (3.3). Every
+ * change produces a new state object.
  */
 export class BacktestSession implements Observable<BacktestState> {
   readonly #client: EngineClient;
@@ -238,6 +307,8 @@ export class BacktestSession implements Observable<BacktestState> {
   readonly #store: Store<BacktestState>;
   #runToken = 0;
   #datasetRevision = 0;
+  /** What the last applied set replaced, for undo; dropped once the inputs change otherwise. */
+  #beforeApply: Pick<BaseState, 'inputs' | 'run' | 'result'> | null = null;
 
   constructor(client: EngineClient, options: BacktestSessionOptions = {}) {
     this.#client = client;
@@ -254,6 +325,8 @@ export class BacktestSession implements Observable<BacktestState> {
         dataset: null,
         run: { status: 'idle' },
         result: null,
+        preview: null,
+        applied: null,
       }),
     );
   }
@@ -270,31 +343,58 @@ export class BacktestSession implements Observable<BacktestState> {
     this.#store.setState(derive({ ...this.getState(), ...change }));
   }
 
+  /**
+   * End the run in progress, of the current inputs or of the preview, as cancelled. Returns the
+   * state change, empty when nothing was running; the caller stops the Worker.
+   */
+  #interrupt(cause: 'user' | 'source'): Partial<BaseState> {
+    const { run, preview } = this.getState();
+    if (run.status !== 'running' && preview?.run.status !== 'running') return {};
+    this.#runToken++;
+    const finishedAt = this.#now();
+    const stopped = (state: RunState): RunState =>
+      state.status === 'running'
+        ? { status: 'cancelled', startedAt: state.startedAt, finishedAt, cause }
+        : state;
+    return { run: stopped(run), preview: preview && { ...preview, run: stopped(preview.run) } };
+  }
+
+  /** Cancel the run in progress through the Worker; returns the state change. */
+  #cancelRunning(): Partial<BaseState> {
+    const change = this.#interrupt('user');
+    if (Object.keys(change).length) this.#client.cancel();
+    return change;
+  }
+
   /** Replace the script and recompile it; a run in progress is discarded with the old source. */
   setSource(source: string): void {
     const state = this.getState();
     if (source === state.source) return;
     const sourceRevision = state.sourceRevision + 1;
     const now = this.#now();
-    let run = state.run;
-    if (run.status === 'running') {
-      this.#runToken++;
-      run = { status: 'cancelled', startedAt: run.startedAt, finishedAt: now, cause: 'source' };
-    }
+    const stopped = this.#interrupt('source');
     this.#client.setSourceRevision(sourceRevision);
+    this.#beforeApply = null;
     if (!source.trim()) {
       this.#update({
+        ...stopped,
         source,
         sourceRevision,
         compile: { status: 'empty' },
         description: null,
         inputs: [],
         scriptProperties: null,
-        run,
+        applied: null,
       });
       return;
     }
-    this.#update({ source, sourceRevision, compile: { status: 'compiling', startedAt: now }, run });
+    this.#update({
+      ...stopped,
+      source,
+      sourceRevision,
+      compile: { status: 'compiling', startedAt: now },
+      applied: null,
+    });
     void this.#compile(source, sourceRevision, now);
   }
 
@@ -326,12 +426,18 @@ export class BacktestSession implements Observable<BacktestState> {
     });
   }
 
+  /** An edit by the user: an applied set can no longer be undone. */
+  #editInputs(inputs: readonly InputField[]): void {
+    this.#beforeApply = null;
+    this.#update({ inputs, applied: null });
+  }
+
   setInput(title: string, value: LiteralValue): void {
-    this.#update({ inputs: setInputValue(this.getState().inputs, title, value) });
+    this.#editInputs(setInputValue(this.getState().inputs, title, value));
   }
 
   resetInputs(): void {
-    this.#update({ inputs: resetInputValues(this.getState().inputs) });
+    this.#editInputs(resetInputValues(this.getState().inputs));
   }
 
   /** B9: put back the input values the current result was computed with. */
@@ -341,7 +447,7 @@ export class BacktestSession implements Observable<BacktestState> {
     let inputs = this.getState().inputs;
     for (const [title, value] of Object.entries(result.computedWith.inputs))
       inputs = setInputValue(inputs, title, value);
-    this.#update({ inputs });
+    this.#editInputs(inputs);
   }
 
   /** Override one strategy property; ignored until a compile has supplied the script's values. */
@@ -360,14 +466,19 @@ export class BacktestSession implements Observable<BacktestState> {
     this.#update({ dataset: { revision: ++this.#datasetRevision, input } });
   }
 
-  /** Start a backtest with the current settings; does nothing unless `readiness.ok`. */
+  /**
+   * Start a backtest with the current settings, or run the open preview again; does nothing
+   * unless that run's readiness is ok.
+   */
   async run(): Promise<void> {
     const state = this.getState();
-    if (!state.readiness.ok || !state.dataset) return;
+    const target: RunTarget = state.preview ? 'preview' : 'main';
+    const readiness = state.preview ? state.preview.readiness : state.readiness;
+    if (!readiness.ok || !state.dataset) return;
     const snapshot: RunSnapshot = {
       source: state.source,
       sourceRevision: state.sourceRevision,
-      inputs: inputValues(state.inputs),
+      inputs: inputValues(state.preview ? state.preview.inputs : state.inputs),
       properties: state.propertyOverrides,
       dataset: state.dataset,
     };
@@ -378,7 +489,7 @@ export class BacktestSession implements Observable<BacktestState> {
     };
     const token = ++this.#runToken;
     const startedAt = this.#now();
-    this.#update({ run: { status: 'running', startedAt } });
+    this.#setRun(target, { status: 'running', startedAt });
     let output: TrialResult;
     try {
       output = await this.#client.run(snapshot.source, input, snapshot.sourceRevision);
@@ -386,68 +497,127 @@ export class BacktestSession implements Observable<BacktestState> {
       if (token !== this.#runToken) return;
       const finishedAt = this.#now();
       if (error instanceof WorkerCancelledError || error instanceof WorkerStaleError)
-        this.#update({
-          run: {
-            status: 'cancelled',
-            startedAt,
-            finishedAt,
-            cause: error instanceof WorkerStaleError ? 'source' : 'user',
-          },
+        this.#setRun(target, {
+          status: 'cancelled',
+          startedAt,
+          finishedAt,
+          cause: error instanceof WorkerStaleError ? 'source' : 'user',
         });
       else
-        this.#update({
-          run: {
-            status: 'failed',
-            startedAt,
-            finishedAt,
-            failure: { diagnostics: [], bar: null, error: errorText(error) },
-          },
+        this.#setRun(target, {
+          status: 'failed',
+          startedAt,
+          finishedAt,
+          failure: { diagnostics: [], bar: null, error: errorText(error) },
         });
       return;
     }
     if (token !== this.#runToken) return;
     const finishedAt = this.#now();
     if (output.diagnostics.length) {
-      this.#update({
-        run: {
-          status: 'failed',
-          startedAt,
-          finishedAt,
-          failure: {
-            diagnostics: output.diagnostics,
-            bar: failedBar(output.diagnostics[0]),
-            error: null,
-          },
+      this.#setRun(target, {
+        status: 'failed',
+        startedAt,
+        finishedAt,
+        failure: {
+          diagnostics: output.diagnostics,
+          bar: failedBar(output.diagnostics[0]),
+          error: null,
         },
       });
       return;
     }
-    this.#update({
-      run: { status: 'done', startedAt, finishedAt },
-      result: {
+    this.#setRun(
+      target,
+      { status: 'done', startedAt, finishedAt },
+      {
         computedWith: snapshot,
         output,
         initialCapital: metricValue(output.metrics, 'Initial capital'),
         durationMs: finishedAt - startedAt,
         finishedAt,
       },
-    });
+    );
   }
 
-  /** Stop the running backtest; the previous result stays. */
+  #setRun(target: RunTarget, run: RunState, result?: BacktestResult): void {
+    const change = result ? { run, result } : { run };
+    if (target === 'main') this.#update(change);
+    else {
+      const { preview } = this.getState();
+      if (preview) this.#update({ preview: { ...preview, ...change } });
+    }
+  }
+
+  /** Stop the running backtest or preview; the previous result stays. */
   cancel(): void {
-    const { run } = this.getState();
-    if (run.status !== 'running') return;
-    this.#runToken++;
-    this.#client.cancel();
+    const change = this.#cancelRunning();
+    if (Object.keys(change).length) this.#update(change);
+  }
+
+  /**
+   * Run the Backtest page on a parameter set from the optimization without changing the current
+   * inputs (B16). A run in progress is cancelled first.
+   */
+  preview(set: Readonly<Record<string, LiteralValue>>, origin: ParameterOrigin): Promise<void> {
+    const change = this.#cancelRunning();
+    this.#beforeApply = null;
     this.#update({
-      run: {
-        status: 'cancelled',
-        startedAt: run.startedAt,
-        finishedAt: this.#now(),
-        cause: 'user',
-      },
+      ...change,
+      preview: { set, origin, run: { status: 'idle' }, result: null },
+      applied: null,
     });
+    return this.run();
+  }
+
+  /** Close the preview (B16); the current inputs and result were never touched. */
+  backToOptimization(): void {
+    if (!this.getState().preview) return;
+    this.#update({ ...this.#cancelRunning(), preview: null });
+  }
+
+  /** B16's "Set as current inputs": apply the previewed set. */
+  setPreviewAsCurrent(): Promise<void> {
+    const { preview } = this.getState();
+    return preview ? this.applyParameters(preview.set, preview.origin) : Promise.resolve();
+  }
+
+  /**
+   * Write a parameter set into the inputs, note where it came from, and run the backtest (B17).
+   * When the open preview finished on this set with the same settings, its result becomes the
+   * current one without running again.
+   */
+  async applyParameters(
+    set: Readonly<Record<string, LiteralValue>>,
+    origin: ParameterOrigin,
+  ): Promise<void> {
+    const stopped = this.#cancelRunning();
+    if (Object.keys(stopped).length) this.#update(stopped);
+    const state = this.getState();
+    this.#beforeApply = { inputs: state.inputs, run: state.run, result: state.result };
+    const inputs = applyInputValues(state.inputs, set, origin);
+    const change: Partial<BaseState> = { inputs, preview: null, applied: { origin } };
+    const preview = state.preview;
+    if (
+      preview?.set === set &&
+      preview.result &&
+      preview.run.status === 'done' &&
+      outdatedOf({ ...state, inputs, result: preview.result })?.reasons.length === 0
+    ) {
+      this.#update({ ...change, run: preview.run, result: preview.result });
+      return;
+    }
+    this.#update(change);
+    await this.run();
+  }
+
+  /** Put back the inputs and result from before the last applied set (B17's Undo). */
+  undoApply(): void {
+    const before = this.#beforeApply;
+    if (!before || !this.getState().applied) return;
+    const stopped = this.#cancelRunning();
+    this.#beforeApply = null;
+    this.#update({ ...stopped, ...before, applied: null });
   }
 }
 
@@ -482,10 +652,12 @@ function runCategory(kind: Diagnostic['kind']): IssueCategory {
 
 /**
  * The Issues tab: the failed compile's errors, the failed run's diagnostics, and the effects the
- * displayed result ignored. An unsupported feature has its own category: missing engine support,
- * not a fault in the script.
+ * displayed result ignored. While a preview is open, its run and result are the displayed ones, so
+ * a failed combination opened from the optimization shows its diagnostics (R11). An unsupported
+ * feature has its own category: missing engine support, not a fault in the script.
  */
 export function backtestIssues(state: BacktestState): Issue[] {
+  const { run, result } = state.preview ?? state;
   const issues: Issue[] = [];
   const workerIssue = (text: Text): Issue => ({
     category: 'workerError',
@@ -505,8 +677,8 @@ export function backtestIssues(state: BacktestState): Issue[] {
       });
     if (state.compile.error !== null) issues.push(workerIssue(state.compile.error));
   }
-  if (state.run.status === 'failed') {
-    const { diagnostics, bar, error } = state.run.failure;
+  if (run.status === 'failed') {
+    const { diagnostics, bar, error } = run.failure;
     diagnostics.forEach((diagnostic, index) =>
       issues.push({
         category: runCategory(diagnostic.kind),
@@ -518,7 +690,7 @@ export function backtestIssues(state: BacktestState): Issue[] {
     );
     if (error !== null) issues.push(workerIssue(error));
   }
-  for (const warning of state.result?.output.warnings ?? [])
+  for (const warning of result?.output.warnings ?? [])
     issues.push({
       category: 'ignoredEffect',
       line: warning.line,

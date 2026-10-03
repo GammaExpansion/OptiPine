@@ -2,6 +2,19 @@ import type { InputDescriptor, InputFixedReason, LiteralValue } from '@pine/engi
 import type { Message } from '@pine/messages';
 import { workflowMessage, type WorkflowMessageId } from './messages.ts';
 
+/**
+ * Where a parameter set written into the inputs came from (B17): a leaderboard row, with its rank
+ * when it was picked, or a failed combination opened to read its diagnostics (R11).
+ */
+export type ParameterOrigin =
+  | {
+      readonly kind: 'rank';
+      readonly optimizationId: number;
+      readonly trialId: string;
+      readonly rank: number;
+    }
+  | { readonly kind: 'failed'; readonly optimizationId: number; readonly trialId: string };
+
 /** One script input in the right panel, in declaration order (B14). */
 export interface InputField {
   readonly descriptor: InputDescriptor;
@@ -16,6 +29,8 @@ export interface InputField {
   readonly error: Message | null;
   /** Why the input is read-only; null for an input the panel can edit. */
   readonly readOnly: Message | null;
+  /** The parameter set that wrote the value; cleared when the user edits or resets it (B17). */
+  readonly origin: ParameterOrigin | null;
 }
 
 // The same type groups as @pine/optimizer's search ranges, so both pages accept the same values.
@@ -77,17 +92,27 @@ export function validateInputValue(
   return null;
 }
 
-function field(descriptor: InputDescriptor, value: LiteralValue | undefined): InputField {
+/** Why a run cannot override an input: the script computes it or declares it unsupportedly. */
+export function fixedInputReason(descriptor: InputDescriptor): Message {
+  return workflowMessage(
+    fixedReasons[descriptor.reason ?? 'computed-default'],
+    descriptor.reason === 'unsupported-type' ? { type: descriptor.type } : {},
+  );
+}
+
+function field(
+  descriptor: InputDescriptor,
+  value: LiteralValue | undefined,
+  origin: ParameterOrigin | null = null,
+): InputField {
   if (descriptor.fixed)
     return {
       descriptor,
       value: descriptor.defaultValue,
       changed: false,
       error: null,
-      readOnly: workflowMessage(
-        fixedReasons[descriptor.reason ?? 'computed-default'],
-        descriptor.reason === 'unsupported-type' ? { type: descriptor.type } : {},
-      ),
+      readOnly: fixedInputReason(descriptor),
+      origin: null,
     };
   return {
     descriptor,
@@ -95,12 +120,14 @@ function field(descriptor: InputDescriptor, value: LiteralValue | undefined): In
     changed: value !== descriptor.defaultValue,
     error: validateInputValue(descriptor, value),
     readOnly: null,
+    origin,
   };
 }
 
 /**
- * Fields for a new compile. An editable input keeps its previous value when an editable input
- * with the same title and type existed before; every other input starts at its default.
+ * Fields for a new compile. An editable input keeps its previous value, and where that value came
+ * from, when an editable input with the same title and type existed before; every other input
+ * starts at its default.
  */
 export function inputFields(
   descriptors: readonly InputDescriptor[],
@@ -115,7 +142,9 @@ export function inputFields(
             item.descriptor.title === descriptor.title &&
             item.descriptor.type === descriptor.type,
         );
-    return field(descriptor, kept ? kept.value : descriptor.defaultValue);
+    return kept
+      ? field(descriptor, kept.value, kept.origin)
+      : field(descriptor, descriptor.defaultValue);
   });
 }
 
@@ -132,7 +161,24 @@ export function setInputValue(
 
 export function resetInputValues(fields: readonly InputField[]): InputField[] {
   return fields.map((item) =>
-    item.changed ? field(item.descriptor, item.descriptor.defaultValue) : item,
+    item.changed || item.origin ? field(item.descriptor, item.descriptor.defaultValue) : item,
+  );
+}
+
+/**
+ * Write a parameter set, keyed by title, into the inputs and note where each value came from.
+ * Read-only inputs, inputs the set does not name and names the script no longer has stay as
+ * they are.
+ */
+export function applyInputValues(
+  fields: readonly InputField[],
+  values: Readonly<Record<string, LiteralValue>>,
+  origin: ParameterOrigin,
+): InputField[] {
+  return fields.map((item) =>
+    item.readOnly || !Object.hasOwn(values, item.descriptor.title)
+      ? item
+      : field(item.descriptor, values[item.descriptor.title], origin),
   );
 }
 
