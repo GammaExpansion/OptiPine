@@ -33,8 +33,11 @@ The harness imports the real Worker factories and clients, checks describe/run, 
 optimization, and renders the shell with Optimize enabled for layout tests. The component sheet
 covers keyboard behavior, both languages at three viewport sizes, and G5 layout comparisons using
 the same self-hosted fonts. Neither test entry is in `dist/`.
-The test setup owns and closes the production, preview and dev servers on ports 5174–5176 directly,
-avoiding platform-specific shell process cleanup.
+The test setup owns and closes the production, preview and dev servers directly, avoiding
+platform-specific shell process cleanup. They listen on three consecutive ports from
+`E2E_BASE_PORT` (production, preview, dev), 5174–5176 by default; set another base, as in
+`E2E_BASE_PORT=6174 npm run e2e -w @pine/web`, to run suites in several worktrees at once.
+`e2e/ports.ts` gives the specs their origins.
 
 `src/i18n/translate.ts` is framework-free: use `translate` for `Text`, `translateId` for app ids,
 and `translateError` for errors carrying `errorText`. Unknown ids retain package fallbacks. Number
@@ -52,7 +55,13 @@ Visual review at 1440 × 900: S1 follows the reference's 48 px header, 430 px ch
 and 336 px sidebar, with a sidebar collapse control revealed on hover or keyboard focus. O1 uses
 the same empty-results area and sidebar sections, but leaves the absent script's search rows,
 dataset dates, filters, property values, combination count and timing unpopulated. Its Start action
-is disabled. Full tablet and phone arrangements remain phase 5. Screenshots in both languages are
-written under `test-results/` by the smoke tests.
+is disabled. Screenshots in both languages are written under `test-results/` by the smoke tests.
+
+The layout follows the window (WEB.md 2.7; `src/shell/layout.ts` and `useLayout`): the desktop
+panes from 1280 px (G1); from 768 to 1279 px the right panel as a drawer the header's toggle
+opens, with a condensed header (G2); below 768 px one column with tabs, where Inputs on the
+Backtest page and Settings on the Optimize page hold the right panel (G3, G4). `e2e/layout.spec.ts`
+checks S1, B1, O1 and R1 at 1440 × 900, 1024 × 768 and 390 × 844 in both languages for cut labels
+and page scroll, and drives the drawer and the phone tabs.
 
 No files under `src/workflows/`, `examples/` or `src/pages/backtest/code/` belong to this scaffold.

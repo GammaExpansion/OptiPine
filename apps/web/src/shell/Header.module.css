@@ -38,3 +38,129 @@
     min-width: 100px;
   }
 }
+.timeframe {
+  display: contents;
+}
+.runShort {
+  display: none;
+}
+/* G2: one row without the brand name, the facts, the provider and the date range. */
+.header[data-layout='tablet'] {
+  gap: 10px;
+  padding: 0 8px 0 14px;
+}
+.header[data-layout='tablet'] .facts {
+  display: none;
+}
+.toggle[aria-expanded='true'] {
+  color: var(--link);
+  background: var(--hover);
+}
+/* Below 1024 px the timeframe waits in the market data dialog, and Run is enough. */
+@media (max-width: 1023px) {
+  .header[data-layout='tablet'] .timeframe,
+  .header[data-layout='tablet'] .runLong {
+    display: none;
+  }
+  .header[data-layout='tablet'] .runShort {
+    display: inline;
+  }
+  .header[data-layout='tablet'] span[data-loaded] {
+    max-width: 120px;
+  }
+}
+/* G3, G4: the page switch with Run, then the script, the data and the language. */
+.phone {
+  height: auto;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+}
+.row {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  min-width: 0;
+}
+.phone .data {
+  height: 48px;
+  gap: 4px;
+  padding: 0 6px;
+  border-top: 1px solid var(--divider);
+}
+.phone .data button:not([role='radio']) {
+  height: 44px;
+  min-width: 0;
+  padding: 0 6px;
+}
+.phone .data span[data-loaded] {
+  max-width: 104px;
+}
+/* G3 names the script without its file icon. */
+.phone .data > button:first-of-type > svg:first-child {
+  display: none;
+}
+.phone .facts {
+  min-width: 0;
+  overflow: hidden;
+}
+.phone .run {
+  height: 44px;
+  padding: 0 14px;
+}
+.phone[data-page='backtest'] .facts {
+  display: none;
+}
+.pageSwitch nav {
+  align-self: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--divider);
+  border-radius: 6px;
+  background: var(--panel);
+}
+.pageSwitch button {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.pageSwitch button[aria-current='page'] {
+  background: var(--selected);
+  font-weight: 500;
+}
+.pageSwitch button::after {
+  display: none;
+}
+.select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  flex: none;
+}
+.select select {
+  height: 100%;
+  padding: 0 22px 0 6px;
+  border: 0;
+  border-radius: var(--radius);
+  appearance: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+}
+.select select:disabled {
+  color: var(--caption);
+}
+.select option {
+  background: var(--panel);
+}
+.select svg {
+  position: absolute;
+  right: 6px;
+  color: var(--secondary);
+  pointer-events: none;
+}

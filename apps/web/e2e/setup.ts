@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { build, createServer, preview } from 'vite';
 import { createAppServer } from '../server/app.ts';
+import { ports } from './ports.ts';
 
 /** Own server lifetimes directly so Windows and CI need no shell process-tree termination. */
 export default async function setup() {
@@ -10,7 +11,7 @@ export default async function setup() {
   const production = createAppServer();
   await new Promise<void>((resolve, reject) => {
     production.once('error', reject);
-    production.listen(5174, '127.0.0.1', resolve);
+    production.listen(ports.production, '127.0.0.1', resolve);
   });
   const closeProduction = () =>
     new Promise<void>((resolve, reject) => {
@@ -22,13 +23,13 @@ export default async function setup() {
       root,
       mode: 'e2e',
       logLevel: 'warn',
-      preview: { host: '127.0.0.1', port: 5175, strictPort: true },
+      preview: { host: '127.0.0.1', port: ports.preview, strictPort: true },
     });
     try {
       const dev = await createServer({
         root,
         logLevel: 'warn',
-        server: { host: '127.0.0.1', port: 5176, strictPort: true },
+        server: { host: '127.0.0.1', port: ports.dev, strictPort: true },
       });
       await dev.listen();
       return async () => {

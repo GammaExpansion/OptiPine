@@ -5,12 +5,16 @@
  * above the chart (B16). Dock owns the tabs and sizing. Header slots live in shell/; dialog slots
  * mount once at shell/DialogsRoot.
  */
+import { useLayout } from '../../shell/useLayout.ts';
 import { Workbench } from '../../shell/Workbench.tsx';
 import { ChartArea } from './ChartArea.tsx';
 import { Dock } from './Dock.tsx';
+import { PhoneBacktest } from './PhoneBacktest.tsx';
 import { Sidebar } from './Sidebar.tsx';
 
 export function BacktestPage() {
+  const layout = useLayout();
+  if (layout === 'phone') return <PhoneBacktest />;
   return (
     <Workbench
       page="backtest"

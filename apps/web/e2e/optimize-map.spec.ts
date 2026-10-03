@@ -1,9 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { OptimizationStoreState } from '../src/state/optimization.ts';
+import { origins } from './ports.ts';
 
 // The setup sidebar is an independent slot. Initialize its stores through Vite; every trial and
 // analysis still runs through the production Worker factories and real optimization pool.
-test.use({ baseURL: 'http://127.0.0.1:5176' });
+test.use({ baseURL: origins.dev });
 type Hooks = Window & { mapState: () => OptimizationStoreState };
 const source = (dense: boolean) => `//@version=6
 strategy("Map test", initial_capital=1000000)

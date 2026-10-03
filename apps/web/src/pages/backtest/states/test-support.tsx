@@ -20,6 +20,8 @@ export function useBacktestTestServices() {
       language: 'en',
       openDialogs: [],
       paneSizes: { backtest: { ...defaultPaneSizes }, optimize: { ...defaultPaneSizes } },
+      drawerOpen: false,
+      optimizeTab: 'summary',
     });
   });
   afterEach(() => {

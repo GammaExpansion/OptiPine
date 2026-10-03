@@ -27,15 +27,50 @@ async function renderCodeTab() {
 const line = (number: number) => document.querySelectorAll('.cm-line')[number - 1];
 
 test('the empty editor shows the placeholder, and typing starts a pasted script', async () => {
-  await renderCodeTab();
-  expect(screen.getByText('Paste strategy code here, or drop a .pine file')).toBeInTheDocument();
-  act(() => editor().dispatch({ changes: { from: 0, insert: strategySource } }));
+  renderInEnglish(<CodeTab />);
+  // S1 draws the empty editor without CodeMirror, which loads once there is something to edit.
+  const empty = await screen.findByPlaceholderText(
+    'Paste strategy code here, or drop a .pine file',
+  );
+  expect(empty).toHaveAccessibleName('Pine code editor');
+  expect(document.querySelector('.cm-editor')).toBeNull();
+  act(() => empty.focus());
+  fireEvent.change(empty, { target: { value: strategySource } });
   expect(getBacktestStore().getState()).toMatchObject({
     source: strategySource,
     fileName: null,
     origin: { kind: 'pasted' },
   });
+  // CodeMirror takes over with the script and the focus.
+  await waitFor(() => expect(document.querySelector('.cm-editor')).not.toBeNull());
+  expect(editor().state.doc.toString()).toBe(strategySource);
+  expect(editor().hasFocus).toBe(true);
+  expect(editor().state.selection.main.head).toBe(strategySource.length);
   await waitFor(() => expect(getBacktestStore().getState().compile.status).toBe('compiled'));
+});
+
+test('focusing the empty editor hands the focus to CodeMirror as it loads', async () => {
+  renderInEnglish(<CodeTab />);
+  const empty = await screen.findByPlaceholderText(
+    'Paste strategy code here, or drop a .pine file',
+  );
+  act(() => empty.focus());
+  await waitFor(() => expect(document.querySelector('.cm-editor')).not.toBeNull());
+  expect(editor().hasFocus).toBe(true);
+});
+
+test('a .pine file dropped on the empty editor opens before CodeMirror loads', async () => {
+  renderInEnglish(<CodeTab />);
+  const empty = await screen.findByPlaceholderText(
+    'Paste strategy code here, or drop a .pine file',
+  );
+  // jsdom's File has no text(); the editor reads only the name and the text.
+  const file = { name: 'quiet.pine', text: async () => quietSource } as File;
+  fireEvent.drop(empty, { dataTransfer: { files: [file], types: ['Files'] } });
+  await waitFor(() => expect(getBacktestStore().getState().fileName).toBe('quiet.pine'));
+  await waitFor(() => expect(document.querySelector('.cm-editor')).not.toBeNull());
+  expect(editor().state.doc.toString()).toBe(quietSource);
+  expect(editor().hasFocus).toBe(false);
 });
 
 test('editing recompiles in the background and each input shows its current value', async () => {

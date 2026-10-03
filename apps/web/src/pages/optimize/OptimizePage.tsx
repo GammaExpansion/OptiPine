@@ -15,8 +15,14 @@
  *
  * The panels mount while there are results or a run fills them, and read the optimization store
  * themselves; none takes props. Dialog slots mount once at shell/DialogsRoot.
+ *
+ * Below 768 px `PhoneOptimize` (G4) mounts the same slots one per tab: Summary, Leaderboard,
+ * Parameter map and Sensitivity each get the tab's whole width and height (390 px wide on G4, room
+ * for the leaderboard's cards), Settings holds the data range over the right panel, and the
+ * selection bar stays along the bottom. From 768 to 1279 px the right panel is a drawer (G2).
  */
 import { useOptimizationStore } from '../../state/optimization.ts';
+import { useLayout } from '../../shell/useLayout.ts';
 import { Workbench } from '../../shell/Workbench.tsx';
 import { LeaderboardPanel } from './leaderboard/LeaderboardPanel.tsx';
 import { MapPanel } from './map/MapPanel.tsx';
@@ -25,6 +31,7 @@ import { DataRangeBar } from './range/DataRangeBar.tsx';
 import { WindowPlan } from './range/WindowPlan.tsx';
 import { SelectionBar } from './selection/SelectionBar.tsx';
 import { SensitivityPanel } from './sensitivity/SensitivityPanel.tsx';
+import { PhoneOptimize } from './PhoneOptimize.tsx';
 import { OptimizeSidebar } from './sidebar/OptimizeSidebar.tsx';
 import { Split } from './Split.tsx';
 import { EmptyResults } from './states/EmptyResults.tsx';
@@ -86,5 +93,7 @@ function OptimizeMain() {
 }
 
 export function OptimizePage() {
+  const layout = useLayout();
+  if (layout === 'phone') return <PhoneOptimize />;
   return <Workbench page="optimize" main={<OptimizeMain />} sidebar={<OptimizeSidebar />} />;
 }
