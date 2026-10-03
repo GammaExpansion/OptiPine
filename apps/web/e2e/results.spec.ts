@@ -149,27 +149,32 @@ test('S1 keeps results, dialogs, the script menu, Optimize and Chinese out of th
   await page.waitForLoadState('networkidle');
   const scripts = await Promise.all(requested);
   const lazy =
-    /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|ScriptMenuContent|OptimizePage|\/zh-)/;
+    /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|ScriptMenuContent|OptimizePage|optimization-services|optimize-|\/zh-)/;
   expect(scripts.map(({ file }) => file).filter((file) => lazy.test(file))).toEqual([]);
-  // Measured with walk-forward runs in the optimization session, which the shell creates with the
-  // page: 876,589 bytes in all, the English catalog loading before the first render among them,
-  // and 528,692 in the entry. The budgets leave about 6 KB, less than the script menu (14 KB), the
-  // market data dialog (19 KB) or the Chinese catalog (43 KB) would add if any loaded with the
-  // page again.
-  const bytes = scripts.reduce((total, script) => total + script.bytes, 0);
-  expect(bytes).toBeGreaterThan(0);
-  expect(bytes).toBeLessThan(883000);
+  // Measured with the optimization side loading when Optimize first opens: 781,854 bytes of code,
+  // 478,160 of them in the entry, and the English catalog's 44,203. The code budgets leave about
+  // 6 KB, less than the script menu (14 KB) or the market data dialog (19 KB) would add if either
+  // loaded with the page again.
+  const catalog = /\/en-[^/]*\.js$/;
+  const sum = (files: typeof scripts) => files.reduce((total, script) => total + script.bytes, 0);
+  const code = sum(scripts.filter(({ file }) => !catalog.test(file)));
+  expect(code).toBeGreaterThan(0);
+  expect(code).toBeLessThan(788000);
+  // The catalog grows with the copy of every feature. It is checked on its own, about 6 KB over
+  // its size, so new copy never pushes the code over its budget; a catalog that outgrows this
+  // budget is a reason to look at what it carries, then to raise the budget.
+  const catalogBytes = sum(scripts.filter(({ file }) => catalog.test(file)));
+  expect(catalogBytes).toBeGreaterThan(0);
+  expect(catalogBytes).toBeLessThan(50500);
   const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
   const entryFiles = new Set(
     [...html.matchAll(/(?:src|href)="([^"\s]+\.js)"/g)].map((match) => match[1]),
   );
-  const entryBytes = scripts
-    .filter(({ file }) => entryFiles.has(file))
-    .reduce((total, script) => total + script.bytes, 0);
-  expect(entryBytes).toBeLessThan(535000);
+  const entryBytes = sum(scripts.filter(({ file }) => entryFiles.has(file)));
+  expect(entryBytes).toBeLessThan(484500);
   await writeFile(
     info.outputPath('s1-bundle.json'),
-    JSON.stringify({ scripts, entryBytes, bytes }, null, 2),
+    JSON.stringify({ scripts, entryBytes, code, catalogBytes }, null, 2),
   );
 });
 
