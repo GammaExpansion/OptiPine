@@ -1,14 +1,12 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import {
   CandlestickSeries,
-  LineSeries,
   createChart,
   createSeriesMarkers,
   type IChartApi,
   type ISeriesApi,
   type ISeriesMarkersPluginApi,
-  type LineData,
-  type WhitespaceData,
+  type SeriesType,
   type Time,
   type UTCTimestamp,
   type SeriesMarker,
@@ -17,10 +15,12 @@ import type { MarketBar, PlotOutput } from '@pine/engine';
 import type { TradeRow } from '../workflows/trades.ts';
 import { useI18n } from '../i18n/I18nProvider.tsx';
 import { formatNumber } from '../i18n/translate.ts';
-import { lowerBound, mapPlots, tradeMarkers, tradeRange } from './model.ts';
+import { declaredColor, lowerBound, mapPlots, tradeMarkers, tradeRange } from './model.ts';
 import { priceFormat } from './formatting.ts';
 import { chartOptions, chartTheme, timeFormat, zoomChart } from './runtime.ts';
 import { tradePrimitive } from './tradePrimitive.ts';
+import { plotPrimitive } from './plotPrimitive.ts';
+import { addPlotSeries } from './plotSeries.ts';
 import styles from './Charts.module.css';
 
 export interface PriceChartProps {
@@ -123,7 +123,11 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
     current.times = times;
     candles.setData(bars.map((bar) => ({ ...bar, time: bar.time as UTCTimestamp })));
     const mapped = mapPlots(bars, plots);
-    const series: ISeriesApi<'Line'>[] = [];
+    const series: ISeriesApi<SeriesType>[] = [];
+    const primitives: {
+      series: ISeriesApi<SeriesType>;
+      primitive: ReturnType<typeof plotPrimitive>;
+    }[] = [];
     const plugins: ISeriesMarkersPluginApi<Time>[] = [];
     const markers: SeriesMarker<Time>[] = tradeMarkers(trades).map((marker) => ({
       ...marker,
@@ -133,49 +137,24 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
       size: 0.8,
     }));
     for (const plot of mapped) {
-      if (plot.kind === 'markers' && plot.pane === 0) {
-        markers.push(
-          ...plot.markers.map((marker) => ({
-            ...marker,
-            time: marker.time as UTCTimestamp,
-            text: '',
-            size: 0.6,
-          })),
+      const onCandles = plot.kind === 'markers' && plot.pane === 0 && !plot.absolute;
+      const target = onCandles ? candles : addPlotSeries(chart, plot, mintick);
+      if (!onCandles) series.push(target);
+      if (plot.markers.length) {
+        const primitive = plotPrimitive(
+          chart,
+          target,
+          plot.markers,
+          plot.pane === 0
+            ? markers.map((marker) => ({
+                time: Number(marker.time),
+                location: marker.position === 'aboveBar' ? 'abovebar' : 'belowbar',
+              }))
+            : [],
         );
-        continue;
+        target.attachPrimitive(primitive);
+        primitives.push({ series: target, primitive });
       }
-      const line = chart.addSeries(
-        LineSeries,
-        {
-          color: plot.color,
-          lineWidth: 1,
-          priceLineVisible: false,
-          lastValueVisible: false,
-          priceFormat: priceFormat(plot.pane === 0 ? mintick : 0.01),
-          ...(plot.kind === 'markers'
-            ? { lineVisible: false, crosshairMarkerVisible: false, priceScaleId: 'boolean' }
-            : {}),
-        },
-        plot.pane,
-      );
-      line.setData(plot.points as (LineData<Time> | WhitespaceData<Time>)[]);
-      if (plot.pane === 1)
-        line.priceScale().applyOptions({
-          entireTextOnly: true,
-          scaleMargins: { top: 0.1, bottom: 0.1 },
-        });
-      series.push(line);
-      if (plot.kind === 'markers')
-        plugins.push(
-          createSeriesMarkers(
-            line,
-            plot.markers.map((marker) => ({
-              ...marker,
-              time: marker.time as UTCTimestamp,
-              text: '',
-            })),
-          ),
-        );
     }
     plugins.push(
       createSeriesMarkers(
@@ -222,7 +201,7 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
             value:
               typeof value === 'number' && Number.isFinite(value) ? number(value) : t('charts.na'),
           }),
-          mapped[i].color,
+          declaredColor(plots[i], i, index),
         );
       }
       paneLegend.current.style.top = `${chart.panes()[0].getHeight() + 8}px`;
@@ -243,6 +222,7 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
       chart.unsubscribeCrosshairMove(crosshair);
       chart.timeScale().unsubscribeSizeChange(resized);
       plugins.forEach((plugin) => plugin.detach());
+      primitives.forEach(({ series, primitive }) => series.detachPrimitive(primitive));
       series.forEach((line) => chart.removeSeries(line));
       legend.current?.replaceChildren();
       paneLegend.current?.replaceChildren();

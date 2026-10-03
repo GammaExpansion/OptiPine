@@ -24,14 +24,27 @@ accept a `CalendarViewport` with the parent chart's width and calendar-day proje
 
 ## Rendering decisions
 
-- Plot declaration order selects `#2bb3a3`, `#8fb8de`, `#b59bd5`, `#d9c38c`, `#6cb6dd`, `#f2a33a`,
+- Declared engine colours (including alpha, per-bar colours and invisible `na`) take precedence.
+  Without a declared colour, plot order selects `#2bb3a3`, `#8fb8de`, `#b59bd5`, `#d9c38c`, `#6cb6dd`, `#f2a33a`,
   then repeats. Boolean plots consume a palette slot too. All non-overlay plots share one lower pane;
   `force_overlay` is already resolved by the engine's `overlay` flag.
-- Boolean values become circles only where strictly true. The engine retains neither the original
-  plotshape style nor plotchar character, so the renderer cannot recover them. Boolean plots are omitted
-  from the legend. An all-null plot is an
+- `style.kind` distinguishes numeric plots, shapes and characters even with all-null values.
+  Shapes use their declared triangle, arrow, circle, square, diamond, cross, xcross, flag or label;
+  characters/text are rendered verbatim as script data. Relative markers anchor above the high or
+  below the low, `absolute` uses the numeric value (including zero), and `top`/`bottom` use pane edges.
+  Separate-pane relative markers use an independent hidden price scale; absolute markers share the
+  plot scale. Size maps to fixed pixel glyphs. Only visible markers are drawn by a canvas primitive.
+  Relative signals near a trade marker move outward by 24 px to clear its label; autoscaling reserves
+  the glyph margin so a signal at the highest or lowest bar is not clipped.
+  Missing shape/location metadata retains the circle/above-bar fallback; missing characters draw no
+  invented glyph. Shape/character plots are omitted from the legend. Legacy boolean values become
+  circles only where strictly true. A legacy all-null plot is an
   empty numeric series until a result reveals its value type. Numeric nonfinite/null values reserve
   whitespace and hide the outgoing line segment so Lightweight Charts does not bridge gaps.
+- Lines use the declared width and steplines use stepped interpolation. Area/areabr use AreaSeries;
+  histogram and columns use HistogramSeries (both use the library's bar-spacing-based column width).
+  Circles use LineSeries point markers without connecting lines, while crosses use numeric glyphs.
+  Line/area variants retain the existing no-gap-bridging rule. Per-bar colours also update the legend.
 - Candle bodies are hollow green and solid red, as in B1. Long/short entries use green/red arrows;
   exits use circles. Dashed trade spans show percentage P&L. A focused or hovered trade has outlined
   endpoints and an amber span; details stay at the upper right to remain readable near either edge.
@@ -86,9 +99,10 @@ Compared with `Main-en`, `B5-en`, `B6-en` and `B7-en`:
 - The dev workbench keeps the 48 px header, 430 px price region and 336 px sidebar. It substitutes
   dev controls for page inputs/properties, shows Equity beneath price, and omits the page-owned facts,
   report and trades table. B5's chart stack is therefore 50 px higher, without its facts row.
-- Synthetic curves, fills, OHLC and performance naturally differ. Extra plot colours follow the
-  documented palette instead of the mock's grey Bollinger bands; the first RSI line is teal rather
-  than B7's blue. Generic boolean circles and explicit exit circles are additional to the mock.
+- Synthetic curves, fills, OHLC and performance naturally differ. Trend Breakout's bands are Pine
+  grey and its two-pixel basis is Pine teal. RSI Reversal's Buy/Sell signals are lime/red triangles,
+  below/above their bars. Its RSI line follows the script's teal rather than B7's blue. Explicit trade
+  exit circles remain additional to the mock. Pine glyphs are drawn locally, not TradingView sprites.
 - Lightweight Charts chooses its own tick spacing. Its shared time axis sits below the indicator
   pane; B7 draws price dates above the pane. Pane heights preserve the approximate 3:1 price/indicator
   ratio, with space for the legend. RSI-specific background bands are not fabricated from plot names.
