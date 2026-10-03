@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>选择行情 · 预览</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&amp;family=Noto+Sans+SC:wght@400;500;700&amp;family=Source+Code+Pro:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#0e1013;color:#e8eaed;font-family:"Barlow","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;line-height:1.35;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#f5b155;text-decoration:none}a:hover{color:#ffc877}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;text-align:inherit}
+input{font:inherit;color:inherit;min-width:0}
+.num{font-variant-numeric:tabular-nums}
+.t2{color:#aab1b9}.t3{color:#7f8790}.up{color:#3fbf8a}.dn{color:#f06a5d}.am{color:#f5b155}
+.tb{height:30px;display:inline-flex;align-items:center;gap:8px;padding:0 10px;border-radius:4px;font-size:13px;white-space:nowrap}
+.tb:hover,.tb.on{background:#1b1f24}
+.seg{display:inline-flex;height:30px;padding:2px;gap:2px;background:#14171b;border:1px solid #23272d;border-radius:5px;flex:none}
+.seg>button{padding:0 10px;border-radius:3px;font-size:12.5px;color:#aab1b9;white-space:nowrap;text-align:center}
+.seg>button.on{background:#282d34;color:#e8eaed}
+.seg.sm{height:26px}.seg.sm>button{font-size:12px;padding:0 9px}
+.primary{height:32px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;border-radius:4px;background:#f2a33a;color:#1a1206;font-weight:600;font-size:13px;white-space:nowrap}
+.primary:hover{background:#f6b04d}
+.primary.off{background:#3a3327;color:#8d8370;cursor:default}
+.ghost{height:32px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;border-radius:4px;border:1px solid #2f353c;color:#e8eaed;font-weight:500;font-size:13px;white-space:nowrap}
+.ghost:hover{background:#1b1f24}
+kbd{font:inherit;font-size:11px;font-weight:500;padding:1px 5px;border-radius:3px;background:rgba(26,18,6,.16)}
+.iconbtn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;color:#aab1b9;flex:none}
+.iconbtn:hover{background:#1b1f24;color:#e8eaed}
+.iconbtn.on{color:#f5b155}
+.dtab{position:relative;display:inline-flex;align-items:center;gap:6px;padding:0 12px;font-size:13px;color:#aab1b9;white-space:nowrap}
+.dtab.on{color:#e8eaed;font-weight:500}
+.dtab.on::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;background:#f2a33a}
+.rtab{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:40px;position:relative;font-size:13px;color:#aab1b9;white-space:nowrap}
+.rtab.on{color:#e8eaed;font-weight:500}
+.rtab.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#f2a33a}
+.mtab{height:48px;display:inline-flex;align-items:center;gap:6px;padding:0 2px;font-size:14px;color:#aab1b9;position:relative;white-space:nowrap}
+.mtab:hover{color:#e8eaed}
+.mtab.on{color:#e8eaed;font-weight:600}
+.mtab.on::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:#f2a33a}
+.cnt{font-size:11.5px;color:#7f8790;font-variant-numeric:tabular-nums}
+.cnt.bad{color:#1a0b09;background:#f06a5d;border-radius:8px;padding:0 5px;font-weight:600}
+.sec{display:flex;align-items:center;justify-content:space-between;height:28px;font-size:13px;font-weight:600}
+.field{height:32px;display:flex;align-items:center;border:1px solid #2f353c;border-radius:4px;background:#0f1215;font-size:13px;font-variant-numeric:tabular-nums}
+.field .k{width:30px;height:100%;display:flex;align-items:center;justify-content:center;color:#7f8790}
+.field .v{flex:1;text-align:center;background:none;border:0;width:100%;outline:none}
+.sel{height:32px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 10px;border:1px solid #2f353c;border-radius:4px;background:#0f1215;font-size:13px;width:100%}
+.inp{height:32px;border:1px solid #2f353c;border-radius:4px;background:#0f1215;padding:0 10px;font-size:13px;outline:none;width:100%;font-variant-numeric:tabular-nums}
+.mini{height:28px;display:flex;align-items:center;padding:0 8px;border:1px solid #2f353c;border-radius:4px;background:#0f1215;font-size:12.5px;font-variant-numeric:tabular-nums;outline:none}
+.field.err,.inp.err,.mini.err,.sel.err{border-color:#f06a5d}
+.field.foc,.inp.foc,.mini.foc,.sel.foc{border-color:#f2a33a}
+.errt{font-size:12px;color:#f58a7f}
+.lab{font-size:12.5px;color:#aab1b9}
+.sw{width:34px;height:20px;border-radius:10px;background:#2f353c;position:relative;flex:none}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:7px;background:#aab1b9}
+.sw.on{background:#f2a33a}.sw.on::after{left:17px;background:#1a1206}
+.kv{display:flex;align-items:center;justify-content:space-between;gap:12px;height:31px;border-top:1px solid #1f2328;font-size:13px;white-space:nowrap}
+.kv>span:first-child{color:#aab1b9}
+.chip{height:26px;display:inline-flex;align-items:center;gap:6px;padding:0 9px;border-radius:13px;border:1px solid #2f353c;font-size:12.5px;white-space:nowrap}
+.chip.on{border-color:#6b5227;background:#241c10;color:#f5c27a}
+.chip.bad{border-color:#7a3a33;color:#f58a7f}
+.cb{width:15px;height:15px;border-radius:3px;border:1px solid #4a525c;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.cb.on{background:#f2a33a;border-color:#f2a33a}
+.tag{height:18px;padding:0 6px;border-radius:3px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;white-space:nowrap;background:#282d34;color:#aab1b9}
+.tag.am{background:#3a2c16;color:#f5b155}.tag.dn{background:#3b1f1c;color:#f58a7f}.tag.bl{background:#1c3340;color:#8fd0f0}
+table{border-collapse:collapse;width:100%}
+th{font-weight:500;font-size:12px;color:#7f8790;text-align:right;padding:0 0 6px 8px;white-space:nowrap}
+th:first-child{text-align:left;padding-left:0}
+td{font-size:12.5px;text-align:right;padding:0 0 0 8px;height:25px;border-top:1px solid #1f2328;white-space:nowrap;font-variant-numeric:tabular-nums}
+td:first-child{text-align:left;padding-left:0;color:#aab1b9}
+.lb th{font-size:12px;padding:0 8px;height:30px;border-bottom:1px solid #23272d}
+.lb td{height:30px;padding:0 8px;border-top:0;border-bottom:1px solid #1b1f24}
+.lb td:first-child{padding-left:12px}.lb th:first-child{padding-left:12px}
+.lb tr.cur td{background:#221b11}
+.lb tr.cur td:first-child{color:#f5b155}
+.lb.sm td{height:26px}
+.code{font-family:"Source Code Pro",Consolas,monospace;font-size:12.5px;line-height:19px}
+.cl{display:flex;height:19px;border-left:2px solid transparent;white-space:pre}
+.cl .ln{width:46px;flex:none;text-align:right;padding-right:14px;color:#4f565f}
+.cl.in{background:rgba(242,163,58,0.06);border-left-color:#f2a33a}.cl.in .ln{color:#aab1b9}
+.cl.fx{background:rgba(255,255,255,0.025);border-left-color:#3a4048}.cl.fx .ln{color:#aab1b9}
+.cl.er{background:rgba(240,106,93,0.10);border-left-color:#f06a5d}.cl.er .ln{color:#f58a7f}
+.cl.cu{background:rgba(255,255,255,0.035)}
+.kw{color:#8fb8de}.fn{color:#d9c38c}.st{color:#a9c98f}.nu{color:#e0a577}.cm{color:#6b727b}
+.sq{text-decoration:underline wavy #f06a5d;text-underline-offset:3px}
+.menu{position:absolute;background:#1b1f24;border:1px solid #2f353c;border-radius:6px;box-shadow:0 14px 36px rgba(0,0,0,.55);padding:4px;font-size:13px;display:flex;flex-direction:column}
+.mi{height:30px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:4px;white-space:nowrap;width:100%}
+.mi:hover,.mi.on{background:#2a3038}
+.mh{height:26px;display:flex;align-items:center;padding:0 10px;font-size:11.5px;color:#7f8790}
+.msep{height:1px;background:#2f353c;margin:4px 0;flex:none}
+.dlg{background:#14171b;border:1px solid #2f353c;border-radius:8px;box-shadow:0 24px 64px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden}
+.toast{position:absolute;display:flex;align-items:center;gap:12px;height:40px;padding:0 8px 0 14px;border-radius:6px;background:#282d34;border:1px solid #3a4048;box-shadow:0 12px 28px rgba(0,0,0,.5);font-size:13px;white-space:nowrap}
+.bar{height:4px;border-radius:2px;background:#2f353c;position:relative;overflow:hidden}
+.bar>i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:#f2a33a}
+.note{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:4px;font-size:12.5px;line-height:1.45;background:#1b1f24;color:#aab1b9}
+.note.am{background:#241c10;color:#f5c27a}.note.dn{background:#2a1715;color:#f5a59c}
+</style>
+</helmet>
+<div style="width: 880px; height: 620px; background: #0e1013"><div class="dlg" style="width: 880px; height: 620px">
+<div style="height: 52px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 12px 0 20px">
+<span style="font-size: 15px; font-weight: 600; flex: 1">选择行情</span>
+<button class="iconbtn" aria-label="关闭"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+</div>
+<div style="height: 40px; flex: none; display: flex; gap: 2px; padding: 0 8px; border-bottom: 1px solid #23272d">
+<button class="dtab on">Binance<span class="t3" style="font-size: 12px; font-weight: 400">加密现货、永续</span></button><button class="dtab">Yahoo Finance<span class="t3" style="font-size: 12px; font-weight: 400">股票、ETF、指数、外汇</span></button><button class="dtab">上传 CSV</button>
+</div>
+<div style="flex: 1; min-height: 0; display: flex">
+<div style="width: 400px; flex: none; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; border-right: 1px solid #23272d">
+<div style="display: flex; flex-direction: column; gap: 6px"><span class="lab">市场</span><div class="seg" style="align-self: flex-start" role="group" aria-label="市场"><button class="on">现货</button><button>USDⓈ-M 永续</button></div></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><span class="lab">品种</span><div class="inp" style="display: flex; align-items: center; gap: 8px"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><span style="flex: 1"><span style="font-weight: 600">BTCUSDT</span></span><span class="t3" style="font-size: 12px">Bitcoin / TetherUS</span></div></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><span class="lab">周期</span><div class="seg" style="align-self: flex-start" role="group" aria-label="周期"><button>1m</button><button>5m</button><button>15m</button><button class="on">1h</button><button>4h</button><button>1D</button><button>1W</button></div></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><span class="lab">范围</span><div style="display: flex; gap: 6px"><button class="chip">1 个月</button><button class="chip">1 年</button><button class="chip">2 年</button><button class="chip">全部</button><button class="chip on">自定义</button></div>
+<div class="num" style="display: flex; align-items: center; gap: 8px"><div class="inp" style="display: flex; align-items: center; gap: 8px"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg><span style="flex: 1">2023-01-02</span></div><span class="t3">至</span><div class="inp" style="display: flex; align-items: center; gap: 8px"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg><span style="flex: 1">2025-05-04</span></div></div></div>
+<span class="t3" style="font-size: 12px">单次最多 100,000 根，仅加载已收盘的 K 线。</span>
+</div>
+<div style="flex: 1; min-width: 0; padding: 16px 20px; background: #111417; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-weight: 600">预览<span class="t2 num" style="font-weight: 400; margin-left: 10px">BTCUSDT，1h</span></span><span class="t3" style="font-size: 12px">已缓存，5 分钟内有效</span></div>
+<svg width="440" height="104" viewBox="0 0 440 104" style="display: block" role="img" aria-label="收盘价预览">
+<path d="M0.5 100L0.5 93.5L1 93.1L1.5 92.7L3.1 92L3.6 92.1L5.2 91.2L5.7 90.6L7.2 89.7L7.7 88.9L8.3 88.2L9.8 88.3L11.3 87.8L11.9 87.5L13.4 86.6L13.9 86.2L15.5 85.7L16 85.3L16.5 84.8L18.1 84.5L19.1 84.8L19.6 84.6L20.1 84.5L22.7 84.4L23.2 84.8L23.7 85.3L25.3 86.3L26.3 86.5L27.3 87.2L27.9 87.4L29.4 88.3L29.9 88.4L31.5 89L32 89.2L32.5 89.1L33.5 89.2L34.6 89.9L35.6 90L37.1 88L37.7 87.4L39.2 84.5L40.8 83.5L41.3 84.2L41.8 83.8L42.8 83L43.8 83L44.9 83.2L45.9 82.4L46.4 82.7L48 82.7L49.5 81.6L50 81L51.1 81.6L52.1 82.1L53.1 80.8L54.7 80.7L55.2 80.2L55.7 80.3L57.3 81.8L58.8 82.3L59.3 82.7L59.8 82.9L61.4 83.4L62.4 83.2L63.4 84.1L64 84.1L65.5 82.8L66 82.9L67.1 82.5L67.6 82.5L68.6 82.8L69.6 82.6L71.2 83.6L71.7 83.7L73.2 84.6L73.8 85.3L75.3 86.5L75.8 87.1L77.4 86.6L77.9 86.5L79.4 85L80.5 84.7L81.5 85.2L82.5 85.4L83.6 84.7L84.1 84.9L85.1 85.6L86.7 85.6L87.2 85L87.7 84.7L89.2 82.5L89.8 81.3L91.3 80.1L91.8 80.3L92.8 80.9L94.4 80.2L95.4 80.7L95.9 80.3L97 79.9L98.5 80.4L99 79.6L100.1 79.7L101.1 79.3L102.1 79.6L103.2 80.7L103.7 80.8L104.7 81L106.3 81.4L107.3 81.6L107.8 81.7L108.8 82.4L109.9 81.9L111.4 83.7L112.5 84L113 84.3L114 84L115.5 83.5L116.1 83.5L117.6 83.9L118.1 83.7L119.2 84.8L120.2 84L120.7 84.4L121.7 83.9L123.3 85.1L123.8 84.8L124.8 84.3L125.9 84L126.4 83.6L128.4 84.1L129.5 83.6L130 84.2L131 85.1L132.1 85.6L133.6 84.9L134.1 84.8L135.1 85.1L136.2 85.6L136.7 84.8L137.7 84.5L139.3 85.3L140.3 85.7L141.3 84.8L141.9 84.1L143.4 84.3L143.9 84.4L145.5 83L146.5 82.8L147.5 83.3L148 83.4L149.1 83.9L150.6 83.7L151.7 82.4L152.2 81.3L153.2 79.5L153.7 79.1L155.3 76.8L156.3 77.9L156.8 77.1L158.4 76.6L159.4 77.9L159.9 78L161.5 77L162.5 77.4L163.5 77.1L164 77.1L165.6 75.7L166.1 75.6L167.1 74.9L168.7 74.7L169.2 75.4L170.7 75.3L171.3 75.5L171.8 75.1L173.3 73.7L173.8 73.8L175.4 72.3L175.9 71.9L176.9 71.5L178 72.4L179 73.4L180.5 72.6L181.1 73L182.1 72.6L183.6 71.6L184.7 71.4L185.2 70.7L186.2 71L187.2 69.4L187.8 69.3L188.8 68.2L190.3 68.3L190.9 67.2L191.9 67.6L193.4 65.8L194 66.1L195.5 65.7L196.5 67.3L197 66.3L198.1 68.4L199.6 70.4L200.1 70.4L201.7 69.4L202.2 70.1L203.2 69.3L204.3 68.4L204.8 68.8L205.8 68.8L207.4 66.5L207.9 65.5L209.4 62.7L209.9 62.4L211.5 61.2L212 59.7L213.6 56.3L214.1 55.9L215.6 53.4L216.6 53.8L217.7 52.7L218.2 51.8L219.2 53.3L220.3 51L221.3 48.7L221.8 47L222.8 45.9L223.9 45.4L225.4 43.3L226.4 42.7L227.5 40.7L228 42.5L229.5 45.5L230.1 46.4L231.6 49L232.1 50L233.7 48.3L234.2 49.1L235.2 52.3L236.2 50.9L237.3 49.5L238.3 50.3L239.3 49L239.9 50L240.9 50.7L241.9 49.6L243.5 52.1L244 51.4L245.5 54.9L246 54.7L246.6 55.1L248.1 55.9L249.7 53L250.2 54L250.7 55.1L252.2 54.7L253.3 53.5L253.8 53.9L255.3 49.8L255.8 51.4L257.4 48.9L257.9 49.5L258.9 52L260 50.4L261.5 47.4L262 46.1L263.6 44.4L264.1 46L264.6 47.8L266.2 48.4L267.7 46.1L269.3 44.8L269.8 47.2L270.8 46.8L271.3 48.6L271.8 48.3L273.4 50.6L274.9 48.9L275.5 50.6L277 50.6L277.5 51.3L278.5 51.1L279.6 52.2L280.1 51.5L281.6 54.6L282.2 54.2L283.7 56.2L284.2 56.1L285.8 55.4L286.3 55L287.3 53.6L287.8 52.9L289.4 51.8L289.9 51L291.4 48.5L293 45.6L293.5 47.3L294 49.3L295.6 51.3L296.6 53.1L297.6 54.9L298.1 56L299.7 58.5L300.2 59.1L301.8 57.3L302.3 56.9L303.8 56.1L304.9 55.8L305.4 56.5L305.9 55.5L306.4 54.2L309 55.6L309.5 53.7L310.5 53.8L311.6 55.9L312.6 55.6L313.6 56.5L314.1 56.7L315.2 54.8L316.7 55.8L317.2 55.3L318.8 55L319.8 53.4L320.3 52.4L321.4 52.6L321.9 52.7L323.4 49.9L323.9 48.6L325 50.1L326.5 48.6L327.5 49.5L328.1 49L329.1 51.6L330.1 50.1L330.6 49.2L333.2 49.7L333.7 48.1L334.3 48.8L335.8 46.6L336.3 47.6L337.4 45.2L338.4 45.2L339.4 43.3L340.4 44.9L341.5 43.2L342 42.5L343.5 38.7L344.1 37.5L345.1 35.1L346.1 35.2L347.7 31.1L348.2 30.1L349.7 28L350.2 26.6L351.8 23.1L352.8 21.9L353.9 23.8L354.4 23.4L354.9 21.8L355.9 22.5L357.5 17.2L358 16.4L359 15.3L360 15L361.6 11.9L362.1 11.2L363.7 16.5L364.2 15.7L365.7 12.2L366.2 14.3L367.8 9.8L368.8 7.9L369.8 10L370.9 9.2L371.9 12.3L372.4 11.9L373.5 17.1L374 19.8L375.5 21.5L377.1 25.1L377.6 22L378.1 22L379.1 19.4L380.2 22.6L381.7 18.3L382.2 19.6L383.8 15.4L384.3 14.8L385.8 12.1L386.9 11.1L387.9 7.7L388.4 6.9L388.9 7.2L390 6.9L391.5 13.8L392 15.3L393.6 17.7L394.1 16L395.6 21.3L396.7 24.2L397.2 23.2L398.2 22.7L399.2 24.5L400.8 22.7L401.8 24.3L402.3 26.2L403.9 31.1L404.9 29.9L406 33.2L407 33.7L407.5 33.1L408 32.9L409.6 32.5L410.6 30.2L411.6 33.2L412.7 34.8L413.7 33.2L414.2 32.1L415.8 35.5L416.3 36.3L417.3 34.8L419.4 35.8L419.9 36.9L420.4 37.8L421.4 39.9L423 38.4L423.5 37.6L424 39.1L425.6 38.1L426.1 37.4L427.6 32.5L428.1 32.7L429.7 29.4L430.2 28.5L431.2 26.5L432.3 26.3L433.8 23.1L435.4 22.1L435.9 20.4L436.9 20.8L437.4 18.1L438.5 19.3L439.5 16.9L440 19.1L440 100Z" fill="rgba(159,179,200,0.10)"/>
+<path d="M0.5 93.5L1 93.1L1.5 92.7L3.1 92L3.6 92.1L5.2 91.2L5.7 90.6L7.2 89.7L7.7 88.9L8.3 88.2L9.8 88.3L11.3 87.8L11.9 87.5L13.4 86.6L13.9 86.2L15.5 85.7L16 85.3L16.5 84.8L18.1 84.5L19.1 84.8L19.6 84.6L20.1 84.5L22.7 84.4L23.2 84.8L23.7 85.3L25.3 86.3L26.3 86.5L27.3 87.2L27.9 87.4L29.4 88.3L29.9 88.4L31.5 89L32 89.2L32.5 89.1L33.5 89.2L34.6 89.9L35.6 90L37.1 88L37.7 87.4L39.2 84.5L40.8 83.5L41.3 84.2L41.8 83.8L42.8 83L43.8 83L44.9 83.2L45.9 82.4L46.4 82.7L48 82.7L49.5 81.6L50 81L51.1 81.6L52.1 82.1L53.1 80.8L54.7 80.7L55.2 80.2L55.7 80.3L57.3 81.8L58.8 82.3L59.3 82.7L59.8 82.9L61.4 83.4L62.4 83.2L63.4 84.1L64 84.1L65.5 82.8L66 82.9L67.1 82.5L67.6 82.5L68.6 82.8L69.6 82.6L71.2 83.6L71.7 83.7L73.2 84.6L73.8 85.3L75.3 86.5L75.8 87.1L77.4 86.6L77.9 86.5L79.4 85L80.5 84.7L81.5 85.2L82.5 85.4L83.6 84.7L84.1 84.9L85.1 85.6L86.7 85.6L87.2 85L87.7 84.7L89.2 82.5L89.8 81.3L91.3 80.1L91.8 80.3L92.8 80.9L94.4 80.2L95.4 80.7L95.9 80.3L97 79.9L98.5 80.4L99 79.6L100.1 79.7L101.1 79.3L102.1 79.6L103.2 80.7L103.7 80.8L104.7 81L106.3 81.4L107.3 81.6L107.8 81.7L108.8 82.4L109.9 81.9L111.4 83.7L112.5 84L113 84.3L114 84L115.5 83.5L116.1 83.5L117.6 83.9L118.1 83.7L119.2 84.8L120.2 84L120.7 84.4L121.7 83.9L123.3 85.1L123.8 84.8L124.8 84.3L125.9 84L126.4 83.6L128.4 84.1L129.5 83.6L130 84.2L131 85.1L132.1 85.6L133.6 84.9L134.1 84.8L135.1 85.1L136.2 85.6L136.7 84.8L137.7 84.5L139.3 85.3L140.3 85.7L141.3 84.8L141.9 84.1L143.4 84.3L143.9 84.4L145.5 83L146.5 82.8L147.5 83.3L148 83.4L149.1 83.9L150.6 83.7L151.7 82.4L152.2 81.3L153.2 79.5L153.7 79.1L155.3 76.8L156.3 77.9L156.8 77.1L158.4 76.6L159.4 77.9L159.9 78L161.5 77L162.5 77.4L163.5 77.1L164 77.1L165.6 75.7L166.1 75.6L167.1 74.9L168.7 74.7L169.2 75.4L170.7 75.3L171.3 75.5L171.8 75.1L173.3 73.7L173.8 73.8L175.4 72.3L175.9 71.9L176.9 71.5L178 72.4L179 73.4L180.5 72.6L181.1 73L182.1 72.6L183.6 71.6L184.7 71.4L185.2 70.7L186.2 71L187.2 69.4L187.8 69.3L188.8 68.2L190.3 68.3L190.9 67.2L191.9 67.6L193.4 65.8L194 66.1L195.5 65.7L196.5 67.3L197 66.3L198.1 68.4L199.6 70.4L200.1 70.4L201.7 69.4L202.2 70.1L203.2 69.3L204.3 68.4L204.8 68.8L205.8 68.8L207.4 66.5L207.9 65.5L209.4 62.7L209.9 62.4L211.5 61.2L212 59.7L213.6 56.3L214.1 55.9L215.6 53.4L216.6 53.8L217.7 52.7L218.2 51.8L219.2 53.3L220.3 51L221.3 48.7L221.8 47L222.8 45.9L223.9 45.4L225.4 43.3L226.4 42.7L227.5 40.7L228 42.5L229.5 45.5L230.1 46.4L231.6 49L232.1 50L233.7 48.3L234.2 49.1L235.2 52.3L236.2 50.9L237.3 49.5L238.3 50.3L239.3 49L239.9 50L240.9 50.7L241.9 49.6L243.5 52.1L244 51.4L245.5 54.9L246 54.7L246.6 55.1L248.1 55.9L249.7 53L250.2 54L250.7 55.1L252.2 54.7L253.3 53.5L253.8 53.9L255.3 49.8L255.8 51.4L257.4 48.9L257.9 49.5L258.9 52L260 50.4L261.5 47.4L262 46.1L263.6 44.4L264.1 46L264.6 47.8L266.2 48.4L267.7 46.1L269.3 44.8L269.8 47.2L270.8 46.8L271.3 48.6L271.8 48.3L273.4 50.6L274.9 48.9L275.5 50.6L277 50.6L277.5 51.3L278.5 51.1L279.6 52.2L280.1 51.5L281.6 54.6L282.2 54.2L283.7 56.2L284.2 56.1L285.8 55.4L286.3 55L287.3 53.6L287.8 52.9L289.4 51.8L289.9 51L291.4 48.5L293 45.6L293.5 47.3L294 49.3L295.6 51.3L296.6 53.1L297.6 54.9L298.1 56L299.7 58.5L300.2 59.1L301.8 57.3L302.3 56.9L303.8 56.1L304.9 55.8L305.4 56.5L305.9 55.5L306.4 54.2L309 55.6L309.5 53.7L310.5 53.8L311.6 55.9L312.6 55.6L313.6 56.5L314.1 56.7L315.2 54.8L316.7 55.8L317.2 55.3L318.8 55L319.8 53.4L320.3 52.4L321.4 52.6L321.9 52.7L323.4 49.9L323.9 48.6L325 50.1L326.5 48.6L327.5 49.5L328.1 49L329.1 51.6L330.1 50.1L330.6 49.2L333.2 49.7L333.7 48.1L334.3 48.8L335.8 46.6L336.3 47.6L337.4 45.2L338.4 45.2L339.4 43.3L340.4 44.9L341.5 43.2L342 42.5L343.5 38.7L344.1 37.5L345.1 35.1L346.1 35.2L347.7 31.1L348.2 30.1L349.7 28L350.2 26.6L351.8 23.1L352.8 21.9L353.9 23.8L354.4 23.4L354.9 21.8L355.9 22.5L357.5 17.2L358 16.4L359 15.3L360 15L361.6 11.9L362.1 11.2L363.7 16.5L364.2 15.7L365.7 12.2L366.2 14.3L367.8 9.8L368.8 7.9L369.8 10L370.9 9.2L371.9 12.3L372.4 11.9L373.5 17.1L374 19.8L375.5 21.5L377.1 25.1L377.6 22L378.1 22L379.1 19.4L380.2 22.6L381.7 18.3L382.2 19.6L383.8 15.4L384.3 14.8L385.8 12.1L386.9 11.1L387.9 7.7L388.4 6.9L388.9 7.2L390 6.9L391.5 13.8L392 15.3L393.6 17.7L394.1 16L395.6 21.3L396.7 24.2L397.2 23.2L398.2 22.7L399.2 24.5L400.8 22.7L401.8 24.3L402.3 26.2L403.9 31.1L404.9 29.9L406 33.2L407 33.7L407.5 33.1L408 32.9L409.6 32.5L410.6 30.2L411.6 33.2L412.7 34.8L413.7 33.2L414.2 32.1L415.8 35.5L416.3 36.3L417.3 34.8L419.4 35.8L419.9 36.9L420.4 37.8L421.4 39.9L423 38.4L423.5 37.6L424 39.1L425.6 38.1L426.1 37.4L427.6 32.5L428.1 32.7L429.7 29.4L430.2 28.5L431.2 26.5L432.3 26.3L433.8 23.1L435.4 22.1L435.9 20.4L436.9 20.8L437.4 18.1L438.5 19.3L439.5 16.9L440 19.1" fill="none" stroke="#9fb3c8" stroke-width="1.3" stroke-linejoin="round"/>
+<line x1="0" x2="440" y1="100.5" y2="100.5" stroke="#23272d" stroke-width="1"/>
+</svg>
+<div style="display: flex; flex-direction: column"><div class="kv num"><span>K 线</span><span>20,488 根</span></div><div class="kv num"><span>区间 UTC</span><span>2023-01-02 00:00 – 2025-05-04 23:00</span></div><div class="kv num" style="border-bottom: 1px solid #1f2328"><span>交易时段</span><span>24 × 7</span></div></div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-weight: 600">品种档案</span><span class="t3" style="font-size: 12px">由数据源提供，可修改</span></div>
+<div style="display: flex; gap: 8px"><div style="flex: 1; min-width: 0"><div style="display: flex; flex-direction: column; gap: 5px"><span class="lab">最小变动价位</span><div class="inp num" style="height: 30px; display: flex; align-items: center">0.01</div></div></div><div style="flex: 1; min-width: 0"><div style="display: flex; flex-direction: column; gap: 5px"><span class="lab">合约乘数</span><div class="inp num" style="height: 30px; display: flex; align-items: center">1</div></div></div><div style="flex: 1; min-width: 0"><div style="display: flex; flex-direction: column; gap: 5px"><span class="lab">最小下单量</span><div class="inp num" style="height: 30px; display: flex; align-items: center">0.00001</div></div></div><div style="flex: 1.7; min-width: 0"><div style="display: flex; flex-direction: column; gap: 5px"><span class="lab">时区</span><div class="inp num" style="height: 30px; display: flex; align-items: center">UTC</div></div></div></div>
+</div>
+</div>
+</div>
+<div style="height: 60px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 20px; border-top: 1px solid #23272d">
+<span class="t3" style="font-size: 12px; flex: 1">行情由服务端获取；脚本与回测仅在浏览器本地运行</span>
+<button class="ghost">取消</button>
+<button class="primary">使用此数据</button>
+</div>
+</div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":620}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

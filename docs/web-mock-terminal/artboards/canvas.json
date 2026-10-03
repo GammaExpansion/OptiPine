@@ -1,0 +1,1168 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "S1.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "S1 首次打开"
+    },
+    "S2.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 660,
+      "h": 400,
+      "title": "S2 脚本菜单"
+    },
+    "S3.dc.html": {
+      "x": 2260,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "S3 选择行情 · 搜索品种"
+    },
+    "S4.dc.html": {
+      "x": 3780,
+      "y": 0,
+      "w": 880,
+      "h": 620,
+      "title": "S4 选择行情 · 获取中"
+    },
+    "S5.dc.html": {
+      "x": 4740,
+      "y": 0,
+      "w": 880,
+      "h": 620,
+      "title": "S5 选择行情 · 预览"
+    },
+    "S6.dc.html": {
+      "x": 5700,
+      "y": 0,
+      "w": 880,
+      "h": 620,
+      "title": "S6 选择行情 · Yahoo Finance"
+    },
+    "S7.dc.html": {
+      "x": 6660,
+      "y": 0,
+      "w": 880,
+      "h": 620,
+      "title": "S7 选择行情 · 上传 CSV"
+    },
+    "S8.dc.html": {
+      "x": 7620,
+      "y": 0,
+      "w": 880,
+      "h": 620,
+      "title": "S8 选择行情 · CSV 解析错误"
+    },
+    "S9.dc.html": {
+      "x": 8580,
+      "y": 0,
+      "w": 880,
+      "h": 620,
+      "title": "S9 选择行情 · 数据源拒绝访问"
+    },
+    "S10.dc.html": {
+      "x": 9540,
+      "y": 0,
+      "w": 660,
+      "h": 300,
+      "title": "S10 改日期范围"
+    },
+    "Main.dc.html": {
+      "x": 0,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "B1 回测 · 报告"
+    },
+    "B2.dc.html": {
+      "x": 1520,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "B2 回测 · 成交"
+    },
+    "B3.dc.html": {
+      "x": 3040,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "B3 回测 · Pine 代码"
+    },
+    "B4.dc.html": {
+      "x": 4560,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "B4 代码最大化"
+    },
+    "B5.dc.html": {
+      "x": 6080,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "B5 回测 · 权益"
+    },
+    "B6.dc.html": {
+      "x": 7600,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "B6 悬停与成交定位"
+    },
+    "B7.dc.html": {
+      "x": 9120,
+      "y": 1320,
+      "w": 1104,
+      "h": 478,
+      "title": "B7 副图指标"
+    },
+    "B8.dc.html": {
+      "x": 0,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "B8 运行中"
+    },
+    "B9.dc.html": {
+      "x": 1520,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "B9 参数已修改，结果过期"
+    },
+    "B10.dc.html": {
+      "x": 3040,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "B10 编译失败"
+    },
+    "B11.dc.html": {
+      "x": 4560,
+      "y": 2640,
+      "w": 1104,
+      "h": 422,
+      "title": "B11 运行失败"
+    },
+    "B12.dc.html": {
+      "x": 5744,
+      "y": 2640,
+      "w": 1104,
+      "h": 422,
+      "title": "B12 无成交"
+    },
+    "B13.dc.html": {
+      "x": 6928,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "B13 策略属性"
+    },
+    "B14.dc.html": {
+      "x": 8448,
+      "y": 2640,
+      "w": 336,
+      "h": 852,
+      "title": "B14 输入控件状态"
+    },
+    "B15.dc.html": {
+      "x": 8864,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "B15 面板收起"
+    },
+    "B16.dc.html": {
+      "x": 10384,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "B16 预览优化结果中的一组参数"
+    },
+    "B17.dc.html": {
+      "x": 11904,
+      "y": 2640,
+      "w": 880,
+      "h": 900,
+      "title": "B17 应用参数后"
+    },
+    "O1.dc.html": {
+      "x": 0,
+      "y": 3960,
+      "w": 1440,
+      "h": 900,
+      "title": "O1 优化 · 设置（样本内 / 外）"
+    },
+    "O2.dc.html": {
+      "x": 1520,
+      "y": 3960,
+      "w": 1440,
+      "h": 900,
+      "title": "O2 优化 · 设置（不验证）"
+    },
+    "O3.dc.html": {
+      "x": 3040,
+      "y": 3960,
+      "w": 1440,
+      "h": 900,
+      "title": "O3 优化 · 设置（滚动窗口）"
+    },
+    "O4.dc.html": {
+      "x": 4560,
+      "y": 3960,
+      "w": 336,
+      "h": 600,
+      "title": "O4 取值列表"
+    },
+    "O5.dc.html": {
+      "x": 4976,
+      "y": 3960,
+      "w": 336,
+      "h": 852,
+      "title": "O5 组合数超限，切换随机采样"
+    },
+    "O6.dc.html": {
+      "x": 5392,
+      "y": 3960,
+      "w": 336,
+      "h": 852,
+      "title": "O6 搜索范围校验错误"
+    },
+    "O7.dc.html": {
+      "x": 5808,
+      "y": 3960,
+      "w": 336,
+      "h": 852,
+      "title": "O7 排序目标"
+    },
+    "O8.dc.html": {
+      "x": 6224,
+      "y": 3960,
+      "w": 1440,
+      "h": 900,
+      "title": "O8 优化进行中"
+    },
+    "R1.dc.html": {
+      "x": 0,
+      "y": 5280,
+      "w": 1440,
+      "h": 900,
+      "title": "R1 优化结果 · 前 20 组权益"
+    },
+    "R2.dc.html": {
+      "x": 1520,
+      "y": 5280,
+      "w": 1440,
+      "h": 900,
+      "title": "R2 优化结果 · 样本内 vs 样本外"
+    },
+    "R2b.dc.html": {
+      "x": 3040,
+      "y": 5280,
+      "w": 1440,
+      "h": 900,
+      "title": "R2b 优化结果 · 净利润分布"
+    },
+    "R3.dc.html": {
+      "x": 4560,
+      "y": 5280,
+      "w": 1440,
+      "h": 900,
+      "title": "R3 优化结果 · 不验证"
+    },
+    "R4.dc.html": {
+      "x": 6080,
+      "y": 5280,
+      "w": 1440,
+      "h": 900,
+      "title": "R4 优化结果 · 7 个参数"
+    },
+    "R5.dc.html": {
+      "x": 7600,
+      "y": 5280,
+      "w": 1440,
+      "h": 900,
+      "title": "R5 设置已修改，结果过期"
+    },
+    "R6.dc.html": {
+      "x": 0,
+      "y": 6600,
+      "w": 480,
+      "h": 516,
+      "title": "R6 单元格悬停"
+    },
+    "R7.dc.html": {
+      "x": 560,
+      "y": 6600,
+      "w": 480,
+      "h": 516,
+      "title": "R7 格内明细（取值过多时分箱）"
+    },
+    "R8.dc.html": {
+      "x": 1120,
+      "y": 6600,
+      "w": 480,
+      "h": 516,
+      "title": "R8 单参数优化"
+    },
+    "R9.dc.html": {
+      "x": 1680,
+      "y": 6600,
+      "w": 624,
+      "h": 516,
+      "title": "R9 无符合条件的组合"
+    },
+    "R10.dc.html": {
+      "x": 2384,
+      "y": 6600,
+      "w": 624,
+      "h": 516,
+      "title": "R10 添加条件"
+    },
+    "R11.dc.html": {
+      "x": 3088,
+      "y": 6600,
+      "w": 800,
+      "h": 262,
+      "title": "R11 报错组合"
+    },
+    "R12.dc.html": {
+      "x": 3968,
+      "y": 6600,
+      "w": 480,
+      "h": 516,
+      "title": "R12 拖动换轴"
+    },
+    "W1.dc.html": {
+      "x": 0,
+      "y": 7536,
+      "w": 1440,
+      "h": 900,
+      "title": "W1 滚动窗口结果"
+    },
+    "W2.dc.html": {
+      "x": 1520,
+      "y": 7536,
+      "w": 1440,
+      "h": 900,
+      "title": "W2 逐窗视图"
+    },
+    "W3.dc.html": {
+      "x": 3040,
+      "y": 7536,
+      "w": 464,
+      "h": 429,
+      "title": "W3 窗口参数图（六窗平均）"
+    },
+    "W4.dc.html": {
+      "x": 3584,
+      "y": 7536,
+      "w": 1440,
+      "h": 900,
+      "title": "W4 滚动优化进行中"
+    },
+    "W5.dc.html": {
+      "x": 5104,
+      "y": 7536,
+      "w": 640,
+      "h": 429,
+      "title": "W5 异常窗口"
+    },
+    "W6.dc.html": {
+      "x": 5824,
+      "y": 7536,
+      "w": 1104,
+      "h": 362,
+      "title": "W6 样本内固定起点"
+    },
+    "G1.dc.html": {
+      "x": 0,
+      "y": 8856,
+      "w": 580,
+      "h": 380,
+      "title": "G1 拖动分栏"
+    },
+    "G2.dc.html": {
+      "x": 660,
+      "y": 8856,
+      "w": 1024,
+      "h": 768,
+      "title": "G2 平板：右栏收为抽屉"
+    },
+    "G3.dc.html": {
+      "x": 1764,
+      "y": 8856,
+      "w": 390,
+      "h": 844,
+      "title": "G3 手机 · 回测"
+    },
+    "G4.dc.html": {
+      "x": 2234,
+      "y": 8856,
+      "w": 390,
+      "h": 844,
+      "title": "G4 手机 · 优化结果"
+    },
+    "G5.dc.html": {
+      "x": 2704,
+      "y": 8856,
+      "w": 1440,
+      "h": 1120,
+      "title": "G5 组件与状态"
+    },
+    "S1-en.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "S1 First launch",
+      "page": "en"
+    },
+    "S2-en.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 660,
+      "h": 400,
+      "title": "S2 Script menu",
+      "page": "en"
+    },
+    "S3-en.dc.html": {
+      "x": 2260,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "S3 Select market data · Search symbols",
+      "page": "en"
+    },
+    "S4-en.dc.html": {
+      "x": 3780,
+      "y": 0,
+      "w": 880,
+      "h": 620,
+      "title": "S4 Select market data · Fetching",
+      "page": "en"
+    },
+    "S5-en.dc.html": {
+      "x": 4740,
+      "y": 0,
+      "w": 880,
+      "h": 620,
+      "title": "S5 Select market data · Preview",
+      "page": "en"
+    },
+    "S6-en.dc.html": {
+      "x": 5700,
+      "y": 0,
+      "w": 880,
+      "h": 620,
+      "title": "S6 Select market data · Yahoo Finance",
+      "page": "en"
+    },
+    "S7-en.dc.html": {
+      "x": 6660,
+      "y": 0,
+      "w": 880,
+      "h": 620,
+      "title": "S7 Select market data · Upload CSV",
+      "page": "en"
+    },
+    "S8-en.dc.html": {
+      "x": 7620,
+      "y": 0,
+      "w": 880,
+      "h": 620,
+      "title": "S8 Select market data · CSV errors",
+      "page": "en"
+    },
+    "S9-en.dc.html": {
+      "x": 8580,
+      "y": 0,
+      "w": 880,
+      "h": 620,
+      "title": "S9 Select market data · Access denied",
+      "page": "en"
+    },
+    "S10-en.dc.html": {
+      "x": 9540,
+      "y": 0,
+      "w": 660,
+      "h": 300,
+      "title": "S10 Change date range",
+      "page": "en"
+    },
+    "Main-en.dc.html": {
+      "x": 0,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "B1 Backtest · Report",
+      "page": "en"
+    },
+    "B2-en.dc.html": {
+      "x": 1520,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "B2 Backtest · Trades",
+      "page": "en"
+    },
+    "B3-en.dc.html": {
+      "x": 3040,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "B3 Backtest · Pine code",
+      "page": "en"
+    },
+    "B4-en.dc.html": {
+      "x": 4560,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "B4 Code maximized",
+      "page": "en"
+    },
+    "B5-en.dc.html": {
+      "x": 6080,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "B5 Backtest · Equity",
+      "page": "en"
+    },
+    "B6-en.dc.html": {
+      "x": 7600,
+      "y": 1320,
+      "w": 1440,
+      "h": 900,
+      "title": "B6 Hover and trade lookup",
+      "page": "en"
+    },
+    "B7-en.dc.html": {
+      "x": 9120,
+      "y": 1320,
+      "w": 1104,
+      "h": 478,
+      "title": "B7 Indicator pane",
+      "page": "en"
+    },
+    "B8-en.dc.html": {
+      "x": 0,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "B8 Running",
+      "page": "en"
+    },
+    "B9-en.dc.html": {
+      "x": 1520,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "B9 Inputs changed, results stale",
+      "page": "en"
+    },
+    "B10-en.dc.html": {
+      "x": 3040,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "B10 Compile failed",
+      "page": "en"
+    },
+    "B11-en.dc.html": {
+      "x": 4560,
+      "y": 2640,
+      "w": 1104,
+      "h": 422,
+      "title": "B11 Run failed",
+      "page": "en"
+    },
+    "B12-en.dc.html": {
+      "x": 5744,
+      "y": 2640,
+      "w": 1104,
+      "h": 422,
+      "title": "B12 No trades",
+      "page": "en"
+    },
+    "B13-en.dc.html": {
+      "x": 6928,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "B13 Properties",
+      "page": "en"
+    },
+    "B14-en.dc.html": {
+      "x": 8448,
+      "y": 2640,
+      "w": 336,
+      "h": 852,
+      "title": "B14 Input control states",
+      "page": "en"
+    },
+    "B15-en.dc.html": {
+      "x": 8864,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "B15 Panel collapsed",
+      "page": "en"
+    },
+    "B16-en.dc.html": {
+      "x": 10384,
+      "y": 2640,
+      "w": 1440,
+      "h": 900,
+      "title": "B16 Previewing a parameter set from the optimization",
+      "page": "en"
+    },
+    "B17-en.dc.html": {
+      "x": 11904,
+      "y": 2640,
+      "w": 880,
+      "h": 900,
+      "title": "B17 After applying parameters",
+      "page": "en"
+    },
+    "O1-en.dc.html": {
+      "x": 0,
+      "y": 3960,
+      "w": 1440,
+      "h": 900,
+      "title": "O1 Optimize · Setup (IS / OOS)",
+      "page": "en"
+    },
+    "O2-en.dc.html": {
+      "x": 1520,
+      "y": 3960,
+      "w": 1440,
+      "h": 900,
+      "title": "O2 Optimize · Setup (no validation)",
+      "page": "en"
+    },
+    "O3-en.dc.html": {
+      "x": 3040,
+      "y": 3960,
+      "w": 1440,
+      "h": 900,
+      "title": "O3 Optimize · Setup (walk-forward)",
+      "page": "en"
+    },
+    "O4-en.dc.html": {
+      "x": 4560,
+      "y": 3960,
+      "w": 336,
+      "h": 600,
+      "title": "O4 Value list",
+      "page": "en"
+    },
+    "O5-en.dc.html": {
+      "x": 4976,
+      "y": 3960,
+      "w": 336,
+      "h": 852,
+      "title": "O5 Too many combos, random sampling",
+      "page": "en"
+    },
+    "O6-en.dc.html": {
+      "x": 5392,
+      "y": 3960,
+      "w": 336,
+      "h": 852,
+      "title": "O6 Search range errors",
+      "page": "en"
+    },
+    "O7-en.dc.html": {
+      "x": 5808,
+      "y": 3960,
+      "w": 336,
+      "h": 852,
+      "title": "O7 Ranking objective",
+      "page": "en"
+    },
+    "O8-en.dc.html": {
+      "x": 6224,
+      "y": 3960,
+      "w": 1440,
+      "h": 900,
+      "title": "O8 Optimization in progress",
+      "page": "en"
+    },
+    "R1-en.dc.html": {
+      "x": 0,
+      "y": 5280,
+      "w": 1440,
+      "h": 900,
+      "title": "R1 Optimization results · Top 20 equity",
+      "page": "en"
+    },
+    "R2-en.dc.html": {
+      "x": 1520,
+      "y": 5280,
+      "w": 1440,
+      "h": 900,
+      "title": "R2 Optimization results · IS vs OOS",
+      "page": "en"
+    },
+    "R2b-en.dc.html": {
+      "x": 3040,
+      "y": 5280,
+      "w": 1440,
+      "h": 900,
+      "title": "R2b Optimization results · Net profit distribution",
+      "page": "en"
+    },
+    "R3-en.dc.html": {
+      "x": 4560,
+      "y": 5280,
+      "w": 1440,
+      "h": 900,
+      "title": "R3 Optimization results · No validation",
+      "page": "en"
+    },
+    "R4-en.dc.html": {
+      "x": 6080,
+      "y": 5280,
+      "w": 1440,
+      "h": 900,
+      "title": "R4 Optimization results · 7 parameters",
+      "page": "en"
+    },
+    "R5-en.dc.html": {
+      "x": 7600,
+      "y": 5280,
+      "w": 1440,
+      "h": 900,
+      "title": "R5 Settings changed, results stale",
+      "page": "en"
+    },
+    "R6-en.dc.html": {
+      "x": 0,
+      "y": 6600,
+      "w": 480,
+      "h": 516,
+      "title": "R6 Cell hover",
+      "page": "en"
+    },
+    "R7-en.dc.html": {
+      "x": 560,
+      "y": 6600,
+      "w": 480,
+      "h": 516,
+      "title": "R7 Cell detail (binned values)",
+      "page": "en"
+    },
+    "R8-en.dc.html": {
+      "x": 1120,
+      "y": 6600,
+      "w": 480,
+      "h": 516,
+      "title": "R8 Single-parameter optimization",
+      "page": "en"
+    },
+    "R9-en.dc.html": {
+      "x": 1680,
+      "y": 6600,
+      "w": 624,
+      "h": 516,
+      "title": "R9 No combination passes",
+      "page": "en"
+    },
+    "R10-en.dc.html": {
+      "x": 2384,
+      "y": 6600,
+      "w": 624,
+      "h": 516,
+      "title": "R10 Add condition",
+      "page": "en"
+    },
+    "R11-en.dc.html": {
+      "x": 3088,
+      "y": 6600,
+      "w": 800,
+      "h": 262,
+      "title": "R11 Failed combinations",
+      "page": "en"
+    },
+    "R12-en.dc.html": {
+      "x": 3968,
+      "y": 6600,
+      "w": 480,
+      "h": 516,
+      "title": "R12 Drag to change an axis",
+      "page": "en"
+    },
+    "W1-en.dc.html": {
+      "x": 0,
+      "y": 7536,
+      "w": 1440,
+      "h": 900,
+      "title": "W1 Walk-forward results",
+      "page": "en"
+    },
+    "W2-en.dc.html": {
+      "x": 1520,
+      "y": 7536,
+      "w": 1440,
+      "h": 900,
+      "title": "W2 Per-window view",
+      "page": "en"
+    },
+    "W3-en.dc.html": {
+      "x": 3040,
+      "y": 7536,
+      "w": 464,
+      "h": 429,
+      "title": "W3 Window map (6-window mean)",
+      "page": "en"
+    },
+    "W4-en.dc.html": {
+      "x": 3584,
+      "y": 7536,
+      "w": 1440,
+      "h": 900,
+      "title": "W4 Walk-forward in progress",
+      "page": "en"
+    },
+    "W5-en.dc.html": {
+      "x": 5104,
+      "y": 7536,
+      "w": 640,
+      "h": 429,
+      "title": "W5 Problem windows",
+      "page": "en"
+    },
+    "W6-en.dc.html": {
+      "x": 5824,
+      "y": 7536,
+      "w": 1104,
+      "h": 362,
+      "title": "W6 Anchored IS",
+      "page": "en"
+    },
+    "G1-en.dc.html": {
+      "x": 0,
+      "y": 8856,
+      "w": 580,
+      "h": 380,
+      "title": "G1 Resize panes",
+      "page": "en"
+    },
+    "G2-en.dc.html": {
+      "x": 660,
+      "y": 8856,
+      "w": 1024,
+      "h": 768,
+      "title": "G2 Tablet: right panel as a drawer",
+      "page": "en"
+    },
+    "G3-en.dc.html": {
+      "x": 1764,
+      "y": 8856,
+      "w": 390,
+      "h": 844,
+      "title": "G3 Phone · Backtest",
+      "page": "en"
+    },
+    "G4-en.dc.html": {
+      "x": 2234,
+      "y": 8856,
+      "w": 390,
+      "h": 844,
+      "title": "G4 Phone · Optimization results",
+      "page": "en"
+    },
+    "G5-en.dc.html": {
+      "x": 2704,
+      "y": 8856,
+      "w": 1440,
+      "h": 1120,
+      "title": "G5 Components and states",
+      "page": "en"
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-02T10:23:12Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "row1": {
+      "x": 0,
+      "y": -300,
+      "kind": "title1",
+      "maxW": 8000,
+      "w": 240,
+      "text": "开始与行情"
+    },
+    "row2": {
+      "x": 0,
+      "y": 1020,
+      "kind": "title1",
+      "maxW": 8000,
+      "w": 240,
+      "text": "回测"
+    },
+    "row3": {
+      "x": 0,
+      "y": 2340,
+      "kind": "title1",
+      "maxW": 8000,
+      "w": 240,
+      "text": "回测的状态"
+    },
+    "row4": {
+      "x": 0,
+      "y": 3660,
+      "kind": "title1",
+      "maxW": 7664,
+      "w": 240,
+      "text": "优化 · 设置"
+    },
+    "row5": {
+      "x": 0,
+      "y": 4980,
+      "kind": "title1",
+      "maxW": 8000,
+      "w": 240,
+      "text": "优化 · 结果"
+    },
+    "row6": {
+      "x": 0,
+      "y": 6300,
+      "kind": "title1",
+      "maxW": 4448,
+      "w": 240,
+      "text": "优化 · 结果的局部状态"
+    },
+    "row7": {
+      "x": 0,
+      "y": 7236,
+      "kind": "title1",
+      "maxW": 6928,
+      "w": 240,
+      "text": "优化 · 滚动窗口"
+    },
+    "row8": {
+      "x": 0,
+      "y": 8556,
+      "kind": "title1",
+      "maxW": 4144,
+      "w": 240,
+      "text": "通用"
+    },
+    "en-row1": {
+      "x": 0,
+      "y": -300,
+      "kind": "title1",
+      "maxW": 8000,
+      "w": 240,
+      "text": "Getting started and market data",
+      "page": "en"
+    },
+    "en-row2": {
+      "x": 0,
+      "y": 1020,
+      "kind": "title1",
+      "maxW": 8000,
+      "w": 240,
+      "text": "Backtest",
+      "page": "en"
+    },
+    "en-row3": {
+      "x": 0,
+      "y": 2340,
+      "kind": "title1",
+      "maxW": 8000,
+      "w": 240,
+      "text": "Backtest states",
+      "page": "en"
+    },
+    "en-row4": {
+      "x": 0,
+      "y": 3660,
+      "kind": "title1",
+      "maxW": 7664,
+      "w": 240,
+      "text": "Optimize · Setup",
+      "page": "en"
+    },
+    "en-row5": {
+      "x": 0,
+      "y": 4980,
+      "kind": "title1",
+      "maxW": 8000,
+      "w": 240,
+      "text": "Optimize · Results",
+      "page": "en"
+    },
+    "en-row6": {
+      "x": 0,
+      "y": 6300,
+      "kind": "title1",
+      "maxW": 4448,
+      "w": 240,
+      "text": "Optimize · Result states",
+      "page": "en"
+    },
+    "en-row7": {
+      "x": 0,
+      "y": 7236,
+      "kind": "title1",
+      "maxW": 6928,
+      "w": 240,
+      "text": "Optimize · Walk-forward",
+      "page": "en"
+    },
+    "en-row8": {
+      "x": 0,
+      "y": 8556,
+      "kind": "title1",
+      "maxW": 4144,
+      "w": 240,
+      "text": "Common",
+      "page": "en"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "S1.dc.html",
+    "S2.dc.html",
+    "S3.dc.html",
+    "S4.dc.html",
+    "S5.dc.html",
+    "S6.dc.html",
+    "S7.dc.html",
+    "S8.dc.html",
+    "S9.dc.html",
+    "S10.dc.html",
+    "B2.dc.html",
+    "B3.dc.html",
+    "B4.dc.html",
+    "B5.dc.html",
+    "B6.dc.html",
+    "B7.dc.html",
+    "B8.dc.html",
+    "B9.dc.html",
+    "B10.dc.html",
+    "B11.dc.html",
+    "B12.dc.html",
+    "B13.dc.html",
+    "B14.dc.html",
+    "B15.dc.html",
+    "B16.dc.html",
+    "B17.dc.html",
+    "O1.dc.html",
+    "O2.dc.html",
+    "O3.dc.html",
+    "O4.dc.html",
+    "O5.dc.html",
+    "O6.dc.html",
+    "O7.dc.html",
+    "O8.dc.html",
+    "R1.dc.html",
+    "R2.dc.html",
+    "R2b.dc.html",
+    "R3.dc.html",
+    "R4.dc.html",
+    "R5.dc.html",
+    "R6.dc.html",
+    "R7.dc.html",
+    "R8.dc.html",
+    "R9.dc.html",
+    "R10.dc.html",
+    "R11.dc.html",
+    "R12.dc.html",
+    "W1.dc.html",
+    "W2.dc.html",
+    "W3.dc.html",
+    "W4.dc.html",
+    "W5.dc.html",
+    "W6.dc.html",
+    "G1.dc.html",
+    "G2.dc.html",
+    "G3.dc.html",
+    "G4.dc.html",
+    "G5.dc.html",
+    "Main-en.dc.html",
+    "S1-en.dc.html",
+    "S2-en.dc.html",
+    "S3-en.dc.html",
+    "S4-en.dc.html",
+    "S5-en.dc.html",
+    "S6-en.dc.html",
+    "S7-en.dc.html",
+    "S8-en.dc.html",
+    "S9-en.dc.html",
+    "S10-en.dc.html",
+    "B2-en.dc.html",
+    "B3-en.dc.html",
+    "B4-en.dc.html",
+    "B5-en.dc.html",
+    "B6-en.dc.html",
+    "B7-en.dc.html",
+    "B8-en.dc.html",
+    "B9-en.dc.html",
+    "B10-en.dc.html",
+    "B11-en.dc.html",
+    "B12-en.dc.html",
+    "B13-en.dc.html",
+    "B14-en.dc.html",
+    "B15-en.dc.html",
+    "B16-en.dc.html",
+    "B17-en.dc.html",
+    "O1-en.dc.html",
+    "O2-en.dc.html",
+    "O3-en.dc.html",
+    "O4-en.dc.html",
+    "O5-en.dc.html",
+    "O6-en.dc.html",
+    "O7-en.dc.html",
+    "O8-en.dc.html",
+    "R1-en.dc.html",
+    "R2-en.dc.html",
+    "R2b-en.dc.html",
+    "R3-en.dc.html",
+    "R4-en.dc.html",
+    "R5-en.dc.html",
+    "R6-en.dc.html",
+    "R7-en.dc.html",
+    "R8-en.dc.html",
+    "R9-en.dc.html",
+    "R10-en.dc.html",
+    "R11-en.dc.html",
+    "R12-en.dc.html",
+    "W1-en.dc.html",
+    "W2-en.dc.html",
+    "W3-en.dc.html",
+    "W4-en.dc.html",
+    "W5-en.dc.html",
+    "W6-en.dc.html",
+    "G1-en.dc.html",
+    "G2-en.dc.html",
+    "G3-en.dc.html",
+    "G4-en.dc.html",
+    "G5-en.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "zh",
+      "name": "中文"
+    },
+    {
+      "id": "en",
+      "name": "English"
+    }
+  ],
+  "title": "Pine Optimizer · 行情终端全屏设计"
+}

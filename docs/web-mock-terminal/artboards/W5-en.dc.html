@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Problem windows</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&amp;family=Noto+Sans+SC:wght@400;500;700&amp;family=Source+Code+Pro:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#0e1013;color:#e8eaed;font-family:"Barlow","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;line-height:1.35;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#f5b155;text-decoration:none}a:hover{color:#ffc877}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;text-align:inherit}
+input{font:inherit;color:inherit;min-width:0}
+.num{font-variant-numeric:tabular-nums}
+.t2{color:#aab1b9}.t3{color:#7f8790}.up{color:#3fbf8a}.dn{color:#f06a5d}.am{color:#f5b155}
+.tb{height:30px;display:inline-flex;align-items:center;gap:8px;padding:0 10px;border-radius:4px;font-size:13px;white-space:nowrap}
+.tb:hover,.tb.on{background:#1b1f24}
+.seg{display:inline-flex;height:30px;padding:2px;gap:2px;background:#14171b;border:1px solid #23272d;border-radius:5px;flex:none}
+.seg>button{padding:0 10px;border-radius:3px;font-size:12.5px;color:#aab1b9;white-space:nowrap;text-align:center}
+.seg>button.on{background:#282d34;color:#e8eaed}
+.seg.sm{height:26px}.seg.sm>button{font-size:12px;padding:0 9px}
+.primary{height:32px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;border-radius:4px;background:#f2a33a;color:#1a1206;font-weight:600;font-size:13px;white-space:nowrap}
+.primary:hover{background:#f6b04d}
+.primary.off{background:#3a3327;color:#8d8370;cursor:default}
+.ghost{height:32px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;border-radius:4px;border:1px solid #2f353c;color:#e8eaed;font-weight:500;font-size:13px;white-space:nowrap}
+.ghost:hover{background:#1b1f24}
+kbd{font:inherit;font-size:11px;font-weight:500;padding:1px 5px;border-radius:3px;background:rgba(26,18,6,.16)}
+.iconbtn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;color:#aab1b9;flex:none}
+.iconbtn:hover{background:#1b1f24;color:#e8eaed}
+.iconbtn.on{color:#f5b155}
+.dtab{position:relative;display:inline-flex;align-items:center;gap:6px;padding:0 12px;font-size:13px;color:#aab1b9;white-space:nowrap}
+.dtab.on{color:#e8eaed;font-weight:500}
+.dtab.on::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;background:#f2a33a}
+.rtab{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:40px;position:relative;font-size:13px;color:#aab1b9;white-space:nowrap}
+.rtab.on{color:#e8eaed;font-weight:500}
+.rtab.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#f2a33a}
+.mtab{height:48px;display:inline-flex;align-items:center;gap:6px;padding:0 2px;font-size:14px;color:#aab1b9;position:relative;white-space:nowrap}
+.mtab:hover{color:#e8eaed}
+.mtab.on{color:#e8eaed;font-weight:600}
+.mtab.on::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:#f2a33a}
+.cnt{font-size:11.5px;color:#7f8790;font-variant-numeric:tabular-nums}
+.cnt.bad{color:#1a0b09;background:#f06a5d;border-radius:8px;padding:0 5px;font-weight:600}
+.sec{display:flex;align-items:center;justify-content:space-between;height:28px;font-size:13px;font-weight:600}
+.field{height:32px;display:flex;align-items:center;border:1px solid #2f353c;border-radius:4px;background:#0f1215;font-size:13px;font-variant-numeric:tabular-nums}
+.field .k{width:30px;height:100%;display:flex;align-items:center;justify-content:center;color:#7f8790}
+.field .v{flex:1;text-align:center;background:none;border:0;width:100%;outline:none}
+.sel{height:32px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 10px;border:1px solid #2f353c;border-radius:4px;background:#0f1215;font-size:13px;width:100%}
+.inp{height:32px;border:1px solid #2f353c;border-radius:4px;background:#0f1215;padding:0 10px;font-size:13px;outline:none;width:100%;font-variant-numeric:tabular-nums}
+.mini{height:28px;display:flex;align-items:center;padding:0 8px;border:1px solid #2f353c;border-radius:4px;background:#0f1215;font-size:12.5px;font-variant-numeric:tabular-nums;outline:none}
+.field.err,.inp.err,.mini.err,.sel.err{border-color:#f06a5d}
+.field.foc,.inp.foc,.mini.foc,.sel.foc{border-color:#f2a33a}
+.errt{font-size:12px;color:#f58a7f}
+.lab{font-size:12.5px;color:#aab1b9}
+.sw{width:34px;height:20px;border-radius:10px;background:#2f353c;position:relative;flex:none}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:7px;background:#aab1b9}
+.sw.on{background:#f2a33a}.sw.on::after{left:17px;background:#1a1206}
+.kv{display:flex;align-items:center;justify-content:space-between;gap:12px;height:31px;border-top:1px solid #1f2328;font-size:13px;white-space:nowrap}
+.kv>span:first-child{color:#aab1b9}
+.chip{height:26px;display:inline-flex;align-items:center;gap:6px;padding:0 9px;border-radius:13px;border:1px solid #2f353c;font-size:12.5px;white-space:nowrap}
+.chip.on{border-color:#6b5227;background:#241c10;color:#f5c27a}
+.chip.bad{border-color:#7a3a33;color:#f58a7f}
+.cb{width:15px;height:15px;border-radius:3px;border:1px solid #4a525c;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.cb.on{background:#f2a33a;border-color:#f2a33a}
+.tag{height:18px;padding:0 6px;border-radius:3px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;white-space:nowrap;background:#282d34;color:#aab1b9}
+.tag.am{background:#3a2c16;color:#f5b155}.tag.dn{background:#3b1f1c;color:#f58a7f}.tag.bl{background:#1c3340;color:#8fd0f0}
+table{border-collapse:collapse;width:100%}
+th{font-weight:500;font-size:12px;color:#7f8790;text-align:right;padding:0 0 6px 8px;white-space:nowrap}
+th:first-child{text-align:left;padding-left:0}
+td{font-size:12.5px;text-align:right;padding:0 0 0 8px;height:25px;border-top:1px solid #1f2328;white-space:nowrap;font-variant-numeric:tabular-nums}
+td:first-child{text-align:left;padding-left:0;color:#aab1b9}
+.lb th{font-size:12px;padding:0 8px;height:30px;border-bottom:1px solid #23272d}
+.lb td{height:30px;padding:0 8px;border-top:0;border-bottom:1px solid #1b1f24}
+.lb td:first-child{padding-left:12px}.lb th:first-child{padding-left:12px}
+.lb tr.cur td{background:#221b11}
+.lb tr.cur td:first-child{color:#f5b155}
+.lb.sm td{height:26px}
+.code{font-family:"Source Code Pro",Consolas,monospace;font-size:12.5px;line-height:19px}
+.cl{display:flex;height:19px;border-left:2px solid transparent;white-space:pre}
+.cl .ln{width:46px;flex:none;text-align:right;padding-right:14px;color:#4f565f}
+.cl.in{background:rgba(242,163,58,0.06);border-left-color:#f2a33a}.cl.in .ln{color:#aab1b9}
+.cl.fx{background:rgba(255,255,255,0.025);border-left-color:#3a4048}.cl.fx .ln{color:#aab1b9}
+.cl.er{background:rgba(240,106,93,0.10);border-left-color:#f06a5d}.cl.er .ln{color:#f58a7f}
+.cl.cu{background:rgba(255,255,255,0.035)}
+.kw{color:#8fb8de}.fn{color:#d9c38c}.st{color:#a9c98f}.nu{color:#e0a577}.cm{color:#6b727b}
+.sq{text-decoration:underline wavy #f06a5d;text-underline-offset:3px}
+.menu{position:absolute;background:#1b1f24;border:1px solid #2f353c;border-radius:6px;box-shadow:0 14px 36px rgba(0,0,0,.55);padding:4px;font-size:13px;display:flex;flex-direction:column}
+.mi{height:30px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:4px;white-space:nowrap;width:100%}
+.mi:hover,.mi.on{background:#2a3038}
+.mh{height:26px;display:flex;align-items:center;padding:0 10px;font-size:11.5px;color:#7f8790}
+.msep{height:1px;background:#2f353c;margin:4px 0;flex:none}
+.dlg{background:#14171b;border:1px solid #2f353c;border-radius:8px;box-shadow:0 24px 64px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden}
+.toast{position:absolute;display:flex;align-items:center;gap:12px;height:40px;padding:0 8px 0 14px;border-radius:6px;background:#282d34;border:1px solid #3a4048;box-shadow:0 12px 28px rgba(0,0,0,.5);font-size:13px;white-space:nowrap}
+.bar{height:4px;border-radius:2px;background:#2f353c;position:relative;overflow:hidden}
+.bar>i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:#f2a33a}
+.note{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:4px;font-size:12.5px;line-height:1.45;background:#1b1f24;color:#aab1b9}
+.note.am{background:#241c10;color:#f5c27a}.note.dn{background:#2a1715;color:#f5a59c}
+</style>
+</helmet>
+<div style="width: 640px; height: 429px; position: relative; overflow: hidden; background: #0e1013">
+<div style="position: absolute; left: 0px; top: -411px">
+<div style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: #0e1013; color: #e8eaed; overflow: hidden; position: relative">
+<header style="height: 48px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 12px 0 16px; border-bottom: 1px solid #23272d; background: #0e1013">
+<div style="display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 15px; white-space: nowrap; padding-right: 6px"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="1.5" y="7" width="3.5" height="9" rx="1" fill="#f2a33a"/><rect x="7.25" y="2" width="3.5" height="14" rx="1" fill="#f2a33a"/><rect x="13" y="9.5" width="3.5" height="6.5" rx="1" fill="#7a5a26"/></svg><span>Pine Optimizer</span></div>
+<div style="width: 1px; height: 22px; background: #23272d"></div>
+<nav style="display: flex; gap: 18px; align-self: stretch; padding: 0 6px" aria-label="Pages"><button class="mtab">Backtest</button><button class="mtab on" aria-current="page">Optimize<span style="width: 6px; height: 6px; border-radius: 6px; background: #f2a33a; flex: none"></span></button></nav>
+<div style="width: 1px; height: 22px; background: #23272d"></div>
+<button class="tb" aria-label="Script trend_breakout.pine"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#aab1b9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 1.5h5.5L13 5v9.5H4z"/><path d="M9.5 1.5V5H13"/></svg><span>trend_breakout.pine</span><span style="width: 7px; height: 7px; border-radius: 7px; background: #3fbf8a; flex: none"></span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+<button class="tb"><span style="font-weight: 600">BTCUSDT</span><span class="t3">Binance</span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+<div class="seg" role="group" aria-label="Timeframe"><button>15m</button><button class="on">1h</button><button>4h</button><button>1D</button></div>
+<button class="tb num"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#aab1b9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg><span>2023-01-02 – 2025-05-04</span></button>
+<div style="flex: 1"></div>
+<span class="num" style="font-size: 12px; white-space: nowrap; display: flex; align-items: center; gap: 10px"><span class="t3">6 windows in 29:06</span><a href="#" class="dn">2 failed</a></span>
+<div class="seg" role="group" aria-label="Language"><button>中</button><button class="on">EN</button></div>
+</header>
+<div style="flex: 1; display: flex; min-height: 0">
+<main style="width: 1104px; flex: none; display: flex; flex-direction: column; min-width: 0; position: relative">
+<div style="height: 32px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 12px; font-size: 12px; white-space: nowrap">
+<span style="font-weight: 600; font-size: 13px">Stitched OOS equity</span>
+<span class="num" style="display: flex; align-items: baseline; gap: 12px"><span class="up" style="font-weight: 600">+7,600</span><span><span class="t3">WFE </span>0.54</span><span><span class="t3">Profitable windows </span>5 / 6</span></span>
+<div style="display: flex; align-items: center; gap: 12px; margin-left: 8px">
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 2px; background: #3b6f8c"></span><span class="t2">IS</span></span>
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 2px; background: #f2a33a"></span><span class="t2">OOS</span></span>
+
+
+</div>
+<div style="flex: 1"></div>
+<div class="seg sm" role="group" aria-label="Window view"><button class="on">Stitched</button><button>Per window</button></div>
+
+</div>
+<div style="height: 330px; flex: none; position: relative">
+<svg width="1104" height="330" viewBox="0 0 1104 330" style="display: block" role="img" aria-label="6 windows and stitched OOS equity">
+<rect x="250.2" y="26" width="427.4" height="286" fill="rgba(108,182,221,0.08)"/>
+<rect x="677.5" y="26" width="107.4" height="286" fill="rgba(242,163,58,0.10)"/>
+<line x1="40" x2="1036" y1="149.5" y2="149.5" stroke="#1a1d22" stroke-width="1"/>
+<line x1="40" x2="1036" y1="61.3" y2="61.3" stroke="#1a1d22" stroke-width="1"/>
+<line x1="40" x2="1036" y1="105.4" y2="105.4" stroke="#3a4048" stroke-width="1" stroke-dasharray="2 3"/>
+<line x1="465" x2="465" y1="26" y2="176" stroke="#23272d" stroke-width="1"/>
+<text x="518.2" y="38" fill="#aab1b9" font-size="11" text-anchor="middle" font-weight="500">W1 +2.3k</text>
+<line x1="571.3" x2="571.3" y1="26" y2="176" stroke="#23272d" stroke-width="1"/>
+<text x="624.4" y="38" fill="#aab1b9" font-size="11" text-anchor="middle" font-weight="500">W2 +1.1k</text>
+<line x1="677.5" x2="677.5" y1="26" y2="176" stroke="#23272d" stroke-width="1"/>
+<text x="731.2" y="38" fill="#f06a5d" font-size="11" text-anchor="middle" font-weight="700">W3 −0.9k</text>
+<line x1="785" x2="785" y1="26" y2="176" stroke="#23272d" stroke-width="1"/>
+<text x="838.7" y="38" fill="#aab1b9" font-size="11" text-anchor="middle" font-weight="500">W4 +3.0k</text>
+<line x1="892.4" x2="892.4" y1="26" y2="176" stroke="#23272d" stroke-width="1"/>
+<text x="944.9" y="38" fill="#aab1b9" font-size="11" text-anchor="middle" font-weight="500">W5 +1.6k</text>
+<line x1="997.5" x2="997.5" y1="26" y2="176" stroke="#23272d" stroke-width="1"/>
+<text x="1037.2" y="38" fill="#aab1b9" font-size="11" text-anchor="end" font-weight="500">W6 +0.4k</text>
+<path d="M465 176L465 105.4L466.2 103.1L467.4 101.5L468.5 101.9L469.7 102.5L470.9 102L472 100L473.2 98.9L474.4 98.1L475.5 98.8L476.7 96.9L477.9 95.7L479 94.7L480.2 95.9L481.4 95.3L482.5 95.9L483.7 95.8L484.9 96.5L486 97.8L487.2 97.2L488.4 97.7L489.5 97.3L490.7 98.9L491.9 99.5L493 98.2L494.2 97.6L495.4 96L496.5 96.6L497.7 93.8L498.9 93.8L500.1 93L501.2 94L502.4 95.4L503.6 93.5L504.7 92.8L505.9 88.9L507.1 89.2L508.2 90.7L509.4 92.1L510.6 89.4L511.7 91.9L512.9 91.9L514.1 90.3L515.2 88.9L516.4 88.4L517.6 86.5L518.7 85.8L519.9 83.8L521.1 82.7L522.2 80.5L523.4 79.6L524.6 81.2L525.7 81.9L526.9 82.2L528.1 81.2L529.2 79.9L530.4 80.9L531.6 83L532.7 81.8L533.9 81.8L535.1 81.6L536.2 80.8L537.4 81.7L538.6 83L539.8 85.3L540.9 84.4L542.1 85.9L543.3 86.5L544.4 85.4L545.6 86.9L546.8 88.3L547.9 89.1L549.1 89.6L550.3 89L551.4 87.9L552.6 88.8L553.8 87L554.9 86.1L556.1 86.2L557.3 85.2L558.4 85.1L559.6 84.4L560.8 83.8L561.9 85L563.1 87.3L564.3 85.8L565.4 84.8L566.6 84.2L567.8 84.8L568.9 85.4L570.1 85L571.3 85.4L572.4 88.6L573.6 88.8L574.8 88.2L575.9 88.7L577.1 88.9L578.3 87.7L579.5 88.4L580.6 88.6L581.8 88L583 86.1L584.1 84.2L585.3 86.1L586.5 83.9L587.6 82.1L588.8 81.6L590 83.1L591.1 83.6L592.3 85.7L593.5 86.6L594.6 85.4L595.8 86.9L597 88.3L598.1 89.2L599.3 85.4L600.5 84.4L601.6 85.6L602.8 83.8L604 85.5L605.1 84.7L606.3 86L607.5 87.3L608.6 86.6L609.8 88.7L611 90.1L612.1 90.7L613.3 90.1L614.5 90.7L615.6 90.3L616.8 88.5L618 88.2L619.2 89.1L620.3 90.4L621.5 91.4L622.7 89.8L623.8 88.6L625 86.2L626.2 82.7L627.3 82.1L628.5 83.3L629.7 84.4L630.8 85.3L632 86.1L633.2 85.8L634.3 83.7L635.5 82.6L636.7 82.5L637.8 82.6L639 84.5L640.2 84.9L641.3 82.7L642.5 83.8L643.7 81.6L644.8 82.1L646 82.2L647.2 84.4L648.3 83.7L649.5 84.3L650.7 85.7L651.8 84.6L653 81.8L654.2 80.9L655.3 81.6L656.5 81.4L657.7 81L658.9 79.5L660 79.8L661.2 78.5L662.4 80.4L663.5 78.9L664.7 80.4L665.9 80.9L667 77.9L668.2 77.3L669.4 76.4L670.5 75.5L671.7 73.1L672.9 72.3L674 72.6L675.2 74.5L676.4 75.1L677.5 73.6L678.7 74.5L679.9 74L681 72.4L682.2 74.7L683.4 76.7L684.5 77.6L685.7 78.1L686.9 77.3L688 76.7L689.2 75.9L690.4 78.7L691.5 78.9L692.7 81.6L693.9 80.6L695 79.5L696.2 80.9L697.4 80.6L698.6 80.7L699.7 79.2L700.9 79.7L702.1 78.7L703.2 80.3L704.4 78.1L705.6 78.9L706.7 78.5L707.9 79.8L709.1 79.1L710.2 79.6L711.4 80.9L712.6 79.2L713.7 78.2L714.9 76.3L716.1 75.6L717.2 76.7L718.4 75.5L719.6 75.7L720.7 74.2L721.9 74.7L723.1 75.6L724.2 77.4L725.4 78.3L726.6 77.1L727.7 75.7L728.9 75.3L730.1 75.3L731.2 75L732.4 73.8L733.6 77.2L734.7 78.2L735.9 78.9L737.1 78.9L738.3 81.6L739.4 81.2L740.6 81.8L741.8 82.6L742.9 83.9L744.1 84.8L745.3 86L746.4 88.6L747.6 89.6L748.8 89.9L749.9 88.2L751.1 88.7L752.3 87.6L753.4 84.6L754.6 86.8L755.8 85.7L756.9 85.8L758.1 84.3L759.3 82.9L760.4 82.5L761.6 83L762.8 84.6L763.9 85.9L765.1 87.1L766.3 86.4L767.4 86.8L768.6 86.7L769.8 85.5L770.9 87L772.1 87.4L773.3 84.4L774.4 83.8L775.6 83.3L776.8 81.7L778 81.9L779.1 84.7L780.3 86.5L781.5 85.3L782.6 82.8L783.8 82.7L785 84.4L786.1 83.1L787.3 81.3L788.5 82.9L789.6 82.1L790.8 82.6L792 82.6L793.1 82.5L794.3 83.2L795.5 84L796.6 85.8L797.8 83.4L799 83.1L800.1 86.7L801.3 86.6L802.5 84.6L803.6 84.3L804.8 83L806 82.3L807.1 81.1L808.3 79.8L809.5 79L810.6 78.2L811.8 80.1L813 80.6L814.1 82L815.3 81.4L816.5 81.3L817.7 80.7L818.8 80.1L820 78.7L821.2 76.1L822.3 76.5L823.5 76.9L824.7 77.5L825.8 78.2L827 78.9L828.2 80.1L829.3 78.8L830.5 78.5L831.7 77.9L832.8 77.6L834 77.9L835.2 78.4L836.3 75.7L837.5 76.2L838.7 78.5L839.8 77.3L841 75.3L842.2 74.4L843.3 73.9L844.5 75.5L845.7 76.3L846.8 74.1L848 74.1L849.2 75.1L850.3 77.7L851.5 74.3L852.7 73.9L853.8 72.2L855 72L856.2 72L857.4 71.5L858.5 71.3L859.7 69.7L860.9 70.4L862 72.1L863.2 69.9L864.4 69L865.5 69.9L866.7 69.3L867.9 69L869 69.1L870.2 70.4L871.4 67.8L872.5 67.5L873.7 65.3L874.9 65.5L876 63.1L877.2 63.6L878.4 64.8L879.5 61.4L880.7 61.2L881.9 60.9L883 61L884.2 62.4L885.4 61L886.5 59.9L887.7 58.2L888.9 60L890 57.9L891.2 56.4L892.4 58L893.5 59L894.7 56.9L895.9 56.1L897.1 55.9L898.2 56.9L899.4 55.1L900.6 55L901.7 54.8L902.9 54.7L904.1 54.1L905.2 52.8L906.4 53L907.6 51.1L908.7 52.6L909.9 52.5L911.1 51.7L912.2 52L913.4 54.7L914.6 52.9L915.7 53.3L916.9 54.1L918.1 55.3L919.2 55.7L920.4 55.9L921.6 56.7L922.7 56.2L923.9 56.9L925.1 53.7L926.2 55.1L927.4 54.1L928.6 52.7L929.7 52.3L930.9 52.4L932.1 50.9L933.2 49.7L934.4 51.3L935.6 50.6L936.8 51.1L937.9 50.3L939.1 49.5L940.3 51.1L941.4 51.4L942.6 53.4L943.8 55.8L944.9 56.8L946.1 56L947.3 56.8L948.4 56.2L949.6 58.2L950.8 58L951.9 60.1L953.1 59L954.3 58.7L955.4 58.3L956.6 58L957.8 58.2L958.9 59.1L960.1 56.2L961.3 58L962.4 56.4L963.6 56L964.8 56.9L965.9 57.2L967.1 56.6L968.3 58L969.4 54.5L970.6 52.3L971.8 51.2L972.9 49.5L974.1 47.6L975.3 48.6L976.5 48.1L977.6 46L978.8 44.7L980 43.6L981.1 43L982.3 44.5L983.5 45.8L984.6 45.5L985.8 42.7L987 42.9L988.1 42.5L989.3 42.1L990.5 44.2L991.6 45.5L992.8 42.7L994 41.8L995.1 42L996.3 42L997.5 41.6L998.6 42.4L999.8 42.1L1001 43.1L1002.1 44.1L1003.3 43.4L1004.5 45.4L1005.6 45.5L1006.8 44.4L1008 43L1009.1 41L1010.3 40.3L1011.5 40.4L1012.6 38.7L1013.8 40.3L1015 39.8L1016.2 38.9L1017.3 40.1L1018.5 38.8L1019.7 39.4L1020.8 42.1L1022 42.1L1023.2 40.4L1024.3 41.4L1025.5 41.3L1026.7 42.5L1027.8 41.8L1029 41.6L1030.2 42.2L1031.3 41.3L1032.5 39.9L1033.7 39.7L1034.8 39.5L1036 38.4L1036 176Z" fill="rgba(242,163,58,0.07)"/>
+<path d="M465 105.4L466.2 103.1L467.4 101.5L468.5 101.9L469.7 102.5L470.9 102L472 100L473.2 98.9L474.4 98.1L475.5 98.8L476.7 96.9L477.9 95.7L479 94.7L480.2 95.9L481.4 95.3L482.5 95.9L483.7 95.8L484.9 96.5L486 97.8L487.2 97.2L488.4 97.7L489.5 97.3L490.7 98.9L491.9 99.5L493 98.2L494.2 97.6L495.4 96L496.5 96.6L497.7 93.8L498.9 93.8L500.1 93L501.2 94L502.4 95.4L503.6 93.5L504.7 92.8L505.9 88.9L507.1 89.2L508.2 90.7L509.4 92.1L510.6 89.4L511.7 91.9L512.9 91.9L514.1 90.3L515.2 88.9L516.4 88.4L517.6 86.5L518.7 85.8L519.9 83.8L521.1 82.7L522.2 80.5L523.4 79.6L524.6 81.2L525.7 81.9L526.9 82.2L528.1 81.2L529.2 79.9L530.4 80.9L531.6 83L532.7 81.8L533.9 81.8L535.1 81.6L536.2 80.8L537.4 81.7L538.6 83L539.8 85.3L540.9 84.4L542.1 85.9L543.3 86.5L544.4 85.4L545.6 86.9L546.8 88.3L547.9 89.1L549.1 89.6L550.3 89L551.4 87.9L552.6 88.8L553.8 87L554.9 86.1L556.1 86.2L557.3 85.2L558.4 85.1L559.6 84.4L560.8 83.8L561.9 85L563.1 87.3L564.3 85.8L565.4 84.8L566.6 84.2L567.8 84.8L568.9 85.4L570.1 85L571.3 85.4L572.4 88.6L573.6 88.8L574.8 88.2L575.9 88.7L577.1 88.9L578.3 87.7L579.5 88.4L580.6 88.6L581.8 88L583 86.1L584.1 84.2L585.3 86.1L586.5 83.9L587.6 82.1L588.8 81.6L590 83.1L591.1 83.6L592.3 85.7L593.5 86.6L594.6 85.4L595.8 86.9L597 88.3L598.1 89.2L599.3 85.4L600.5 84.4L601.6 85.6L602.8 83.8L604 85.5L605.1 84.7L606.3 86L607.5 87.3L608.6 86.6L609.8 88.7L611 90.1L612.1 90.7L613.3 90.1L614.5 90.7L615.6 90.3L616.8 88.5L618 88.2L619.2 89.1L620.3 90.4L621.5 91.4L622.7 89.8L623.8 88.6L625 86.2L626.2 82.7L627.3 82.1L628.5 83.3L629.7 84.4L630.8 85.3L632 86.1L633.2 85.8L634.3 83.7L635.5 82.6L636.7 82.5L637.8 82.6L639 84.5L640.2 84.9L641.3 82.7L642.5 83.8L643.7 81.6L644.8 82.1L646 82.2L647.2 84.4L648.3 83.7L649.5 84.3L650.7 85.7L651.8 84.6L653 81.8L654.2 80.9L655.3 81.6L656.5 81.4L657.7 81L658.9 79.5L660 79.8L661.2 78.5L662.4 80.4L663.5 78.9L664.7 80.4L665.9 80.9L667 77.9L668.2 77.3L669.4 76.4L670.5 75.5L671.7 73.1L672.9 72.3L674 72.6L675.2 74.5L676.4 75.1L677.5 73.6L678.7 74.5L679.9 74L681 72.4L682.2 74.7L683.4 76.7L684.5 77.6L685.7 78.1L686.9 77.3L688 76.7L689.2 75.9L690.4 78.7L691.5 78.9L692.7 81.6L693.9 80.6L695 79.5L696.2 80.9L697.4 80.6L698.6 80.7L699.7 79.2L700.9 79.7L702.1 78.7L703.2 80.3L704.4 78.1L705.6 78.9L706.7 78.5L707.9 79.8L709.1 79.1L710.2 79.6L711.4 80.9L712.6 79.2L713.7 78.2L714.9 76.3L716.1 75.6L717.2 76.7L718.4 75.5L719.6 75.7L720.7 74.2L721.9 74.7L723.1 75.6L724.2 77.4L725.4 78.3L726.6 77.1L727.7 75.7L728.9 75.3L730.1 75.3L731.2 75L732.4 73.8L733.6 77.2L734.7 78.2L735.9 78.9L737.1 78.9L738.3 81.6L739.4 81.2L740.6 81.8L741.8 82.6L742.9 83.9L744.1 84.8L745.3 86L746.4 88.6L747.6 89.6L748.8 89.9L749.9 88.2L751.1 88.7L752.3 87.6L753.4 84.6L754.6 86.8L755.8 85.7L756.9 85.8L758.1 84.3L759.3 82.9L760.4 82.5L761.6 83L762.8 84.6L763.9 85.9L765.1 87.1L766.3 86.4L767.4 86.8L768.6 86.7L769.8 85.5L770.9 87L772.1 87.4L773.3 84.4L774.4 83.8L775.6 83.3L776.8 81.7L778 81.9L779.1 84.7L780.3 86.5L781.5 85.3L782.6 82.8L783.8 82.7L785 84.4L786.1 83.1L787.3 81.3L788.5 82.9L789.6 82.1L790.8 82.6L792 82.6L793.1 82.5L794.3 83.2L795.5 84L796.6 85.8L797.8 83.4L799 83.1L800.1 86.7L801.3 86.6L802.5 84.6L803.6 84.3L804.8 83L806 82.3L807.1 81.1L808.3 79.8L809.5 79L810.6 78.2L811.8 80.1L813 80.6L814.1 82L815.3 81.4L816.5 81.3L817.7 80.7L818.8 80.1L820 78.7L821.2 76.1L822.3 76.5L823.5 76.9L824.7 77.5L825.8 78.2L827 78.9L828.2 80.1L829.3 78.8L830.5 78.5L831.7 77.9L832.8 77.6L834 77.9L835.2 78.4L836.3 75.7L837.5 76.2L838.7 78.5L839.8 77.3L841 75.3L842.2 74.4L843.3 73.9L844.5 75.5L845.7 76.3L846.8 74.1L848 74.1L849.2 75.1L850.3 77.7L851.5 74.3L852.7 73.9L853.8 72.2L855 72L856.2 72L857.4 71.5L858.5 71.3L859.7 69.7L860.9 70.4L862 72.1L863.2 69.9L864.4 69L865.5 69.9L866.7 69.3L867.9 69L869 69.1L870.2 70.4L871.4 67.8L872.5 67.5L873.7 65.3L874.9 65.5L876 63.1L877.2 63.6L878.4 64.8L879.5 61.4L880.7 61.2L881.9 60.9L883 61L884.2 62.4L885.4 61L886.5 59.9L887.7 58.2L888.9 60L890 57.9L891.2 56.4L892.4 58L893.5 59L894.7 56.9L895.9 56.1L897.1 55.9L898.2 56.9L899.4 55.1L900.6 55L901.7 54.8L902.9 54.7L904.1 54.1L905.2 52.8L906.4 53L907.6 51.1L908.7 52.6L909.9 52.5L911.1 51.7L912.2 52L913.4 54.7L914.6 52.9L915.7 53.3L916.9 54.1L918.1 55.3L919.2 55.7L920.4 55.9L921.6 56.7L922.7 56.2L923.9 56.9L925.1 53.7L926.2 55.1L927.4 54.1L928.6 52.7L929.7 52.3L930.9 52.4L932.1 50.9L933.2 49.7L934.4 51.3L935.6 50.6L936.8 51.1L937.9 50.3L939.1 49.5L940.3 51.1L941.4 51.4L942.6 53.4L943.8 55.8L944.9 56.8L946.1 56L947.3 56.8L948.4 56.2L949.6 58.2L950.8 58L951.9 60.1L953.1 59L954.3 58.7L955.4 58.3L956.6 58L957.8 58.2L958.9 59.1L960.1 56.2L961.3 58L962.4 56.4L963.6 56L964.8 56.9L965.9 57.2L967.1 56.6L968.3 58L969.4 54.5L970.6 52.3L971.8 51.2L972.9 49.5L974.1 47.6L975.3 48.6L976.5 48.1L977.6 46L978.8 44.7L980 43.6L981.1 43L982.3 44.5L983.5 45.8L984.6 45.5L985.8 42.7L987 42.9L988.1 42.5L989.3 42.1L990.5 44.2L991.6 45.5L992.8 42.7L994 41.8L995.1 42L996.3 42L997.5 41.6L998.6 42.4L999.8 42.1L1001 43.1L1002.1 44.1L1003.3 43.4L1004.5 45.4L1005.6 45.5L1006.8 44.4L1008 43L1009.1 41L1010.3 40.3L1011.5 40.4L1012.6 38.7L1013.8 40.3L1015 39.8L1016.2 38.9L1017.3 40.1L1018.5 38.8L1019.7 39.4L1020.8 42.1L1022 42.1L1023.2 40.4L1024.3 41.4L1025.5 41.3L1026.7 42.5L1027.8 41.8L1029 41.6L1030.2 42.2L1031.3 41.3L1032.5 39.9L1033.7 39.7L1034.8 39.5L1036 38.4" fill="none" stroke="#f2a33a" stroke-width="1.7" stroke-linejoin="round"/>
+<circle cx="1036" cy="38.4" r="3" fill="#f2a33a"/>
+<rect x="1042" y="29.4" width="60" height="18" rx="2" fill="#f2a33a"/>
+<text x="1046" y="42.4" fill="#1a1206" font-size="11" font-weight="600">107,600</text>
+<rect x="40" y="192" width="425" height="14" rx="1" fill="#223140"/>
+<rect x="465" y="192" width="106.3" height="14" rx="1" fill="#5c4622"/>
+<text x="32" y="203" fill="#7f8790" font-size="11" text-anchor="end" font-weight="500">W1</text>
+<rect x="143.9" y="212" width="427.4" height="14" rx="1" fill="#223140"/>
+<rect x="571.3" y="212" width="106.3" height="14" rx="1" fill="#5c4622"/>
+<text x="32" y="223" fill="#7f8790" font-size="11" text-anchor="end" font-weight="500">W2</text>
+<rect x="250.2" y="232" width="427.4" height="14" rx="1" fill="#3b6f8c"/>
+<rect x="677.5" y="232" width="107.4" height="14" rx="1" fill="#f2a33a"/>
+<rect x="248.2" y="230" width="538.8" height="18" rx="2" fill="none" stroke="#e8eaed" stroke-width="1.5"/>
+<text x="32" y="243" fill="#f5b155" font-size="11" text-anchor="end" font-weight="700">W3</text>
+<rect x="357.6" y="252" width="427.4" height="14" rx="1" fill="#223140"/>
+<rect x="785" y="252" width="107.4" height="14" rx="1" fill="#5c4622"/>
+<text x="32" y="263" fill="#7f8790" font-size="11" text-anchor="end" font-weight="500">W4</text>
+<rect x="465" y="272" width="427.4" height="14" rx="1" fill="#223140"/>
+<rect x="892.4" y="272" width="105.1" height="14" rx="1" fill="#5c4622"/>
+<text x="32" y="283" fill="#7f8790" font-size="11" text-anchor="end" font-weight="500">W5</text>
+<rect x="571.3" y="292" width="426.2" height="14" rx="1" fill="#223140"/>
+<rect x="997.5" y="292" width="39.7" height="14" rx="1" fill="#5c4622"/>
+<text x="32" y="303" fill="#7f8790" font-size="11" text-anchor="end" font-weight="500">W6</text>
+<text x="250.2" y="324" fill="#7f8790" font-size="11" text-anchor="middle">2023-07</text>
+<text x="465" y="324" fill="#7f8790" font-size="11" text-anchor="middle">2024-01</text>
+<text x="677.5" y="324" fill="#7f8790" font-size="11" text-anchor="middle">2024-07</text>
+<text x="892.4" y="324" fill="#7f8790" font-size="11" text-anchor="middle">2025-01</text>
+<text x="1046" y="153.5" fill="#7f8790" font-size="11">95,000</text>
+<text x="1046" y="109.4" fill="#7f8790" font-size="11">100,000</text>
+<text x="1046" y="65.3" fill="#7f8790" font-size="11">105,000</text>
+</svg>
+</div>
+<div style="height: 1px; flex: none; background: #23272d"></div>
+<section style="flex: 1; min-height: 0; background: #14171b; display: flex">
+<div style="width: 640px; flex: none; display: flex; flex-direction: column; border-right: 1px solid #23272d">
+<div style="height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; white-space: nowrap">
+<span style="font-weight: 600; margin-right: 4px">Per window</span>
+<button class="chip"><span class="t3">By</span>IS net profit<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+<span class="chip num">Trades ≥ 30<button aria-label="Remove condition" class="t3" style="display: inline-flex"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span><span class="chip num">Max DD ≤ 15%<button aria-label="Remove condition" class="t3" style="display: inline-flex"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span><button class="chip t2" style="border-style: dashed">+ Condition</button>
+</div>
+<table class="lb num" style="table-layout: fixed">
+
+<thead><tr><th style="width: 58px; text-align: left">Window</th><th style="width: 156px; text-align: left">OOS range</th><th style="width: 150px; text-align: left">Selected parameters</th><th style="width: 76px">IS</th><th style="width: 84px; color: #e8eaed">OOS</th><th style="width: 56px">WFE</th><th style="width: 60px; padding-right: 12px">Trades</th></tr></thead>
+<tbody>
+<tr><td style="text-align: left">W1</td><td style="text-align: left" class="t2">24-01-01 → 03-31</td><td style="text-align: left">24, 2.00, close, off</td><td>+9,840</td><td class="up">+2,310</td><td>0.94</td><td style="padding-right: 12px">41</td></tr>
+<tr><td style="text-align: left">W2</td><td style="text-align: left" class="t2">24-04-01 → 06-30</td><td style="text-align: left">26, 2.00, close, off</td><td>+11,200</td><td class="up">+1,120</td><td>0.40</td><td style="padding-right: 12px">38</td></tr>
+<tr class="cur"><td style="text-align: left">W3</td><td style="text-align: left" class="t2">24-07-01 → 09-30</td><td style="text-align: left">26, 2.25, close, off</td><td>+10,450</td><td class="dn">−860</td><td class="dn">−0.33</td><td style="padding-right: 12px">35</td></tr>
+<tr><td style="text-align: left">W4</td><td style="text-align: left" class="t2">24-10-01 → 12-31</td><td style="text-align: left" colspan="4"><span style="display: inline-flex; align-items: center; gap: 6px; color: #f58a7f"><svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.8l6.6 11.8H1.4z" fill="#f06a5d"/><path d="M8 6.2v3.6" stroke="#14171b" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="11.6" r="0.9" fill="#14171b"/></svg>No combination passes; window stays flat</span></td><td style="padding-right: 12px"><a href="#">Adjust</a></td></tr>
+<tr><td style="text-align: left">W5</td><td style="text-align: left" class="t2">25-01-01 → 03-31</td><td style="text-align: left">26, 2.00, close, off</td><td>+12,300</td><td class="up">+1,640</td><td>0.53</td><td style="padding-right: 12px">39</td></tr>
+<tr><td style="text-align: left">W6</td><td style="text-align: left" class="t2">25-04-01 → 05-04 <span class="tag" style="margin-left: 4px">Part</span></td><td style="text-align: left">28, 2.00, close, off</td><td>+10,100</td><td class="up">+410</td><td>0.44</td><td style="padding-right: 12px">12</td></tr>
+<tr><td style="font-weight: 600; color: #e8eaed; border-top: 1px solid #2f353c">Total</td><td style="text-align: left; border-top: 1px solid #2f353c" class="t2">24-01-01 → 25-05-04</td><td style="text-align: left; border-top: 1px solid #2f353c">4 / 5 profitable, 1 flat</td><td style=" border-top: 1px solid #2f353c">+53,890</td><td class="up" style="font-weight: 600; border-top: 1px solid #2f353c">+4,620</td><td style="font-weight: 600; border-top: 1px solid #2f353c">0.41</td><td style="padding-right: 12px; border-top: 1px solid #2f353c">165</td></tr>
+</tbody>
+</table>
+<div style="flex: 1"></div>
+<div style="flex: none; margin: 0 12px 14px; padding: 12px 14px; border: 1px solid #2f353c; border-radius: 5px; display: flex; align-items: center; gap: 16px">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 5px">
+<span class="t2" style="font-size: 12px">Fixed parameters for every window</span>
+<span class="num" style="display: flex; gap: 14px; white-space: nowrap"><span><span class="t3">Length </span><b style="font-weight: 600">27</b></span><span><span class="t3">Multiplier </span><b style="font-weight: 600">2.00</b></span><span><span class="t3">Source </span><b style="font-weight: 600">close</b></span><span><span class="t3">Stop </span><b style="font-weight: 600">Off</b></span></span>
+</div>
+<button class="primary">Apply to inputs</button>
+</div>
+</div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 0 16px">
+<div style="height: 44px; flex: none; display: flex; align-items: center; gap: 10px">
+<div class="seg sm" role="group" aria-label="Right view"><button class="on">Stability</button><button>Window map</button></div>
+<span style="flex: 1"></span>
+<button class="chip num"><span class="t3">Tolerance</span>10%<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+</div>
+
+<div class="num t3" style="height: 18px; flex: none; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); margin-left: 172px; font-size: 11.5px; text-align: center">
+<span>W1</span><span>W2</span><span style="color: #f5b155; font-weight: 600">W3</span><span>W4</span><span>W5</span><span>W6</span>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; flex: 1; min-height: 0; border-top: 1px solid #1f2328">
+<div style="width: 160px; flex: none; display: flex; flex-direction: column; gap: 3px"><span>Length</span><span class="num" style="font-size: 12px">Common 26–28</span><span class="t3 num" style="font-size: 12px">Fixed at 27, mean loss 1.6%</span></div>
+<div style="position: relative; flex: 1; min-width: 0">
+<svg width="260" height="64" viewBox="0 0 260 64" style="display: block" aria-hidden="true"><rect x="0" y="25.9" width="260" height="12.2" fill="rgba(242,163,58,0.16)"/><rect x="15.7" y="19.7" width="12" height="30.9" rx="2" fill="#2c4a5c"/><circle cx="21.7" cy="41.3" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="59" y="22.8" width="12" height="21.6" rx="2" fill="#2c4a5c"/><circle cx="65" cy="35.1" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="102.3" y="19.7" width="12" height="21.6" rx="2" fill="#2c4a5c"/><circle cx="108.3" cy="35.1" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="145.7" y="10.3" width="12" height="27.8" rx="2" fill="#2c4a5c"/><circle cx="151.7" cy="22.7" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="189" y="25.9" width="12" height="21.6" rx="2" fill="#2c4a5c"/><circle cx="195" cy="35.1" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="232.3" y="16.6" width="12" height="21.6" rx="2" fill="#2c4a5c"/><circle cx="238.3" cy="28.9" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/></svg>
+<span class="t3 num" style="position: absolute; left: -2px; top: -2px; font-size: 10.5px">36</span><span class="t3 num" style="position: absolute; left: -2px; bottom: -2px; font-size: 10.5px">18</span>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; flex: 1; min-height: 0; border-top: 1px solid #1f2328">
+<div style="width: 160px; flex: none; display: flex; flex-direction: column; gap: 3px"><span>Multiplier</span><span class="num" style="font-size: 12px">Common 2.00–2.25</span><span class="t3 num" style="font-size: 12px">Fixed at 2.00, mean loss 2.5%</span></div>
+<div style="position: relative; flex: 1; min-width: 0">
+<svg width="260" height="64" viewBox="0 0 260 64" style="display: block" aria-hidden="true"><rect x="0" y="23.4" width="260" height="17.2" fill="rgba(242,163,58,0.16)"/><rect x="15.7" y="23.4" width="12" height="28.4" rx="2" fill="#2c4a5c"/><circle cx="21.7" cy="37.6" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="59" y="23.4" width="12" height="28.4" rx="2" fill="#2c4a5c"/><circle cx="65" cy="37.6" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="102.3" y="12.2" width="12" height="28.4" rx="2" fill="#2c4a5c"/><circle cx="108.3" cy="26.4" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="145.7" y="12.2" width="12" height="28.4" rx="2" fill="#2c4a5c"/><circle cx="151.7" cy="26.4" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="189" y="23.4" width="12" height="28.4" rx="2" fill="#2c4a5c"/><circle cx="195" cy="37.6" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="232.3" y="23.4" width="12" height="28.4" rx="2" fill="#2c4a5c"/><circle cx="238.3" cy="37.6" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/></svg>
+<span class="t3 num" style="position: absolute; left: -2px; top: -2px; font-size: 10.5px">2.75</span><span class="t3 num" style="position: absolute; left: -2px; bottom: -2px; font-size: 10.5px">1.50</span>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; flex: 1; min-height: 0; border-top: 1px solid #1f2328">
+<div style="width: 160px; flex: none; display: flex; flex-direction: column; gap: 3px"><span>Source</span><span class="num" style="font-size: 12px">close: all near-optimal</span><span class="t3 num" style="font-size: 12px">Fixed at close, mean loss 0.9%</span></div>
+<div style="position: relative; flex: 1; min-width: 0">
+<svg width="260" height="64" viewBox="0 0 260 64" style="display: block" aria-hidden="true"><rect x="0" y="29" width="260" height="24.7" fill="rgba(242,163,58,0.16)"/><rect x="15.7" y="10.3" width="12" height="43.3" rx="2" fill="#2c4a5c"/><circle cx="21.7" cy="50.7" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="59" y="29" width="12" height="24.7" rx="2" fill="#2c4a5c"/><circle cx="65" cy="50.7" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="102.3" y="10.3" width="12" height="43.3" rx="2" fill="#2c4a5c"/><circle cx="108.3" cy="50.7" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="145.7" y="10.3" width="12" height="43.3" rx="2" fill="#2c4a5c"/><circle cx="151.7" cy="32" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="189" y="29" width="12" height="24.7" rx="2" fill="#2c4a5c"/><circle cx="195" cy="50.7" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="232.3" y="10.3" width="12" height="43.3" rx="2" fill="#2c4a5c"/><circle cx="238.3" cy="50.7" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/></svg>
+
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; flex: 1; min-height: 0; border-top: 1px solid #1f2328">
+<div style="width: 160px; flex: none; display: flex; flex-direction: column; gap: 3px"><span>Use trailing stop</span><span class="num" style="font-size: 12px">Off: all near-optimal</span><span class="t3 num" style="font-size: 12px">Fixed at off, mean loss 0.0%</span></div>
+<div style="position: relative; flex: 1; min-width: 0">
+<svg width="260" height="64" viewBox="0 0 260 64" style="display: block" aria-hidden="true"><rect x="0" y="43" width="260" height="6" fill="rgba(242,163,58,0.16)"/><rect x="15.7" y="43" width="12" height="6" rx="2" fill="#2c4a5c"/><circle cx="21.7" cy="46" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="59" y="15" width="12" height="34" rx="2" fill="#2c4a5c"/><circle cx="65" cy="46" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="102.3" y="43" width="12" height="6" rx="2" fill="#2c4a5c"/><circle cx="108.3" cy="46" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="145.7" y="43" width="12" height="6" rx="2" fill="#2c4a5c"/><circle cx="151.7" cy="46" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="189" y="15" width="12" height="34" rx="2" fill="#2c4a5c"/><circle cx="195" cy="46" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="232.3" y="43" width="12" height="6" rx="2" fill="#2c4a5c"/><circle cx="238.3" cy="46" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/></svg>
+
+</div>
+</div>
+</div>
+</section>
+<div class="num" style="height: 60px; flex: none; display: flex; align-items: center; gap: 18px; padding: 0 12px 0 16px; background: #1b1f24; border-top: 1px solid #2f353c; white-space: nowrap">
+<span class="am" style="font-size: 18px; font-weight: 700">W3</span>
+<span style="display: flex; gap: 14px"><span><span class="t3">OOS </span><b style="font-weight: 600">2024-07-01 – 09-30</b></span><span><span class="t3">Selected </span><b style="font-weight: 600">26, 2.25, close, off</b></span></span>
+<span style="width: 1px; height: 20px; background: #2f353c"></span>
+<span style="display: flex; gap: 14px"><span><span class="t3">IS </span><span class="up">+10,450</span></span><span><span class="t3">OOS </span><span class="dn">−860</span></span><span><span class="t3">WFE </span><span class="dn">−0.33</span></span></span>
+<span style="flex: 1"></span>
+<button class="ghost">View backtest</button>
+
+</div>
+</main><aside style="width: 336px; flex: none; display: flex; flex-direction: column; background: #14171b; border-left: 1px solid #23272d; position: relative; ">
+
+<div style="flex: 1; min-height: 0; padding: 12px 16px 0; display: flex; flex-direction: column; gap: 22px; overflow: hidden; position: relative">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div class="sec"><span>Search ranges</span><div class="seg sm" role="group" aria-label="Search method"><button class="on">Grid</button><button>Random</button></div></div>
+<div style="display: flex; flex-direction: column; gap: 7px">
+<div style="display: flex; align-items: center; gap: 10px"><button class="cb on" role="checkbox" aria-checked="true" aria-label="Optimize Length"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#1a1206" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.4 2.3 4.6-5"/></svg></button><span style="flex: 1">Length</span><span class="t2 num">41</span></div>
+<div class="num" style="display: flex; align-items: center; gap: 6px; padding-left: 25px">
+<input class="mini" value="10" aria-label="Length from" style="width: 60px"><span class="t3">to</span><input class="mini" value="50" aria-label="Length to" style="width: 60px"><span class="t3" style="margin-left: 6px">Step</span><input class="mini" value="1" aria-label="Length step" style="width: 52px">
+</div>
+
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px">
+<div style="display: flex; align-items: center; gap: 10px"><button class="cb on" role="checkbox" aria-checked="true" aria-label="Optimize Multiplier"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#1a1206" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.4 2.3 4.6-5"/></svg></button><span style="flex: 1">Multiplier</span><span class="t2 num">9</span></div>
+<div class="num" style="display: flex; align-items: center; gap: 6px; padding-left: 25px">
+<input class="mini" value="1.00" aria-label="Multiplier from" style="width: 60px"><span class="t3">to</span><input class="mini" value="3.00" aria-label="Multiplier to" style="width: 60px"><span class="t3" style="margin-left: 6px">Step</span><input class="mini" value="0.25" aria-label="Multiplier step" style="width: 52px">
+</div>
+
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px">
+<div style="display: flex; align-items: center; gap: 10px"><button class="cb on" role="checkbox" aria-checked="true" aria-label="Optimize Source"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#1a1206" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.4 2.3 4.6-5"/></svg></button><span style="flex: 1">Source</span><span class="t2 num">3</span></div>
+<div style="display: flex; align-items: center; gap: 6px; padding-left: 25px; flex-wrap: wrap"><button class="chip on">close</button><button class="chip on">hl2</button><button class="chip on">ohlc4</button><button class="chip t2">5 more</button></div>
+
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px">
+<div style="display: flex; align-items: center; gap: 10px"><button class="cb on" role="checkbox" aria-checked="true" aria-label="Optimize Use trailing stop"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#1a1206" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.4 2.3 4.6-5"/></svg></button><span style="flex: 1">Use trailing stop</span><span class="t2 num">2</span></div>
+<div style="display: flex; align-items: center; gap: 6px; padding-left: 25px; flex-wrap: wrap"><button class="chip on">Off</button><button class="chip on">On</button></div>
+
+</div>
+<div style="display: flex; align-items: center; gap: 10px; height: 28px"><button class="cb" role="checkbox" aria-checked="false" aria-label="Optimize Trail %"></button><span style="flex: 1" class="t2">Trail %</span><span class="t3" style="font-size: 12px">Fixed</span><input class="mini" value="3.0" aria-label="Trail % fixed value" style="width: 60px"></div>
+
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div class="sec"><span>Validation</span></div>
+<div class="seg" style="width: 100%; height: 32px" role="group" aria-label="Validation"><button style="flex: 1">None</button><button style="flex: 1">IS / OOS</button><button class="on" style="flex: 1">Walk-forward</button></div>
+<div class="num" style="display: flex; align-items: center; gap: 6px; white-space: nowrap">
+<span class="t2">IS</span><input class="mini" value="12" aria-label="IS months" style="width: 42px">
+<span class="t2" style="margin-left: 6px">OOS</span><input class="mini" value="3" aria-label="OOS months" style="width: 36px">
+<span class="t2" style="margin-left: 6px">Step</span><input class="mini" value="3" aria-label="Step in months" style="width: 36px">
+<span class="t3">months</span>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between"><span class="t2">IS start</span><div class="seg sm" role="group" aria-label="Window mode"><button class="on">Rolls forward</button><button>Anchored</button></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div class="sec"><span>Per-window selection and filters</span></div>
+<button class="sel"><span><span class="t3">By </span>IS net profit<span class="t3">, max</span></span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+<div style="display: flex; flex-wrap: wrap; gap: 6px"><span class="chip num">Trades ≥ 30<button aria-label="Remove condition" class="t3" style="display: inline-flex"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span><span class="chip num">Max DD ≤ 15%<button aria-label="Remove condition" class="t3" style="display: inline-flex"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span><button class="chip t2" style="border-style: dashed">+ Condition</button></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div class="sec"><span>Properties</span><a href="#" style="font-size: 12.5px; font-weight: 400">Edit</a></div>
+<div class="num t2" style="display: flex; gap: 14px; font-size: 12.5px"><span>Commission 0.1%</span><span>Slippage 1 tick</span><span>100% of equity</span></div>
+</div>
+
+
+</div>
+<div style="flex: none; border-top: 1px solid #23272d; padding: 14px 16px 16px; display: flex; align-items: center; gap: 12px">
+<div class="num" style="flex: 1; display: flex; flex-direction: column; gap: 2px"><div style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 20px; font-weight: 600">13,284</span><span class="t2">backtests</span></div><span class="t3" style="font-size: 12px">Last run 29:06, 7 threads</span></div>
+<button class="primary" style="height: 36px; padding: 0 16px"><svg width="11" height="11" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Re-optimize</button>
+</div>
+</aside>
+</div>
+
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":640,"height":429}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

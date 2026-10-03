@@ -13,7 +13,8 @@
 
 > **Status.** This repository contains the Pine engine, the optimizer, market data, Web Worker
 > execution and the TradingView verification suite as TypeScript packages. The browser app that
-> puts them on screen is being rebuilt and is not included yet.
+> puts them on screen is being rebuilt and is not included yet; its design is drawn in
+> [docs/web-mock-terminal](docs/web-mock-terminal/README.md).
 
 ## Why this exists
 

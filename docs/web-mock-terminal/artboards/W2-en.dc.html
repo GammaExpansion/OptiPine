@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Per-window view</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&amp;family=Noto+Sans+SC:wght@400;500;700&amp;family=Source+Code+Pro:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#0e1013;color:#e8eaed;font-family:"Barlow","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;line-height:1.35;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#f5b155;text-decoration:none}a:hover{color:#ffc877}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;text-align:inherit}
+input{font:inherit;color:inherit;min-width:0}
+.num{font-variant-numeric:tabular-nums}
+.t2{color:#aab1b9}.t3{color:#7f8790}.up{color:#3fbf8a}.dn{color:#f06a5d}.am{color:#f5b155}
+.tb{height:30px;display:inline-flex;align-items:center;gap:8px;padding:0 10px;border-radius:4px;font-size:13px;white-space:nowrap}
+.tb:hover,.tb.on{background:#1b1f24}
+.seg{display:inline-flex;height:30px;padding:2px;gap:2px;background:#14171b;border:1px solid #23272d;border-radius:5px;flex:none}
+.seg>button{padding:0 10px;border-radius:3px;font-size:12.5px;color:#aab1b9;white-space:nowrap;text-align:center}
+.seg>button.on{background:#282d34;color:#e8eaed}
+.seg.sm{height:26px}.seg.sm>button{font-size:12px;padding:0 9px}
+.primary{height:32px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;border-radius:4px;background:#f2a33a;color:#1a1206;font-weight:600;font-size:13px;white-space:nowrap}
+.primary:hover{background:#f6b04d}
+.primary.off{background:#3a3327;color:#8d8370;cursor:default}
+.ghost{height:32px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;border-radius:4px;border:1px solid #2f353c;color:#e8eaed;font-weight:500;font-size:13px;white-space:nowrap}
+.ghost:hover{background:#1b1f24}
+kbd{font:inherit;font-size:11px;font-weight:500;padding:1px 5px;border-radius:3px;background:rgba(26,18,6,.16)}
+.iconbtn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;color:#aab1b9;flex:none}
+.iconbtn:hover{background:#1b1f24;color:#e8eaed}
+.iconbtn.on{color:#f5b155}
+.dtab{position:relative;display:inline-flex;align-items:center;gap:6px;padding:0 12px;font-size:13px;color:#aab1b9;white-space:nowrap}
+.dtab.on{color:#e8eaed;font-weight:500}
+.dtab.on::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;background:#f2a33a}
+.rtab{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:40px;position:relative;font-size:13px;color:#aab1b9;white-space:nowrap}
+.rtab.on{color:#e8eaed;font-weight:500}
+.rtab.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#f2a33a}
+.mtab{height:48px;display:inline-flex;align-items:center;gap:6px;padding:0 2px;font-size:14px;color:#aab1b9;position:relative;white-space:nowrap}
+.mtab:hover{color:#e8eaed}
+.mtab.on{color:#e8eaed;font-weight:600}
+.mtab.on::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:#f2a33a}
+.cnt{font-size:11.5px;color:#7f8790;font-variant-numeric:tabular-nums}
+.cnt.bad{color:#1a0b09;background:#f06a5d;border-radius:8px;padding:0 5px;font-weight:600}
+.sec{display:flex;align-items:center;justify-content:space-between;height:28px;font-size:13px;font-weight:600}
+.field{height:32px;display:flex;align-items:center;border:1px solid #2f353c;border-radius:4px;background:#0f1215;font-size:13px;font-variant-numeric:tabular-nums}
+.field .k{width:30px;height:100%;display:flex;align-items:center;justify-content:center;color:#7f8790}
+.field .v{flex:1;text-align:center;background:none;border:0;width:100%;outline:none}
+.sel{height:32px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 10px;border:1px solid #2f353c;border-radius:4px;background:#0f1215;font-size:13px;width:100%}
+.inp{height:32px;border:1px solid #2f353c;border-radius:4px;background:#0f1215;padding:0 10px;font-size:13px;outline:none;width:100%;font-variant-numeric:tabular-nums}
+.mini{height:28px;display:flex;align-items:center;padding:0 8px;border:1px solid #2f353c;border-radius:4px;background:#0f1215;font-size:12.5px;font-variant-numeric:tabular-nums;outline:none}
+.field.err,.inp.err,.mini.err,.sel.err{border-color:#f06a5d}
+.field.foc,.inp.foc,.mini.foc,.sel.foc{border-color:#f2a33a}
+.errt{font-size:12px;color:#f58a7f}
+.lab{font-size:12.5px;color:#aab1b9}
+.sw{width:34px;height:20px;border-radius:10px;background:#2f353c;position:relative;flex:none}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:7px;background:#aab1b9}
+.sw.on{background:#f2a33a}.sw.on::after{left:17px;background:#1a1206}
+.kv{display:flex;align-items:center;justify-content:space-between;gap:12px;height:31px;border-top:1px solid #1f2328;font-size:13px;white-space:nowrap}
+.kv>span:first-child{color:#aab1b9}
+.chip{height:26px;display:inline-flex;align-items:center;gap:6px;padding:0 9px;border-radius:13px;border:1px solid #2f353c;font-size:12.5px;white-space:nowrap}
+.chip.on{border-color:#6b5227;background:#241c10;color:#f5c27a}
+.chip.bad{border-color:#7a3a33;color:#f58a7f}
+.cb{width:15px;height:15px;border-radius:3px;border:1px solid #4a525c;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.cb.on{background:#f2a33a;border-color:#f2a33a}
+.tag{height:18px;padding:0 6px;border-radius:3px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;white-space:nowrap;background:#282d34;color:#aab1b9}
+.tag.am{background:#3a2c16;color:#f5b155}.tag.dn{background:#3b1f1c;color:#f58a7f}.tag.bl{background:#1c3340;color:#8fd0f0}
+table{border-collapse:collapse;width:100%}
+th{font-weight:500;font-size:12px;color:#7f8790;text-align:right;padding:0 0 6px 8px;white-space:nowrap}
+th:first-child{text-align:left;padding-left:0}
+td{font-size:12.5px;text-align:right;padding:0 0 0 8px;height:25px;border-top:1px solid #1f2328;white-space:nowrap;font-variant-numeric:tabular-nums}
+td:first-child{text-align:left;padding-left:0;color:#aab1b9}
+.lb th{font-size:12px;padding:0 8px;height:30px;border-bottom:1px solid #23272d}
+.lb td{height:30px;padding:0 8px;border-top:0;border-bottom:1px solid #1b1f24}
+.lb td:first-child{padding-left:12px}.lb th:first-child{padding-left:12px}
+.lb tr.cur td{background:#221b11}
+.lb tr.cur td:first-child{color:#f5b155}
+.lb.sm td{height:26px}
+.code{font-family:"Source Code Pro",Consolas,monospace;font-size:12.5px;line-height:19px}
+.cl{display:flex;height:19px;border-left:2px solid transparent;white-space:pre}
+.cl .ln{width:46px;flex:none;text-align:right;padding-right:14px;color:#4f565f}
+.cl.in{background:rgba(242,163,58,0.06);border-left-color:#f2a33a}.cl.in .ln{color:#aab1b9}
+.cl.fx{background:rgba(255,255,255,0.025);border-left-color:#3a4048}.cl.fx .ln{color:#aab1b9}
+.cl.er{background:rgba(240,106,93,0.10);border-left-color:#f06a5d}.cl.er .ln{color:#f58a7f}
+.cl.cu{background:rgba(255,255,255,0.035)}
+.kw{color:#8fb8de}.fn{color:#d9c38c}.st{color:#a9c98f}.nu{color:#e0a577}.cm{color:#6b727b}
+.sq{text-decoration:underline wavy #f06a5d;text-underline-offset:3px}
+.menu{position:absolute;background:#1b1f24;border:1px solid #2f353c;border-radius:6px;box-shadow:0 14px 36px rgba(0,0,0,.55);padding:4px;font-size:13px;display:flex;flex-direction:column}
+.mi{height:30px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:4px;white-space:nowrap;width:100%}
+.mi:hover,.mi.on{background:#2a3038}
+.mh{height:26px;display:flex;align-items:center;padding:0 10px;font-size:11.5px;color:#7f8790}
+.msep{height:1px;background:#2f353c;margin:4px 0;flex:none}
+.dlg{background:#14171b;border:1px solid #2f353c;border-radius:8px;box-shadow:0 24px 64px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden}
+.toast{position:absolute;display:flex;align-items:center;gap:12px;height:40px;padding:0 8px 0 14px;border-radius:6px;background:#282d34;border:1px solid #3a4048;box-shadow:0 12px 28px rgba(0,0,0,.5);font-size:13px;white-space:nowrap}
+.bar{height:4px;border-radius:2px;background:#2f353c;position:relative;overflow:hidden}
+.bar>i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:#f2a33a}
+.note{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:4px;font-size:12.5px;line-height:1.45;background:#1b1f24;color:#aab1b9}
+.note.am{background:#241c10;color:#f5c27a}.note.dn{background:#2a1715;color:#f5a59c}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: #0e1013; color: #e8eaed; overflow: hidden; position: relative">
+<header style="height: 48px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 12px 0 16px; border-bottom: 1px solid #23272d; background: #0e1013">
+<div style="display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 15px; white-space: nowrap; padding-right: 6px"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="1.5" y="7" width="3.5" height="9" rx="1" fill="#f2a33a"/><rect x="7.25" y="2" width="3.5" height="14" rx="1" fill="#f2a33a"/><rect x="13" y="9.5" width="3.5" height="6.5" rx="1" fill="#7a5a26"/></svg><span>Pine Optimizer</span></div>
+<div style="width: 1px; height: 22px; background: #23272d"></div>
+<nav style="display: flex; gap: 18px; align-self: stretch; padding: 0 6px" aria-label="Pages"><button class="mtab">Backtest</button><button class="mtab on" aria-current="page">Optimize<span style="width: 6px; height: 6px; border-radius: 6px; background: #f2a33a; flex: none"></span></button></nav>
+<div style="width: 1px; height: 22px; background: #23272d"></div>
+<button class="tb" aria-label="Script trend_breakout.pine"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#aab1b9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 1.5h5.5L13 5v9.5H4z"/><path d="M9.5 1.5V5H13"/></svg><span>trend_breakout.pine</span><span style="width: 7px; height: 7px; border-radius: 7px; background: #3fbf8a; flex: none"></span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+<button class="tb"><span style="font-weight: 600">BTCUSDT</span><span class="t3">Binance</span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+<div class="seg" role="group" aria-label="Timeframe"><button>15m</button><button class="on">1h</button><button>4h</button><button>1D</button></div>
+<button class="tb num"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#aab1b9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg><span>2023-01-02 – 2025-05-04</span></button>
+<div style="flex: 1"></div>
+<span class="num" style="font-size: 12px; white-space: nowrap; display: flex; align-items: center; gap: 10px"><span class="t3">6 windows in 29:06</span><a href="#" class="dn">2 failed</a></span>
+<div class="seg" role="group" aria-label="Language"><button>中</button><button class="on">EN</button></div>
+</header>
+<div style="flex: 1; display: flex; min-height: 0">
+<main style="width: 1104px; flex: none; display: flex; flex-direction: column; min-width: 0; position: relative">
+<div style="height: 32px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 12px; font-size: 12px; white-space: nowrap">
+<span style="font-weight: 600; font-size: 13px">Windows and equity</span>
+<span class="num up" style="font-weight: 600">+7,600</span>
+<div style="display: flex; align-items: center; gap: 12px; margin-left: 8px">
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 2px; background: #3b6f8c"></span><span class="t2">IS</span></span>
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 2px; background: #f2a33a"></span><span class="t2">OOS</span></span>
+
+<span class="t3">Dashed: IS equity · solid: OOS equity · right: OOS net and equity</span>
+</div>
+<div style="flex: 1"></div>
+<div class="seg sm" role="group" aria-label="Window view"><button>Stitched</button><button class="on">Per window</button></div>
+
+</div>
+<div style="height: 330px; flex: none; position: relative">
+<svg width="1104" height="330" viewBox="0 0 1104 330" style="display: block" role="img" aria-label="6 windows and stitched OOS equity">
+<line x1="244.7" x2="244.7" y1="12" y2="308" stroke="#1a1d22" stroke-width="1"/>
+<line x1="453.9" x2="453.9" y1="12" y2="308" stroke="#1a1d22" stroke-width="1"/>
+<line x1="660.9" x2="660.9" y1="12" y2="308" stroke="#1a1d22" stroke-width="1"/>
+<line x1="870.1" x2="870.1" y1="12" y2="308" stroke="#1a1d22" stroke-width="1"/>
+<rect x="40" y="16" width="413.9" height="40" rx="2" fill="#182630"/>
+<rect x="453.9" y="16" width="103.5" height="40" rx="2" fill="#3a2c16"/>
+<path d="M43 49.7L46.4 48.2L48.6 48.7L52 51L54.2 49.9L58.7 48.9L61 49.8L64.4 48.2L65.5 47.2L68.8 48.9L73.3 49.3L76.7 48.2L77.8 49.1L81.2 48.1L85.7 49.3L88 48L90.2 48L92.4 46.4L95.8 48L100.3 47L101.4 47.1L104.8 45.7L109.3 44.7L110.4 45.9L112.7 45.5L116 44.3L118.3 46.4L120.5 45.6L127.3 46.1L129.5 45.1L132.9 46.1L135.1 44.5L136.3 44.7L140.8 42.8L141.9 42.3L146.4 43L147.5 44.6L149.8 43.3L153.1 43.6L155.4 41.9L162.1 42.8L164.4 41.9L168.9 44L170 42.3L174.5 41.7L175.6 42.2L177.9 43.9L180.1 42.8L182.3 43.3L188 40L189.1 40.3L193.6 38.8L194.7 38.6L199.2 39.7L203.7 40.4L204.8 40.9L207.1 40.9L210.4 39.9L213.8 40.7L217.2 39.7L218.3 38L222.8 39.4L225.1 40L228.4 38.6L229.5 38.9L232.9 37.6L237.4 38L239.7 37.3L240.8 37.8L241.9 37.2L247.5 37L250.9 38.4L254.3 37.7L255.4 38.6L261 37.7L263.3 36.8L264.4 35.3L268.9 33.4L271.1 33L274.5 33.4L276.7 32.6L279 30.8L282.4 31.7L285.7 32.5L289.1 31.8L292.5 29.9L293.6 29.8L298.1 28.5L301.5 26.9L303.7 28.3L307.1 28L310.5 26.9L313.8 26.4L316.1 28.9L319.4 29.6L320.6 28.5L323.9 28.6L326.2 29.7L328.4 29.8L334.1 27.7L338.6 27.8L339.7 27L340.8 27L343 25.2L346.4 26.5L350.9 25.4L352 25L354.3 26.6L361 25.8L362.1 26.6L364.4 27.7L368.9 26.7L372.3 27L374.5 25.3L375.6 25.4L379 24.2L381.3 25.1L385.7 22.8L386.9 22.3L391.4 21.6L394.7 21.6L398.1 22.7L399.2 22.6L400.4 21.3L406 21L409.3 22L413.8 23.2L415 21.9L416.1 22.7L421.7 26L424 25.4L426.2 23.8L430.7 23.5L432.9 25.2L434.1 25.3L436.3 24.5L439.7 24.8L444.2 23.7L448.7 24.2L450.9 22.7" fill="none" stroke="#5b8fab" stroke-width="1.3" stroke-dasharray="3 2" stroke-linejoin="round"/>
+<path d="M456.9 51L459.1 46.5L460.2 46.9L461.3 47.7L463.4 44.7L465.6 42.5L466.7 43.3L468.8 39.8L469.9 38.6L471 40L474.3 39.8L475.3 40.6L476.4 42.2L477.5 41.4L479.7 41.5L481.8 44.1L482.9 42.6L485.1 40L486.2 40.7L488.3 37.5L489.4 36.6L491.6 39.4L492.7 37.2L494.8 31.8L495.9 32.2L498.1 35.6L499.2 32.4L500.3 35.3L502.4 33.5L504.6 31.2L505.7 29L507.8 25.8L508.9 24.7L511.1 21L512.2 22.9L514.3 24L515.4 22.9L516.5 21.3L518.7 25L519.7 23.6L523 22.4L524.1 23.4L525.2 25L526.2 27.6L529.5 29L530.6 27.8L531.7 29.4L533.8 32L534.9 32.6L537.1 30.7L538.2 31.7L540.3 28.6L541.4 28.7L543.6 27.4L545.7 25.9L546.8 27.3L547.9 30L550.1 27.1L551.2 26.4L553.3 27.7L554.4 27.3" fill="none" stroke="#d9973f" stroke-width="1.5" stroke-linejoin="round"/>
+<text x="32" y="40" fill="#7f8790" font-size="11" text-anchor="end" font-weight="500">W1</text>
+<text x="46" y="29" fill="#8fa9b8" font-size="10.5">+9,840</text>
+<text x="1072" y="34" fill="#3fbf8a" font-size="12" text-anchor="end" font-weight="600">+2,310</text>
+<text x="1072" y="48" fill="#7f8790" font-size="10.5" text-anchor="end">102,310</text>
+<rect x="141.2" y="64" width="416.2" height="40" rx="2" fill="#182630"/>
+<rect x="557.4" y="64" width="103.5" height="40" rx="2" fill="#3a2c16"/>
+<path d="M145.3 99L148.7 96.8L151 96.5L152.1 95.2L156.6 94.5L159.9 95.3L161.1 95.1L164.4 96L166.7 94.9L168.9 96.3L173.4 96L177.9 94.1L179 93.8L182.4 94.9L184.7 93.7L186.9 94.8L190.3 92.9L194.8 94.8L197 94.9L201.5 93.1L202.6 93.1L206 91.5L208.3 92.8L212.8 90.8L215 92L217.3 90.5L219.5 91.2L222.9 92.3L226.2 93.3L230.7 91.8L231.9 92.1L233 92.5L237.5 93.5L242 94.9L243.1 96.2L248.7 93.6L249.8 93L254.3 90.3L256.6 89.8L258.8 88.5L264.5 89.4L265.6 90.1L266.7 89.1L272.3 89.9L273.4 89.8L277.9 88.4L281.3 90.2L283.6 90.6L284.7 90.6L289.2 89.4L290.3 89.2L294.8 86.8L298.2 85.2L301.5 86.6L302.7 87.1L306 88L309.4 86.3L312.8 88.3L315 87.5L318.4 89.6L320.7 89.5L325.1 86.9L328.5 87.9L330.8 88.8L333 87.8L336.4 89.1L337.5 88L342 84.9L345.4 84.8L348.7 83.4L349.9 82.9L352.1 84.3L355.5 83.1L360 80.9L362.2 79.9L364.5 80.8L366.7 81.1L369 82.5L372.3 81L378 78.4L380.2 78.2L382.5 79.1L387 79.6L389.2 78.7L391.5 79L394.8 78.1L397.1 75.4L400.4 76.8L402.7 77.3L407.2 76.6L410.6 76.1L412.8 76.9L415.1 77.2L418.4 75.4L419.5 76.1L422.9 74.9L427.4 75.1L430.8 77.7L431.9 77.9L436.4 76.3L440.9 75.9L442 74.8L445.4 75.7L447.6 75.1L451 75L454.4 73.6L455.5 73.9L460 72.4L462.3 71.7L464.5 70.8L466.7 70.2L469 71.6L473.5 70.9L476.9 69.3L480.2 71.4L483.6 69.8L484.7 70L487 69L490.4 70.4L494.8 71.7L496 72.4L500.5 71.3L503.8 70.2L505 69.1L508.3 69.4L511.7 71.8L514 71.9L517.3 70.8L519.6 70.4L522.9 72.8L525.2 71.5L526.3 72.4L533.1 71.8L534.2 72.4L538.7 73L542 71.1L545.4 70.4L547.7 71.6L549.9 72.7L554.4 70.5" fill="none" stroke="#5b8fab" stroke-width="1.3" stroke-dasharray="3 2" stroke-linejoin="round"/>
+<path d="M560.4 89.6L562.6 95L563.7 93.9L565.8 95.1L566.9 93.1L569.1 94.6L570.2 93.7L572.3 87.7L573.4 90.6L575.6 84.3L576.7 83.6L578.8 86.7L581 91.5L582.1 89.6L583.2 92L585.3 95.5L587.5 88.1L588.6 89.9L589.7 87.1L590.7 89.8L592.9 90.5L594 92.5L596.2 94.8L598.3 98L599.4 96.9L600.5 97.9L603.7 94.1L604.8 95.4L607 99L608.1 96.5L609.2 94.6L611.3 85.4L612.4 84.5L614.6 88L615.6 89.4L616.7 90.7L618.9 87L621.1 84.9L622.1 85.2L624.3 88.8L626.5 87L627.6 83.6L628.6 84.4L630.8 88L631.9 86.8L634.1 90.1L635.1 88.3L637.3 82.6L638.4 83.6L640.6 82.7L642.7 80.8L643.8 78.8L644.9 81.7L646 79.3L648.1 82.4L650.3 76.8L651.4 75.4L653.6 70.2L654.6 69L657.9 73.4" fill="none" stroke="#d9973f" stroke-width="1.5" stroke-linejoin="round"/>
+<text x="32" y="88" fill="#7f8790" font-size="11" text-anchor="end" font-weight="500">W2</text>
+<text x="147.2" y="77" fill="#8fa9b8" font-size="10.5">+11,200</text>
+<text x="1072" y="82" fill="#3fbf8a" font-size="12" text-anchor="end" font-weight="600">+1,120</text>
+<text x="1072" y="96" fill="#7f8790" font-size="10.5" text-anchor="end">103,430</text>
+<rect x="244.7" y="112" width="416.2" height="40" rx="2" fill="#24465a"/>
+<rect x="660.9" y="112" width="104.6" height="40" rx="2" fill="#6b4d1c"/>
+<rect x="242.7" y="110" width="524.8" height="44" rx="3" fill="none" stroke="#e8eaed" stroke-width="1.5"/>
+<path d="M247.7 144L252.2 143L254.4 143.5L257.8 142.7L258.9 142.5L263.4 141L264.5 140.6L269 142.2L270.2 142.2L273.5 143.1L278 143L280.3 144.2L282.5 143.2L287 144.3L288.1 145.4L290.4 147L293.8 146.4L294.9 146.8L302.8 146.5L305 145.6L306.1 144.6L309.5 143.7L311.7 143.6L316.2 145.8L318.5 146.1L321.9 145L327.5 145.4L328.6 144.2L329.7 142.7L332 142.1L335.3 142.9L337.6 143.7L343.2 144.4L345.5 143.4L346.6 144L352.2 144.6L354.5 145.1L357.8 143.3L358.9 143.6L363.4 142.1L365.7 142.4L366.8 141.6L371.3 141.4L375.8 139.4L378.1 138.8L381.4 137.5L383.7 135.9L387 136.7L389.3 136.7L392.7 136L394.9 136.5L397.2 135.9L399.4 136.7L401.7 135.6L406.2 134.3L408.4 135.1L411.8 134.6L414 133.3L419.6 133.7L420.8 134.4L424.1 133.9L427.5 132.2L432 131.5L434.2 132.4L436.5 134.2L439.9 133.3L441 133.6L445.5 130.1L446.6 129.1L450 127.4L453.4 128.5L456.7 130.5L460.1 127.9L463.5 128.7L464.6 129L466.8 128.5L472.5 129.4L473.6 128.4L475.8 129.1L477 129.9L482.6 129.5L487.1 128L488.2 127.4L489.3 128.7L494.9 127.9L496.1 129L499.4 128.2L505 127.5L507.3 128.2L509.5 126.3L511.8 126.1L512.9 127L517.4 126.8L521.9 124.8L523 124.1L526.4 123.5L529.8 125.1L532 125.8L535.4 124.5L538.8 122.4L541 122.4L545.5 119.9L547.8 120.2L551.1 118.5L553.4 118.5L556.7 121.5L559 121.7L563.5 122.9L564.6 123.9L569.1 124.9L570.2 124.9L574.7 123.6L579.2 123.7L581.5 122.4L582.6 121.7L583.7 122.7L589.3 122.2L592.7 120.8L595 120.2L598.3 121.1L599.5 120.7L603.9 118.5L607.3 117.5L609.6 118.6L614.1 119.1L616.3 118.1L617.4 118.3L620.8 119.5L623.1 119.6L626.4 120.8L628.7 119.5L632 117.7L636.5 119L637.7 119.7L641 119.6L642.2 118.3L646.7 118.1L651.1 118.8L652.3 118.7L656.8 117L657.9 117.6" fill="none" stroke="#8fd0f0" stroke-width="1.3" stroke-dasharray="3 2" stroke-linejoin="round"/>
+<path d="M663.9 119L665 120.5L667.1 117L669.3 124.3L671.5 126.7L672.6 125.4L674.7 123L675.8 127.7L676.9 128.1L678 132.7L680.1 129.1L681.2 131.5L683.4 131.1L684.5 128.7L687.7 130.5L688.8 126.7L691 127.5L692.1 129.6L693.2 128.6L695.3 131.5L696.4 128.6L698.6 123.7L700.7 124.4L701.8 122.4L702.9 122.6L704 120L706.2 122.4L708.3 127.2L709.4 125L711.6 121.9L714.8 119.4L715.9 125.2L717 126.9L718.1 128.2L721.3 132.2L722.4 133.1L723.5 134.6L725.7 138.3L726.7 140.3L728.9 146.6L730 147L731.1 144.1L733.2 143.1L734.3 137.9L737.6 139.9L738.7 137.4L740.8 134.3L741.9 135.2L743 138L745.2 142.1L746.3 141L747.3 141.6L749.5 139.5L751.7 142.7L752.8 137.5L754.9 135.6L756 133L758.2 138.1L759.3 141.2L762.5 134.7" fill="none" stroke="#ffd08a" stroke-width="1.5" stroke-linejoin="round"/>
+<text x="32" y="136" fill="#f5b155" font-size="11" text-anchor="end" font-weight="700">W3</text>
+<text x="250.7" y="125" fill="#cfe9f7" font-size="10.5">+10,450</text>
+<text x="1072" y="130" fill="#f06a5d" font-size="12" text-anchor="end" font-weight="600">−860</text>
+<text x="1072" y="144" fill="#7f8790" font-size="10.5" text-anchor="end">102,570</text>
+<rect x="349.3" y="160" width="416.2" height="40" rx="2" fill="#182630"/>
+<rect x="765.5" y="160" width="104.6" height="40" rx="2" fill="#3a2c16"/>
+<path d="M353.4 190.9L356.8 192.3L361.3 193.1L362.4 194.6L363.5 195L365.8 194.2L371.4 192.6L373.7 193.7L374.8 193.5L380.4 191.1L384.9 191.8L386 191.4L388.3 192.1L391.6 191.1L392.8 189.6L397.3 187.3L398.4 187.8L404 187L406.3 187.4L409.6 186.2L411.9 186.3L414.1 187L416.4 187.2L418.6 184.9L422 185.4L424.2 186.2L431 184.3L433.2 186.1L435.5 185.9L438.8 184.6L440 184.6L443.3 184.9L445.6 184.2L447.8 184.9L452.3 184.6L455.7 183.9L461.3 184.6L462.4 183.7L463.6 183.8L466.9 182.2L470.3 183.9L472.6 182.9L474.8 184.1L478.2 181.9L482.7 181.5L486 183.4L489.4 182.5L490.5 184.3L492.8 182.8L497.3 183.8L499.5 182.9L501.8 184.1L504 183.5L508.5 184.7L510.8 184L511.9 183.5L517.5 183.8L519.8 185L522 184.8L526.5 183.5L527.6 182.2L532.1 181L534.4 181.2L537.7 178.7L540 180.2L543.4 183.2L545.6 182.7L547.9 181.7L554.6 181.9L555.7 183L558 182.1L562.5 181L565.8 181.7L567 182.6L570.3 182.5L571.5 182.8L574.8 182.9L578.2 181.8L581.6 181.1L586.1 183.4L587.2 182.8L591.7 180.2L592.8 179.9L597.3 178.5L598.4 179L601.8 178.4L606.3 178.7L609.7 177.1L610.8 175.7L615.3 175L616.4 175L620.9 173.9L622 173.2L626.5 174.9L627.6 174.2L629.9 172.7L634.4 172.5L636.6 171.9L642.3 171.1L644.5 172.1L645.6 171.9L649 173.6L652.4 173.2L655.7 174.5L660.2 174.6L662.5 173.3L663.6 173.7L667 172.7L669.2 172.7L673.7 173.6L676 174.6L679.3 173.5L682.7 174.1L686.1 173L687.2 173.1L691.7 175.1L692.8 175.8L697.3 174.7L698.5 174.4L702.9 172.1L704.1 172.2L708.6 169.8L709.7 169.9L710.8 168.6L716.4 167.6L720.9 167.1L722.1 168.3L724.3 168.8L727.7 168.3L732.2 171L733.3 170.6L736.7 168.5L740 168.9L742.3 167.6L747.9 166.2L750.1 167.4L753.5 167.1L755.8 167.8L756.9 167.5L762.5 165" fill="none" stroke="#5b8fab" stroke-width="1.3" stroke-dasharray="3 2" stroke-linejoin="round"/>
+<path d="M768.5 192.7L770.7 189.7L771.8 191.2L772.8 190.5L776.1 190.9L777.2 191.6L779.3 194.1L780.4 191.8L781.5 191.4L782.6 195L784.8 192.9L786.9 191.3L788 190.6L790.2 188.1L792.4 186.6L793.4 188.4L794.5 188.9L795.6 190.4L797.8 189.6L799.9 188.5L801 187.1L802.1 184.5L804.3 185.3L806.4 186.6L808.6 188.4L809.7 187.2L810.8 186.9L812.9 186L815.1 186.8L816.2 184.1L818.4 186.9L820.5 183.7L822.7 182.3L823.8 183.9L824.9 184.7L825.9 182.5L829.2 186.1L830.3 182.7L831.4 182.3L833.5 180.5L834.6 180.5L836.8 179.8L837.9 178.2L840 180.5L842.2 177.5L843.3 178.4L844.4 177.8L845.5 177.4L847.6 178.9L849.8 176L852 174L853 171.6L855.2 173.3L856.3 169.9L857.4 169.8L858.5 169.4L860.6 170.9L862.8 168.5L865 168.5L867.1 165" fill="none" stroke="#d9973f" stroke-width="1.5" stroke-linejoin="round"/>
+<text x="32" y="184" fill="#7f8790" font-size="11" text-anchor="end" font-weight="500">W4</text>
+<text x="355.3" y="173" fill="#8fa9b8" font-size="10.5">+8,900</text>
+<text x="1072" y="178" fill="#3fbf8a" font-size="12" text-anchor="end" font-weight="600">+2,980</text>
+<text x="1072" y="192" fill="#7f8790" font-size="10.5" text-anchor="end">105,550</text>
+<rect x="453.9" y="208" width="416.2" height="40" rx="2" fill="#182630"/>
+<rect x="870.1" y="208" width="102.3" height="40" rx="2" fill="#3a2c16"/>
+<path d="M456.9 238.8L461.4 240.1L462.5 240.9L465.9 242.4L470.4 243L472.7 242.2L473.8 242.4L477.2 241.3L479.4 241.2L482.8 242.6L488.4 242.3L490.6 241.2L491.8 240.8L492.9 240.2L497.4 240.7L500.8 238.5L504.1 238.7L508.6 240.2L509.7 239.5L512 238.4L515.4 239.2L518.7 237.7L521 239.7L525.5 237.3L527.7 235.9L530 236.6L532.2 235.9L537.8 232.7L540.1 233.1L543.5 234.3L544.6 234.7L546.8 234.1L552.5 233.9L554.7 232L555.8 232.5L560.3 231.7L563.7 232.2L565.9 233.4L569.3 232L572.7 233.5L573.8 233.3L578.3 231L579.4 230.8L581.7 230.4L586.2 230.8L590.7 232.8L592.9 232L594 233L599.7 232.5L601.9 231.7L604.2 232.5L607.5 231.5L608.6 231.7L612 229.3L616.5 229.3L619.9 230.7L621 231.8L624.4 230.9L626.6 231.7L631.1 230L632.2 229.3L634.5 228.5L639 229.1L642.4 229.6L644.6 230.1L646.9 229.6L651.4 229.9L654.7 229L655.8 229.6L661.5 228.3L662.6 227.5L664.8 226.6L668.2 226.7L670.5 226L675 225.5L678.3 226.6L679.4 226.9L680.6 227.4L688.4 226.3L689.6 225.4L691.8 225.9L695.2 224.1L697.4 224.9L701.9 223L703 222.5L707.5 223L708.7 223.6L713.2 221.9L716.5 223.9L719.9 223.2L723.3 224.1L725.5 222.8L728.9 223.7L730 222.9L732.3 223.1L734.5 222.2L741.3 221.2L743.5 222L745.8 220.9L749.1 221.8L751.4 221.6L753.6 221.2L758.1 220.7L759.2 221.5L763.7 220.7L766 222.2L768.2 222L771.6 220.9L775 221.2L778.3 221.6L779.5 221.4L781.7 220.3L785.1 221.7L788.5 218.7L791.8 220L796.3 217.8L797.5 217.8L801.9 217.3L805.3 219.4L807.6 218.1L808.7 218.6L813.2 216.8L814.3 216.4L819.9 214.6L822.2 214.8L824.4 213.9L827.8 214.4L830 213.6L832.3 214.4L833.4 213.4L840.2 213L843.5 214.7L845.8 215.3L849.1 214.5L851.4 213.5L854.8 215.7L858.1 217.4L860.4 215.6L862.6 215.8L866 214.3L867.1 215.8" fill="none" stroke="#5b8fab" stroke-width="1.3" stroke-dasharray="3 2" stroke-linejoin="round"/>
+<path d="M874.2 241.2L875.3 237.7L877.5 236.1L878.5 237.8L879.6 234.8L881.8 234.3L882.9 234.2L885 231.1L886.1 231.4L887.2 228.2L889.4 230.6L890.4 229.2L892.6 234.1L893.7 231.3L895.9 233.2L898 235.8L899.1 236.2L900.2 237.5L902.4 237.8L903.4 232.5L905.6 233.2L907.8 230.2L908.9 230.5L911 226L912.1 228.6L913.2 227.4L916.4 225.6L917.5 228.3L918.6 228.8L920.8 235.9L922.9 236.3L924 237.7L925.1 236.7L926.2 239.9L928.3 243L930.5 240.7L931.6 240L932.7 239.6L934.8 241.4L935.9 236.7L939.2 236.3L940.2 237.7L942.4 237.3L943.5 239.6L944.6 233.9L946.7 228.5L947.8 225.6L948.9 222.5L951.1 223.4L953.2 217.7L955.4 214.9L956.5 217.4L957.6 219.6L959.7 214.4L960.8 214.8L963 213.5L965.1 219L966.2 214.5L967.3 213L968.4 213.3L969.5 213.3" fill="none" stroke="#d9973f" stroke-width="1.5" stroke-linejoin="round"/>
+<text x="32" y="232" fill="#7f8790" font-size="11" text-anchor="end" font-weight="500">W5</text>
+<text x="459.9" y="221" fill="#8fa9b8" font-size="10.5">+12,300</text>
+<text x="1072" y="226" fill="#3fbf8a" font-size="12" text-anchor="end" font-weight="600">+1,640</text>
+<text x="1072" y="240" fill="#7f8790" font-size="10.5" text-anchor="end">107,190</text>
+<rect x="557.4" y="256" width="415.1" height="40" rx="2" fill="#182630"/>
+<rect x="972.5" y="256" width="38.7" height="40" rx="2" fill="#3a2c16"/>
+<path d="M560.4 287.4L564.9 289.6L566 290.2L568.3 290.8L571.6 291L576.1 287.7L579.5 287.7L580.6 287.3L584 287.8L588.5 285.7L589.6 285.1L594.1 284.2L596.4 284.4L599.7 282.6L603.1 282.4L605.4 283.8L606.5 283.9L607.6 284.8L614.4 284.8L616.6 286.5L618.8 287.5L621.1 286.3L626.7 286.5L629 285.4L632.3 284.1L633.5 285.2L636.8 284.4L641.3 285.9L643.6 286.3L645.8 287.9L648.1 287.7L650.3 289.2L653.7 287.8L655.9 286.7L659.3 287.3L662.7 286.3L664.9 285.4L670.5 284L671.7 284.5L675 283L677.3 282.9L678.4 281.5L682.9 281.8L685.2 280.8L689.6 281.9L690.8 281.5L695.3 281.9L699.8 281.1L700.9 281.3L703.1 279.2L706.5 281.1L711 279.9L712.1 280.7L716.6 278.8L718.9 279.4L723.4 277.3L724.5 276.9L729 274.9L730.1 275.2L732.4 275.8L736.8 275.7L739.1 276.2L741.3 276.1L744.7 277.3L747 276.7L750.3 275.4L756 274.1L758.2 275.1L759.3 275L762.7 276.4L766.1 277.5L769.4 276L770.6 275L775.1 273.8L778.4 272.7L781.8 274.5L782.9 274.7L785.2 275.4L788.5 275.6L793 273.4L794.2 274L798.7 275.8L800.9 276.5L805.4 274.1L807.6 274.7L808.8 275.4L813.3 273.1L815.5 274.9L817.8 274.1L820 272.4L824.5 273.4L827.9 270.9L831.2 270.5L832.4 269.6L836.9 270.4L840.2 269.1L842.5 269.9L845.9 268.7L849.2 268.8L850.4 267.9L854.8 267.9L856 269.1L858.2 268L863.8 266.8L866.1 266.1L868.3 266.8L872.8 265.6L875.1 267.4L876.2 268.1L880.7 269.9L882.9 270.4L887.4 268.3L888.6 267.5L893.1 266.4L896.4 266L898.7 266.7L899.8 267.9L904.3 265.5L907.7 266.9L908.8 265.7L911 266.9L914.4 268.3L920 267.6L921.2 266.4L923.4 266.2L927.9 266.7L930.1 266.1L933.5 264.9L935.8 265.7L938 265L941.4 266.1L945.9 264.7L949.2 264.3L950.4 263.5L954.9 263.5L957.1 261.8L958.2 262.2L960.5 261.1L963.9 261L967.2 262.8L969.5 261.8" fill="none" stroke="#5b8fab" stroke-width="1.3" stroke-dasharray="3 2" stroke-linejoin="round"/>
+<path d="M975.5 274.8L976.5 277.8L977.5 276.7L978.4 280.8L979.4 284.8L980.4 282L981.4 290.4L982.4 291L983.4 286.3L984.4 280.4L985.4 271.9L986.4 269.1L987.4 269.5L988.3 262.4L989.3 269.2L990.3 267.1L991.3 263.2L992.3 268.3L993.3 262.8L994.3 265.5L995.3 276.7L996.3 276.6L997.2 269.6L998.2 273.8L999.2 273.3L1000.2 278.2L1001.2 275.6L1002.2 274.6L1003.2 276.9L1004.2 273.2L1005.2 267.4L1006.2 266.7L1007.1 266L1008.1 261" fill="none" stroke="#d9973f" stroke-width="1.5" stroke-linejoin="round"/>
+<text x="32" y="280" fill="#7f8790" font-size="11" text-anchor="end" font-weight="500">W6</text>
+<text x="563.4" y="269" fill="#8fa9b8" font-size="10.5">+10,100</text>
+<text x="1072" y="274" fill="#3fbf8a" font-size="12" text-anchor="end" font-weight="600">+410</text>
+<text x="1072" y="288" fill="#7f8790" font-size="10.5" text-anchor="end">107,600</text>
+<text x="244.7" y="322" fill="#7f8790" font-size="11" text-anchor="middle">2023-07</text>
+<text x="453.9" y="322" fill="#7f8790" font-size="11" text-anchor="middle">2024-01</text>
+<text x="660.9" y="322" fill="#7f8790" font-size="11" text-anchor="middle">2024-07</text>
+<text x="870.1" y="322" fill="#7f8790" font-size="11" text-anchor="middle">2025-01</text>
+</svg>
+</div>
+<div style="height: 1px; flex: none; background: #23272d"></div>
+<section style="flex: 1; min-height: 0; background: #14171b; display: flex">
+<div style="width: 640px; flex: none; display: flex; flex-direction: column; border-right: 1px solid #23272d">
+<div style="height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; white-space: nowrap">
+<span style="font-weight: 600; margin-right: 4px">Per window</span>
+<button class="chip"><span class="t3">By</span>IS net profit<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+<span class="chip num">Trades ≥ 30<button aria-label="Remove condition" class="t3" style="display: inline-flex"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span><span class="chip num">Max DD ≤ 15%<button aria-label="Remove condition" class="t3" style="display: inline-flex"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span><button class="chip t2" style="border-style: dashed">+ Condition</button>
+</div>
+<table class="lb num" style="table-layout: fixed">
+
+<thead><tr><th style="width: 58px; text-align: left">Window</th><th style="width: 156px; text-align: left">OOS range</th><th style="width: 150px; text-align: left">Selected parameters</th><th style="width: 76px">IS</th><th style="width: 84px; color: #e8eaed">OOS</th><th style="width: 56px">WFE</th><th style="width: 60px; padding-right: 12px">Trades</th></tr></thead>
+<tbody>
+<tr><td style="text-align: left">W1</td><td style="text-align: left" class="t2">24-01-01 → 03-31</td><td style="text-align: left">24, 2.00, close, off</td><td>+9,840</td><td class="up">+2,310</td><td>0.94</td><td style="padding-right: 12px">41</td></tr>
+<tr><td style="text-align: left">W2</td><td style="text-align: left" class="t2">24-04-01 → 06-30</td><td style="text-align: left">26, 2.00, close, off</td><td>+11,200</td><td class="up">+1,120</td><td>0.40</td><td style="padding-right: 12px">38</td></tr>
+<tr class="cur"><td style="text-align: left">W3</td><td style="text-align: left" class="t2">24-07-01 → 09-30</td><td style="text-align: left">26, 2.25, close, off</td><td>+10,450</td><td class="dn">−860</td><td class="dn">−0.33</td><td style="padding-right: 12px">35</td></tr>
+<tr><td style="text-align: left">W4</td><td style="text-align: left" class="t2">24-10-01 → 12-31</td><td style="text-align: left">30, 2.25, hl2, off</td><td>+8,900</td><td class="up">+2,980</td><td>1.34</td><td style="padding-right: 12px">44</td></tr>
+<tr><td style="text-align: left">W5</td><td style="text-align: left" class="t2">25-01-01 → 03-31</td><td style="text-align: left">26, 2.00, close, off</td><td>+12,300</td><td class="up">+1,640</td><td>0.53</td><td style="padding-right: 12px">39</td></tr>
+<tr><td style="text-align: left">W6</td><td style="text-align: left" class="t2">25-04-01 → 05-04</td><td style="text-align: left">28, 2.00, close, off</td><td>+10,100</td><td class="up">+410</td><td>0.44</td><td style="padding-right: 12px">12</td></tr>
+<tr><td style="font-weight: 600; color: #e8eaed; border-top: 1px solid #2f353c">Total</td><td style="text-align: left; border-top: 1px solid #2f353c" class="t2">24-01-01 → 25-05-04</td><td style="text-align: left; border-top: 1px solid #2f353c">5 / 6 profitable</td><td style=" border-top: 1px solid #2f353c">+62,790</td><td class="up" style="font-weight: 600; border-top: 1px solid #2f353c">+7,600</td><td style="font-weight: 600; border-top: 1px solid #2f353c">0.54</td><td style="padding-right: 12px; border-top: 1px solid #2f353c">209</td></tr>
+</tbody>
+</table>
+<div style="flex: 1"></div>
+<div style="flex: none; margin: 0 12px 14px; padding: 12px 14px; border: 1px solid #2f353c; border-radius: 5px; display: flex; align-items: center; gap: 16px">
+<div style="flex: 1; display: flex; flex-direction: column; gap: 5px">
+<span class="t2" style="font-size: 12px">Fixed parameters for every window</span>
+<span class="num" style="display: flex; gap: 14px; white-space: nowrap"><span><span class="t3">Length </span><b style="font-weight: 600">27</b></span><span><span class="t3">Multiplier </span><b style="font-weight: 600">2.00</b></span><span><span class="t3">Source </span><b style="font-weight: 600">close</b></span><span><span class="t3">Stop </span><b style="font-weight: 600">Off</b></span></span>
+</div>
+<button class="primary">Apply to inputs</button>
+</div>
+</div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 0 16px">
+<div style="height: 44px; flex: none; display: flex; align-items: center; gap: 10px">
+<div class="seg sm" role="group" aria-label="Right view"><button class="on">Stability</button><button>Window map</button></div>
+<span style="flex: 1"></span>
+<button class="chip num"><span class="t3">Tolerance</span>10%<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+</div>
+
+<div class="num t3" style="height: 18px; flex: none; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); margin-left: 172px; font-size: 11.5px; text-align: center">
+<span>W1</span><span>W2</span><span style="color: #f5b155; font-weight: 600">W3</span><span>W4</span><span>W5</span><span>W6</span>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; flex: 1; min-height: 0; border-top: 1px solid #1f2328">
+<div style="width: 160px; flex: none; display: flex; flex-direction: column; gap: 3px"><span>Length</span><span class="num" style="font-size: 12px">Common 26–28</span><span class="t3 num" style="font-size: 12px">Fixed at 27, mean loss 1.6%</span></div>
+<div style="position: relative; flex: 1; min-width: 0">
+<svg width="260" height="64" viewBox="0 0 260 64" style="display: block" aria-hidden="true"><rect x="0" y="25.9" width="260" height="12.2" fill="rgba(242,163,58,0.16)"/><rect x="15.7" y="19.7" width="12" height="30.9" rx="2" fill="#2c4a5c"/><circle cx="21.7" cy="41.3" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="59" y="22.8" width="12" height="21.6" rx="2" fill="#2c4a5c"/><circle cx="65" cy="35.1" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="102.3" y="19.7" width="12" height="21.6" rx="2" fill="#2c4a5c"/><circle cx="108.3" cy="35.1" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="145.7" y="10.3" width="12" height="27.8" rx="2" fill="#2c4a5c"/><circle cx="151.7" cy="22.7" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="189" y="25.9" width="12" height="21.6" rx="2" fill="#2c4a5c"/><circle cx="195" cy="35.1" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="232.3" y="16.6" width="12" height="21.6" rx="2" fill="#2c4a5c"/><circle cx="238.3" cy="28.9" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/></svg>
+<span class="t3 num" style="position: absolute; left: -2px; top: -2px; font-size: 10.5px">36</span><span class="t3 num" style="position: absolute; left: -2px; bottom: -2px; font-size: 10.5px">18</span>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; flex: 1; min-height: 0; border-top: 1px solid #1f2328">
+<div style="width: 160px; flex: none; display: flex; flex-direction: column; gap: 3px"><span>Multiplier</span><span class="num" style="font-size: 12px">Common 2.00–2.25</span><span class="t3 num" style="font-size: 12px">Fixed at 2.00, mean loss 2.5%</span></div>
+<div style="position: relative; flex: 1; min-width: 0">
+<svg width="260" height="64" viewBox="0 0 260 64" style="display: block" aria-hidden="true"><rect x="0" y="23.4" width="260" height="17.2" fill="rgba(242,163,58,0.16)"/><rect x="15.7" y="23.4" width="12" height="28.4" rx="2" fill="#2c4a5c"/><circle cx="21.7" cy="37.6" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="59" y="23.4" width="12" height="28.4" rx="2" fill="#2c4a5c"/><circle cx="65" cy="37.6" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="102.3" y="12.2" width="12" height="28.4" rx="2" fill="#2c4a5c"/><circle cx="108.3" cy="26.4" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="145.7" y="12.2" width="12" height="28.4" rx="2" fill="#2c4a5c"/><circle cx="151.7" cy="26.4" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="189" y="23.4" width="12" height="28.4" rx="2" fill="#2c4a5c"/><circle cx="195" cy="37.6" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="232.3" y="23.4" width="12" height="28.4" rx="2" fill="#2c4a5c"/><circle cx="238.3" cy="37.6" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/></svg>
+<span class="t3 num" style="position: absolute; left: -2px; top: -2px; font-size: 10.5px">2.75</span><span class="t3 num" style="position: absolute; left: -2px; bottom: -2px; font-size: 10.5px">1.50</span>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; flex: 1; min-height: 0; border-top: 1px solid #1f2328">
+<div style="width: 160px; flex: none; display: flex; flex-direction: column; gap: 3px"><span>Source</span><span class="num" style="font-size: 12px">close: all near-optimal</span><span class="t3 num" style="font-size: 12px">Fixed at close, mean loss 0.9%</span></div>
+<div style="position: relative; flex: 1; min-width: 0">
+<svg width="260" height="64" viewBox="0 0 260 64" style="display: block" aria-hidden="true"><rect x="0" y="29" width="260" height="24.7" fill="rgba(242,163,58,0.16)"/><rect x="15.7" y="10.3" width="12" height="43.3" rx="2" fill="#2c4a5c"/><circle cx="21.7" cy="50.7" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="59" y="29" width="12" height="24.7" rx="2" fill="#2c4a5c"/><circle cx="65" cy="50.7" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="102.3" y="10.3" width="12" height="43.3" rx="2" fill="#2c4a5c"/><circle cx="108.3" cy="50.7" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="145.7" y="10.3" width="12" height="43.3" rx="2" fill="#2c4a5c"/><circle cx="151.7" cy="32" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="189" y="29" width="12" height="24.7" rx="2" fill="#2c4a5c"/><circle cx="195" cy="50.7" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="232.3" y="10.3" width="12" height="43.3" rx="2" fill="#2c4a5c"/><circle cx="238.3" cy="50.7" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/></svg>
+
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; flex: 1; min-height: 0; border-top: 1px solid #1f2328">
+<div style="width: 160px; flex: none; display: flex; flex-direction: column; gap: 3px"><span>Use trailing stop</span><span class="num" style="font-size: 12px">Off: all near-optimal</span><span class="t3 num" style="font-size: 12px">Fixed at off, mean loss 0.0%</span></div>
+<div style="position: relative; flex: 1; min-width: 0">
+<svg width="260" height="64" viewBox="0 0 260 64" style="display: block" aria-hidden="true"><rect x="0" y="43" width="260" height="6" fill="rgba(242,163,58,0.16)"/><rect x="15.7" y="43" width="12" height="6" rx="2" fill="#2c4a5c"/><circle cx="21.7" cy="46" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="59" y="15" width="12" height="34" rx="2" fill="#2c4a5c"/><circle cx="65" cy="46" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="102.3" y="43" width="12" height="6" rx="2" fill="#2c4a5c"/><circle cx="108.3" cy="46" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="145.7" y="43" width="12" height="6" rx="2" fill="#2c4a5c"/><circle cx="151.7" cy="46" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="189" y="15" width="12" height="34" rx="2" fill="#2c4a5c"/><circle cx="195" cy="46" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/><rect x="232.3" y="43" width="12" height="6" rx="2" fill="#2c4a5c"/><circle cx="238.3" cy="46" r="3.2" fill="#e8eaed" stroke="#14171b" stroke-width="1.5"/></svg>
+
+</div>
+</div>
+</div>
+</section>
+<div class="num" style="height: 60px; flex: none; display: flex; align-items: center; gap: 18px; padding: 0 12px 0 16px; background: #1b1f24; border-top: 1px solid #2f353c; white-space: nowrap">
+<span class="am" style="font-size: 18px; font-weight: 700">W3</span>
+<span style="display: flex; gap: 14px"><span><span class="t3">OOS </span><b style="font-weight: 600">2024-07-01 – 09-30</b></span><span><span class="t3">Selected </span><b style="font-weight: 600">26, 2.25, close, off</b></span></span>
+<span style="width: 1px; height: 20px; background: #2f353c"></span>
+<span style="display: flex; gap: 14px"><span><span class="t3">IS </span><span class="up">+10,450</span></span><span><span class="t3">OOS </span><span class="dn">−860</span></span><span><span class="t3">WFE </span><span class="dn">−0.33</span></span></span>
+<span style="flex: 1"></span>
+<button class="ghost">View backtest</button>
+
+</div>
+</main><aside style="width: 336px; flex: none; display: flex; flex-direction: column; background: #14171b; border-left: 1px solid #23272d; position: relative; ">
+
+<div style="flex: 1; min-height: 0; padding: 12px 16px 0; display: flex; flex-direction: column; gap: 22px; overflow: hidden; position: relative">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div class="sec"><span>Search ranges</span><div class="seg sm" role="group" aria-label="Search method"><button class="on">Grid</button><button>Random</button></div></div>
+<div style="display: flex; flex-direction: column; gap: 7px">
+<div style="display: flex; align-items: center; gap: 10px"><button class="cb on" role="checkbox" aria-checked="true" aria-label="Optimize Length"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#1a1206" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.4 2.3 4.6-5"/></svg></button><span style="flex: 1">Length</span><span class="t2 num">41</span></div>
+<div class="num" style="display: flex; align-items: center; gap: 6px; padding-left: 25px">
+<input class="mini" value="10" aria-label="Length from" style="width: 60px"><span class="t3">to</span><input class="mini" value="50" aria-label="Length to" style="width: 60px"><span class="t3" style="margin-left: 6px">Step</span><input class="mini" value="1" aria-label="Length step" style="width: 52px">
+</div>
+
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px">
+<div style="display: flex; align-items: center; gap: 10px"><button class="cb on" role="checkbox" aria-checked="true" aria-label="Optimize Multiplier"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#1a1206" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.4 2.3 4.6-5"/></svg></button><span style="flex: 1">Multiplier</span><span class="t2 num">9</span></div>
+<div class="num" style="display: flex; align-items: center; gap: 6px; padding-left: 25px">
+<input class="mini" value="1.00" aria-label="Multiplier from" style="width: 60px"><span class="t3">to</span><input class="mini" value="3.00" aria-label="Multiplier to" style="width: 60px"><span class="t3" style="margin-left: 6px">Step</span><input class="mini" value="0.25" aria-label="Multiplier step" style="width: 52px">
+</div>
+
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px">
+<div style="display: flex; align-items: center; gap: 10px"><button class="cb on" role="checkbox" aria-checked="true" aria-label="Optimize Source"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#1a1206" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.4 2.3 4.6-5"/></svg></button><span style="flex: 1">Source</span><span class="t2 num">3</span></div>
+<div style="display: flex; align-items: center; gap: 6px; padding-left: 25px; flex-wrap: wrap"><button class="chip on">close</button><button class="chip on">hl2</button><button class="chip on">ohlc4</button><button class="chip t2">5 more</button></div>
+
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px">
+<div style="display: flex; align-items: center; gap: 10px"><button class="cb on" role="checkbox" aria-checked="true" aria-label="Optimize Use trailing stop"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#1a1206" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.4 2.3 4.6-5"/></svg></button><span style="flex: 1">Use trailing stop</span><span class="t2 num">2</span></div>
+<div style="display: flex; align-items: center; gap: 6px; padding-left: 25px; flex-wrap: wrap"><button class="chip on">Off</button><button class="chip on">On</button></div>
+
+</div>
+<div style="display: flex; align-items: center; gap: 10px; height: 28px"><button class="cb" role="checkbox" aria-checked="false" aria-label="Optimize Trail %"></button><span style="flex: 1" class="t2">Trail %</span><span class="t3" style="font-size: 12px">Fixed</span><input class="mini" value="3.0" aria-label="Trail % fixed value" style="width: 60px"></div>
+
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div class="sec"><span>Validation</span></div>
+<div class="seg" style="width: 100%; height: 32px" role="group" aria-label="Validation"><button style="flex: 1">None</button><button style="flex: 1">IS / OOS</button><button class="on" style="flex: 1">Walk-forward</button></div>
+<div class="num" style="display: flex; align-items: center; gap: 6px; white-space: nowrap">
+<span class="t2">IS</span><input class="mini" value="12" aria-label="IS months" style="width: 42px">
+<span class="t2" style="margin-left: 6px">OOS</span><input class="mini" value="3" aria-label="OOS months" style="width: 36px">
+<span class="t2" style="margin-left: 6px">Step</span><input class="mini" value="3" aria-label="Step in months" style="width: 36px">
+<span class="t3">months</span>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between"><span class="t2">IS start</span><div class="seg sm" role="group" aria-label="Window mode"><button class="on">Rolls forward</button><button>Anchored</button></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div class="sec"><span>Per-window selection and filters</span></div>
+<button class="sel"><span><span class="t3">By </span>IS net profit<span class="t3">, max</span></span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+<div style="display: flex; flex-wrap: wrap; gap: 6px"><span class="chip num">Trades ≥ 30<button aria-label="Remove condition" class="t3" style="display: inline-flex"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span><span class="chip num">Max DD ≤ 15%<button aria-label="Remove condition" class="t3" style="display: inline-flex"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span><button class="chip t2" style="border-style: dashed">+ Condition</button></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div class="sec"><span>Properties</span><a href="#" style="font-size: 12.5px; font-weight: 400">Edit</a></div>
+<div class="num t2" style="display: flex; gap: 14px; font-size: 12.5px"><span>Commission 0.1%</span><span>Slippage 1 tick</span><span>100% of equity</span></div>
+</div>
+
+
+</div>
+<div style="flex: none; border-top: 1px solid #23272d; padding: 14px 16px 16px; display: flex; align-items: center; gap: 12px">
+<div class="num" style="flex: 1; display: flex; flex-direction: column; gap: 2px"><div style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 20px; font-weight: 600">13,284</span><span class="t2">backtests</span></div><span class="t3" style="font-size: 12px">Last run 29:06, 7 threads</span></div>
+<button class="primary" style="height: 36px; padding: 0 16px"><svg width="11" height="11" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>Re-optimize</button>
+</div>
+</aside>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>优化结果 · 样本内 vs 样本外</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&amp;family=Noto+Sans+SC:wght@400;500;700&amp;family=Source+Code+Pro:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#0e1013;color:#e8eaed;font-family:"Barlow","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;line-height:1.35;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#f5b155;text-decoration:none}a:hover{color:#ffc877}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;text-align:inherit}
+input{font:inherit;color:inherit;min-width:0}
+.num{font-variant-numeric:tabular-nums}
+.t2{color:#aab1b9}.t3{color:#7f8790}.up{color:#3fbf8a}.dn{color:#f06a5d}.am{color:#f5b155}
+.tb{height:30px;display:inline-flex;align-items:center;gap:8px;padding:0 10px;border-radius:4px;font-size:13px;white-space:nowrap}
+.tb:hover,.tb.on{background:#1b1f24}
+.seg{display:inline-flex;height:30px;padding:2px;gap:2px;background:#14171b;border:1px solid #23272d;border-radius:5px;flex:none}
+.seg>button{padding:0 10px;border-radius:3px;font-size:12.5px;color:#aab1b9;white-space:nowrap;text-align:center}
+.seg>button.on{background:#282d34;color:#e8eaed}
+.seg.sm{height:26px}.seg.sm>button{font-size:12px;padding:0 9px}
+.primary{height:32px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;border-radius:4px;background:#f2a33a;color:#1a1206;font-weight:600;font-size:13px;white-space:nowrap}
+.primary:hover{background:#f6b04d}
+.primary.off{background:#3a3327;color:#8d8370;cursor:default}
+.ghost{height:32px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;border-radius:4px;border:1px solid #2f353c;color:#e8eaed;font-weight:500;font-size:13px;white-space:nowrap}
+.ghost:hover{background:#1b1f24}
+kbd{font:inherit;font-size:11px;font-weight:500;padding:1px 5px;border-radius:3px;background:rgba(26,18,6,.16)}
+.iconbtn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;color:#aab1b9;flex:none}
+.iconbtn:hover{background:#1b1f24;color:#e8eaed}
+.iconbtn.on{color:#f5b155}
+.dtab{position:relative;display:inline-flex;align-items:center;gap:6px;padding:0 12px;font-size:13px;color:#aab1b9;white-space:nowrap}
+.dtab.on{color:#e8eaed;font-weight:500}
+.dtab.on::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;background:#f2a33a}
+.rtab{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:40px;position:relative;font-size:13px;color:#aab1b9;white-space:nowrap}
+.rtab.on{color:#e8eaed;font-weight:500}
+.rtab.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#f2a33a}
+.mtab{height:48px;display:inline-flex;align-items:center;gap:6px;padding:0 2px;font-size:14px;color:#aab1b9;position:relative;white-space:nowrap}
+.mtab:hover{color:#e8eaed}
+.mtab.on{color:#e8eaed;font-weight:600}
+.mtab.on::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:#f2a33a}
+.cnt{font-size:11.5px;color:#7f8790;font-variant-numeric:tabular-nums}
+.cnt.bad{color:#1a0b09;background:#f06a5d;border-radius:8px;padding:0 5px;font-weight:600}
+.sec{display:flex;align-items:center;justify-content:space-between;height:28px;font-size:13px;font-weight:600}
+.field{height:32px;display:flex;align-items:center;border:1px solid #2f353c;border-radius:4px;background:#0f1215;font-size:13px;font-variant-numeric:tabular-nums}
+.field .k{width:30px;height:100%;display:flex;align-items:center;justify-content:center;color:#7f8790}
+.field .v{flex:1;text-align:center;background:none;border:0;width:100%;outline:none}
+.sel{height:32px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 10px;border:1px solid #2f353c;border-radius:4px;background:#0f1215;font-size:13px;width:100%}
+.inp{height:32px;border:1px solid #2f353c;border-radius:4px;background:#0f1215;padding:0 10px;font-size:13px;outline:none;width:100%;font-variant-numeric:tabular-nums}
+.mini{height:28px;display:flex;align-items:center;padding:0 8px;border:1px solid #2f353c;border-radius:4px;background:#0f1215;font-size:12.5px;font-variant-numeric:tabular-nums;outline:none}
+.field.err,.inp.err,.mini.err,.sel.err{border-color:#f06a5d}
+.field.foc,.inp.foc,.mini.foc,.sel.foc{border-color:#f2a33a}
+.errt{font-size:12px;color:#f58a7f}
+.lab{font-size:12.5px;color:#aab1b9}
+.sw{width:34px;height:20px;border-radius:10px;background:#2f353c;position:relative;flex:none}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:7px;background:#aab1b9}
+.sw.on{background:#f2a33a}.sw.on::after{left:17px;background:#1a1206}
+.kv{display:flex;align-items:center;justify-content:space-between;gap:12px;height:31px;border-top:1px solid #1f2328;font-size:13px;white-space:nowrap}
+.kv>span:first-child{color:#aab1b9}
+.chip{height:26px;display:inline-flex;align-items:center;gap:6px;padding:0 9px;border-radius:13px;border:1px solid #2f353c;font-size:12.5px;white-space:nowrap}
+.chip.on{border-color:#6b5227;background:#241c10;color:#f5c27a}
+.chip.bad{border-color:#7a3a33;color:#f58a7f}
+.cb{width:15px;height:15px;border-radius:3px;border:1px solid #4a525c;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.cb.on{background:#f2a33a;border-color:#f2a33a}
+.tag{height:18px;padding:0 6px;border-radius:3px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;white-space:nowrap;background:#282d34;color:#aab1b9}
+.tag.am{background:#3a2c16;color:#f5b155}.tag.dn{background:#3b1f1c;color:#f58a7f}.tag.bl{background:#1c3340;color:#8fd0f0}
+table{border-collapse:collapse;width:100%}
+th{font-weight:500;font-size:12px;color:#7f8790;text-align:right;padding:0 0 6px 8px;white-space:nowrap}
+th:first-child{text-align:left;padding-left:0}
+td{font-size:12.5px;text-align:right;padding:0 0 0 8px;height:25px;border-top:1px solid #1f2328;white-space:nowrap;font-variant-numeric:tabular-nums}
+td:first-child{text-align:left;padding-left:0;color:#aab1b9}
+.lb th{font-size:12px;padding:0 8px;height:30px;border-bottom:1px solid #23272d}
+.lb td{height:30px;padding:0 8px;border-top:0;border-bottom:1px solid #1b1f24}
+.lb td:first-child{padding-left:12px}.lb th:first-child{padding-left:12px}
+.lb tr.cur td{background:#221b11}
+.lb tr.cur td:first-child{color:#f5b155}
+.lb.sm td{height:26px}
+.code{font-family:"Source Code Pro",Consolas,monospace;font-size:12.5px;line-height:19px}
+.cl{display:flex;height:19px;border-left:2px solid transparent;white-space:pre}
+.cl .ln{width:46px;flex:none;text-align:right;padding-right:14px;color:#4f565f}
+.cl.in{background:rgba(242,163,58,0.06);border-left-color:#f2a33a}.cl.in .ln{color:#aab1b9}
+.cl.fx{background:rgba(255,255,255,0.025);border-left-color:#3a4048}.cl.fx .ln{color:#aab1b9}
+.cl.er{background:rgba(240,106,93,0.10);border-left-color:#f06a5d}.cl.er .ln{color:#f58a7f}
+.cl.cu{background:rgba(255,255,255,0.035)}
+.kw{color:#8fb8de}.fn{color:#d9c38c}.st{color:#a9c98f}.nu{color:#e0a577}.cm{color:#6b727b}
+.sq{text-decoration:underline wavy #f06a5d;text-underline-offset:3px}
+.menu{position:absolute;background:#1b1f24;border:1px solid #2f353c;border-radius:6px;box-shadow:0 14px 36px rgba(0,0,0,.55);padding:4px;font-size:13px;display:flex;flex-direction:column}
+.mi{height:30px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:4px;white-space:nowrap;width:100%}
+.mi:hover,.mi.on{background:#2a3038}
+.mh{height:26px;display:flex;align-items:center;padding:0 10px;font-size:11.5px;color:#7f8790}
+.msep{height:1px;background:#2f353c;margin:4px 0;flex:none}
+.dlg{background:#14171b;border:1px solid #2f353c;border-radius:8px;box-shadow:0 24px 64px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden}
+.toast{position:absolute;display:flex;align-items:center;gap:12px;height:40px;padding:0 8px 0 14px;border-radius:6px;background:#282d34;border:1px solid #3a4048;box-shadow:0 12px 28px rgba(0,0,0,.5);font-size:13px;white-space:nowrap}
+.bar{height:4px;border-radius:2px;background:#2f353c;position:relative;overflow:hidden}
+.bar>i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:#f2a33a}
+.note{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:4px;font-size:12.5px;line-height:1.45;background:#1b1f24;color:#aab1b9}
+.note.am{background:#241c10;color:#f5c27a}.note.dn{background:#2a1715;color:#f5a59c}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: #0e1013; color: #e8eaed; overflow: hidden; position: relative">
+<header style="height: 48px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 12px 0 16px; border-bottom: 1px solid #23272d; background: #0e1013">
+<div style="display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 15px; white-space: nowrap; padding-right: 6px"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="1.5" y="7" width="3.5" height="9" rx="1" fill="#f2a33a"/><rect x="7.25" y="2" width="3.5" height="14" rx="1" fill="#f2a33a"/><rect x="13" y="9.5" width="3.5" height="6.5" rx="1" fill="#7a5a26"/></svg><span>Pine Optimizer</span></div>
+<div style="width: 1px; height: 22px; background: #23272d"></div>
+<nav style="display: flex; gap: 18px; align-self: stretch; padding: 0 6px" aria-label="页面"><button class="mtab">回测</button><button class="mtab on" aria-current="page">优化<span style="width: 6px; height: 6px; border-radius: 6px; background: #f2a33a; flex: none"></span></button></nav>
+<div style="width: 1px; height: 22px; background: #23272d"></div>
+<button class="tb" aria-label="脚本 trend_breakout.pine"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#aab1b9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 1.5h5.5L13 5v9.5H4z"/><path d="M9.5 1.5V5H13"/></svg><span>trend_breakout.pine</span><span style="width: 7px; height: 7px; border-radius: 7px; background: #3fbf8a; flex: none"></span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+<button class="tb"><span style="font-weight: 600">BTCUSDT</span><span class="t3">Binance</span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+<div class="seg" role="group" aria-label="周期"><button>15m</button><button class="on">1h</button><button>4h</button><button>1D</button></div>
+<button class="tb num"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#aab1b9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg><span>2023-01-02 – 2025-05-04</span></button>
+<div style="flex: 1"></div>
+<span class="num" style="font-size: 12px; white-space: nowrap; display: flex; align-items: center; gap: 10px"><span class="t3">优化 2,214 组，用时 10:09</span><a href="#" class="dn">2 组报错</a></span>
+<div class="seg" role="group" aria-label="语言"><button class="on">中</button><button>EN</button></div>
+</header>
+<div style="flex: 1; display: flex; min-height: 0">
+<main style="width: 1104px; flex: none; display: flex; flex-direction: column; min-width: 0; position: relative">
+<div class="num" style="height: 44px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 12px; border-bottom: 1px solid #23272d; font-size: 12px; white-space: nowrap">
+<span class="t2">数据区间</span>
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 2px; background: #6cb6dd"></span>样本内<span class="t2">2023-01-02 – 2024-08-20</span></span>
+<div style="flex: 1; height: 8px; border-radius: 4px; overflow: hidden; display: flex"><div style="width: 70%; background: #3b6f8c"></div><div style="width: 30%; background: #f2a33a"></div></div>
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 2px; background: #f2a33a"></span>样本外<span class="t2">2024-08-21 – 2025-05-04</span></span>
+</div>
+<div style="height: 32px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 12px; font-size: 12px; white-space: nowrap">
+<span style="font-weight: 600; font-size: 13px">汇总</span>
+<div class="num" style="display: flex; align-items: center; gap: 14px"><span class="t2">每个点是一组参数，共 2,214 组</span><span style="display: flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 4px; background: #3fbf8a"></span><span class="t2">样本外盈利</span></span><span style="display: flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 4px; background: #f06a5d"></span><span class="t2">样本外亏损</span></span><span style="display: flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 4px; background: #e8eaed"></span><span class="t2">排行前 13</span></span><span style="display: flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 4px; background: #f2a33a"></span><span class="t2">#1</span></span></div>
+<div style="flex: 1"></div>
+<div class="seg sm" role="group" aria-label="汇总图"><button>前 20 组权益</button><button class="on">样本内 vs 样本外</button><button>净利润分布</button></div>
+</div>
+<div style="height: 200px; flex: none; border-bottom: 1px solid #23272d"><svg width="1104" height="200" viewBox="0 0 1104 200" style="display: block" role="img" aria-label="样本内 vs 样本外"><line x1="98.4" x2="98.4" y1="12" y2="170" stroke="#1a1d22" stroke-width="1"/>
+<line x1="666.6" x2="666.6" y1="12" y2="170" stroke="#1a1d22" stroke-width="1"/>
+<line x1="950.8" x2="950.8" y1="12" y2="170" stroke="#1a1d22" stroke-width="1"/>
+<line x1="70" x2="1036" y1="40.4" y2="40.4" stroke="#1a1d22" stroke-width="1"/>
+<line x1="70" x2="1036" y1="121.4" y2="121.4" stroke="#3a4048" stroke-width="1"/>
+<line x1="382.5" x2="382.5" y1="12" y2="170" stroke="#3a4048" stroke-width="1"/>
+<path d="M211.5 137.4h0.01M302.4 128.2h0.01M268.9 153.8h0.01M228 135.4h0.01M253.3 148.4h0.01M278.3 148.1h0.01M324 133.3h0.01M327.1 150.6h0.01M274.6 157.3h0.01M254.7 157.5h0.01M226.3 159.5h0.01M260.1 159.5h0.01M391.9 147.2h0.01M307.8 152.6h0.01M280.2 159.4h0.01M278.3 140.5h0.01M382.5 134.1h0.01M276.8 158.5h0.01M303.5 135h0.01M240.8 151.2h0.01M326.8 128.4h0.01M257.8 154.9h0.01M560.4 137.9h0.01M459.8 133.5h0.01M353.3 152.8h0.01M261.5 145.1h0.01M360.4 153.1h0.01M268.3 156.1h0.01M268.3 153.5h0.01M373.2 123.2h0.01M288.8 151h0.01M448.2 137.2h0.01M301 131.8h0.01M434.2 129.8h0.01M438.8 124h0.01M478.6 131.3h0.01M453.6 135.5h0.01M413.5 133.5h0.01M416.9 141.9h0.01M410.1 149.3h0.01M435.9 129.3h0.01M275.4 156.2h0.01M399.9 158.3h0.01M524.3 123.5h0.01M457 128.6h0.01M255.2 160.9h0.01M333.1 126.8h0.01M249.6 133.2h0.01M253 121.8h0.01M425.4 130.4h0.01M299 128.7h0.01M227.4 156.5h0.01M377.1 152.1h0.01M455.5 136.8h0.01M442.2 130.4h0.01M333.9 140h0.01M230.8 160.1h0.01M214.3 153.6h0.01M352.7 130.9h0.01M388.8 142h0.01M272 147.9h0.01M216.9 157.6h0.01M268.6 144.6h0.01M258.4 154h0.01M222.9 155.8h0.01M270.3 150.1h0.01M317.8 127.4h0.01M299 129.6h0.01M208.1 150.4h0.01M223.7 161.4h0.01M251 153.6h0.01M235.9 152.3h0.01M242.5 156h0.01M211.8 151.2h0.01M238.8 158.3h0.01M241 157.7h0.01M224 154.8h0.01M222.3 156.1h0.01M223.7 158.3h0.01M214.9 161.3h0.01M211.8 160.4h0.01M218 159.6h0.01M219.7 122.9h0.01M211.8 148.6h0.01M249.8 159.9h0.01M217.2 156.4h0.01M262.9 147.1h0.01M244.2 144.6h0.01M243.9 150.5h0.01M334.2 156.6h0.01M292.7 136.9h0.01M231.9 154.8h0.01M237.9 152.9h0.01M294.2 129.7h0.01M356.7 129.6h0.01M392.8 130.6h0.01M204.1 149.2h0.01M318.9 128.3h0.01M351 141.3h0.01M254.1 151.5h0.01M205.5 156.4h0.01M234.8 154h0.01M367.2 146.1h0.01M487.4 125.2h0.01M404.1 141.2h0.01M229.1 162.2h0.01M241.6 142.5h0.01M531.1 139.2h0.01M205.5 146.2h0.01M467.8 151.4h0.01M310.9 154.4h0.01M228 159.2h0.01M259.2 150.1h0.01M373.4 142.3h0.01M242.7 159.1h0.01M259.5 148.9h0.01M387.9 153.2h0.01M247.3 132.9h0.01M422.6 132.4h0.01M385.7 142.8h0.01M294.7 126.1h0.01M313.2 146.6h0.01M415.8 150.3h0.01M308.9 123.4h0.01M264.6 144.8h0.01M460.4 129.6h0.01M269.5 151.8h0.01M267.7 162.4h0.01M410.4 155.3h0.01M560.7 136h0.01M226 158.1h0.01M340.5 137.5h0.01M443 136.1h0.01M341 148.9h0.01M212.3 148.1h0.01M236.2 133.2h0.01M467.8 134.8h0.01M342.2 131.8h0.01M242.2 159h0.01M302.7 142h0.01M305.2 132.2h0.01M264.1 140.3h0.01M247.9 150.4h0.01M265.2 156.7h0.01M381.1 143.2h0.01M447 129.6h0.01M248.4 134.4h0.01M228 146.3h0.01M198.1 157.4h0.01M413.2 159.9h0.01M425.1 156.4h0.01M296.4 138.6h0.01M367.2 150.2h0.01M341.3 159.9h0.01M238.5 160h0.01M218.6 164.7h0.01M218.6 157.8h0.01M264.1 154.1h0.01M255.8 161.6h0.01M304.4 124.2h0.01M201.5 157.7h0.01M245.9 147.4h0.01M202.1 154h0.01M221.4 143.7h0.01M253 160.4h0.01M192.5 157h0.01M204.4 161.1h0.01M165.2 163.9h0.01M202.7 144.7h0.01M196.7 159.9h0.01M176.5 158.3h0.01M203.8 160.1h0.01M192.7 156.5h0.01M215.2 160h0.01M262.3 153.6h0.01M197 156.1h0.01M200.1 150.1h0.01M266.9 150h0.01M307.5 157.8h0.01M204.1 161.6h0.01M209.5 157.5h0.01M338.8 142.8h0.01M218.9 160h0.01M376.8 143.7h0.01M374.9 123.6h0.01M343.6 149.9h0.01M273.7 155.2h0.01M189.3 133.9h0.01M418 147.8h0.01M348.4 149.4h0.01M370.9 141.4h0.01M368.9 145.7h0.01M228 130.9h0.01M289.3 133.3h0.01M279.4 147.7h0.01M234.5 123.2h0.01M340.8 127.8h0.01M235.6 160.2h0.01M398.4 127.3h0.01M535.7 133.2h0.01M576 127h0.01M258.9 163.4h0.01M264.3 150.5h0.01M268.3 159.3h0.01M394.7 147.1h0.01M288.8 156.4h0.01M282.5 135.7h0.01M418.6 143.5h0.01M260.9 131.9h0.01M288.5 148h0.01M432.8 124.5h0.01M406.7 130.1h0.01M403.8 144.6h0.01M294.7 145.8h0.01M350.1 156.5h0.01M360.9 133.3h0.01M233.4 157.7h0.01M303.3 148.4h0.01M228.8 152.5h0.01M313.8 137.3h0.01M320 123.2h0.01M251.3 153.1h0.01M286.2 130.5h0.01M418.9 129.5h0.01M212.9 143.3h0.01M322 159.1h0.01M269.7 142.2h0.01M212.9 142.9h0.01M314.6 148.5h0.01M356.7 124.6h0.01M297.9 142.7h0.01M268.9 139.3h0.01M254.4 154.8h0.01M297 122.3h0.01M348.4 136.1h0.01M206.7 160.8h0.01M289.6 162.9h0.01M349.6 136.5h0.01M287.6 151.2h0.01M246.2 144.4h0.01M157.5 163.7h0.01M285.4 156.1h0.01M306.4 152.6h0.01M231.7 156h0.01M301.3 138h0.01M222.6 162.1h0.01M210.4 160h0.01M234.5 156.8h0.01M216.3 126.3h0.01M173.1 144.2h0.01M169.7 162.7h0.01M215.8 159.3h0.01M235.6 159.5h0.01M223.7 157.6h0.01M181.1 155.6h0.01M187.1 156.1h0.01M159.2 162.4h0.01M235.9 155.6h0.01M209.5 148.8h0.01M177.7 161.7h0.01M198.1 160.7h0.01M195.6 157.5h0.01M135.1 138.2h0.01M181.9 154h0.01M224.3 151.9h0.01M257.8 160.8h0.01M236.2 146.9h0.01M322.9 137.6h0.01M287.1 148.9h0.01M242.2 161.3h0.01M291.6 149.3h0.01M215.5 154.1h0.01M230.5 159.1h0.01M235.4 145.4h0.01M336.5 149.8h0.01M351.8 155.2h0.01M172.3 159.5h0.01M266.9 153.5h0.01M421.7 122.6h0.01M319.2 151h0.01M197.9 128.9h0.01M168.3 151.5h0.01M237.9 149.5h0.01M454.1 125.2h0.01M316 145.7h0.01M204.1 142h0.01M232.2 127.9h0.01M257.8 152.3h0.01M351.8 139.1h0.01M244.4 160.5h0.01M380 145.4h0.01M251 127.5h0.01M242.2 150.9h0.01M524.6 143.6h0.01M449.9 149.9h0.01M205.5 153.5h0.01M336.8 136.6h0.01M495 124.1h0.01M214.6 145.4h0.01M260.6 157.4h0.01M213.8 156.3h0.01M365.2 142.5h0.01M519.5 127.9h0.01M261.5 138.9h0.01M392.2 139.5h0.01M253 147.2h0.01M375.1 146h0.01M283.4 158.7h0.01M287.1 129.2h0.01M263.5 134.2h0.01M270.6 138.5h0.01M392.8 157.8h0.01M228.5 157.7h0.01M404.1 132.1h0.01M222.6 161h0.01M375.4 127.3h0.01M592.8 127h0.01M341 135h0.01M417.2 154h0.01M459.8 143.8h0.01M431.1 129.1h0.01M352.1 127.6h0.01M310.4 153.2h0.01M443.3 148.9h0.01M466.3 152.6h0.01M192.7 154h0.01M327.7 142h0.01M410.1 144.2h0.01M400.1 149h0.01M234.5 160.4h0.01M267.2 155.5h0.01M379.1 128.3h0.01M501.3 128h0.01M571.5 134.4h0.01M211.8 122.4h0.01M209.8 158.8h0.01M316.3 125.3h0.01M414.1 143.3h0.01M192.7 158.6h0.01M246.4 151.4h0.01M302.7 145.7h0.01M338.2 156.3h0.01M297 128.5h0.01M170.3 161.2h0.01M353.8 144.7h0.01M322.3 147.9h0.01M179.7 162.6h0.01M283.7 151.4h0.01M264.6 154.3h0.01M205.5 160.1h0.01M206.4 125.7h0.01M196.1 163.8h0.01M234.2 128.5h0.01M279.7 150.5h0.01M221.2 154.5h0.01M187.1 139h0.01M205.2 151.3h0.01M281.7 147.8h0.01M218 121.7h0.01M175.7 152.1h0.01M225.4 160.6h0.01M176.3 153.6h0.01M195.6 156.1h0.01M170.9 124.1h0.01M217.5 145.8h0.01M173.7 150.1h0.01M170.6 159.1h0.01M212.9 157.1h0.01M179.4 149.8h0.01M180.2 159.1h0.01M157.2 159.9h0.01M219.7 154.2h0.01M185.1 152.3h0.01M256.4 149.7h0.01M280.8 155.5h0.01M241 150.1h0.01M157.5 157.4h0.01M243 159h0.01M220.3 157.4h0.01M268.6 125.4h0.01M310.1 140.1h0.01M210.1 143.3h0.01M176.3 154.7h0.01M211.5 139.5h0.01M304.4 146.4h0.01M328.5 131.6h0.01M202.4 163.8h0.01M372 153.3h0.01M185.6 160.2h0.01M208.6 132.1h0.01M252.4 130.5h0.01M345.3 136.4h0.01M399.3 143.1h0.01M438.2 138.8h0.01M363.5 133h0.01M226.3 148.3h0.01M290.2 138.5h0.01M365.2 141.6h0.01M297.6 158.9h0.01M232.2 139.6h0.01M431.4 132.8h0.01M243.6 155.4h0.01M318.9 132h0.01M337.9 156.8h0.01M359.8 130.1h0.01M387.6 126.3h0.01M248.4 160.4h0.01M355.3 136h0.01M428 135.2h0.01M278.3 136.9h0.01M262.1 140.5h0.01M381.1 144.7h0.01M414.9 144.4h0.01M277.1 150h0.01M262.1 148.9h0.01M390.8 145h0.01M394.7 134.7h0.01M244.2 156.6h0.01M396.7 126.7h0.01M234.5 144.4h0.01M229.1 158.1h0.01M321.7 130.1h0.01M210.4 132.8h0.01M297.6 145h0.01M423.7 146.1h0.01M414.4 141.9h0.01M248.4 159.2h0.01M381.1 122.4h0.01M405 126.9h0.01M338.8 124.5h0.01M264.6 159h0.01M198.7 154.2h0.01M190.8 159.1h0.01M421.5 132.1h0.01M183.9 157.8h0.01M352.7 131.7h0.01M216.6 151h0.01M211.5 157.2h0.01M318 134h0.01M363.2 140.6h0.01M169.4 154.2h0.01M268 137.6h0.01M281.1 142.9h0.01M325.7 152.7h0.01M284.2 135.9h0.01M250.1 146.8h0.01M228 155.1h0.01M291.9 150.4h0.01M294.7 146.2h0.01M191 159.4h0.01M192.7 138.9h0.01M189 147.2h0.01M203 155.3h0.01M206.1 147.8h0.01M207.8 147.1h0.01M260.4 157.4h0.01M226 156h0.01M224.8 137.7h0.01M163.5 160.5h0.01M191 160.4h0.01M204.4 159.6h0.01M226.3 155.3h0.01M208.6 157.7h0.01M210.1 143.1h0.01M182.5 158.8h0.01M201.8 156.2h0.01M162.6 162.6h0.01M211.2 147.3h0.01M159.8 158h0.01M180.8 156.6h0.01M176.3 151.4h0.01M195.6 149.6h0.01M182.8 149.9h0.01M190.2 155.5h0.01M213.2 161.1h0.01M204.1 158.8h0.01M170.9 163.4h0.01M206.7 154.4h0.01M226.8 150.6h0.01M260.1 138.8h0.01M161.8 139.2h0.01M233.4 160.4h0.01M338.8 160.1h0.01M217.2 126.2h0.01M172.9 153.6h0.01M281.1 157.9h0.01M263.2 150.1h0.01M205.8 161.8h0.01M298.4 125.5h0.01M362.4 125.8h0.01M181.4 160.9h0.01M191 155.7h0.01M355.8 132.3h0.01M218.9 163.8h0.01M220 159.1h0.01M423.7 156.6h0.01M438.8 134.1h0.01M301.3 149.8h0.01M165.2 160.9h0.01M130.2 160h0.01M253.8 162.8h0.01M415.8 148.4h0.01M290.8 155.8h0.01M210.4 130.1h0.01M434.2 151.5h0.01M390.5 143.7h0.01M339.9 152h0.01M266 147.5h0.01M256.4 142.5h0.01M220.3 153.4h0.01M264.1 154.3h0.01M344.2 129.9h0.01M266.9 147.2h0.01M567.2 136.8h0.01M277.1 152.1h0.01M304.4 148.6h0.01M358.1 148.5h0.01M230.8 159.7h0.01M268.9 139.2h0.01M246.7 141.6h0.01M384.5 133.3h0.01M224.6 144.8h0.01M189 160.9h0.01M539.4 133.1h0.01M366.9 132.3h0.01M260.9 148.7h0.01M367.2 137.4h0.01M470 146.1h0.01M230.2 138.4h0.01M321.2 140.9h0.01M424.6 153.4h0.01M221.2 151.5h0.01M218 141.9h0.01M505.6 138.9h0.01M499.9 126.7h0.01M297.3 162.1h0.01M215.5 151.4h0.01M214.6 132.1h0.01M291.9 130.3h0.01M243.6 161.4h0.01M237.9 139.3h0.01M320 149.9h0.01M249 146.6h0.01M276.8 146.2h0.01M386.2 126.5h0.01M311.2 147.7h0.01M198.1 148.7h0.01M185.6 149.8h0.01M245 134.3h0.01M195.9 160.4h0.01M185.9 156.8h0.01M235.6 146.8h0.01M243.3 122.1h0.01M236.2 151.5h0.01M325.4 152.1h0.01M230.5 155.8h0.01M233.9 158.8h0.01M196.4 143.7h0.01M185.4 156.1h0.01M242.2 142.3h0.01M133.4 152.6h0.01M181.7 154.5h0.01M168.6 141.6h0.01M229.4 162.6h0.01M147.3 159.1h0.01M155.5 147.7h0.01M242.5 148.4h0.01M142.7 138.6h0.01M208.6 157.9h0.01M189.3 149.9h0.01M191.6 150.1h0.01M182.5 147.1h0.01M152.4 144.1h0.01M137.3 155.8h0.01M132.5 156.8h0.01" stroke="rgba(240,106,93,0.5)" stroke-width="4" stroke-linecap="round" fill="none"/>
+<path d="M432.8 112.3h0.01M486.5 99.1h0.01M549.6 65.7h0.01M431.1 118.1h0.01M487.7 119.8h0.01M639.9 97.2h0.01M391.1 103.5h0.01M696.8 72.3h0.01M381.4 102.5h0.01M736.3 65.7h0.01M802.5 57.1h0.01M413.8 118.6h0.01M822.9 73.7h0.01M751 90.8h0.01M818.9 57.7h0.01M617.2 96.1h0.01M820.4 64h0.01M614.1 108.1h0.01M835.7 62.2h0.01M843.1 65.5h0.01M622.3 91.6h0.01M623.7 89.6h0.01M607.8 91.9h0.01M822.6 49.1h0.01M890.5 36.1h0.01M824 63.4h0.01M576.9 86h0.01M758.7 43.6h0.01M605 103.6h0.01M460.7 119.8h0.01M668.1 97h0.01M480.3 100.7h0.01M552.7 102.2h0.01M578.9 94.8h0.01M502.7 107.9h0.01M431.1 98.5h0.01M293.3 119.4h0.01M284.2 119.5h0.01M326.3 108.3h0.01M453.3 111.7h0.01M566.1 97.2h0.01M548.7 101.7h0.01M591.1 92.1h0.01M602.2 102.7h0.01M469.8 116.3h0.01M643.3 111.8h0.01M702.4 106.4h0.01M776.9 91.7h0.01M557.5 96.3h0.01M563.5 102.8h0.01M732.8 54.7h0.01M734.6 79.3h0.01M884.3 73h0.01M286.8 109.7h0.01M855.3 61.2h0.01M619.2 85.7h0.01M672.3 84.2h0.01M614.7 82.9h0.01M792.2 99.6h0.01M876.3 72.5h0.01M619.8 92.3h0.01M659.8 71.5h0.01M779.7 76.6h0.01M825.2 70.4h0.01M637.1 104.3h0.01M815 49.3h0.01M896.5 44.2h0.01M633.1 85.6h0.01M541.4 112.1h0.01M742.5 91.9h0.01M725.5 63.6h0.01M619.8 88.5h0.01M704.2 114.7h0.01M618.3 79.3h0.01M696.2 98.5h0.01M517.2 86.3h0.01M567.8 118.1h0.01M502.1 102h0.01M599 95.3h0.01M445 97.6h0.01M439.4 92h0.01M324.6 111.7h0.01M239.3 118.8h0.01M347.9 114.9h0.01M428.6 109.1h0.01M524.6 92h0.01M600.2 104.6h0.01M534.5 92.1h0.01M613.2 81.6h0.01M697.9 91.4h0.01M470.3 91.4h0.01M249.3 119.2h0.01M541.1 96.5h0.01M669.8 79.7h0.01M774.9 51.7h0.01M584 111.3h0.01M386.2 113.4h0.01M811.3 74.8h0.01M414.4 120.2h0.01M616.6 109.8h0.01M631.4 98.1h0.01M879.2 96.1h0.01M821.8 74h0.01M604.7 116.8h0.01M853.9 33h0.01M871.2 53.6h0.01M595.9 114.3h0.01M567.8 103.7h0.01M780 82.8h0.01M411.2 108h0.01M582 98.6h0.01M664.9 92.1h0.01M514.6 107.3h0.01M595.3 82.8h0.01M561.5 90.6h0.01M657.3 68.2h0.01M532.8 113.4h0.01M567.5 88.7h0.01M412.1 109.1h0.01M308.1 117.3h0.01M422.6 114.8h0.01M519.2 104.9h0.01M380 118.8h0.01M514.6 92.2h0.01M583.1 106.3h0.01M565.2 89.3h0.01M252.7 119.2h0.01M289.6 111h0.01M595 97.2h0.01M497.9 111.5h0.01M618.1 107.2h0.01M562.4 57.3h0.01M742.2 40.3h0.01M780.6 69.3h0.01M763.5 66h0.01M804.2 77.4h0.01M557.3 104.4h0.01M793.9 83.2h0.01M661.2 82h0.01M412.1 117.4h0.01M606.4 55.4h0.01M768.6 79h0.01M849.6 86.5h0.01M853.3 85.8h0.01M869.8 41.5h0.01M564.6 108.2h0.01M605.6 92.9h0.01M410.9 109.8h0.01M648.2 95.9h0.01M753 85.2h0.01M687.7 87.4h0.01M545 105.2h0.01M570.3 72.8h0.01M519.2 108.1h0.01M455.8 120.8h0.01M312.9 119.4h0.01M399.6 117.3h0.01M368.9 119.4h0.01M452.7 113.7h0.01M536 99.6h0.01M444.2 115.6h0.01M527.1 95.1h0.01M472.3 116.8h0.01M733.4 112.4h0.01M543.1 115.6h0.01M722.6 106.4h0.01M714.1 84.9h0.01M626.9 82.4h0.01M841.1 63.5h0.01M877.5 87.7h0.01M815.5 59.4h0.01M603.6 89.2h0.01M778.3 84.2h0.01M813.5 75.3h0.01M830.6 53.8h0.01M821.8 38.5h0.01M759.3 62.8h0.01M870.6 77.1h0.01M595 106.3h0.01M853.6 66.8h0.01M745.1 91.4h0.01M760.4 83.9h0.01M659 77.5h0.01M705 81.5h0.01M539.9 103.9h0.01M389.3 120h0.01M632.6 114.8h0.01M341.9 115.1h0.01M322.9 112.1h0.01M420.9 112.8h0.01M691.6 102.7h0.01M459.8 94.5h0.01M504.7 97.2h0.01M552.7 104.7h0.01M555.6 113.8h0.01M614.4 84.7h0.01M570 89.9h0.01M628.9 81.8h0.01M532.3 112.6h0.01M780.9 88.7h0.01M567.8 72.5h0.01M818.1 63.1h0.01M793.6 68.6h0.01M827.5 50.8h0.01M793.6 61.7h0.01M380 99.7h0.01M790.5 90.6h0.01M465.8 121.1h0.01M793.1 83.3h0.01M851 62.8h0.01M807.3 69.3h0.01M649 100h0.01M805.6 84.5h0.01M611 100.2h0.01M779.7 74.1h0.01M865.8 51.3h0.01M712.4 73.4h0.01M392.5 118.1h0.01M789.7 69h0.01M759.6 89.8h0.01M775.7 89.1h0.01M770.6 72.4h0.01M561.8 98.1h0.01M576 89.8h0.01M686.8 98h0.01M558.7 98.9h0.01M459 94.2h0.01M644.5 101.7h0.01M636.5 90.1h0.01M538.5 97.9h0.01M620.9 112.6h0.01M586.5 88.5h0.01M430 120.5h0.01M570.6 110.1h0.01M377.4 111.3h0.01M571.8 94.7h0.01M382.8 118.7h0.01M273.7 113.8h0.01" stroke="rgba(63,191,138,0.5)" stroke-width="4" stroke-linecap="round" fill="none"/>
+<path d="M978.3 43h0.01M974.1 45.8h0.01M970.7 32.8h0.01M963.8 49.4h0.01M958.4 56.6h0.01M966.7 32.1h0.01M976.6 37.6h0.01M935.4 53.4h0.01M1013.3 21.4h0.01M949.9 26.7h0.01M937.7 42.5h0.01M929.5 42h0.01M931.4 34.8h0.01" stroke="#e8eaed" stroke-width="5" stroke-linecap="round" fill="none"/>
+<circle cx="1013.3" cy="21.4" r="7" fill="none" stroke="#f2a33a" stroke-width="2"/>
+<text x="1001.3" y="11.4" fill="#f2a33a" font-size="11.5" text-anchor="end" font-weight="600">#1</text>
+<text x="98.4" y="186" fill="#7f8790" font-size="11" text-anchor="middle">−10k</text>
+<text x="382.5" y="186" fill="#7f8790" font-size="11" text-anchor="middle">0</text>
+<text x="666.6" y="186" fill="#7f8790" font-size="11" text-anchor="middle">+10k</text>
+<text x="950.8" y="186" fill="#7f8790" font-size="11" text-anchor="middle">+20k</text>
+<text x="64" y="125.4" fill="#7f8790" font-size="11" text-anchor="end">0</text>
+<text x="64" y="44.4" fill="#7f8790" font-size="11" text-anchor="end">+10k</text><text x="1036" y="166" fill="#aab1b9" font-size="11.5" text-anchor="end">样本内净利润 →</text><text x="76" y="24" fill="#aab1b9" font-size="11.5">样本外净利润 ↑</text></svg></div>
+<section style="flex: 1; min-height: 0; background: #14171b; display: flex"><div style="width: 624px; flex: none; display: flex; flex-direction: column; border-right: 1px solid #23272d; position: relative">
+<div style="height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px">
+<span style="font-weight: 600">排行</span>
+<span class="t3 num" style="font-size: 12px; margin-right: 6px">2,096 / 2,214 符合</span>
+<span class="chip num">交易数 ≥ 30<button aria-label="移除条件" class="t3" style="display: inline-flex"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span><span class="chip num">最大回撤 ≤ 15%<button aria-label="移除条件" class="t3" style="display: inline-flex"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span><button class="chip t2" style="border-style: dashed">+ 条件</button>
+</div>
+<table class="lb num" style="table-layout: fixed">
+
+<thead><tr>
+<th style="width: 40px; text-align: left">#</th><th style="width: 62px">Length</th><th style="width: 50px">Mult</th><th style="width: 62px; text-align: left">Source</th><th style="width: 44px; text-align: left">止损</th><th style="width: 84px; color: #e8eaed"><span style="display: inline-flex; align-items: center; gap: 3px">样本内<svg width="9" height="9" viewBox="0 0 10 10" fill="#f2a33a" aria-label="降序"><path d="M1 3h8L5 8z"/></svg></span></th><th style="width: 84px">样本外</th><th style="width: 50px">PF</th><th style="width: 80px">回撤</th><th style="width: 68px; padding-right: 12px">交易</th>
+</tr></thead>
+<tbody>
+<tr class="cur"><td>1</td><td>28</td><td>2.00</td><td style="text-align: left">close</td><td style="text-align: left">关</td><td class="up">+22,200</td><td class="up">+12,340</td><td>1.32</td><td>−7.5%</td><td style="padding-right: 12px">91</td></tr>
+<tr><td>2</td><td>24</td><td>2.00</td><td style="text-align: left">close</td><td style="text-align: left">关</td><td class="up">+20,970</td><td class="up">+9,670</td><td>1.20</td><td>−11.4%</td><td style="padding-right: 12px">136</td></tr>
+<tr><td>3</td><td>27</td><td>2.25</td><td style="text-align: left">close</td><td style="text-align: left">关</td><td class="up">+20,910</td><td class="up">+10,340</td><td>1.21</td><td>−11.5%</td><td style="padding-right: 12px">69</td></tr>
+<tr><td>4</td><td>25</td><td>1.75</td><td style="text-align: left">close</td><td style="text-align: left">关</td><td class="up">+20,820</td><td class="up">+9,330</td><td>1.30</td><td>−12.1%</td><td style="padding-right: 12px">84</td></tr>
+<tr><td>5</td><td>25</td><td>2.00</td><td style="text-align: left">close</td><td style="text-align: left">关</td><td class="up">+20,700</td><td class="up">+10,930</td><td>1.40</td><td>−8.2%</td><td style="padding-right: 12px">106</td></tr>
+<tr><td>6</td><td>27</td><td>2.00</td><td style="text-align: left">close</td><td style="text-align: left">关</td><td class="up">+20,560</td><td class="up">+11,020</td><td>1.60</td><td>−8.5%</td><td style="padding-right: 12px">103</td></tr>
+<tr><td>7</td><td>26</td><td>2.00</td><td style="text-align: left">close</td><td style="text-align: left">关</td><td class="up">+20,460</td><td class="up">+8,880</td><td>1.62</td><td>−8.6%</td><td style="padding-right: 12px">71</td></tr>
+<tr><td>8</td><td>27</td><td>1.75</td><td style="text-align: left">close</td><td style="text-align: left">关</td><td class="up">+20,270</td><td class="up">+7,990</td><td>1.66</td><td>−12.0%</td><td style="padding-right: 12px">63</td></tr>
+<tr><td>9</td><td>28</td><td>2.25</td><td style="text-align: left">close</td><td style="text-align: left">关</td><td class="up">+19,970</td><td class="up">+11,690</td><td>1.36</td><td>−6.1%</td><td style="padding-right: 12px">111</td></tr>
+<tr><td>10</td><td>29</td><td>2.00</td><td style="text-align: left">close</td><td style="text-align: left">关</td><td class="up">+19,540</td><td class="up">+9,740</td><td>1.19</td><td>−8.3%</td><td style="padding-right: 12px">143</td></tr>
+<tr><td>11</td><td>28</td><td>1.75</td><td style="text-align: left">close</td><td style="text-align: left">关</td><td class="up">+19,460</td><td class="up">+8,390</td><td>1.71</td><td>−11.6%</td><td style="padding-right: 12px">147</td></tr>
+<tr><td>12</td><td>29</td><td>2.00</td><td style="text-align: left">hl2</td><td style="text-align: left">关</td><td class="up">+19,320</td><td class="up">+10,690</td><td>1.18</td><td>−8.3%</td><td style="padding-right: 12px">129</td></tr>
+<tr><td>13</td><td>31</td><td>2.00</td><td style="text-align: left">close</td><td style="text-align: left">关</td><td class="up">+19,250</td><td class="up">+9,800</td><td>1.17</td><td>−6.9%</td><td style="padding-right: 12px">137</td></tr>
+</tbody>
+</table>
+<div style="flex: 1"></div>
+<div style="height: 44px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-top: 1px solid #1f2328">
+<span class="t3 num" style="font-size: 12px">第 1–13 名</span>
+<div class="num" style="display: flex; align-items: center; gap: 4px">
+<button class="iconbtn" aria-label="上一页" style="color: #4f565f"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4l-4 4 4 4"/></svg></button>
+<span style="font-size: 12.5px">1 <span class="t3">/ 162</span></span>
+<button class="iconbtn" aria-label="下一页"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg></button>
+</div>
+</div>
+
+</div><div style="flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative">
+<div style="height: 44px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 12px 0 16px">
+<span style="font-weight: 600; flex: 1">参数图</span>
+<div class="seg sm" role="group" aria-label="区间"><button class="on">样本内</button><button>样本外</button></div>
+<span style="display: flex; align-items: center; gap: 7px; font-size: 12.5px" class="t2">平滑<button class="sw" role="switch" aria-checked="false" aria-label="平滑：每格取相邻 ±1 步的平均"></button></span>
+</div>
+<div class="num" style="height: 30px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 16px; font-size: 12.5px; white-space: nowrap">
+<button style="display: inline-flex; align-items: center; gap: 5px"><span class="t3">X</span>Length<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button><button style="display: inline-flex; align-items: center; gap: 5px"><span class="t3">Y</span>Multiplier<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+<span style="width: 1px; height: 14px; background: #2f353c"></span>
+<button style="display: inline-flex; align-items: center; gap: 5px"><span class="t3">Source</span>close<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button><button style="display: inline-flex; align-items: center; gap: 5px"><span class="t3">止损</span>关<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+</div>
+<div style="height: 210px; flex: none; position: relative">
+<svg width="480" height="210" viewBox="0 0 480 210" style="display: block" role="img" aria-label="Length × Multiplier 净利润热力图">
+<path d="M67 150h16v16h-16zM67 132h16v16h-16zM67 114h16v16h-16zM67 24h16v16h-16zM67 6h16v16h-16zM85 150h16v16h-16zM85 132h16v16h-16zM85 24h16v16h-16zM85 6h16v16h-16zM103 150h16v16h-16zM103 6h16v16h-16zM121 150h16v16h-16zM121 6h16v16h-16zM139 150h16v16h-16zM139 6h16v16h-16zM157 150h16v16h-16zM283 6h16v16h-16zM301 150h16v16h-16zM301 6h16v16h-16zM319 150h16v16h-16zM319 6h16v16h-16zM337 150h16v16h-16zM337 6h16v16h-16zM355 150h16v16h-16zM355 132h16v16h-16zM355 24h16v16h-16zM355 6h16v16h-16zM373 150h16v16h-16zM373 132h16v16h-16zM373 24h16v16h-16zM373 6h16v16h-16zM391 150h16v16h-16zM391 132h16v16h-16zM391 114h16v16h-16zM391 96h16v16h-16zM391 78h16v16h-16zM391 60h16v16h-16zM391 42h16v16h-16zM391 24h16v16h-16zM391 6h16v16h-16zM409 150h16v16h-16zM409 132h16v16h-16zM409 114h16v16h-16zM409 96h16v16h-16zM409 78h16v16h-16zM409 60h16v16h-16zM409 42h16v16h-16zM409 24h16v16h-16zM409 6h16v16h-16zM427 150h16v16h-16zM427 132h16v16h-16zM427 114h16v16h-16zM427 96h16v16h-16zM427 78h16v16h-16zM427 60h16v16h-16zM427 42h16v16h-16zM427 24h16v16h-16zM427 6h16v16h-16z" fill="#9a4535"/>
+<path d="M67 96h16v16h-16zM67 78h16v16h-16zM67 60h16v16h-16zM67 42h16v16h-16zM85 114h16v16h-16zM85 42h16v16h-16zM103 132h16v16h-16zM103 24h16v16h-16zM121 132h16v16h-16zM121 24h16v16h-16zM157 6h16v16h-16zM175 150h16v16h-16zM175 6h16v16h-16zM193 150h16v16h-16zM193 6h16v16h-16zM211 150h16v16h-16zM211 6h16v16h-16zM229 150h16v16h-16zM229 6h16v16h-16zM247 150h16v16h-16zM247 6h16v16h-16zM265 150h16v16h-16zM265 6h16v16h-16zM283 150h16v16h-16zM301 132h16v16h-16zM319 132h16v16h-16zM319 24h16v16h-16zM337 132h16v16h-16zM337 42h16v16h-16zM337 24h16v16h-16zM355 114h16v16h-16zM355 96h16v16h-16zM355 60h16v16h-16zM355 42h16v16h-16zM373 114h16v16h-16zM373 96h16v16h-16zM373 78h16v16h-16zM373 60h16v16h-16zM373 42h16v16h-16z" fill="#66342c"/>
+<path d="M85 96h16v16h-16zM85 78h16v16h-16zM85 60h16v16h-16zM103 114h16v16h-16zM103 42h16v16h-16zM139 132h16v16h-16zM139 24h16v16h-16zM157 132h16v16h-16zM283 132h16v16h-16zM283 24h16v16h-16zM301 24h16v16h-16zM337 114h16v16h-16zM355 78h16v16h-16z" fill="#3a2724"/>
+<path d="M103 96h16v16h-16zM103 78h16v16h-16zM103 60h16v16h-16zM121 114h16v16h-16zM121 96h16v16h-16zM121 78h16v16h-16zM121 60h16v16h-16zM121 42h16v16h-16zM139 114h16v16h-16zM139 42h16v16h-16zM157 114h16v16h-16zM157 24h16v16h-16zM175 132h16v16h-16zM175 24h16v16h-16zM193 132h16v16h-16zM193 24h16v16h-16zM211 132h16v16h-16zM211 24h16v16h-16zM229 132h16v16h-16zM229 24h16v16h-16zM247 132h16v16h-16zM247 24h16v16h-16zM265 132h16v16h-16zM265 24h16v16h-16zM283 114h16v16h-16zM283 42h16v16h-16zM301 114h16v16h-16zM301 42h16v16h-16zM319 114h16v16h-16zM319 96h16v16h-16zM319 78h16v16h-16zM319 60h16v16h-16zM319 42h16v16h-16zM337 96h16v16h-16zM337 78h16v16h-16zM337 60h16v16h-16z" fill="#1b3441"/>
+<path d="M139 96h16v16h-16zM139 78h16v16h-16zM139 60h16v16h-16zM157 96h16v16h-16zM157 42h16v16h-16zM175 114h16v16h-16zM175 42h16v16h-16zM193 114h16v16h-16zM193 42h16v16h-16zM211 114h16v16h-16zM211 42h16v16h-16zM229 114h16v16h-16zM229 42h16v16h-16zM247 114h16v16h-16zM247 42h16v16h-16zM265 114h16v16h-16zM265 42h16v16h-16zM283 96h16v16h-16zM283 60h16v16h-16zM301 96h16v16h-16zM301 78h16v16h-16zM301 60h16v16h-16z" fill="#1f5572"/>
+<path d="M157 78h16v16h-16zM157 60h16v16h-16zM175 96h16v16h-16zM175 60h16v16h-16zM247 96h16v16h-16zM265 96h16v16h-16zM265 78h16v16h-16zM265 60h16v16h-16zM283 78h16v16h-16z" fill="#2f7ea6"/>
+<path d="M175 78h16v16h-16zM193 96h16v16h-16zM193 60h16v16h-16zM211 96h16v16h-16zM211 60h16v16h-16zM229 96h16v16h-16zM229 60h16v16h-16zM247 78h16v16h-16zM247 60h16v16h-16z" fill="#56abd3"/>
+<path d="M193 78h16v16h-16zM211 78h16v16h-16zM229 78h16v16h-16z" fill="#a6ddf2"/>
+<rect x="227.5" y="76.5" width="19" height="19" fill="none" stroke="#f2a33a" stroke-width="2"/>
+<text x="75" y="182" fill="#7f8790" font-size="10.5" text-anchor="middle">10–11</text>
+<text x="165" y="182" fill="#7f8790" font-size="10.5" text-anchor="middle">20–21</text>
+<text x="255" y="182" fill="#7f8790" font-size="10.5" text-anchor="middle">30–31</text>
+<text x="345" y="182" fill="#7f8790" font-size="10.5" text-anchor="middle">40–41</text>
+<text x="435" y="182" fill="#7f8790" font-size="10.5" text-anchor="middle">50</text>
+<text x="61" y="162" fill="#7f8790" font-size="10.5" text-anchor="end">1.00</text>
+<text x="61" y="126" fill="#7f8790" font-size="10.5" text-anchor="end">1.50</text>
+<text x="61" y="90" fill="#7f8790" font-size="10.5" text-anchor="end">2.00</text>
+<text x="61" y="54" fill="#7f8790" font-size="10.5" text-anchor="end">2.50</text>
+<text x="61" y="18" fill="#7f8790" font-size="10.5" text-anchor="end">3.00</text><text x="256" y="202" fill="#aab1b9" font-size="11.5" text-anchor="middle">Length<tspan fill="#7f8790"> · 每格 2 个值取平均</tspan></text><text x="27" y="87" fill="#aab1b9" font-size="11.5" text-anchor="middle" transform="rotate(-90 27 87)">Multiplier</text>
+</svg>
+</div>
+<div class="num" style="height: 30px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px; font-size: 11.5px">
+<span class="t3">净利润</span>
+<div style="display: flex; align-items: center; gap: 2px">
+<span class="t3" style="margin-right: 4px">−6.4k</span><span style="width: 20px; height: 10px; background: #9a4535"></span><span style="width: 20px; height: 10px; background: #66342c"></span><span style="width: 20px; height: 10px; background: #3a2724"></span><span style="margin: 0 5px" class="t2">0</span><span style="width: 20px; height: 10px; background: #1b3441"></span><span style="width: 20px; height: 10px; background: #1f5572"></span><span style="width: 20px; height: 10px; background: #2f7ea6"></span><span style="width: 20px; height: 10px; background: #56abd3"></span><span style="width: 20px; height: 10px; background: #a6ddf2"></span><span class="t3" style="margin-left: 4px">+20.9k</span>
+</div>
+
+
+</div>
+<div style="flex: 1; min-height: 0; border-top: 1px solid #1f2328; padding: 10px 16px 0; display: flex; flex-direction: column">
+<div style="display: flex; align-items: baseline; height: 24px; flex: none"><span style="font-weight: 600">影响度</span></div>
+<div style="display: flex; align-items: center; gap: 10px; height: 38px; border-top: 1px solid #1f2328">
+<span style="width: 124px; display: flex; align-items: center; gap: 6px; white-space: nowrap">Length<button aria-label="拖动设置 X 轴" style="height: 17px; padding: 0 5px; border-radius: 3px; background: #3a2c16; color: #f5b155; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center">X</button></span>
+<div style="width: 70px; height: 4px; border-radius: 2px; background: #23272d; position: relative"><div style="position: absolute; left: 0; top: 0; bottom: 0; width: 46%; border-radius: 2px; background: #f2a33a"></div></div>
+<span class="num" style="width: 32px; text-align: right; font-size: 12px">46%</span>
+<svg width="150" height="26" viewBox="0 0 150 26" style="margin-left: auto" aria-hidden="true"><path d="M2 20.7L5.7 19.7L9.3 19.2L13 18L16.6 17.7L20.3 15.5L23.9 14.9L27.6 12.7L31.2 12L34.9 10.8L38.5 9.1L42.2 9L45.8 6.3L49.5 5.6L53.1 3.2L56.8 3.2L60.4 2.5L64.1 3L67.7 3.6L71.4 4.2L75 3.2L78.7 4.5L82.3 4.4L85.9 7.5L89.6 7.9L93.3 10.4L96.9 11.7L100.6 12.6L104.2 13.2L107.9 15.7L111.5 16.1L115.2 17.6L118.8 18.6L122.5 19.8L126.1 19.7L129.8 21.1L133.4 21.4L137.1 21.7L140.7 21.9L144.4 22.3L148 22.3L148 23.3L144.4 23.5L140.7 23.4L137.1 23L133.4 22.5L129.8 22.5L126.1 22.5L122.5 22.1L118.8 21.8L115.2 21.3L111.5 21.1L107.9 20.8L104.2 20.8L100.6 19.4L96.9 19.4L93.3 18.6L89.6 17.9L85.9 17.3L82.3 16.6L78.7 17.1L75 16.4L71.4 15.5L67.7 16.5L64.1 16.9L60.4 16L56.8 17.2L53.1 16.6L49.5 18L45.8 18.4L42.2 17.9L38.5 18.1L34.9 19.6L31.2 19.6L27.6 20L23.9 20.8L20.3 21.5L16.6 21.3L13 21.6L9.3 21.8L5.7 22.3L2 22.6Z" fill="rgba(242,163,58,0.18)"/><path d="M2 21.7L5.7 20.9L9.3 20.4L13 20L16.6 19.3L20.3 18.4L23.9 17.8L27.6 16.7L31.2 15.9L34.9 15.1L38.5 14.4L42.2 13.5L45.8 12.6L49.5 12L53.1 10.8L56.8 10.8L60.4 10.2L64.1 10.3L67.7 10.4L71.4 10.7L75 10.8L78.7 11.5L82.3 11.7L85.9 12.8L89.6 13.5L93.3 14.9L96.9 15.5L100.6 16.4L104.2 16.9L107.9 18.4L111.5 18.9L115.2 19.5L118.8 20.1L122.5 20.9L126.1 21.1L129.8 21.8L133.4 22L137.1 22.3L140.7 22.5L144.4 23L148 22.8" fill="none" stroke="#f2a33a" stroke-width="1.5" stroke-linejoin="round"/></svg>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; height: 38px; border-top: 1px solid #1f2328">
+<span style="width: 124px; display: flex; align-items: center; gap: 6px; white-space: nowrap">Multiplier<button aria-label="拖动设置 Y 轴" style="height: 17px; padding: 0 5px; border-radius: 3px; background: #3a2c16; color: #f5b155; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center">Y</button></span>
+<div style="width: 70px; height: 4px; border-radius: 2px; background: #23272d; position: relative"><div style="position: absolute; left: 0; top: 0; bottom: 0; width: 38%; border-radius: 2px; background: #f2a33a"></div></div>
+<span class="num" style="width: 32px; text-align: right; font-size: 12px">38%</span>
+<svg width="150" height="26" viewBox="0 0 150 26" style="margin-left: auto" aria-hidden="true"><path d="M2 20.8L20.3 16.9L38.5 10.8L56.8 5.8L75 3.7L93.3 5.8L111.5 10.8L129.8 16.7L148 20.7L148 22.8L129.8 21.6L111.5 20L93.3 18.7L75 18L56.8 18.7L38.5 20.3L20.3 21.4L2 22.6Z" fill="rgba(242,163,58,0.18)"/><path d="M2 21.7L20.3 19.2L38.5 15.9L56.8 12.5L75 11L93.3 12.3L111.5 15.7L129.8 19.2L148 21.7" fill="none" stroke="#f2a33a" stroke-width="1.5" stroke-linejoin="round"/></svg>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; height: 38px; border-top: 1px solid #1f2328">
+<span style="width: 124px; display: flex; align-items: center; gap: 6px; white-space: nowrap">Source</span>
+<div style="width: 70px; height: 4px; border-radius: 2px; background: #23272d; position: relative"><div style="position: absolute; left: 0; top: 0; bottom: 0; width: 2%; border-radius: 2px; background: #7f8790"></div></div>
+<span class="num" style="width: 32px; text-align: right; font-size: 12px">0%</span>
+<svg width="150" height="26" viewBox="0 0 150 26" style="margin-left: auto" aria-hidden="true"><path d="M2 12.7L75 13.1L148 13.4L148 21.9L75 21.5L2 21Z" fill="rgba(154,163,173,0.16)"/><path d="M2 16L75 16.7L148 17" fill="none" stroke="#9aa3ad" stroke-width="1.5" stroke-linejoin="round"/><circle cx="2" cy="16" r="2.2" fill="#9aa3ad"/><circle cx="75" cy="16.7" r="2.2" fill="#9aa3ad"/><circle cx="148" cy="17" r="2.2" fill="#9aa3ad"/></svg>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; height: 38px; border-top: 1px solid #1f2328">
+<span style="width: 124px; display: flex; align-items: center; gap: 6px; white-space: nowrap">Use trailing stop</span>
+<div style="width: 70px; height: 4px; border-radius: 2px; background: #23272d; position: relative"><div style="position: absolute; left: 0; top: 0; bottom: 0; width: 2%; border-radius: 2px; background: #7f8790"></div></div>
+<span class="num" style="width: 32px; text-align: right; font-size: 12px">0%</span>
+<svg width="150" height="26" viewBox="0 0 150 26" style="margin-left: auto" aria-hidden="true"><path d="M2 12.9L148 13.1L148 21.6L2 21.2Z" fill="rgba(154,163,173,0.16)"/><path d="M2 16.4L148 16.8" fill="none" stroke="#9aa3ad" stroke-width="1.5" stroke-linejoin="round"/><circle cx="2" cy="16.4" r="2.2" fill="#9aa3ad"/><circle cx="148" cy="16.8" r="2.2" fill="#9aa3ad"/></svg>
+</div>
+</div>
+
+</div></section>
+<div class="num" style="height: 60px; flex: none; display: flex; align-items: center; gap: 18px; padding: 0 12px 0 16px; background: #1b1f24; border-top: 1px solid #2f353c; white-space: nowrap">
+<span class="am" style="font-size: 18px; font-weight: 700">#1</span>
+<span style="display: flex; gap: 14px"><span><span class="t3">Length </span><b style="font-weight: 600">28</b></span><span><span class="t3">Multiplier </span><b style="font-weight: 600">2.00</b></span><span><span class="t3">Source </span><b style="font-weight: 600">close</b></span><span><span class="t3">止损 </span><b style="font-weight: 600">关</b></span></span>
+<span style="width: 1px; height: 20px; background: #2f353c"></span>
+<span style="display: flex; gap: 14px"><span><span class="t3">样本内 </span><span class="up">+22,200</span></span><span><span class="t3">样本外 </span><span class="up">+12,340</span></span><span><span class="t3">邻域均值 </span><span class="">+19,090</span></span></span>
+<span style="flex: 1"></span>
+<button class="ghost">查看这组参数的回测</button>
+<button class="primary">应用到参数</button>
+</div>
+</main><aside style="width: 336px; flex: none; display: flex; flex-direction: column; background: #14171b; border-left: 1px solid #23272d; position: relative; ">
+
+<div style="flex: 1; min-height: 0; padding: 12px 16px 0; display: flex; flex-direction: column; gap: 22px; overflow: hidden; position: relative">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div class="sec"><span>搜索范围</span><div class="seg sm" role="group" aria-label="搜索方式"><button class="on">网格</button><button>随机</button></div></div>
+<div style="display: flex; flex-direction: column; gap: 7px">
+<div style="display: flex; align-items: center; gap: 10px"><button class="cb on" role="checkbox" aria-checked="true" aria-label="优化 Length"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#1a1206" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.4 2.3 4.6-5"/></svg></button><span style="flex: 1">Length</span><span class="t2 num">41</span></div>
+<div class="num" style="display: flex; align-items: center; gap: 6px; padding-left: 25px">
+<input class="mini" value="10" aria-label="Length 从" style="width: 60px"><span class="t3">至</span><input class="mini" value="50" aria-label="Length 到" style="width: 60px"><span class="t3" style="margin-left: 6px">步长</span><input class="mini" value="1" aria-label="Length 步长" style="width: 52px">
+</div>
+
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px">
+<div style="display: flex; align-items: center; gap: 10px"><button class="cb on" role="checkbox" aria-checked="true" aria-label="优化 Multiplier"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#1a1206" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.4 2.3 4.6-5"/></svg></button><span style="flex: 1">Multiplier</span><span class="t2 num">9</span></div>
+<div class="num" style="display: flex; align-items: center; gap: 6px; padding-left: 25px">
+<input class="mini" value="1.00" aria-label="Multiplier 从" style="width: 60px"><span class="t3">至</span><input class="mini" value="3.00" aria-label="Multiplier 到" style="width: 60px"><span class="t3" style="margin-left: 6px">步长</span><input class="mini" value="0.25" aria-label="Multiplier 步长" style="width: 52px">
+</div>
+
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px">
+<div style="display: flex; align-items: center; gap: 10px"><button class="cb on" role="checkbox" aria-checked="true" aria-label="优化 Source"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#1a1206" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.4 2.3 4.6-5"/></svg></button><span style="flex: 1">Source</span><span class="t2 num">3</span></div>
+<div style="display: flex; align-items: center; gap: 6px; padding-left: 25px; flex-wrap: wrap"><button class="chip on">close</button><button class="chip on">hl2</button><button class="chip on">ohlc4</button><button class="chip t2">其余 5 个</button></div>
+
+</div>
+<div style="display: flex; flex-direction: column; gap: 7px">
+<div style="display: flex; align-items: center; gap: 10px"><button class="cb on" role="checkbox" aria-checked="true" aria-label="优化 Use trailing stop"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#1a1206" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.4 2.3 4.6-5"/></svg></button><span style="flex: 1">Use trailing stop</span><span class="t2 num">2</span></div>
+<div style="display: flex; align-items: center; gap: 6px; padding-left: 25px; flex-wrap: wrap"><button class="chip on">关</button><button class="chip on">开</button></div>
+
+</div>
+<div style="display: flex; align-items: center; gap: 10px; height: 28px"><button class="cb" role="checkbox" aria-checked="false" aria-label="优化 Trail %"></button><span style="flex: 1" class="t2">Trail %</span><span class="t3" style="font-size: 12px">固定</span><input class="mini" value="3.0" aria-label="Trail % 固定值" style="width: 60px"></div>
+
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div class="sec"><span>验证</span></div>
+<div class="seg" style="width: 100%; height: 32px" role="group" aria-label="验证方式"><button style="flex: 1">不验证</button><button class="on" style="flex: 1">样本内 / 外</button><button style="flex: 1">滚动窗口</button></div>
+<div style="display: flex; align-items: center; gap: 12px">
+<span class="t2" style="white-space: nowrap">样本外占比</span>
+<div style="flex: 1; height: 4px; border-radius: 2px; background: #2f353c; position: relative">
+<div style="position: absolute; right: 0; top: 0; bottom: 0; width: 30%; border-radius: 2px; background: #f2a33a"></div>
+<div style="position: absolute; left: 70%; top: -6px; width: 16px; height: 16px; margin-left: -8px; border-radius: 8px; background: #e8eaed; border: 3px solid #f2a33a"></div>
+</div>
+<span class="num" style="width: 32px; text-align: right">30%</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div class="sec"><span>排序与筛选</span></div>
+<button class="sel"><span><span class="t3">按 </span>样本内净利润<span class="t3">，最大</span></span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+<div style="display: flex; flex-wrap: wrap; gap: 6px"><span class="chip num">交易数 ≥ 30<button aria-label="移除条件" class="t3" style="display: inline-flex"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span><span class="chip num">最大回撤 ≤ 15%<button aria-label="移除条件" class="t3" style="display: inline-flex"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></span><button class="chip t2" style="border-style: dashed">+ 条件</button></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div class="sec"><span>策略属性</span><a href="#" style="font-size: 12.5px; font-weight: 400">修改</a></div>
+<div class="num t2" style="display: flex; gap: 14px; font-size: 12.5px"><span>手续费 0.1%</span><span>滑点 1 tick</span><span>100% 权益</span></div>
+</div>
+
+
+</div>
+<div style="flex: none; border-top: 1px solid #23272d; padding: 14px 16px 16px; display: flex; align-items: center; gap: 12px">
+<div class="num" style="flex: 1; display: flex; flex-direction: column; gap: 2px"><div style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 20px; font-weight: 600">2,214</span><span class="t2">组</span></div><span class="t3" style="font-size: 12px">上次用时 10:09，7 个线程</span></div>
+<button class="primary" style="height: 36px; padding: 0 16px"><svg width="11" height="11" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>重新优化</button>
+</div>
+</aside>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

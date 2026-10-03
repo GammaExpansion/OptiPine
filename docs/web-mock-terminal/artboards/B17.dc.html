@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>应用参数后</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&amp;family=Noto+Sans+SC:wght@400;500;700&amp;family=Source+Code+Pro:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#0e1013;color:#e8eaed;font-family:"Barlow","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;line-height:1.35;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#f5b155;text-decoration:none}a:hover{color:#ffc877}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;text-align:inherit}
+input{font:inherit;color:inherit;min-width:0}
+.num{font-variant-numeric:tabular-nums}
+.t2{color:#aab1b9}.t3{color:#7f8790}.up{color:#3fbf8a}.dn{color:#f06a5d}.am{color:#f5b155}
+.tb{height:30px;display:inline-flex;align-items:center;gap:8px;padding:0 10px;border-radius:4px;font-size:13px;white-space:nowrap}
+.tb:hover,.tb.on{background:#1b1f24}
+.seg{display:inline-flex;height:30px;padding:2px;gap:2px;background:#14171b;border:1px solid #23272d;border-radius:5px;flex:none}
+.seg>button{padding:0 10px;border-radius:3px;font-size:12.5px;color:#aab1b9;white-space:nowrap;text-align:center}
+.seg>button.on{background:#282d34;color:#e8eaed}
+.seg.sm{height:26px}.seg.sm>button{font-size:12px;padding:0 9px}
+.primary{height:32px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;border-radius:4px;background:#f2a33a;color:#1a1206;font-weight:600;font-size:13px;white-space:nowrap}
+.primary:hover{background:#f6b04d}
+.primary.off{background:#3a3327;color:#8d8370;cursor:default}
+.ghost{height:32px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;border-radius:4px;border:1px solid #2f353c;color:#e8eaed;font-weight:500;font-size:13px;white-space:nowrap}
+.ghost:hover{background:#1b1f24}
+kbd{font:inherit;font-size:11px;font-weight:500;padding:1px 5px;border-radius:3px;background:rgba(26,18,6,.16)}
+.iconbtn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;color:#aab1b9;flex:none}
+.iconbtn:hover{background:#1b1f24;color:#e8eaed}
+.iconbtn.on{color:#f5b155}
+.dtab{position:relative;display:inline-flex;align-items:center;gap:6px;padding:0 12px;font-size:13px;color:#aab1b9;white-space:nowrap}
+.dtab.on{color:#e8eaed;font-weight:500}
+.dtab.on::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;background:#f2a33a}
+.rtab{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:40px;position:relative;font-size:13px;color:#aab1b9;white-space:nowrap}
+.rtab.on{color:#e8eaed;font-weight:500}
+.rtab.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#f2a33a}
+.mtab{height:48px;display:inline-flex;align-items:center;gap:6px;padding:0 2px;font-size:14px;color:#aab1b9;position:relative;white-space:nowrap}
+.mtab:hover{color:#e8eaed}
+.mtab.on{color:#e8eaed;font-weight:600}
+.mtab.on::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:#f2a33a}
+.cnt{font-size:11.5px;color:#7f8790;font-variant-numeric:tabular-nums}
+.cnt.bad{color:#1a0b09;background:#f06a5d;border-radius:8px;padding:0 5px;font-weight:600}
+.sec{display:flex;align-items:center;justify-content:space-between;height:28px;font-size:13px;font-weight:600}
+.field{height:32px;display:flex;align-items:center;border:1px solid #2f353c;border-radius:4px;background:#0f1215;font-size:13px;font-variant-numeric:tabular-nums}
+.field .k{width:30px;height:100%;display:flex;align-items:center;justify-content:center;color:#7f8790}
+.field .v{flex:1;text-align:center;background:none;border:0;width:100%;outline:none}
+.sel{height:32px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 10px;border:1px solid #2f353c;border-radius:4px;background:#0f1215;font-size:13px;width:100%}
+.inp{height:32px;border:1px solid #2f353c;border-radius:4px;background:#0f1215;padding:0 10px;font-size:13px;outline:none;width:100%;font-variant-numeric:tabular-nums}
+.mini{height:28px;display:flex;align-items:center;padding:0 8px;border:1px solid #2f353c;border-radius:4px;background:#0f1215;font-size:12.5px;font-variant-numeric:tabular-nums;outline:none}
+.field.err,.inp.err,.mini.err,.sel.err{border-color:#f06a5d}
+.field.foc,.inp.foc,.mini.foc,.sel.foc{border-color:#f2a33a}
+.errt{font-size:12px;color:#f58a7f}
+.lab{font-size:12.5px;color:#aab1b9}
+.sw{width:34px;height:20px;border-radius:10px;background:#2f353c;position:relative;flex:none}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:7px;background:#aab1b9}
+.sw.on{background:#f2a33a}.sw.on::after{left:17px;background:#1a1206}
+.kv{display:flex;align-items:center;justify-content:space-between;gap:12px;height:31px;border-top:1px solid #1f2328;font-size:13px;white-space:nowrap}
+.kv>span:first-child{color:#aab1b9}
+.chip{height:26px;display:inline-flex;align-items:center;gap:6px;padding:0 9px;border-radius:13px;border:1px solid #2f353c;font-size:12.5px;white-space:nowrap}
+.chip.on{border-color:#6b5227;background:#241c10;color:#f5c27a}
+.chip.bad{border-color:#7a3a33;color:#f58a7f}
+.cb{width:15px;height:15px;border-radius:3px;border:1px solid #4a525c;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.cb.on{background:#f2a33a;border-color:#f2a33a}
+.tag{height:18px;padding:0 6px;border-radius:3px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;white-space:nowrap;background:#282d34;color:#aab1b9}
+.tag.am{background:#3a2c16;color:#f5b155}.tag.dn{background:#3b1f1c;color:#f58a7f}.tag.bl{background:#1c3340;color:#8fd0f0}
+table{border-collapse:collapse;width:100%}
+th{font-weight:500;font-size:12px;color:#7f8790;text-align:right;padding:0 0 6px 8px;white-space:nowrap}
+th:first-child{text-align:left;padding-left:0}
+td{font-size:12.5px;text-align:right;padding:0 0 0 8px;height:25px;border-top:1px solid #1f2328;white-space:nowrap;font-variant-numeric:tabular-nums}
+td:first-child{text-align:left;padding-left:0;color:#aab1b9}
+.lb th{font-size:12px;padding:0 8px;height:30px;border-bottom:1px solid #23272d}
+.lb td{height:30px;padding:0 8px;border-top:0;border-bottom:1px solid #1b1f24}
+.lb td:first-child{padding-left:12px}.lb th:first-child{padding-left:12px}
+.lb tr.cur td{background:#221b11}
+.lb tr.cur td:first-child{color:#f5b155}
+.lb.sm td{height:26px}
+.code{font-family:"Source Code Pro",Consolas,monospace;font-size:12.5px;line-height:19px}
+.cl{display:flex;height:19px;border-left:2px solid transparent;white-space:pre}
+.cl .ln{width:46px;flex:none;text-align:right;padding-right:14px;color:#4f565f}
+.cl.in{background:rgba(242,163,58,0.06);border-left-color:#f2a33a}.cl.in .ln{color:#aab1b9}
+.cl.fx{background:rgba(255,255,255,0.025);border-left-color:#3a4048}.cl.fx .ln{color:#aab1b9}
+.cl.er{background:rgba(240,106,93,0.10);border-left-color:#f06a5d}.cl.er .ln{color:#f58a7f}
+.cl.cu{background:rgba(255,255,255,0.035)}
+.kw{color:#8fb8de}.fn{color:#d9c38c}.st{color:#a9c98f}.nu{color:#e0a577}.cm{color:#6b727b}
+.sq{text-decoration:underline wavy #f06a5d;text-underline-offset:3px}
+.menu{position:absolute;background:#1b1f24;border:1px solid #2f353c;border-radius:6px;box-shadow:0 14px 36px rgba(0,0,0,.55);padding:4px;font-size:13px;display:flex;flex-direction:column}
+.mi{height:30px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:4px;white-space:nowrap;width:100%}
+.mi:hover,.mi.on{background:#2a3038}
+.mh{height:26px;display:flex;align-items:center;padding:0 10px;font-size:11.5px;color:#7f8790}
+.msep{height:1px;background:#2f353c;margin:4px 0;flex:none}
+.dlg{background:#14171b;border:1px solid #2f353c;border-radius:8px;box-shadow:0 24px 64px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden}
+.toast{position:absolute;display:flex;align-items:center;gap:12px;height:40px;padding:0 8px 0 14px;border-radius:6px;background:#282d34;border:1px solid #3a4048;box-shadow:0 12px 28px rgba(0,0,0,.5);font-size:13px;white-space:nowrap}
+.bar{height:4px;border-radius:2px;background:#2f353c;position:relative;overflow:hidden}
+.bar>i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:#f2a33a}
+.note{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:4px;font-size:12.5px;line-height:1.45;background:#1b1f24;color:#aab1b9}
+.note.am{background:#241c10;color:#f5c27a}.note.dn{background:#2a1715;color:#f5a59c}
+</style>
+</helmet>
+<div style="width: 880px; height: 900px; position: relative; overflow: hidden; background: #0e1013">
+<div style="position: absolute; left: -560px; top: 0px">
+<div style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: #0e1013; color: #e8eaed; overflow: hidden; position: relative">
+<header style="height: 48px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 12px 0 16px; border-bottom: 1px solid #23272d; background: #0e1013">
+<div style="display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 15px; white-space: nowrap; padding-right: 6px"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="1.5" y="7" width="3.5" height="9" rx="1" fill="#f2a33a"/><rect x="7.25" y="2" width="3.5" height="14" rx="1" fill="#f2a33a"/><rect x="13" y="9.5" width="3.5" height="6.5" rx="1" fill="#7a5a26"/></svg><span>Pine Optimizer</span></div>
+<div style="width: 1px; height: 22px; background: #23272d"></div>
+<nav style="display: flex; gap: 18px; align-self: stretch; padding: 0 6px" aria-label="页面"><button class="mtab on" aria-current="page">回测</button><button class="mtab">优化<span style="width: 6px; height: 6px; border-radius: 6px; background: #f2a33a; flex: none"></span></button></nav>
+<div style="width: 1px; height: 22px; background: #23272d"></div>
+<button class="tb" aria-label="脚本 trend_breakout.pine"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#aab1b9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 1.5h5.5L13 5v9.5H4z"/><path d="M9.5 1.5V5H13"/></svg><span>trend_breakout.pine</span><span style="width: 7px; height: 7px; border-radius: 7px; background: #3fbf8a; flex: none"></span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+<button class="tb"><span style="font-weight: 600">BTCUSDT</span><span class="t3">Binance</span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+<div class="seg" role="group" aria-label="周期"><button>15m</button><button class="on">1h</button><button>4h</button><button>1D</button></div>
+<button class="tb num"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#aab1b9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg><span>2023-01-02 – 2025-05-04</span></button>
+<div style="flex: 1"></div>
+<span class="num" style="font-size: 12px; white-space: nowrap; display: flex; align-items: center; gap: 10px"><span class="t3">20,488 根 K 线，用时 2.1 秒</span></span><button class="primary"><svg width="11" height="11" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg><span>运行回测</span><kbd>Ctrl ↵</kbd></button>
+<div class="seg" role="group" aria-label="语言"><button class="on">中</button><button>EN</button></div>
+</header>
+<div style="flex: 1; display: flex; min-height: 0">
+<main style="width: 1104px; flex: none; display: flex; flex-direction: column; min-width: 0; position: relative">
+<div style="height: 32px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 12px; font-size: 12px; white-space: nowrap">
+<div style="display: flex; align-items: center; gap: 6px"><span style="font-weight: 600; font-size: 13px">BTCUSDT</span><span class="t2">1h</span></div>
+<div class="num" style="display: flex; align-items: center; gap: 10px">
+<span><span class="t3">开 </span><span class="dn">96,252</span></span>
+<span><span class="t3">高 </span><span class="dn">96,269</span></span>
+<span><span class="t3">低 </span><span class="dn">95,918</span></span>
+<span><span class="t3">收 </span><span class="dn">96,050</span></span>
+<span class="dn">−0.21%</span>
+</div>
+<div class="num" style="display: flex; align-items: center; gap: 12px"><span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 2px; background: #2bb3a3"></span><span class="t2">Basis</span><span>96,155</span></span><span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 1px; background: #6f7782"></span><span class="t2">Upper</span><span>96,951</span></span><span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 1px; background: #6f7782"></span><span class="t2">Lower</span><span>95,359</span></span></div>
+<div style="flex: 1"></div>
+
+<div style="display: flex; gap: 2px"><button class="iconbtn on" aria-label="显示成交标记" aria-pressed="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 3l3 4.5H1z"/><path d="M12 13l-3-4.5h6z"/></svg></button><button class="iconbtn" aria-label="重置缩放"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6V2.5H6M13.5 10v3.5H10M10 2.5h3.5V6M6 13.5H2.5V10"/></svg></button></div>
+</div>
+<div style="height: 398px; flex: none; position: relative">
+<svg width="1104" height="398" viewBox="0 0 1104 398" style="display: block" role="img" aria-label="BTCUSDT 1 小时 K 线">
+<line x1="8" x2="1036" y1="364.9" y2="364.9" stroke="#1a1d22" stroke-width="1"/>
+<line x1="8" x2="1036" y1="273.9" y2="273.9" stroke="#1a1d22" stroke-width="1"/>
+<line x1="8" x2="1036" y1="182.9" y2="182.9" stroke="#1a1d22" stroke-width="1"/>
+<line x1="8" x2="1036" y1="91.9" y2="91.9" stroke="#1a1d22" stroke-width="1"/>
+<line x1="62.8" x2="62.8" y1="10" y2="374" stroke="#1a1d22" stroke-width="1"/>
+<line x1="227.3" x2="227.3" y1="10" y2="374" stroke="#1a1d22" stroke-width="1"/>
+<line x1="391.8" x2="391.8" y1="10" y2="374" stroke="#1a1d22" stroke-width="1"/>
+<line x1="556.3" x2="556.3" y1="10" y2="374" stroke="#1a1d22" stroke-width="1"/>
+<line x1="720.7" x2="720.7" y1="10" y2="374" stroke="#1a1d22" stroke-width="1"/>
+<line x1="885.2" x2="885.2" y1="10" y2="374" stroke="#1a1d22" stroke-width="1"/>
+<path d="M11.4 270.8L18.3 278.9L25.1 287L32 291.7L38.8 296.5L45.7 300.3L52.5 306.4L59.4 309.9L66.3 310.2L73.1 310.2L80 310.2L86.8 310.2L93.7 310.6L100.5 308.5L107.4 308.3L114.2 309.9L121.1 310L127.9 309.5L134.8 310.1L141.6 310.3L148.5 310.1L155.3 310.6L162.2 311.4L169.1 311.2L175.9 311.5L182.8 310.7L189.6 310.4L196.5 308.1L203.3 305.9L210.2 303.8L217 303.3L223.9 302.7L230.7 300.3L237.6 299.4L244.4 297.6L251.3 292.3L258.1 291L265 291.1L271.9 291.1L278.7 291.3L285.6 291.3L292.4 291.3L299.3 290.5L306.1 290.5L313 288.4L319.8 286.1L326.7 281.6L333.5 269.7L340.4 256.5L347.2 238.8L354.1 217.3L360.9 194.3L367.8 173.9L374.7 159.5L381.5 146.4L388.4 136L395.2 126.4L402.1 119.5L408.9 114.5L415.8 111.4L422.6 108.9L429.5 109L436.3 112.8L443.2 119.6L450 122L456.9 128.1L463.7 134.5L470.6 134.8L477.5 137.3L484.3 139L491.2 134.6L498 126.3L504.9 120L511.7 114.7L518.6 110.2L525.4 104.8L532.3 101L539.1 96.2L546 93L552.8 92L559.7 89.1L566.5 86.5L573.4 84.1L580.3 82.5L587.1 77.3L594 68.5L600.8 63.7L607.7 58.2L614.5 54.5L621.4 53.9L628.2 51.6L635.1 49.1L641.9 47.2L648.8 47.2L655.6 46L662.5 43.4L669.3 42.4L676.2 41.7L683.1 40.5L689.9 38.4L696.8 38.2L703.6 38.8L710.5 41.1L717.3 43.1L724.2 43.3L731 42.9L737.9 38.5L744.7 35.4L751.6 33.4L758.4 32.4L765.3 32.2L772.1 32.2L779 28.7L785.9 25L792.7 17.3L799.6 7L806.4 -2.5L813.3 -8.8L820.1 -13.8L827 -14.2L833.8 -15.6L840.7 -16.1L847.5 -16.3L854.4 -13.2L861.2 -6.4L868.1 1.4L874.9 15L881.8 29.5L888.7 46.3L895.5 65.9L902.4 82L909.2 101.8L916.1 120L922.9 140L929.8 155.1L936.6 162.8L943.5 165.6L950.3 161.1L957.2 154.2L964 143.9L970.9 134L977.7 125.8L984.6 117.8L991.5 109.9L998.3 103.2L1005.2 97.9L1012 93.7L1018.9 92.6L1025.7 93.2L1032.6 96.4" fill="none" stroke="#5d6570" stroke-width="1"/>
+<path d="M11.4 352.6L18.3 349.8L25.1 346.4L32 346.4L38.8 344.8L45.7 343.9L52.5 342.6L59.4 341.2L66.3 341.5L73.1 341.4L80 341.1L86.8 341.1L93.7 341L100.5 341.5L107.4 342.2L114.2 342L121.1 342.1L127.9 342.2L134.8 342L141.6 342L148.5 341.2L155.3 342L162.2 342L169.1 341.2L175.9 341.9L182.8 344.2L189.6 344.9L196.5 345.7L203.3 346L210.2 344.3L217 343.7L223.9 343.6L230.7 344.5L237.6 344.9L244.4 343.8L251.3 345.3L258.1 344.5L265 345.4L271.9 345.7L278.7 347.1L285.6 347.4L292.4 347.4L299.3 349.7L306.1 350.6L313 349.6L319.8 347L326.7 345.3L333.5 351.6L340.4 357.9L347.2 366.9L354.1 375.8L360.9 384.6L367.8 391.3L374.7 393.2L381.5 393.4L388.4 393.3L395.2 390.4L402.1 382.9L408.9 374.1L415.8 362.6L422.6 350.3L429.5 334.6L436.3 313.5L443.2 290.7L450 273.8L456.9 254.5L463.7 235.3L470.6 223L477.5 210.4L484.3 202.2L491.2 200.9L498 204L504.9 205.8L511.7 205.4L518.6 204.6L525.4 203L532.3 200.5L539.1 197.5L546 192.8L552.8 186.5L559.7 181.4L566.5 176.2L573.4 171.3L580.3 164.8L587.1 162.5L594 160.7L600.8 157.2L607.7 156.1L614.5 152.6L621.4 145L628.2 140.3L635.1 137.7L641.9 134L648.8 129.3L655.6 124.3L662.5 121L669.3 115.8L676.2 111.9L683.1 107.6L689.9 102.2L696.8 97.5L703.6 92.5L710.5 86.5L717.3 81L724.2 78.1L731 78.1L737.9 79.1L744.7 79.2L751.6 78.3L758.4 76.6L765.3 77L772.1 77L779 82.9L785.9 88.9L792.7 102.5L799.6 122.2L806.4 142.9L813.3 160L820.1 178.1L827 193.3L833.8 209.5L840.7 225.5L847.5 241.9L854.4 254.8L861.2 263L868.1 271.1L874.9 275L881.8 279.7L888.7 282.3L895.5 282.4L902.4 283.6L909.2 281.5L916.1 276.9L922.9 267.9L929.8 259.5L936.6 255.4L943.5 253.9L950.3 256.7L957.2 260.3L964 265.6L970.9 269.3L977.7 270.6L984.6 270.2L991.5 269.7L998.3 269.5L1005.2 267.4L1012 264.9L1018.9 258.5L1025.7 250.5L1032.6 241.3" fill="none" stroke="#5d6570" stroke-width="1"/>
+<path d="M11.4 311.7L18.3 314.4L25.1 316.7L32 319L38.8 320.6L45.7 322.1L52.5 324.5L59.4 325.5L66.3 325.8L73.1 325.8L80 325.7L86.8 325.6L93.7 325.8L100.5 325L107.4 325.2L114.2 326L121.1 326L127.9 325.8L134.8 326.1L141.6 326.1L148.5 325.7L155.3 326.3L162.2 326.7L169.1 326.2L175.9 326.7L182.8 327.5L189.6 327.6L196.5 326.9L203.3 326L210.2 324L217 323.5L223.9 323.2L230.7 322.4L237.6 322.2L244.4 320.7L251.3 318.8L258.1 317.7L265 318.2L271.9 318.4L278.7 319.2L285.6 319.4L292.4 319.4L299.3 320.1L306.1 320.6L313 319L319.8 316.6L326.7 313.5L333.5 310.6L340.4 307.2L347.2 302.9L354.1 296.6L360.9 289.4L367.8 282.6L374.7 276.3L381.5 269.9L388.4 264.6L395.2 258.4L402.1 251.2L408.9 244.3L415.8 237L422.6 229.6L429.5 221.8L436.3 213.2L443.2 205.2L450 197.9L456.9 191.3L463.7 184.9L470.6 178.9L477.5 173.8L484.3 170.6L491.2 167.7L498 165.1L504.9 162.9L511.7 160.1L518.6 157.4L525.4 153.9L532.3 150.8L539.1 146.9L546 142.9L552.8 139.3L559.7 135.3L566.5 131.3L573.4 127.7L580.3 123.7L587.1 119.9L594 114.6L600.8 110.5L607.7 107.1L614.5 103.5L621.4 99.4L628.2 96L635.1 93.4L641.9 90.6L648.8 88.2L655.6 85.1L662.5 82.2L669.3 79.1L676.2 76.8L683.1 74.1L689.9 70.3L696.8 67.8L703.6 65.7L710.5 63.8L717.3 62.1L724.2 60.7L731 60.5L737.9 58.8L744.7 57.3L751.6 55.9L758.4 54.5L765.3 54.6L772.1 54.6L779 55.8L785.9 57L792.7 59.9L799.6 64.6L806.4 70.2L813.3 75.6L820.1 82.1L827 89.5L833.8 97L840.7 104.7L847.5 112.8L854.4 120.8L861.2 128.3L868.1 136.3L874.9 145L881.8 154.6L888.7 164.3L895.5 174.1L902.4 182.8L909.2 191.6L916.1 198.5L922.9 204L929.8 207.3L936.6 209.1L943.5 209.7L950.3 208.9L957.2 207.2L964 204.7L970.9 201.6L977.7 198.2L984.6 194L991.5 189.8L998.3 186.4L1005.2 182.7L1012 179.3L1018.9 175.6L1025.7 171.8L1032.6 168.8" fill="none" stroke="#2bb3a3" stroke-width="1.6"/>
+<g opacity="1">
+<line x1="957.2" y1="152.2" x2="1032.6" y2="178.4" stroke="#f06a5d" stroke-width="1.2" stroke-dasharray="3 3"/>
+<line x1="785.9" y1="91.7" x2="957.2" y2="152.2" stroke="#3fbf8a" stroke-width="1.2" stroke-dasharray="3 3"/>
+<line x1="258.1" y1="289.4" x2="785.9" y2="91.7" stroke="#3fbf8a" stroke-width="1.2" stroke-dasharray="3 3"/>
+<line x1="80" y1="343.8" x2="258.1" y2="289.4" stroke="#f06a5d" stroke-width="1.2" stroke-dasharray="3 3"/>
+</g>
+<path d="M18.3 314.4V320.2M18.3 333.1V344.5M25.1 305.3V318.8M25.1 320.2V332.5M38.8 293V322.7M38.8 334V345.3M59.4 319.4V325.7M59.4 338.9V340.4M80 325.8V329.6M80 343.8V346.3M86.8 316.6V322.6M86.8 329.6V335.1M93.7 305.9V318.4M93.7 322.6V340.1M100.5 297.4V310.9M100.5 318.4V338.1M114.2 322.5V328M114.2 334.5V337.7M121.1 324.9V327.7M121.1 328V337.8M127.9 315.2V318.2M127.9 327.7V330.1M141.6 314.3V316.6M141.6 322.2V341.7M162.2 315.4V326.8M162.2 333.6V352.2M169.1 314.5V322.9M169.1 326.8V330.2M189.6 330.4V342.5M189.6 342.5V349.7M196.5 307.2V310.8M196.5 342.5V353.7M203.3 305.1V310.3M203.3 310.8V312.2M210.2 302.3V305.2M210.2 310.3V315.3M223.9 313.6V315.8M223.9 319.3V326.8M230.7 291.7V303.7M230.7 315.8V317.8M251.3 283.9V289.4M251.3 305.8V317.2M271.9 316.4V326.1M271.9 328.3V347.8M285.6 320.8V327.3M285.6 331.9V340.8M306.1 323.6V332.1M306.1 342.2V347.8M313 293.5V301.3M313 332.1V341.8M319.8 285.7V293.8M319.8 301.3V306.3M326.7 266.4V280.6M326.7 293.8V297.7M333.5 250.3V254.4M333.5 280.6V288M340.4 232.6V242.1M340.4 254.4V260.8M347.2 215.2V217.6M347.2 242.1V246.9M354.1 188.9V193.5M354.1 217.6V225.4M360.9 169.8V173.1M360.9 193.5V198.6M367.8 160.5V167.3M367.8 173.1V175.7M381.5 158.8V177.7M381.5 180.2V192.4M395.2 171.1V181.5M395.2 183.6V203.6M415.8 167.3V186.2M415.8 187.1V189.8M422.6 174.6V180.3M422.6 186.2V192.8M429.5 172.5V176.7M429.5 180.3V196.1M436.3 147.9V169.6M436.3 176.7V183.3M450 149.3V155M450 172.7V174.8M463.7 145.7V152.4M463.7 162.8V168.6M470.6 126.8V134M470.6 152.4V155.7M491.2 126.6V136.1M491.2 152.8V156M498 91.5V120.6M498 136.1V147.7M518.6 112V123.7M518.6 123.7V134.7M525.4 113.1V114.6M525.4 123.7V126.3M539.1 101.1V107.2M539.1 117.9V124.3M559.7 94.3V101M559.7 113.3V121.8M566.5 77.2V97.3M566.5 101V103.1M573.4 88.8V97.2M573.4 97.3V100.1M580.3 82V91.6M580.3 97.2V112.6M587.1 77.4V80.3M587.1 91.6V98.6M594 52.4V57M594 80.3V82.5M607.7 60.5V67.7M607.7 69.1V83.7M628.2 63.2V67.2M628.2 70.4V71.8M641.9 62.2V68M641.9 69V71.8M655.6 53.7V62M655.6 75.9V77.5M662.5 48.4V55.4M662.5 62V66.9M683.1 46.1V53.3M683.1 61V77.8M689.9 36.8V38.2M689.9 53.3V63.2M717.3 39.9V57M717.3 59.9V73.2M724.2 42.5V52.3M724.2 57V66.9M737.9 27.3V35.1M737.9 53.6V71.3M772.1 64.3V69.1M772.1 69.4V80.5M854.4 210V217.1M854.4 221.9V224.7M861.2 196V202.9M861.2 217.1V228.1M874.9 206V209.6M874.9 212.1V226.9M916.1 226.1V228.4M916.1 246.1V252.6M922.9 206.1V208.8M922.9 228.4V236.7M929.8 168.6V188.1M929.8 208.8V212.1M936.6 182.9V184.5M936.6 188.1V190M943.5 171.2V181.1M943.5 184.5V190.9M950.3 141.1V152.2M950.3 181.1V182.8M957.2 144.4V151M957.2 152.2V161.5M964 133V136.5M964 151V169M984.6 114.6V137.1M984.6 141.5V144.9M991.5 130.1V132.5M991.5 137.1V140.5" stroke="#3fbf8a" stroke-width="1" fill="none"/>
+<path d="M11.4 313.5V315.6M11.4 333.1V341.8M32 315.9V318.8M32 334V342.8M45.7 314.8V322.7M45.7 327.5V329.8M52.5 319.6V327.5M52.5 338.9V346.4M66.3 308V325.7M66.3 329.1V331.6M73.1 320.3V329.1M73.1 343.8V354.7M107.4 306V310.9M107.4 334.5V356M134.8 313.7V318.2M134.8 322.2V327.3M148.5 314.7V316.6M148.5 323.9V330.9M155.3 321.3V323.9M155.3 333.6V357.4M175.9 320.4V322.9M175.9 333.1V343.6M182.8 328.1V333.1M182.8 342.5V346.5M217 299V305.2M217 319.3V322.3M237.6 301.6V303.7M237.6 305.6V315.9M244.4 296.2V305.6M244.4 305.8V313.1M258.1 280.1V289.4M258.1 306.4V315.9M265 300.4V306.4M265 328.3V338.7M278.7 310.4V326.1M278.7 331.9V338M292.4 312.4V327.3M292.4 333.5V340M299.3 326.8V333.5M299.3 342.2V361.7M374.7 153.7V167.3M374.7 180.2V185.8M388.4 171.1V177.7M388.4 183.6V190.7M402.1 168.3V181.5M402.1 184.7V198.7M408.9 173.9V184.7M408.9 187.1V191.3M443.2 154.5V169.6M443.2 172.7V187.5M456.9 141.7V155M456.9 162.8V173.9M477.5 123.3V134M477.5 141V150.8M484.3 129.1V141M484.3 152.8V161.2M504.9 114.7V120.6M504.9 123.1V127M511.7 116.7V123.1M511.7 123.7V134.6M532.3 108.8V114.6M532.3 117.9V126.1M546 97.1V107.2M546 107.6V120.7M552.8 104.5V107.6M552.8 113.3V120.3M600.8 50.9V57M600.8 69.1V70.7M614.5 64.6V67.7M614.5 68.8V81.8M621.4 66.8V68.8M621.4 70.4V82.4M635.1 54.5V67.2M635.1 69V78.8M648.8 64.7V68M648.8 75.9V99.5M669.3 42.4V55.4M669.3 56V63.1M676.2 52.3V56M676.2 61V73.2M696.8 24.9V38.2M696.8 50.9V61.4M703.6 36.5V50.9M703.6 54.6V63.7M710.5 50.3V54.6M710.5 59.9V72.1M731 39.2V52.3M731 53.6V65.3M744.7 32.8V35.1M744.7 37.4V44.1M751.6 34.1V37.4M751.6 40V50.6M758.4 34.4V40M758.4 43.1V61.4M765.3 37.9V43.1M765.3 69.4V76M779 59.5V69.1M779 91.7V105.5M785.9 88.6V91.7M785.9 99.1V108.7M792.7 85.8V99.1M792.7 121.4V132.2M799.6 119.4V121.4M799.6 149.2V157.6M806.4 143.1V149.2M806.4 167.4V174.4M813.3 156.1V167.4M813.3 169.3V171.6M820.1 165.3V169.3M820.1 184.1V197.5M827 174.2V184.1M827 186.4V195.3M833.8 180.2V186.4M833.8 199.3V208.7M840.7 188.9V199.3M840.7 209.2V218.2M847.5 207.2V209.2M847.5 221.9V235.7M868.1 186.2V202.9M868.1 212.1V215.7M881.8 204.6V209.6M881.8 229.6V231M888.7 214.4V229.6M888.7 234.4V237.6M895.5 218.4V234.4M895.5 239.1V241.5M902.4 221.7V239.1M902.4 242.7V254.7M909.2 230.2V242.7M909.2 246.1V249.7M970.9 132.9V136.5M970.9 137.1V146.7M977.7 129V137.1M977.7 141.5V147.9M998.3 129.6V132.5M998.3 134.5V153.3M1005.2 126.7V134.5M1005.2 138.3V149M1012 131.1V138.3M1012 141.7V143.3M1018.9 133.8V141.7M1018.9 155.4V160.7M1025.7 152.4V155.4M1025.7 160V172.1M1032.6 158.4V160M1032.6 178.4V190.4" stroke="#f06a5d" stroke-width="1" fill="none"/>
+<path d="M16.7 320.7h3.2v11.8h-3.2zM23.5 319.3h3.2v0.4h-3.2zM37.2 323.2h3.2v10.3h-3.2zM57.8 326.2h3.2v12.2h-3.2zM78.3 330.1h3.2v13.2h-3.2zM85.2 323.1h3.2v6h-3.2zM92 318.9h3.2v3.2h-3.2zM98.9 311.4h3.2v6.5h-3.2zM112.6 328.5h3.2v5.5h-3.2zM119.5 328.2h3.2v0h-3.2zM126.3 318.7h3.2v8.5h-3.2zM140 317.1h3.2v4.6h-3.2zM160.6 327.3h3.2v5.8h-3.2zM167.4 323.4h3.2v2.9h-3.2zM188 343h3.2v0h-3.2zM194.8 311.3h3.2v30.7h-3.2zM201.7 310.8h3.2v0h-3.2zM208.5 305.7h3.2v4.1h-3.2zM222.3 316.3h3.2v2.6h-3.2zM229.1 304.2h3.2v11.1h-3.2zM249.7 289.9h3.2v15.4h-3.2zM270.2 326.6h3.2v1.2h-3.2zM283.9 327.8h3.2v3.6h-3.2zM304.5 332.6h3.2v9.1h-3.2zM311.3 301.8h3.2v29.7h-3.2zM318.2 294.3h3.2v6.5h-3.2zM325.1 281.1h3.2v12.2h-3.2zM331.9 254.9h3.2v25.2h-3.2zM338.8 242.6h3.2v11.4h-3.2zM345.6 218.1h3.2v23.5h-3.2zM352.5 194h3.2v23.1h-3.2zM359.3 173.6h3.2v19.4h-3.2zM366.2 167.8h3.2v4.8h-3.2zM379.9 178.2h3.2v1.5h-3.2zM393.6 182h3.2v1.1h-3.2zM414.1 186.7h3.2v0h-3.2zM421 180.8h3.2v5h-3.2zM427.9 177.2h3.2v2.6h-3.2zM434.7 170.1h3.2v6.1h-3.2zM448.4 155.5h3.2v16.7h-3.2zM462.1 152.9h3.2v9.4h-3.2zM469 134.5h3.2v17.4h-3.2zM489.5 136.6h3.2v15.7h-3.2zM496.4 121.1h3.2v14.4h-3.2zM516.9 124.2h3.2v0h-3.2zM523.8 115.1h3.2v8.2h-3.2zM537.5 107.7h3.2v9.6h-3.2zM558.1 101.5h3.2v11.3h-3.2zM564.9 97.8h3.2v2.7h-3.2zM571.8 97.7h3.2v0h-3.2zM578.6 92.1h3.2v4.6h-3.2zM585.5 80.8h3.2v10.2h-3.2zM592.3 57.5h3.2v22.4h-3.2zM606 68.2h3.2v0.3h-3.2zM626.6 67.7h3.2v2.2h-3.2zM640.3 68.5h3.2v0h-3.2zM654 62.5h3.2v12.8h-3.2zM660.9 55.9h3.2v5.7h-3.2zM681.4 53.8h3.2v6.7h-3.2zM688.3 38.7h3.2v14h-3.2zM715.7 57.5h3.2v2h-3.2zM722.5 52.8h3.2v3.7h-3.2zM736.3 35.6h3.2v17.5h-3.2zM770.5 69.6h3.2v0h-3.2zM852.8 217.6h3.2v3.8h-3.2zM859.6 203.4h3.2v13.2h-3.2zM873.3 210.1h3.2v1.5h-3.2zM914.4 228.9h3.2v16.7h-3.2zM921.3 209.3h3.2v18.6h-3.2zM928.1 188.6h3.2v19.8h-3.2zM935 185h3.2v2.6h-3.2zM941.9 181.6h3.2v2.4h-3.2zM948.7 152.7h3.2v27.9h-3.2zM955.6 151.5h3.2v0.2h-3.2zM962.4 137h3.2v13.5h-3.2zM983 137.6h3.2v3.3h-3.2zM989.8 133h3.2v3.6h-3.2z" fill="#0e1013" stroke="#3fbf8a" stroke-width="1"/>
+<path d="M9.3 315.6h4.2v17.4h-4.2zM29.9 318.8h4.2v15.2h-4.2zM43.6 322.7h4.2v4.8h-4.2zM50.4 327.5h4.2v11.4h-4.2zM64.1 325.7h4.2v3.4h-4.2zM71 329.1h4.2v14.8h-4.2zM105.2 310.9h4.2v23.6h-4.2zM132.7 318.2h4.2v4h-4.2zM146.4 316.6h4.2v7.3h-4.2zM153.2 323.9h4.2v9.7h-4.2zM173.8 322.9h4.2v10.2h-4.2zM180.6 333.1h4.2v9.4h-4.2zM214.9 305.2h4.2v14.2h-4.2zM235.5 303.7h4.2v1.9h-4.2zM242.3 305.6h4.2v1h-4.2zM256 289.4h4.2v16.9h-4.2zM262.9 306.4h4.2v21.9h-4.2zM276.6 326.1h4.2v5.8h-4.2zM290.3 327.3h4.2v6.2h-4.2zM297.1 333.5h4.2v8.6h-4.2zM372.5 167.3h4.2v13h-4.2zM386.2 177.7h4.2v5.9h-4.2zM399.9 181.5h4.2v3.2h-4.2zM406.8 184.7h4.2v2.3h-4.2zM441.1 169.6h4.2v3.1h-4.2zM454.8 155h4.2v7.8h-4.2zM475.3 134h4.2v7h-4.2zM482.2 141h4.2v11.7h-4.2zM502.7 120.6h4.2v2.5h-4.2zM509.6 123.1h4.2v1h-4.2zM530.2 114.6h4.2v3.3h-4.2zM543.9 107.2h4.2v1h-4.2zM550.7 107.6h4.2v5.8h-4.2zM598.7 57h4.2v12.1h-4.2zM612.4 67.7h4.2v1h-4.2zM619.2 68.8h4.2v1.6h-4.2zM633 67.2h4.2v1.9h-4.2zM646.7 68h4.2v7.9h-4.2zM667.2 55.4h4.2v1h-4.2zM674.1 56h4.2v5h-4.2zM694.6 38.2h4.2v12.7h-4.2zM701.5 50.9h4.2v3.6h-4.2zM708.3 54.6h4.2v5.4h-4.2zM728.9 52.3h4.2v1.3h-4.2zM742.6 35.1h4.2v2.3h-4.2zM749.5 37.4h4.2v2.5h-4.2zM756.3 40h4.2v3.1h-4.2zM763.2 43.1h4.2v26.3h-4.2zM776.9 69.1h4.2v22.5h-4.2zM783.7 91.7h4.2v7.4h-4.2zM790.6 99.1h4.2v22.3h-4.2zM797.4 121.4h4.2v27.7h-4.2zM804.3 149.2h4.2v18.2h-4.2zM811.1 167.4h4.2v1.9h-4.2zM818 169.3h4.2v14.8h-4.2zM824.8 184.1h4.2v2.4h-4.2zM831.7 186.4h4.2v12.9h-4.2zM838.6 199.3h4.2v9.8h-4.2zM845.4 209.2h4.2v12.8h-4.2zM866 202.9h4.2v9.2h-4.2zM879.7 209.6h4.2v20h-4.2zM886.5 229.6h4.2v4.8h-4.2zM893.4 234.4h4.2v4.7h-4.2zM900.2 239.1h4.2v3.6h-4.2zM907.1 242.7h4.2v3.4h-4.2zM968.8 136.5h4.2v1h-4.2zM975.6 137.1h4.2v4.3h-4.2zM996.2 132.5h4.2v2h-4.2zM1003 134.5h4.2v3.8h-4.2zM1009.9 138.3h4.2v3.4h-4.2zM1016.7 141.7h4.2v13.7h-4.2zM1023.6 155.4h4.2v4.6h-4.2zM1030.4 160h4.2v18.3h-4.2z" fill="#f06a5d"/>
+<g opacity="1">
+<path d="M80 317.8l5 -8h-10z" fill="#f06a5d"/>
+<text x="80" y="304.8" fill="#f06a5d" font-size="11" text-anchor="middle" font-weight="600">空</text>
+<path d="M258.1 323.9l5 8h-10z" fill="#3fbf8a"/>
+<text x="258.1" y="344.9" fill="#3fbf8a" font-size="11" text-anchor="middle" font-weight="600">多</text>
+<path d="M785.9 80.6l5 -8h-10z" fill="#f06a5d"/>
+<text x="785.9" y="67.6" fill="#f06a5d" font-size="11" text-anchor="middle" font-weight="600">空</text>
+<path d="M957.2 169.5l5 8h-10z" fill="#3fbf8a"/>
+<text x="957.2" y="190.5" fill="#3fbf8a" font-size="11" text-anchor="middle" font-weight="600">多</text>
+<text x="871.5" y="114.9" fill="#3fbf8a" font-size="10.5" text-anchor="middle" font-weight="600">+0.49%</text>
+<text x="522" y="183.5" fill="#3fbf8a" font-size="10.5" text-anchor="middle" font-weight="600">+2.09%</text>
+<text x="169.1" y="309.6" fill="#f06a5d" font-size="10.5" text-anchor="middle" font-weight="600">−0.84%</text>
+</g>
+<text x="1046" y="368.9" fill="#7f8790" font-size="11">94,000</text>
+<text x="1046" y="277.9" fill="#7f8790" font-size="11">95,000</text>
+<text x="1046" y="186.9" fill="#7f8790" font-size="11">96,000</text>
+<text x="1046" y="95.9" fill="#7f8790" font-size="11">97,000</text>
+<line x1="8" x2="1036" y1="178.4" y2="178.4" stroke="#3fbf8a" stroke-width="1" stroke-dasharray="1 3"/>
+<rect x="1042" y="169.4" width="60" height="18" rx="2" fill="#3fbf8a"/>
+<text x="1046" y="182.4" fill="#08170f" font-size="11" font-weight="600">96,050</text>
+<text x="66.8" y="392" fill="#7f8790" font-size="11">4月29日</text>
+<text x="231.3" y="392" fill="#7f8790" font-size="11">4月30日</text>
+<text x="395.8" y="392" fill="#7f8790" font-size="11">5月1日</text>
+<text x="560.3" y="392" fill="#7f8790" font-size="11">5月2日</text>
+<text x="724.7" y="392" fill="#7f8790" font-size="11">5月3日</text>
+<text x="889.2" y="392" fill="#7f8790" font-size="11">5月4日</text>
+</svg>
+
+</div>
+
+<div style="height: 36px; flex: none; display: flex; align-items: stretch; gap: 2px; padding: 0 8px; background: #14171b; border-top: 1px solid #23272d; border-bottom: 1px solid #23272d">
+<button class="dtab on">报告</button>
+<button class="dtab">权益</button>
+<button class="dtab">成交 <span class="cnt">91</span></button>
+<button class="dtab">Pine 代码</button>
+<button class="dtab">问题 <span class="cnt">0</span></button>
+<div style="flex: 1"></div>
+<div style="display: flex; align-items: center; gap: 2px"><button class="iconbtn" aria-label="导出报告"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M2.5 13.5h11"/></svg></button><button class="iconbtn" aria-label="最大化面板"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10l4-4 4 4"/><path d="M3 3.5h10"/></svg></button><button class="iconbtn" aria-label="收起面板"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></div>
+</div>
+<section style="flex: 1; min-height: 0; background: #14171b; display: flex; flex-direction: column">
+
+<div style="flex: 1; min-height: 0; display: flex; flex-direction: column">
+<div class="num" style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-bottom: 1px solid #23272d">
+<div style="padding: 14px 16px; border-right: 1px solid #1f2328; display: flex; flex-direction: column; gap: 3px">
+<span class="t2" style="font-size: 12px">净利润</span>
+<span class="up" style="font-size: 22px; font-weight: 600; line-height: 1.15">+34,540.00</span>
+<span class="t3" style="font-size: 12px">+34.54%</span>
+</div>
+<div style="padding: 14px 16px; border-right: 1px solid #1f2328; display: flex; flex-direction: column; gap: 3px">
+<span class="t2" style="font-size: 12px">最大回撤</span>
+<span style="font-size: 22px; font-weight: 600; line-height: 1.15">−7,950.40</span>
+<span class="t3" style="font-size: 12px">−7.50%</span>
+</div>
+<div style="padding: 14px 16px; border-right: 1px solid #1f2328; display: flex; flex-direction: column; gap: 3px">
+<span class="t2" style="font-size: 12px">盈利因子</span>
+<span style="font-size: 22px; font-weight: 600; line-height: 1.15">1.34</span>
+<span class="t3" style="font-size: 12px">多 1.39  空 1.28</span>
+</div>
+<div style="padding: 14px 16px; border-right: 1px solid #1f2328; display: flex; flex-direction: column; gap: 3px">
+<span class="t2" style="font-size: 12px">胜率</span>
+<span style="font-size: 22px; font-weight: 600; line-height: 1.15">48.35%</span>
+<span class="t3" style="font-size: 12px">44 胜  47 负</span>
+</div>
+<div style="padding: 14px 16px; border-right: 1px solid #1f2328; display: flex; flex-direction: column; gap: 3px">
+<span class="t2" style="font-size: 12px">交易</span>
+<span style="font-size: 22px; font-weight: 600; line-height: 1.15">91</span>
+<span class="t3" style="font-size: 12px">多 49  空 42</span>
+</div>
+<div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 3px">
+<span class="t2" style="font-size: 12px">夏普比率</span>
+<span style="font-size: 22px; font-weight: 600; line-height: 1.15">1.58</span>
+<span class="t3" style="font-size: 12px">索提诺 2.41</span>
+</div>
+</div>
+<div style="flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; padding: 14px 16px 0">
+<div>
+<table>
+<thead><tr><th style="color: #e8eaed; font-weight: 600; font-size: 12.5px">收益</th><th>全部</th><th>多头</th><th>空头</th></tr></thead>
+<tbody>
+<tr><td>净利润</td><td class="up">+34,540.00</td><td class="up">+20,410.30</td><td class="up">+14,129.70</td></tr>
+<tr><td>毛利润</td><td>136,120.40</td><td>77,340.10</td><td>58,780.30</td></tr>
+<tr><td>毛亏损</td><td>−101,580.40</td><td>−56,929.80</td><td>−44,650.60</td></tr>
+<tr><td>手续费</td><td>2,480.15</td><td>1,335.40</td><td>1,144.75</td></tr>
+<tr><td>买入持有</td><td>+471.20%</td><td class="t3">—</td><td class="t3">—</td></tr>
+<tr><td>最大增长</td><td>+36,880.00</td><td class="t3">—</td><td class="t3">—</td></tr>
+<tr><td>最大回撤</td><td>−7,950.40</td><td class="t3">—</td><td class="t3">—</td></tr>
+<tr><td>未平仓</td><td class="dn">−352.60</td><td class="dn">−352.60</td><td class="t3">—</td></tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<thead><tr><th style="color: #e8eaed; font-weight: 600; font-size: 12.5px">交易</th><th>全部</th><th>多头</th><th>空头</th></tr></thead>
+<tbody>
+<tr><td>总交易数</td><td>91</td><td>49</td><td>42</td></tr>
+<tr><td>盈利交易</td><td>44</td><td>24</td><td>20</td></tr>
+<tr><td>亏损交易</td><td>47</td><td>25</td><td>22</td></tr>
+<tr><td>胜率</td><td>48.35%</td><td>48.98%</td><td>47.62%</td></tr>
+<tr><td>平均盈亏</td><td>+379.56</td><td>+416.54</td><td>+336.42</td></tr>
+<tr><td>平均盈利</td><td>+3,093.65</td><td>+3,222.50</td><td>+2,939.02</td></tr>
+<tr><td>平均亏损</td><td>−2,161.29</td><td>−2,277.19</td><td>−2,029.57</td></tr>
+<tr><td>盈亏比</td><td>1.43</td><td>1.42</td><td>1.45</td></tr>
+</tbody>
+</table>
+</div>
+<div>
+<table>
+<thead><tr><th style="color: #e8eaed; font-weight: 600; font-size: 12.5px">风险</th><th>全部</th><th>多头</th><th>空头</th></tr></thead>
+<tbody>
+<tr><td>夏普比率</td><td>1.58</td><td class="t3">—</td><td class="t3">—</td></tr>
+<tr><td>索提诺比率</td><td>2.41</td><td class="t3">—</td><td class="t3">—</td></tr>
+<tr><td>盈利因子</td><td>1.34</td><td>1.39</td><td>1.28</td></tr>
+<tr><td>最大盈利</td><td>+9,214.30</td><td>+9,214.30</td><td>+6,402.75</td></tr>
+<tr><td>最大亏损</td><td>−4,105.60</td><td>−4,105.60</td><td>−3,220.10</td></tr>
+<tr><td>平均持仓</td><td>41 根</td><td>44 根</td><td>37 根</td></tr>
+<tr><td>最大持仓</td><td>1.6</td><td>1.6</td><td>1.6</td></tr>
+<tr><td>追加保证金</td><td>0</td><td>0</td><td>0</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+</main><aside style="width: 336px; flex: none; display: flex; flex-direction: column; background: #14171b; border-left: 1px solid #23272d; position: relative; ">
+
+<div style="flex: 1; min-height: 0; padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 20px">
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div class="sec">
+<span>输入</span>
+<button class="t3" style="display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 400"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.6-3.7"/><path d="M3 2.5V6h3.5"/></svg>恢复默认</button>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><label for="p-len" style="display: flex; align-items: center; gap: 6px">Length<span style="width: 6px; height: 6px; border-radius: 6px; background: #f2a33a; flex: none"></span></label><span class="t3 num" style="font-size: 12px">来自 #1，默认 20</span></div>
+<div class="field"><button class="k" aria-label="减少">−</button><input id="p-len" class="v" value="28"><button class="k" aria-label="增加">+</button></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><label for="p-mult" style="display: flex; align-items: center; gap: 6px">Multiplier</label><span class="t3 num" style="font-size: 12px">步长 0.25</span></div>
+<div class="field"><button class="k" aria-label="减少">−</button><input id="p-mult" class="v" value="2.00"><button class="k" aria-label="增加">+</button></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px"><span>Source</span><button class="sel"><span>close</span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#7f8790" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></div>
+<div style="display: flex; justify-content: space-between; align-items: center; height: 28px"><span>Use trailing stop</span><button class="sw" role="switch" aria-checked="false" aria-label="Use trailing stop"></button></div>
+<div style="display: flex; align-items: center; gap: 10px; margin-top: 2px"><span class="t3" style="font-size: 12px">Risk</span><div style="flex: 1; height: 1px; background: #23272d"></div></div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><label for="p-trail" style="display: flex; align-items: center; gap: 6px">Trail %</label><span class="t3 num" style="font-size: 12px">步长 0.1</span></div>
+<div class="field"><button class="k" aria-label="减少">−</button><input id="p-trail" class="v" value="3.0"><button class="k" aria-label="增加">+</button></div>
+</div>
+</div>
+<div><div style="display: flex; flex-direction: column">
+<div class="sec" style="margin-bottom: 4px"><span>策略属性</span><a href="#" style="font-size: 12.5px; font-weight: 400">全部设置</a></div>
+<div class="kv"><span>初始资金</span><span class="num">100,000 USD</span></div>
+<div class="kv"><span>下单量</span><span class="num">100% 权益</span></div>
+<div class="kv"><span>金字塔加仓</span><span class="num">0</span></div>
+<div class="kv"><span>手续费</span><span class="num">0.1%</span></div>
+<div class="kv"><span>滑点</span><span class="num" style="display: flex; align-items: center; gap: 8px"><span class="t3" style="font-size: 12px">脚本 0</span><span style="width: 6px; height: 6px; border-radius: 6px; background: #f2a33a; flex: none"></span><span>1 tick</span></span></div>
+<div class="kv"><span>脚本执行</span><span>K 线收盘时</span></div>
+<div class="kv" style="border-bottom: 1px solid #1f2328"><span>限价单</span><span>触及即成交</span></div>
+</div></div>
+</div>
+</aside>
+</div>
+<div class="toast" style="left: 596px; bottom: 20px"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#3fbf8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.2l2.4 2.3 4.6-5"/></svg><span>已应用 #1 的参数并重新回测</span><button class="ghost" style="height: 28px">撤销</button><button class="ghost" style="height: 28px">返回优化</button></div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -12,7 +12,8 @@
 </div>
 
 > **当前状态。** 本仓库以 TypeScript 包的形式提供 Pine 引擎、优化器、行情数据、Web Worker
-> 执行以及 TradingView 核对套件。承载这些功能的浏览器应用正在重新开发，暂未包含在内。
+> 执行以及 TradingView 核对套件。承载这些功能的浏览器应用正在重新开发，暂未包含在内；其设计稿见
+> [docs/web-mock-terminal](docs/web-mock-terminal/README.md)。
 
 ## 为什么做这个
 

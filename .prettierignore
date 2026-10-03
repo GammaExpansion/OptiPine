@@ -4,3 +4,4 @@ node_modules/
 .golden/
 package-lock.json
 packages/market-data/test/fixtures/
+docs/web-mock-terminal/artboards/
