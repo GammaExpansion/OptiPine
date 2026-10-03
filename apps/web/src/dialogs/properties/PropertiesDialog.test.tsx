@@ -8,6 +8,7 @@ import {
 } from '../../pages/backtest/states/test-support.tsx';
 import { getBacktestStore } from '../../state/backtest.ts';
 import { uiStore } from '../../state/ui.ts';
+import { strategySource } from '../../workflows/test-support.ts';
 import { PropertiesDialog } from './PropertiesDialog.tsx';
 
 useBacktestTestServices();
@@ -55,6 +56,21 @@ test('an override is marked with the script value and resets alone or with all (
   expect(getBacktestStore().getState().readiness.ok).toBe(false);
   fireEvent.click(screen.getByRole('button', { name: 'Reset all to script values' }));
   expect(getBacktestStore().getState().propertyOverrides).toEqual({});
+});
+
+test('an override of a value the script computes also resets alone', async () => {
+  await loadScript(strategySource.replace('initial_capital=10000', 'initial_capital=5000 * 2'));
+  renderInEnglish(<PropertiesDialog />);
+  const capital = field('Initial capital');
+  expect(capital).toHaveValue('');
+  capital.focus();
+  fireEvent.change(capital, { target: { value: '30000' } });
+  expect(
+    screen.getByText('Overridden; the script computes this value on line 2.'),
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+  expect(getBacktestStore().getState().propertyOverrides).toEqual({});
+  expect(screen.queryByText(/Overridden/)).not.toBeInTheDocument();
 });
 
 test('a property override changes the next result', async () => {

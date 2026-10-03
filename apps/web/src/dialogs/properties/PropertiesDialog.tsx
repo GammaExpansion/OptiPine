@@ -119,7 +119,7 @@ function Row({
   note?: string;
 }) {
   const { t, text } = useI18n();
-  const setProperty = useBacktestStore((state) => state.actions.setProperty);
+  const resetProperty = useBacktestStore((state) => state.actions.resetProperty);
   const present = fields.filter((field): field is PropertyField => field !== undefined);
   const overridden = present.some((field) => field.overridden);
   return (
@@ -137,22 +137,18 @@ function Row({
         const scriptText = scriptValueText(field);
         return (
           <span key={field.id} className={styles.note}>
-            {script.kind === 'expression' || scriptText === null ? (
-              t('properties.overriddenComputed', {
-                line: script.kind === 'expression' ? script.line : 0,
-              })
-            ) : (
-              <>
-                {t('properties.overriddenValue', { value: scriptText })}
-                <Button
-                  variant="link"
-                  className={styles.inlineLink}
-                  onClick={() => setProperty(field.id, script.value)}
-                >
-                  {t('properties.reset')}
-                </Button>
-              </>
-            )}
+            {script.kind === 'expression' || scriptText === null
+              ? t('properties.overriddenComputed', {
+                  line: script.kind === 'expression' ? script.line : 0,
+                })
+              : t('properties.overriddenValue', { value: scriptText })}
+            <Button
+              variant="link"
+              className={styles.inlineLink}
+              onClick={() => resetProperty(field.id)}
+            >
+              {t('properties.reset')}
+            </Button>
           </span>
         );
       })}
