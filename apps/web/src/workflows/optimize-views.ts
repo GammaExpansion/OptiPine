@@ -1,18 +1,15 @@
-import type { Diagnostic, LiteralValue, RunResult } from '@pine/engine';
+import type { Diagnostic, LiteralValue } from '@pine/engine';
 import {
   buildBinDetail,
-  leaderboard,
-  metricRows,
-  scoreMetric,
   type AnalysisAxis,
   type AnalysisValue,
   type BinDetail,
   type Heatmap,
   type HeatmapCell,
-  type OptimizerAnalysis,
+  type OptimizerSummary,
+  type OptimizerSummaryRequest,
   type ParameterSensitivity,
   type Slice,
-  type TrialRecord,
 } from '@pine/optimizer';
 import type { OptimizationTrial } from '@pine/workers';
 import { diagnosticBar } from './backtest.ts';
@@ -23,7 +20,6 @@ import {
   reportMetrics,
   type Direction,
   type FilterCondition,
-  type FilterMetricId,
   type ObjectiveId,
 } from './optimize-ranking.ts';
 
@@ -32,54 +28,64 @@ export const leaderboardPageSize = 13;
 /** Sets the Top 20 equity view reruns (R1). */
 export const topEquityCount = 20;
 
-type Metrics = RunResult['metrics'];
-type MetricRead = (metrics: Metrics | undefined) => number | null;
+/** The metrics a leaderboard row shows for each range. */
+const figureMetrics = [
+  reportMetrics.netProfit,
+  reportMetrics.profitFactor,
+  reportMetrics.maxDrawdown,
+  reportMetrics.trades,
+] as const;
 
-const finite = (value: unknown): value is number =>
-  typeof value === 'number' && Number.isFinite(value);
+/**
+ * What the views ask of the analysis Worker: per-set columns of the leaderboard's figures and of
+ * the filters' metrics, and the maps at full resolution when hover and bin detail need them.
+ */
+export function summaryRequest(
+  filters: readonly FilterCondition[],
+  fullMaps: boolean,
+): OptimizerSummaryRequest {
+  return {
+    metrics: [
+      ...new Set([...figureMetrics, ...filters.map((filter) => reportMetrics[filter.metric])]),
+    ],
+    fullMaps,
+  };
+}
+
 const same = (left: unknown, right: unknown): boolean =>
   JSON.stringify(left) === JSON.stringify(right);
 const mean = (values: readonly number[]): number | null =>
   values.length ? values.reduce((total, value) => total + value, 0) / values.length : null;
+const orNull = (value: number | undefined): number | null =>
+  value === undefined || Number.isNaN(value) ? null : value;
 
-/**
- * Read one report metric from every trial of a run with the value @pine/optimizer's `scoreMetric`
- * gives, resolving the report keys once from `sample`. Every trial of a run has the same keys,
- * and parsing each trial's report would cost the main thread a frame for a large run.
- */
-export function metricReader(metric: string, sample: Metrics | undefined): MetricRead {
-  if (!sample) return (metrics) => (metrics ? scoreMetric(metrics, metric) : null);
-  if (Object.hasOwn(sample, metric))
-    return (metrics) => {
-      const value = metrics?.[metric];
-      return finite(value) ? value : null;
-    };
-  const cell = metricRows(sample).find((row) => row.name === metric)?.all;
-  const valueKey = cell?.valueKey;
-  const percentKey = cell?.percentKey;
-  return (metrics) => {
-    if (!metrics) return null;
-    const value = valueKey === undefined ? undefined : metrics[valueKey];
-    if (finite(value)) return value;
-    const percent = percentKey === undefined ? undefined : metrics[percentKey];
-    return finite(percent) ? percent : null;
-  };
+export type ValidationResultMode = 'none' | 'in-out';
+
+/** One analysis summary with the run's trials, which its positions index. */
+export interface RankedResults {
+  readonly summary: OptimizerSummary;
+  /** The run's trials of the full or IS range, in the order the Worker received them. */
+  readonly trials: readonly OptimizationTrial[];
+  readonly mode: ValidationResultMode;
+  readonly objective: ObjectiveId;
+  readonly direction: Direction;
+  /** The searched inputs with their values, in declaration order. */
+  readonly axes: readonly AnalysisAxis[];
+  /** 1-based rank by position; 0 for a set the filters exclude or that failed. */
+  readonly rankOf: Int32Array;
 }
 
-const inSampleMetrics = (trial: TrialRecord): Metrics | undefined =>
-  trial.inSampleMetrics ?? trial.inSample?.metrics ?? trial.result?.metrics;
-const outOfSampleMetrics = (trial: TrialRecord): Metrics | undefined =>
-  trial.outOfSampleMetrics ?? trial.outOfSample?.metrics;
-
-/** A filter metric of a set as @pine/optimizer's `constraintValue` reads it. */
-export function filterReader(
-  metric: FilterMetricId,
-  sample: Metrics | undefined,
-): (trial: TrialRecord) => number | null {
-  if (metric === 'consecutiveLosses')
-    return (trial) => trial.inSampleStatistics?.maxConsecutiveLosses ?? null;
-  const read = metricReader(reportMetrics[metric], sample);
-  return (trial) => read(inSampleMetrics(trial));
+export function rankResults(
+  summary: OptimizerSummary,
+  trials: readonly OptimizationTrial[],
+  mode: ValidationResultMode,
+  objective: ObjectiveId,
+  direction: Direction,
+  axes: readonly AnalysisAxis[],
+): RankedResults {
+  const rankOf = new Int32Array(summary.total);
+  summary.ranked.forEach((position, index) => (rankOf[position] = index + 1));
+  return { summary, trials, mode, objective, direction, axes, rankOf };
 }
 
 /** The figures a leaderboard row shows for one range. */
@@ -91,84 +97,23 @@ export interface TrialFigures {
   readonly trades: number | null;
 }
 
-interface FigureReaders {
-  readonly netProfit: MetricRead;
-  readonly profitFactor: MetricRead;
-  readonly maxDrawdown: MetricRead;
-  readonly trades: MetricRead;
-}
-
-function figures(readers: FigureReaders, metrics: Metrics | undefined): TrialFigures {
+function figures(
+  results: RankedResults,
+  position: number,
+  range: 'inSample' | 'outOfSample',
+): TrialFigures {
+  const read = (metric: string) =>
+    orNull(results.summary.columns.metrics[metric]?.[range][position]);
   return {
-    netProfit: readers.netProfit(metrics),
-    profitFactor: readers.profitFactor(metrics),
-    maxDrawdownPercent: readers.maxDrawdown(metrics),
-    trades: readers.trades(metrics),
+    netProfit: read(reportMetrics.netProfit),
+    profitFactor: read(reportMetrics.profitFactor),
+    maxDrawdownPercent: read(reportMetrics.maxDrawdown),
+    trades: read(reportMetrics.trades),
   };
 }
 
-export type ValidationResultMode = 'none' | 'in-out';
-
-/** One analysis in the current ranking order; the views below read it. */
-export interface RankedResults {
-  readonly analysis: OptimizerAnalysis;
-  readonly mode: ValidationResultMode;
-  readonly objective: ObjectiveId;
-  readonly direction: Direction;
-  /** The searched inputs with their values, in declaration order. */
-  readonly axes: readonly AnalysisAxis[];
-  /** Sets that pass the filters, best first. */
-  readonly ranked: readonly TrialRecord[];
-  /** 1-based rank by trial id. */
-  readonly rankOf: ReadonlyMap<string, number>;
-  /** A report every trial's keys match, for the metric readers. */
-  readonly sample: Metrics | undefined;
-  readonly readers: FigureReaders;
-}
-
-/**
- * Put an analysis in ranking order. The analysis ranks by the objective's IS value. The
- * neighbourhood mean re-ranks the same sets by the analysis' neighbourhood means with
- * @pine/optimizer's `leaderboard`: the analysis' own `rankBy: 'secondary'` means OOS for IS / OOS.
- */
-export function rankResults(
-  analysis: OptimizerAnalysis,
-  mode: ValidationResultMode,
-  objective: ObjectiveId,
-  direction: Direction,
-  axes: readonly AnalysisAxis[],
-): RankedResults {
-  let ranked: readonly TrialRecord[] = analysis.ranked;
-  if (objective === 'neighbourhoodMean') {
-    const byId = new Map(analysis.ranked.map((trial) => [trial.trialId, trial]));
-    ranked = leaderboard(
-      analysis.ranked.map((trial) => ({
-        ...trial,
-        objectiveValue: analysis.neighbors[trial.trialId] ?? null,
-      })),
-      { direction },
-    ).map((trial) => byId.get(trial.trialId)!);
-  }
-  const sample =
-    analysis.trials.find((trial) => trial.valid && inSampleMetrics(trial))?.inSampleMetrics ??
-    analysis.trials.map(inSampleMetrics).find((metrics) => metrics);
-  return {
-    analysis,
-    mode,
-    objective,
-    direction,
-    axes,
-    ranked,
-    rankOf: new Map(ranked.map((trial, index) => [trial.trialId, index + 1])),
-    sample,
-    readers: {
-      netProfit: metricReader(reportMetrics.netProfit, sample),
-      profitFactor: metricReader(reportMetrics.profitFactor, sample),
-      maxDrawdown: metricReader(reportMetrics.maxDrawdown, sample),
-      trades: metricReader(reportMetrics.trades, sample),
-    },
-  };
-}
+const parametersAt = (results: RankedResults, position: number) =>
+  (results.trials[position]?.parameters.inputs ?? {}) as Record<string, LiteralValue>;
 
 export interface LeaderboardRow {
   readonly rank: number;
@@ -187,17 +132,19 @@ export interface LeaderboardRow {
   readonly neighbourhoodMean: number | null;
 }
 
-function leaderboardRow(results: RankedResults, trial: TrialRecord, rank: number): LeaderboardRow {
-  const neighbourhoodMean = results.analysis.neighbors[trial.trialId] ?? null;
+function leaderboardRow(results: RankedResults, rank: number): LeaderboardRow {
+  const position = results.summary.ranked[rank - 1];
+  const { columns } = results.summary;
+  const neighbourhoodMean = orNull(columns.neighborhood[position]);
+  const inSample = orNull(columns.inSampleValue[position]);
   return {
     rank,
-    trialId: trial.trialId,
-    parameters: trial.parameters as Record<string, LiteralValue>,
-    score: results.objective === 'neighbourhoodMean' ? neighbourhoodMean : trial.inSampleValue,
-    objective: { inSample: trial.inSampleValue, outOfSample: trial.outOfSampleValue },
-    inSample: figures(results.readers, inSampleMetrics(trial)),
-    outOfSample:
-      results.mode === 'none' ? null : figures(results.readers, outOfSampleMetrics(trial)),
+    trialId: results.trials[position].trialId,
+    parameters: parametersAt(results, position),
+    score: results.objective === 'neighbourhoodMean' ? neighbourhoodMean : inSample,
+    objective: { inSample, outOfSample: orNull(columns.outOfSampleValue[position]) },
+    inSample: figures(results, position, 'inSample'),
+    outOfSample: results.mode === 'none' ? null : figures(results, position, 'outOfSample'),
     neighbourhoodMean,
   };
 }
@@ -219,23 +166,40 @@ export function pageCount(passing: number): number {
   return Math.max(1, Math.ceil(passing / leaderboardPageSize));
 }
 
+/** The page shown: `page` kept within the pages there are. */
+function pageOf(results: RankedResults, page: number): number {
+  return Math.min(Math.max(0, Math.floor(page)), pageCount(results.summary.ranked.length) - 1);
+}
+
 export function leaderboardView(results: RankedResults, page: number): LeaderboardView {
-  const pages = pageCount(results.ranked.length);
-  const at = Math.min(Math.max(0, Math.floor(page)), pages - 1);
-  const { x, y, z } = results.analysis.axes;
+  const passing = results.summary.ranked.length;
+  const at = pageOf(results, page);
+  const { x, y, z } = results.summary.axes;
   const searched = results.axes.map((axis) => axis.title);
   const first = [x, y, z].filter((title): title is string => !!title && searched.includes(title));
   const start = at * leaderboardPageSize;
+  const rows: LeaderboardRow[] = [];
+  for (let rank = start + 1; rank <= Math.min(passing, start + leaderboardPageSize); rank++)
+    rows.push(leaderboardRow(results, rank));
   return {
     page: at,
-    pageCount: pages,
-    passing: results.ranked.length,
-    total: results.analysis.trials.length,
+    pageCount: pageCount(passing),
+    passing,
+    total: results.summary.total,
     columns: [...first, ...searched.filter((title) => !first.includes(title))],
-    rows: results.ranked
-      .slice(start, start + leaderboardPageSize)
-      .map((trial, index) => leaderboardRow(results, trial, start + index + 1)),
+    rows,
   };
+}
+
+/** The leading sets, best first, as Top 20 equity reruns them (R1). */
+export function leadingSets(
+  results: RankedResults,
+  count: number,
+): { trialId: string; parameters: Readonly<Record<string, LiteralValue>> }[] {
+  return [...results.summary.ranked.subarray(0, count)].map((position) => ({
+    trialId: results.trials[position].trialId,
+    parameters: parametersAt(results, position),
+  }));
 }
 
 /** The selection bar's set (3.3): the selected row, or #1 while none is selected. */
@@ -251,9 +215,12 @@ export function selectionOf(
   trialId: string | null,
   optimizationId: number,
 ): Selection | null {
-  const rank = (trialId !== null && results.rankOf.get(trialId)) || (results.ranked.length ? 1 : 0);
+  const position =
+    trialId === null ? -1 : results.trials.findIndex((trial) => trial.trialId === trialId);
+  const picked = position >= 0 && position < results.summary.total ? results.rankOf[position] : 0;
+  const rank = picked || (results.summary.ranked.length ? 1 : 0);
   if (!rank) return null;
-  const row = leaderboardRow(results, results.ranked[rank - 1], rank);
+  const row = leaderboardRow(results, rank);
   return {
     row,
     explicit: row.trialId === trialId,
@@ -261,41 +228,39 @@ export function selectionOf(
   };
 }
 
-export interface ScatterPoint {
-  readonly trialId: string;
-  readonly inSample: number;
-  readonly outOfSample: number;
-  /** Null for a set the filters exclude. */
-  readonly rank: number | null;
-}
-
 /** IS vs OOS (R2): one point per completed set with both net profits. */
 export interface ScatterView {
-  readonly points: readonly ScatterPoint[];
+  /** Columns of equal length: one point each. */
+  readonly inSample: Float64Array;
+  readonly outOfSample: Float64Array;
+  /** 1-based rank, 0 for a set the filters exclude. */
+  readonly rank: Int32Array;
   /** The current leaderboard page's ranks, first and last, highlighted on the chart. */
   readonly pageRanks: readonly [number, number] | null;
 }
 
 export function scatterView(results: RankedResults, page: number): ScatterView | null {
   if (results.mode === 'none') return null;
-  const points: ScatterPoint[] = [];
-  for (const trial of results.analysis.trials) {
-    if (!trial.valid) continue;
-    const inSample = results.readers.netProfit(inSampleMetrics(trial));
-    const outOfSample = results.readers.netProfit(outOfSampleMetrics(trial));
-    if (inSample === null || outOfSample === null) continue;
-    points.push({
-      trialId: trial.trialId,
-      inSample,
-      outOfSample,
-      rank: results.rankOf.get(trial.trialId) ?? null,
-    });
+  const { total, columns } = results.summary;
+  const net = columns.metrics[reportMetrics.netProfit];
+  const inSample = new Float64Array(total);
+  const outOfSample = new Float64Array(total);
+  const rank = new Int32Array(total);
+  let points = 0;
+  for (let position = 0; position < total; position++) {
+    const inside = net.inSample[position];
+    const outside = net.outOfSample[position];
+    if (!columns.valid[position] || Number.isNaN(inside) || Number.isNaN(outside)) continue;
+    inSample[points] = inside;
+    outOfSample[points] = outside;
+    rank[points++] = results.rankOf[position];
   }
-  const passing = results.ranked.length;
-  const first = Math.min(Math.max(0, Math.floor(page)), pageCount(passing) - 1);
-  const start = first * leaderboardPageSize + 1;
+  const passing = results.summary.ranked.length;
+  const start = pageOf(results, page) * leaderboardPageSize + 1;
   return {
-    points,
+    inSample: inSample.subarray(0, points),
+    outOfSample: outOfSample.subarray(0, points),
+    rank: rank.subarray(0, points),
     pageRanks: passing ? [start, Math.min(passing, start + leaderboardPageSize - 1)] : null,
   };
 }
@@ -332,53 +297,53 @@ export function binWidth(span: number): number {
   return ([1, 2, 2.5, 5, 10].find((step) => step * power >= raw) ?? 10) * power;
 }
 
-function median(sorted: readonly number[]): number | null {
+function median(sorted: ArrayLike<number>): number | null {
   if (!sorted.length) return null;
   const middle = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 
+/** The completed sets' values of one column; NaN marks a set without one. */
+function completed(results: RankedResults, column: Float64Array): Float64Array {
+  const { total, columns } = results.summary;
+  const values = new Float64Array(total);
+  let count = 0;
+  for (let position = 0; position < total; position++)
+    if (columns.valid[position] && !Number.isNaN(column[position]))
+      values[count++] = column[position];
+  return values.subarray(0, count);
+}
+
+/** Typed arrays sort numerically without a comparator, several times faster on large runs. */
 export function distributionView(results: RankedResults): DistributionView {
-  const inValues: number[] = [];
-  const outValues: number[] = [];
-  for (const trial of results.analysis.trials) {
-    if (!trial.valid) continue;
-    const inSample = results.readers.netProfit(inSampleMetrics(trial));
-    if (inSample !== null) inValues.push(inSample);
-    if (results.mode === 'none') continue;
-    const outOfSample = results.readers.netProfit(outOfSampleMetrics(trial));
-    if (outOfSample !== null) outValues.push(outOfSample);
-  }
-  // A loop rather than Math.min(...values): a large random sample exceeds the argument limit.
-  let low = Infinity;
-  let high = -Infinity;
-  for (const value of [inValues, outValues].flat()) {
-    low = Math.min(low, value);
-    high = Math.max(high, value);
-  }
-  if (low > high) low = high = 0;
+  const net = results.summary.columns.metrics[reportMetrics.netProfit];
+  const inValues = completed(results, net.inSample).sort();
+  const outValues =
+    results.mode === 'none' ? new Float64Array() : completed(results, net.outOfSample).sort();
+  // The sorted ends rather than Math.min(...values): a large sample exceeds the argument limit.
+  const ends = [inValues, outValues].filter((values) => values.length);
+  const low = ends.length ? Math.min(...ends.map((values) => values[0])) : 0;
+  const high = ends.length ? Math.max(...ends.map((values) => values.at(-1)!)) : 0;
   const width = binWidth(high - low);
   const start = Math.floor(low / width) * width;
   const bins = Math.floor((high - start) / width + 1e-9) + 1;
-  const histogram = (values: number[]): Histogram => {
+  const histogram = (values: Float64Array): Histogram => {
     const counts = new Array<number>(bins).fill(0);
-    for (const value of values)
+    let profitable = 0;
+    for (const value of values) {
       counts[Math.min(bins - 1, Math.max(0, Math.floor((value - start) / width + 1e-9)))]++;
-    return {
-      counts,
-      sets: values.length,
-      profitable: values.filter((value) => value > 0).length,
-      median: median([...values].sort((a, b) => a - b)),
-    };
+      if (value > 0) profitable++;
+    }
+    return { counts, sets: values.length, profitable, median: median(values) };
   };
-  const best = results.ranked[0];
+  const best = results.summary.ranked[0];
   return {
     start,
     width,
     bins,
     inSample: histogram(inValues),
     outOfSample: results.mode === 'none' ? null : histogram(outValues),
-    best: best ? results.readers.netProfit(inSampleMetrics(best)) : null,
+    best: best === undefined ? null : orNull(net.inSample[best]),
   };
 }
 
@@ -396,14 +361,15 @@ export function filterDiagnosis(
   results: RankedResults,
   filters: readonly FilterCondition[],
 ): FilterDiagnosis[] {
-  if (results.ranked.length || !filters.length) return [];
-  const completed = results.analysis.trials.filter((trial) => trial.valid);
+  const { valid, metrics } = results.summary.columns;
+  if (results.summary.ranked.length || !filters.length) return [];
   return filters.map((filter) => {
-    const read = filterReader(filter.metric, results.sample);
+    const values = metrics[reportMetrics[filter.metric]]?.inSample;
     let passing = 0;
     let best: number | null = null;
-    for (const trial of completed) {
-      const value = read(trial);
+    for (let position = 0; position < results.summary.total; position++) {
+      if (!valid[position]) continue;
+      const value = orNull(values?.[position]);
       if (passesFilter(filter, value)) passing++;
       if (value !== null && (best === null || (filter.operator === '>=') === value > best))
         best = value;
@@ -421,21 +387,19 @@ export interface DraftPreview {
   readonly pageRanks: readonly number[];
 }
 
-/** From the analysis computed with `draft` as its `constraintDraft`. */
+/** From the summary of an analysis computed with `draft` as its `constraintDraft`. */
 export function draftPreview(
   results: RankedResults,
   draft: FilterCondition,
   page: number,
 ): DraftPreview {
-  const removed = new Set(
-    results.analysis.removedConstraintRanks.map((index) => results.analysis.ranked[index].trialId),
-  );
+  const start = pageOf(results, page) * leaderboardPageSize;
   return {
     filter: draft,
-    excluded: removed.size,
-    pageRanks: leaderboardView(results, page)
-      .rows.filter((row) => removed.has(row.trialId))
-      .map((row) => row.rank),
+    excluded: results.summary.removedConstraintRanks.length,
+    pageRanks: [...results.summary.removedConstraintRanks]
+      .filter((index) => index >= start && index < start + leaderboardPageSize)
+      .map((index) => index + 1),
   };
 }
 
@@ -450,14 +414,15 @@ export interface SliceChip {
   readonly values: readonly AnalysisValue[];
 }
 
-/** The parameter map (R1, R4): full resolution and binned above 24 values per axis. */
+/** The parameter map (R1, R4): binned above 24 values per axis. */
 export interface MapView {
   /** `all` for validation None. */
   readonly surface: 'all' | MapSurface;
   readonly x: string;
   readonly y: string | null;
   readonly z: string | null;
-  readonly map: Heatmap;
+  /** Full resolution, which cell hover and bin detail read; null while the run streams. */
+  readonly map: Heatmap | null;
   /** What the map draws: adjacent values averaged into one cell above 24 per axis. */
   readonly panel: Heatmap;
   readonly binned: boolean;
@@ -465,10 +430,10 @@ export interface MapView {
 }
 
 function surfaceMap(
-  analysis: OptimizerAnalysis,
+  summary: OptimizerSummary,
   surface: 'all' | MapSurface,
-): OptimizerAnalysis['maps'][number] | undefined {
-  return analysis.maps.find((item) => item.surface === surface);
+): OptimizerSummary['maps'][number] | undefined {
+  return summary.maps.find((item) => item.surface === surface);
 }
 
 /** The map for two or more searched inputs; the IS / OOS switch needs no new analysis. */
@@ -477,19 +442,20 @@ export function mapView(
   surface: MapSurface,
   slices: Readonly<Record<string, Slice>>,
 ): MapView | null {
-  const { analysis } = results;
-  const { x, y, z } = analysis.axes;
+  const { summary } = results;
+  const { x, y, z } = summary.axes;
   if (results.axes.length < 2 || !x) return null;
   const shown = results.mode === 'none' ? 'all' : surface;
-  const maps = surfaceMap(analysis, shown);
+  const maps = surfaceMap(summary, shown);
   if (!maps) return null;
   const display = maps.panelMap.display;
+  const selected = summary.selection >= 0 ? parametersAt(results, summary.selection) : {};
   return {
     surface: shown,
     x,
     y: y ?? null,
     z: z ?? null,
-    map: maps.map,
+    map: maps.map ?? null,
     panel: maps.panelMap,
     binned: !!display && (display.xBinSize > 1 || display.yBinSize > 1),
     slices: results.axes
@@ -497,8 +463,7 @@ export function mapView(
       .map((axis) => {
         const slice = slices[axis.title];
         const chosen = slice && Object.hasOwn(slice, 'value') ? slice.value : undefined;
-        const value =
-          chosen ?? analysis.heatmapSelection?.parameters[axis.title] ?? axis.values[0] ?? null;
+        const value = chosen ?? selected[axis.title] ?? axis.values[0] ?? null;
         return {
           title: axis.title,
           mode: slice?.mode ?? 'fixed',
@@ -522,12 +487,21 @@ export interface CellValues {
   readonly mean: { readonly inSample: number | null; readonly outOfSample: number | null };
 }
 
-export function cellValues(analysis: OptimizerAnalysis, cell: HeatmapCell): CellValues {
-  const inSample = (surfaceMap(analysis, 'in') ?? surfaceMap(analysis, 'all'))?.map;
-  const outOfSample = surfaceMap(analysis, 'out')?.map;
+/**
+ * The values under a map cell. A binned cell's values come from the full-resolution maps, which
+ * summaries of complete results carry; without them each value reads as null.
+ */
+export function cellValues(summary: OptimizerSummary, cell: HeatmapCell): CellValues {
+  const full = (surface: 'all' | MapSurface) => {
+    const maps = surfaceMap(summary, surface);
+    return maps?.map ?? maps?.panelMap;
+  };
+  const inSample = full('in') ?? full('all');
+  const outOfSample = full('out');
   const valueAt = (map: Heatmap | undefined, x: AnalysisValue, y: AnalysisValue | undefined) =>
-    map?.cells.find((item) => same(item.x, x) && same(item.y, y) && same(item.z, cell.z))?.value ??
-    null;
+    map?.cells.find(
+      (item) => !item.xValues && same(item.x, x) && same(item.y, y) && same(item.z, cell.z),
+    )?.value ?? null;
   const values: CellValue[] = [];
   for (const y of cell.yValues?.length ? cell.yValues : [cell.y])
     for (const x of cell.xValues ?? [cell.x])
@@ -550,6 +524,7 @@ export function cellValues(analysis: OptimizerAnalysis, cell: HeatmapCell): Cell
 
 /** R7: a binned cell at full resolution, from @pine/optimizer's `buildBinDetail`. */
 export function binDetail(view: MapView, cell: HeatmapCell): BinDetail | undefined {
+  if (!view.map) return undefined;
   return buildBinDetail(view.map, view.panel, {
     x: cell.x,
     ...(cell.y === undefined ? {} : { y: cell.y }),
@@ -578,19 +553,25 @@ export interface CurveView {
 /** Share of the peak's magnitude a value may fall short by and stay near the peak (R8). */
 const peakTolerance = 0.1;
 
+/** A one-input map is never binned, so its drawn map is the full one. */
 export function curveView(results: RankedResults): CurveView | null {
-  const { analysis } = results;
+  const { summary } = results;
   if (results.axes.length !== 1) return null;
-  const inSample = (surfaceMap(analysis, 'in') ?? surfaceMap(analysis, 'all'))?.map;
+  const inSample = (surfaceMap(summary, 'in') ?? surfaceMap(summary, 'all'))?.panelMap;
   if (!inSample) return null;
-  const outOfSample = surfaceMap(analysis, 'out')?.map;
+  const outOfSample = surfaceMap(summary, 'out')?.panelMap;
+  const positions = new Map(
+    results.trials.slice(0, summary.total).map((trial, position) => [trial.trialId, position]),
+  );
   const points = inSample.cells.map((cell) => {
     const trialId = cell.trialId ?? null;
+    const position = trialId === null ? undefined : positions.get(trialId);
     return {
       x: cell.x,
       inSample: cell.value,
       outOfSample: outOfSample?.cells.find((item) => same(item.x, cell.x))?.value ?? null,
-      neighbourhoodMean: trialId === null ? null : (analysis.neighbors[trialId] ?? null),
+      neighbourhoodMean:
+        position === undefined ? null : orNull(summary.columns.neighborhood[position]),
       trialId,
     };
   });
@@ -632,7 +613,7 @@ export interface SensitivityView {
 }
 
 export function sensitivityView(results: RankedResults): SensitivityView {
-  const { sensitivity, axes } = results.analysis;
+  const { sensitivity, axes } = results.summary;
   return {
     rows: sensitivity.parameters.map((row) => ({
       ...row,

@@ -1,16 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { runWithEquity, type MarketBar, type RunInput } from '@pine/engine';
-import {
-  optimizerMessage,
-  scoreMetric,
-  splitBars,
-  type OptimizerAnalysisInput,
-} from '@pine/optimizer';
+import { optimizerMessage, scoreMetric, splitBars } from '@pine/optimizer';
 import {
   OptimizationCompileError,
   WorkerCrashedError,
   workerMessage,
+  type AnalysisRunView,
   type OptimizationTrial,
 } from '@pine/workers';
 import { BacktestSession, type DatasetInput } from './backtest.ts';
@@ -228,15 +224,25 @@ test('trials stream into a buffer; subscribers see a snapshot at most every 250 
   assert.equal(state.run.status === 'running' && state.run.progress.completed, 3);
   // The OOS range is still ahead: (30 + 50) ms for 210 bars, so 80 × 90 / 210 more.
   assert.equal(state.run.status === 'running' && state.run.progress.remainingMs, 50 + 34);
-  assert.deepEqual(h.analysis.kinds, ['records']);
+  // The run opens in the analysis Worker with the trials so far, then a view of them.
+  assert.deepEqual(h.analysis.kinds, ['runOpen', 'runAppend', 'runView']);
+  const [, firstAppend, firstView] = h.analysis.requests;
+  assert.equal((firstAppend.input as { trials: OptimizationTrial[] }).trials.length, 3);
+  assert.deepEqual((firstView.input as { summary: unknown }).summary, {
+    metrics: [
+      'Net profit',
+      'Profit factor',
+      'Performance/Max drawdown (intrabar)/All %',
+      'Total trades',
+    ],
+    fullMaps: false,
+  });
 
   emit(run, 3, 6);
   h.timers.advance(250);
   assert.equal(h.states.length, published + 2);
-  assert.deepEqual(h.analysis.kinds, ['records']);
-  h.analysis.answer();
-  await settle();
-  h.analysis.answer();
+  assert.deepEqual(h.analysis.kinds, ['runOpen', 'runAppend', 'runView']);
+  for (let answered = 0; answered < 3; answered++) h.analysis.answer();
   await settle();
   state = h.session.getState();
   assert.equal(state.views?.inProgress, true);
@@ -244,12 +250,9 @@ test('trials stream into a buffer; subscribers see a snapshot at most every 250 
   assert.equal(state.views?.leaderboard.total, 3);
   assert.equal(state.views?.pending, true);
   assert.equal(state.results, null);
-  // The snapshot taken meanwhile is computed next, with all six trials.
-  assert.deepEqual(h.analysis.kinds, ['records']);
-  assert.equal(
-    (h.analysis.requests[0].input as { groups: OptimizationTrial[][] }).groups[0].length,
-    6,
-  );
+  // The snapshot taken meanwhile is computed next: only the three new trials travel.
+  assert.deepEqual(h.analysis.kinds, ['runAppend', 'runView']);
+  assert.equal((h.analysis.requests[0].input as { trials: OptimizationTrial[] }).trials.length, 3);
   await h.analysis.answerAll();
   assert.equal(h.session.getState().views?.completed, 6);
   assert.equal(h.session.getState().views?.pending, false);
@@ -319,7 +322,7 @@ test('IS and OOS are joined by trial id into rows the engine agrees with', async
     nets,
     [...nets].sort((a, b) => b - a),
   );
-  assert.equal(views?.scatter?.points.length, 8);
+  assert.equal(views?.scatter?.inSample.length, 8);
   assert.equal(views?.distribution.inSample.sets, 8);
   assert.equal(views?.unvalidated, false);
 });
@@ -332,7 +335,7 @@ test('cancel stops every Worker at once and the previous results stay (3.1)', as
   const run = h.pool.active!;
   emit(run, 0, 4);
   h.timers.advance(250);
-  assert.deepEqual(h.analysis.kinds, ['records']);
+  assert.deepEqual(h.analysis.kinds, ['runOpen', 'runAppend', 'runView']);
   assert.equal(h.session.getState().views, null);
   h.timers.now += 100;
   h.session.cancel();
@@ -344,13 +347,20 @@ test('cancel stops every Worker at once and the previous results stay (3.1)', as
   assert.equal(state.views?.inProgress, false);
   assert.equal(state.views?.completed, 8);
   assert.deepEqual(state.outdated, { reasons: ['ranges'] });
-  // The live run's analysis arrives late and is dropped.
+  // The cancelled run is released in the Worker; its late analysis is dropped.
+  assert.deepEqual(h.analysis.kinds, ['runOpen', 'runAppend', 'runView', 'runClose']);
   await h.analysis.answerAll();
   state = h.session.getState();
   assert.equal(state.views?.completed, 8);
   assert.equal(state.results, first);
   emit(run, 4, 6);
   assert.equal(h.timers.scheduled, 0);
+  // The results' run is still held: a new view of them sends no trial.
+  h.session.setSmooth(true);
+  await settle();
+  assert.deepEqual(h.analysis.kinds, ['runView']);
+  await h.analysis.answerAll();
+  assert.equal(h.session.getState().views?.completed, 8);
 });
 
 test('a failed run reports its compile errors or Worker error and keeps the results', async () => {
@@ -381,17 +391,17 @@ test('a newer view request replaces a waiting one; older settings never show (3.
   await complete(h);
   const before = h.session.getState().views!;
   h.session.setObjective('sharpeRatio');
-  assert.deepEqual(h.analysis.kinds, ['view']);
+  assert.deepEqual(h.analysis.kinds, ['runView']);
   h.session.setDirection('minimize');
   h.session.addFilter({ metric: 'trades', operator: '>=', value: 1 });
   h.session.setSmooth(true);
-  assert.deepEqual(h.analysis.kinds, ['view']);
+  assert.deepEqual(h.analysis.kinds, ['runView']);
   assert.equal(h.session.getState().views?.pending, true);
   h.analysis.answer();
   await settle();
-  assert.equal(h.session.getState().views?.analysis, before.analysis);
-  assert.deepEqual(h.analysis.kinds, ['view']);
-  const input = h.analysis.requests[0].input as OptimizerAnalysisInput;
+  assert.equal(h.session.getState().views?.summary, before.summary);
+  assert.deepEqual(h.analysis.kinds, ['runView']);
+  const input = (h.analysis.requests[0].input as { view: AnalysisRunView }).view;
   assert.equal(input.objective, 'Sharpe ratio');
   assert.equal(input.direction, 'minimize');
   assert.deepEqual(input.constraints, [{ metric: 'Total trades', operator: '>=', value: 1 }]);
@@ -399,7 +409,7 @@ test('a newer view request replaces a waiting one; older settings never show (3.
   await h.analysis.answerAll();
   const views = h.session.getState().views!;
   assert.equal(views.pending, false);
-  assert.notEqual(views.analysis, before.analysis);
+  assert.notEqual(views.summary, before.summary);
   const scores = views.leaderboard.rows.map((row) => row.score!);
   assert.deepEqual(
     scores,
@@ -568,7 +578,7 @@ test('a draft condition is previewed by the analysis; adding it applies it (R10)
   const valid = { ...draft, value: 0 };
   h.session.setDraftFilter(valid);
   await settle();
-  const input = h.analysis.requests[0].input as OptimizerAnalysisInput;
+  const input = (h.analysis.requests[0].input as { view: AnalysisRunView }).view;
   assert.deepEqual(input.constraintDraft, { metric: 'Net profit', operator: '>=', value: 0 });
   await h.analysis.answerAll();
   let views = h.session.getState().views!;
@@ -623,10 +633,37 @@ test('an analysis failure is reported and the last views stay', async () => {
   await settle();
   const state = h.session.getState();
   assert.deepEqual(state.analysisError, workerMessage('analysisWorkerCrashed'));
-  assert.equal(state.views?.analysis, before.analysis);
+  assert.equal(state.views?.summary, before.summary);
   h.session.setSmooth(false);
   await settle();
   assert.equal(h.session.getState().analysisError, null);
+});
+
+test('the neighbourhood objective is ranked by the analysis Worker for IS / OOS too', async () => {
+  const h = await harness();
+  await complete(h);
+  h.session.setObjective('neighbourhoodMean');
+  await settle();
+  const input = (h.analysis.requests[0].input as { view: AnalysisRunView }).view;
+  assert.deepEqual([input.objective, input.rankBy], ['Net profit', 'neighborhood']);
+  await h.analysis.answerAll();
+  const views = h.session.getState().views!;
+  const scores = views.leaderboard.rows.map((row) => row.score!);
+  assert.deepEqual(
+    scores,
+    [...scores].sort((a, b) => b - a),
+  );
+  assert.deepEqual(
+    views.leaderboard.rows.map((row) => row.score),
+    views.leaderboard.rows.map((row) => row.neighbourhoodMean),
+  );
+  // The map's fixed slices and the selection bar follow the neighbourhood's best set.
+  const best = views.leaderboard.rows[0];
+  assert.equal(views.selection?.row.trialId, best.trialId);
+  assert.equal(h.session.getState().run.status, 'done');
+  h.session.setObjective('netProfit');
+  await settle();
+  assert.equal((h.analysis.requests[0].input as { view: AnalysisRunView }).view.rankBy, undefined);
 });
 
 test('validation None ranks the full range and marks results unvalidated (R3)', async () => {
@@ -654,7 +691,7 @@ test('the selection gives the set to preview or apply on the Backtest page (3.3,
   const results = await complete(h);
   const second = h.session.getState().views!.leaderboard.rows[1];
   h.session.select(second.trialId);
-  const input = h.analysis.requests[0].input as OptimizerAnalysisInput;
+  const input = (h.analysis.requests[0].input as { view: AnalysisRunView }).view;
   assert.equal(input.selectedTrialId, second.trialId);
   await h.analysis.answerAll();
   const selection = h.session.getState().views!.selection!;
@@ -675,14 +712,14 @@ test('the selection gives the set to preview or apply on the Backtest page (3.3,
 test('axes follow the user, swapping when an input takes another axis (R4, R12)', async () => {
   const h = await harness();
   await complete(h);
-  assert.deepEqual(h.session.getState().views!.analysis.axes, {
+  assert.deepEqual(h.session.getState().views!.summary.axes, {
     x: 'Length',
     y: 'Source',
     z: undefined,
   });
   h.session.setAxis('x', 'Source');
   assert.deepEqual(h.session.getState().viewSettings.axes, { x: 'Source', y: 'Length' });
-  const input = h.analysis.requests[0].input as OptimizerAnalysisInput;
+  const input = (h.analysis.requests[0].input as { view: AnalysisRunView }).view;
   assert.deepEqual(
     [input.axes, input.preserveAxisOrientation],
     [{ x: 'Source', y: 'Length' }, true],
