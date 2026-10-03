@@ -128,8 +128,8 @@ npm run check               # the regression gate CI enforces
 ```
 
 - [Engine design](docs/DESIGN.md) and [compatibility notes](docs/COMPATIBILITY_NOTES.md)
-- [How fixtures are collected](packages/golden/fixtures/docs/collecting-golden-sop.md) (Chinese)
-  and the [fixture documentation](packages/golden/fixtures/README.md)
+- [How fixtures are collected](packages/golden/fixtures/docs/collecting-golden-sop.md) and the
+  [fixture documentation](packages/golden/fixtures/README.md)
 - Pull requests are welcome. A change in engine behaviour needs a fixture with native TradingView
   exports; expected values are never edited by hand and tolerances are never widened to pass.
 

@@ -1,102 +1,102 @@
-# Strategy 层测试用例清单 (INDEX)
+# Strategy Layer Case List (INDEX)
 
-[← 返回 strategy/README.md](./README.md) | [返回测试集导航](../README.md)
+[← Back to strategy/README.md](./README.md) | [Back to the test suite overview](../README.md)
 
-本清单收录 Strategy 撮合层共 64 个独立测试目录（v5 21 个，v6 43 个）。新增日期与交易类型用例已完成原生配对采集并全部匹配；原有 2 个周线持仓探针仅 Sharpe、Sortino 尚未匹配，保留为 unverified。
-
----
-
-## 1. 挂单与基础撮合 (Order Lifecycle & Probe B)
-
-| ID | 版本 | 标的 / 周期 | Plot 列数 | 核心测试点与关键验证 |
-|---|---|---|---|---|
-| `S_pending_entries` | v5 / v6 | BATS:AAPL 60 | 18 | • limit / stop / stop-limit 在市价两侧的触发与成交条件<br>• stop-limit 的 limit > stop（触发即成）与 limit < stop（等回调）<br>• 挂单跨 Bar 保持直至成交/撤销；同 ID 改单；平仓后关联 Exit 自动失效（防 GhostExit） |
-| `B_orders_strings__delay` | v5 / v6 | BATS:AAPL 60 | 8 | • Probe B 基线：挂单价格取整方向<br>• Order execution delay = One tick 成交时点对齐<br>• `str.tostring / str.format` 经 Trades.Signal 传递的原文一致性 |
-| `B_orders_strings__none` | v5 / v6 | BATS:AAPL 60 | 8 | • Probe B 基线：市价挂单取整<br>• Order execution delay = None（即时撮合）时点对齐 |
-| `S_limit_verification__2` | v6 | BATS:AAPL 60 | 17 | 两 tick 多空限价验证、开盘跳空价格改善；源常量 2 与报告原始标签分别保留 |
-| `S_limit_verification__0` | v6 | BATS:AAPL 60 | 17 | Properties 显式关闭验证，原生报告确认 N=0 |
-| `S_limit_verification__1` | v6 | BATS:AAPL 60 | 17 | 独立源码只改常量为 1，区分 N=1 / N=2 同名报告标签 |
-| `S_limit_verification_marketable__2` | v6 | BATS:AAPL 60 | 17 | 可立即成交的多空限价单与两 tick 验证条件 |
-| `S_limit_verification_stop_limit__2` | v6 | BATS:AAPL 60 | 17 | stop-limit 激活与两 tick 限价验证 |
-| `S_limit_verification_exit__2` | v6 | BATS:AAPL 60 | 17 | 限价退出与开仓后已可成交价格改善 |
+This list covers all 64 independent case directories in the Strategy broker layer (21 in v5, 43 in v6). The new date and trade-type case has completed a native paired capture and matches in full. In the 2 existing weekly holding probes, only Sharpe and Sortino do not yet match; they remain unverified.
 
 ---
 
-## 2. 出场、止损与括号单 (Exits & Brackets)
+## 1. Pending orders and basic matching (order lifecycle and Probe B)
 
-| ID | 版本 | 标的 / 周期 | Plot 列数 | 核心测试点与关键验证 |
+| ID | Version | Symbol / timeframe | Plot columns | What it tests and key checks |
 |---|---|---|---|---|
-| `S_exit_brackets` | v5 / v6 | BATS:AAPL 60 | 18 | • 0.15% 紧括号单同 Bar 内同时满足触发时的 4-tick 路径竞争判定<br>• **v5 vs v6 关键分水岭**：相对值（40 tick）与绝对值（0.5%）并存时，v5 绝对优先，v6 先触发优先 |
-| `S_exit_partial` | v5 / v6 | BATS:AAPL 60 | 16 | • Exit 数量预留机制（如 19+20，第二笔仅剩 1 股可平）<br>• `qty_percent` 按 50% 分批止盈<br>• 无 `from_entry` 的 Exit 对后续新 Entry 持续生效；非法 `from_entry` 判定无效 |
-| `S_trailing` | v5 / v6 | BATS:AAPL 60 | 12 | • 跟踪止损：`trail_price` 激活 + 30 tick 跟随（多空双向）<br>• `trail_points` 30 tick 激活 + 20 tick 跟随；跟随点位与 4-tick 极值假设的耦合 |
-| `S_close_variants` | v5 / v6 | BATS:AAPL 60 | 10 | • 平仓 API 族：`close(id)` 无 comment 时的默认 Signal 文案<br>• `qty` 固定股数与 `qty_percent` 比例减仓<br>• `close_all` 默认文案；`immediately=true` 强制即时成交时点 |
+| `S_pending_entries` | v5 / v6 | BATS:AAPL 60 | 18 | • Trigger and fill conditions for limit / stop / stop-limit on either side of the market price<br>• stop-limit with limit > stop (fills on trigger) and limit < stop (waits for a pullback)<br>• Pending orders persist across bars until filled/cancelled; amendment with the same ID; the associated Exit is invalidated automatically after a close (prevents GhostExit) |
+| `B_orders_strings__delay` | v5 / v6 | BATS:AAPL 60 | 8 | • Probe B baseline: pending order price rounding direction<br>• Fill timing alignment with Order execution delay = One tick<br>• Verbatim consistency of `str.tostring / str.format` text passed through Trades.Signal |
+| `B_orders_strings__none` | v5 / v6 | BATS:AAPL 60 | 8 | • Probe B baseline: rounding of pending market orders<br>• Timing alignment with Order execution delay = None (immediate matching) |
+| `S_limit_verification__2` | v6 | BATS:AAPL 60 | 17 | Two-tick limit verification for longs and shorts, price improvement on opening gaps; the source constant 2 and the raw report label are kept separately |
+| `S_limit_verification__0` | v6 | BATS:AAPL 60 | 17 | Properties explicitly disable verification; the native report confirms N=0 |
+| `S_limit_verification__1` | v6 | BATS:AAPL 60 | 17 | A separate source changes only the constant to 1, distinguishing N=1 / N=2, which share the same report label |
+| `S_limit_verification_marketable__2` | v6 | BATS:AAPL 60 | 17 | Marketable long and short limit orders and the two-tick verification condition |
+| `S_limit_verification_stop_limit__2` | v6 | BATS:AAPL 60 | 17 | stop-limit activation and two-tick limit verification |
+| `S_limit_verification_exit__2` | v6 | BATS:AAPL 60 | 17 | Limit exits and price improvement when already marketable after the entry |
 
 ---
 
-## 3. 加仓与平仓匹配规则 (Pyramiding & Matching)
+## 2. Exits, stops and brackets
 
-| ID | 版本 | 标的 / 周期 | Plot 列数 | 核心测试点与关键验证 |
+| ID | Version | Symbol / timeframe | Plot columns | What it tests and key checks |
 |---|---|---|---|---|
-| `S_pyramiding_fifo` | v5 / v6 | BATS:AAPL 60 | 12 | • `pyramiding=3` + 10% equity 定仓：前三笔成交，第四笔超限被静默忽略<br>• **FIFO 规则**：`close("E2")` 调用下实际平掉最先入场的仓位<br>• `strategy.order` 减仓不反转，且不受 pyramiding 限制 |
-| `S_pyramiding_any` | v5 / v6 | BATS:AAPL 60 | 12 | • **ANY 规则**：`close("E2")` 调用精准平掉指定 ID 的开仓单<br>• `strategy.entry` 反转仓位时的 Transaction 净交易量核算 |
+| `S_exit_brackets` | v5 / v6 | BATS:AAPL 60 | 18 | • 4-tick path race resolution when a tight 0.15% bracket triggers on both sides within one bar<br>• **Key v5 vs v6 divide**: when a relative value (40 ticks) and an absolute value (0.5%) are both set, v5 gives priority to the absolute value and v6 to whichever triggers first |
+| `S_exit_partial` | v5 / v6 | BATS:AAPL 60 | 16 | • Exit quantity reservation (e.g. 19+20, where only 1 share is left for the second to close)<br>• `qty_percent` takes profit in 50% batches<br>• An Exit without `from_entry` keeps applying to later new Entries; an invalid `from_entry` is treated as invalid |
+| `S_trailing` | v5 / v6 | BATS:AAPL 60 | 12 | • Trailing stop: `trail_price` activation + 30-tick trail (long and short)<br>• `trail_points` 30-tick activation + 20-tick trail; coupling between the trail level and the 4-tick extreme assumption |
+| `S_close_variants` | v5 / v6 | BATS:AAPL 60 | 10 | • Close API family: default Signal text from `close(id)` without a comment<br>• Reducing by a fixed share count with `qty` and by proportion with `qty_percent`<br>• `close_all` default text; fill timing when `immediately=true` forces an immediate fill |
 
 ---
 
-## 4. 费率、滑点与保证金杠杆 (Economics & Margin)
+## 3. Pyramiding and close matching rules
 
-| ID | 版本 | 标的 / 周期 | Plot 列数 | 核心测试点与关键验证 |
+| ID | Version | Symbol / timeframe | Plot columns | What it tests and key checks |
 |---|---|---|---|---|
-| `S_commission_slippage__base` | v5 / v6 | BATS:AAPL 60 | 15 | 零佣金、零滑点基准对照组 |
-| `S_commission_slippage__pct` | v5 / v6 | BATS:AAPL 60 | 15 | 0.1% 百分比佣金核算；双边进出场均计收；Limit 限价单不吃滑点 |
-| `S_commission_slippage__per_contract` | v5 / v6 | BATS:AAPL 60 | 15 | 每股固定佣金（0.05 USD / contract）计算 |
-| `S_commission_slippage__per_order` | v5 / v6 | BATS:AAPL 60 | 15 | 每笔订单固定佣金（1 USD / order）计算 |
-| `S_commission_slippage__slip3` | v5 / v6 | BATS:AAPL 60 | 15 | 滑点 3 ticks：仅作用于 Market 市价单与 Stop 触发单，Limit 订单不吃滑点 |
-| `S_margin` | v5 / v6 | BATS:AAPL 60 | 12 | 4x 杠杆（25% 保证金）+ 300% 满仓：Margin Call 强平触发门槛、强平数量核算与逐 Bar `margin_liquidation_price` 比对 |
+| `S_pyramiding_fifo` | v5 / v6 | BATS:AAPL 60 | 12 | • `pyramiding=3` + 10% equity sizing: the first three fill, and the fourth exceeds the limit and is silently ignored<br>• **FIFO rule**: a `close("E2")` call actually closes the earliest entered position<br>• Reducing with `strategy.order` does not reverse the position and is not limited by pyramiding |
+| `S_pyramiding_any` | v5 / v6 | BATS:AAPL 60 | 12 | • **ANY rule**: a `close("E2")` call closes exactly the entry with the specified ID<br>• Net Transaction quantity when `strategy.entry` reverses the position |
 
 ---
 
-## 5. 盘中重算触发机制 (Intrabar Order Fills)
+## 4. Commission, slippage and margin leverage
 
-| ID | 版本 | 标的 / 周期 | Plot 列数 | 核心测试点与关键验证 |
+| ID | Version | Symbol / timeframe | Plot columns | What it tests and key checks |
 |---|---|---|---|---|
-| `S_calc_on_order_fills` | v5 / v6 | BATS:AAPL 60 | 24 | • 单 Bar 执行次数统计（`calcs_on_bar`，上限 4 次）<br>• 区分盘中成交触发重算发生在收盘计算前或后<br>• 重算内部提交的市价单撮合 Tick 定位；`barstate.isnew` 状态回传 |
+| `S_commission_slippage__base` | v5 / v6 | BATS:AAPL 60 | 15 | Zero-commission, zero-slippage baseline control |
+| `S_commission_slippage__pct` | v5 / v6 | BATS:AAPL 60 | 15 | 0.1% percent commission; charged on both entry and exit; Limit orders take no slippage |
+| `S_commission_slippage__per_contract` | v5 / v6 | BATS:AAPL 60 | 15 | Fixed commission per share (0.05 USD / contract) |
+| `S_commission_slippage__per_order` | v5 / v6 | BATS:AAPL 60 | 15 | Fixed commission per order (1 USD / order) |
+| `S_commission_slippage__slip3` | v5 / v6 | BATS:AAPL 60 | 15 | Slippage of 3 ticks: applies only to Market orders and triggered Stop orders; Limit orders take no slippage |
+| `S_margin` | v5 / v6 | BATS:AAPL 60 | 12 | 4x leverage (25% margin) + 300% full position: Margin Call liquidation trigger threshold, liquidated quantity, and per-bar comparison of `margin_liquidation_price` |
 
 ---
 
-## 6. 策略风险控制规则 (Risk Management)
+## 5. Intrabar recalculation triggers (intrabar order fills)
 
-| ID | 版本 | 标的 / 周期 | Plot 列数 | 核心测试点与关键验证 |
+| ID | Version | Symbol / timeframe | Plot columns | What it tests and key checks |
 |---|---|---|---|---|
-| `S_risk` | v5 / v6 | BATS:AAPL 60 | 10 | 综合风控基线：同时激活 allow_entry_in、max_position_size 与 max_intraday_filled_orders |
-| `S_risk_allow_entry_in` | v5 / v6 | BATS:AAPL 60 | 10 | 单向开仓：`allow_entry_in(long)` 下持有长仓时，反向 Short 开仓自动退化为平仓单；空仓状态下的 Short 开仓被直接忽略 |
-| `S_risk_max_position_size` | v5 / v6 | BATS:AAPL 60 | 10 | 最大持仓截断：40 股申报被截断至 25 股上限；已满仓后后续 Entry 与 Order(qty=10) 差异处理 |
-| `S_risk_max_intraday_filled_orders` | v5 / v6 | BATS:AAPL 60 | 13 | 日内交易次数限制：单日达 3 笔上限后，第 4、5 笔（含 close_all）被拒绝；支持隔夜持仓并在次日恢复 |
-| `S_risk_max_drawdown__cash` | v6 | BINANCE:BTCUSDT 60 | 18 | 现金回撤 100，已实现余额回撤永久停止交易 |
-| `S_risk_max_intraday_loss__cash` | v6 | BINANCE:BTCUSDT 60 | 18 | 日内现金亏损 100，相对交易日起始净值触发强平并在次日恢复 |
-| `S_risk_max_cons_loss_days__2` | v6 | BINANCE:BTCUSDT 60 | 18 | 连续两个已实现亏损交易日后永久停机 |
-| `S_risk_max_cons_loss_days__1` | v6 | BINANCE:BTCUSDT 60 | 18 | 显式覆盖阈值为 1，首个完整已实现亏损交易日后永久停机 |
-| `S_risk_max_drawdown__percent` | v6 | BINANCE:BTCUSDT 60 | 18 | 最高已实现余额回撤 1% 后永久停机，浮盈浮亏不触发 |
-| `S_risk_max_intraday_loss__percent` | v6 | BINANCE:BTCUSDT 60 | 18 | 相对交易日起始净值亏损 1% 后强平，当日盈利可抵消后续浮亏 |
-| `S_risk_limits__control` | v6 | BINANCE:BTCUSDT 60 | 18 | 同市场与调度的独立原生对照，风控阈值设为不可触及 |
-| `S_risk_max_intraday_loss__cash_march` | v6 | BINANCE:BTCUSDT 60 | 18 | 三月终点的独立原生导出，验证 Sharpe/Sortino 日度观察范围与最后平仓时间 |
-| `S_risk_max_intraday_loss__cash_april` | v6 | BINANCE:BTCUSDT 60 | 18 | 四月终点的独立原生导出，验证跨更长交易区间的 Sharpe/Sortino 月度观察 |
-| `S_risk_max_intraday_loss__cash_weekly` | v6 | BINANCE:BTCUSDT 1W | 18 | 按周线重置；负期初净值暂停现金阈值，恢复正期初净值后重新生效 |
-| `S_risk_max_cons_loss_days__2_weekly` | v6 | BINANCE:BTCUSDT 1W | 18 | 跨周期浮亏计数；同刻全量平仓与固定数量风险订单形成反向仓位，后续脚本订单保持停机 |
-| `S_risk_max_cons_loss_days__full_close_2_weekly` | v6 | BINANCE:BTCUSDT 1W | 17 | 连亏两期，原持仓 2 全量平仓后风险订单卖出 2，留下 -2；全部通过 |
-| `S_risk_max_cons_loss_days__partial_close_2_weekly` | v6 | BINANCE:BTCUSDT 1W | 17 | 连亏两期，原持仓 2 先平 1，再由风险订单卖出 2，留下 -1；全部通过 |
-| `S_risk_max_cons_loss_days__hold_1_weekly` | v6 | BINANCE:BTCUSDT 1W | 17 | 无计划平仓；连亏一期后于 2024-01-15 风控平仓，序列与交易通过；两项比率未通过 |
-| `S_risk_max_cons_loss_days__hold_2_weekly` | v6 | BINANCE:BTCUSDT 1W | 17 | 无计划平仓；连亏两期后于 2024-01-22 风控平仓，序列与交易通过；两项比率未通过 |
+| `S_calc_on_order_fills` | v5 / v6 | BATS:AAPL 60 | 24 | • Count of executions per bar (`calcs_on_bar`, capped at 4)<br>• Whether a recalculation triggered by an intrabar fill happens before or after the close calculation<br>• On which tick a market order submitted inside a recalculation fills; `barstate.isnew` state reported back |
 
 ---
 
-## 7. 标的尺寸与合约步长 (Asset Sizing)
+## 6. Strategy risk management rules
 
-| ID | 版本 | 标的 / 周期 | Plot 列数 | 核心测试点与关键验证 |
+| ID | Version | Symbol / timeframe | Plot columns | What it tests and key checks |
 |---|---|---|---|---|
-| `S_sizing_crypto` | v5 / v6 | BINANCE:BTCUSDT 60 | v5: 12 / v6: 13 | • 加密货币高精度仓位（5% equity 产生的小数 Qty 精度）<br>• 显式数量（0.0123456）舍入规则<br>• 极小单（低于 1e-7 或 `syminfo_mincontract`）的静默跳过判定 |
+| `S_risk` | v5 / v6 | BATS:AAPL 60 | 10 | Combined risk baseline: activates allow_entry_in, max_position_size and max_intraday_filled_orders together |
+| `S_risk_allow_entry_in` | v5 / v6 | BATS:AAPL 60 | 10 | One-direction entries: under `allow_entry_in(long)`, while holding a long position, an opposing Short entry degrades into a close order; a Short entry while flat is ignored outright |
+| `S_risk_max_position_size` | v5 / v6 | BATS:AAPL 60 | 10 | Maximum position cap: a 40-share order is cut to the 25-share limit; differing handling of later Entry and Order(qty=10) once the position is full |
+| `S_risk_max_intraday_filled_orders` | v5 / v6 | BATS:AAPL 60 | 13 | Intraday trade count limit: after the daily limit of 3 is reached, the 4th and 5th orders (including close_all) are rejected; positions can be held overnight and trading resumes the next day |
+| `S_risk_max_drawdown__cash` | v6 | BINANCE:BTCUSDT 60 | 18 | Cash drawdown 100; a drawdown in realized balance stops trading permanently |
+| `S_risk_max_intraday_loss__cash` | v6 | BINANCE:BTCUSDT 60 | 18 | Intraday cash loss 100; measured against start-of-day equity, triggers a forced close and resumes the next day |
+| `S_risk_max_cons_loss_days__2` | v6 | BINANCE:BTCUSDT 60 | 18 | Halts permanently after two consecutive trading days with realized losses |
+| `S_risk_max_cons_loss_days__1` | v6 | BINANCE:BTCUSDT 60 | 18 | Threshold explicitly overridden to 1; halts permanently after the first complete trading day with a realized loss |
+| `S_risk_max_drawdown__percent` | v6 | BINANCE:BTCUSDT 60 | 18 | Halts permanently after a 1% drawdown from the highest realized balance; unrealized profit and loss does not trigger it |
+| `S_risk_max_intraday_loss__percent` | v6 | BINANCE:BTCUSDT 60 | 18 | Forced close after a 1% loss relative to start-of-day equity; profit earlier in the day can offset later unrealized losses |
+| `S_risk_limits__control` | v6 | BINANCE:BTCUSDT 60 | 18 | Independent native control with the same market and schedule; risk thresholds set out of reach |
+| `S_risk_max_intraday_loss__cash_march` | v6 | BINANCE:BTCUSDT 60 | 18 | Independent native export ending in March; verifies the Sharpe/Sortino daily observation range and the last close time |
+| `S_risk_max_intraday_loss__cash_april` | v6 | BINANCE:BTCUSDT 60 | 18 | Independent native export ending in April; verifies Sharpe/Sortino monthly observations over a longer trading range |
+| `S_risk_max_intraday_loss__cash_weekly` | v6 | BINANCE:BTCUSDT 1W | 18 | Resets on each weekly bar; negative starting equity for a period suspends the cash threshold, which takes effect again once starting equity is positive |
+| `S_risk_max_cons_loss_days__2_weekly` | v6 | BINANCE:BTCUSDT 1W | 18 | Unrealized losses across periods count; a simultaneous full close and fixed-quantity risk order create a reverse position, and later script orders stay halted |
+| `S_risk_max_cons_loss_days__full_close_2_weekly` | v6 | BINANCE:BTCUSDT 1W | 17 | Two consecutive losing periods; after the initial position of 2 is fully closed, the risk order sells 2, leaving -2; everything passes |
+| `S_risk_max_cons_loss_days__partial_close_2_weekly` | v6 | BINANCE:BTCUSDT 1W | 17 | Two consecutive losing periods; the initial position of 2 first closes 1, then the risk order sells 2, leaving -1; everything passes |
+| `S_risk_max_cons_loss_days__hold_1_weekly` | v6 | BINANCE:BTCUSDT 1W | 17 | No scheduled close; after one losing period, closed by the risk rule on 2024-01-15; series and trades pass; two ratios fail |
+| `S_risk_max_cons_loss_days__hold_2_weekly` | v6 | BINANCE:BTCUSDT 1W | 17 | No scheduled close; after two consecutive losing periods, closed by the risk rule on 2024-01-22; series and trades pass; two ratios fail |
 
-## 8. 日期输入与语言类型
+---
 
-| ID | 版本 | 标的 / 周期 | Plot 列数 | 核心测试点 |
+## 7. Symbol sizing and contract step
+
+| ID | Version | Symbol / timeframe | Plot columns | What it tests and key checks |
 |---|---|---|---|---|
-| `S_timestamp_trade_types` | v6 | BINANCE:BTCUSDT 60 | 11 | 空格分隔的日期字符串、显式时区、日期输入门控、交易索引/时间/ID 与 `ta.valuewhen` 返回类型；27,046 根原生行情、3,758 笔已平仓交易及报告指标全部匹配 |
+| `S_sizing_crypto` | v5 / v6 | BINANCE:BTCUSDT 60 | v5: 12 / v6: 13 | • High-precision crypto positions (fractional Qty precision produced by 5% equity)<br>• Rounding rules for an explicit quantity (0.0123456)<br>• Silent skipping of very small orders (below 1e-7 or `syminfo_mincontract`) |
+
+## 8. Date inputs and language types
+
+| ID | Version | Symbol / timeframe | Plot columns | What it tests |
+|---|---|---|---|---|
+| `S_timestamp_trade_types` | v6 | BINANCE:BTCUSDT 60 | 11 | Space-separated date strings, explicit time zones, date input gating, return types of trade index/time/ID and `ta.valuewhen`; all 27,046 native bars, 3,758 closed trades and report metrics match |

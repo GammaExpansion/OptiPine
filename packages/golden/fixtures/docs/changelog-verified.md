@@ -1,91 +1,122 @@
-# Golden 数据修订记录
+# Golden data revision log
 
-[返回测试集说明](../README.md)。当前为 246 个用例：240 verified、6 unverified。
-原始采集记录保存在仓库之外；当前来源见各 fixture 的 `meta.capture` 和 `meta.notes`。
+[Back to the suite overview](../README.md). The suite currently has 246 cases: 240 verified and
+6 unverified. Raw capture records are kept outside the repository; current provenance is in each
+fixture's `meta.capture` and `meta.notes`.
 
 ## 2026-09-21
 
-- 新增独立 v6 parse 用例 `P_syn_int_division`：原生 Pine Editor 接受将
-  `timeframe.in_seconds(timeframe.period) / 61` 赋给显式 `int`。
-  图表显示小数，显式 `int(...)` 才截断；未将读数伪造成 CSV golden。
-- 不迁入启用了 Bar Magnifier 的社区策略：Bar Magnifier 需要引擎未获得的低周期数据。
-- 独立补采确认 na trailing offset 与未平仓展示手续费口径；正式用例数不变。
-  loader 支持原生 Volume 列位置，交易比较改用按 mark 计算的展示手续费和真实
-  realized balance。显式迁移比较实现 fingerprint；240 个 verified 的源码、
-  输入、预期观测、精度和所有原有匹配断言均保持不变。
+- Added the independent v6 parse case `P_syn_int_division`: the native Pine Editor accepts
+  assigning `timeframe.in_seconds(timeframe.period) / 61` to an explicit `int`.
+  The chart displays a fraction; only an explicit `int(...)` truncates. The readings were not
+  fabricated into a CSV golden.
+- Community strategies that enable Bar Magnifier are not adopted into the suite: Bar Magnifier
+  needs lower-timeframe data the engine is not given.
+- Independent recaptures confirmed the na trailing offset and the display commission convention
+  for open positions; the number of adopted cases is unchanged. The loader supports the native
+  Volume column position. Trade comparison now uses the display commission computed at the mark
+  and the actual realized balance. The comparison implementation fingerprint was migrated
+  explicitly; the sources, inputs, expected observations, precision, and all previously matching
+  assertions of the 240 verified cases are unchanged.
 
 ## 2026-09-19
 
-- 新增四个独立 v6 语言指标用例：`I_generic_values`、`I_leading_continuations`、
-  `I_drawing_presence`、`I_plot_linestyles`。每例保留 27,046 根 BINANCE:BTCUSDT
-  60 分钟原生数据，索引从 0 开始且连续，所有输出序列匹配。
-- 向左加载确认账户可用最早历史为 2022-01-01，暂停 Replay 的实际末根为
-  2025-01-31 23:00 UTC。首次 300 行的部分导出被拒绝；drawing 的列序问题通过
-  TradingView 显示顺序调整后重新导出解决。原生文件没有裁剪、重排或补值。
-- `P_request_result_types` 原样源码在 Pine Editor 独立编译通过，纳入 verified parse。
-  只验证 request 的 bool/tuple 返回类型，不增加次级数据或 request 运行能力。
-- `S_timestamp_trade_types` 完成 CSV → XLSX → CSV 原生配对，前后 CSV 逐字节相同，
-  XLSX 的 Backtesting range 与 27,046 根图表行情首尾一致。11 条输出、3,758 笔
-  已平仓交易及报告指标全部匹配。末根 Replay bar 的空脚本输出原样保留，执行上下文
-  显式记录在 `meta.execution`；市场数量步长来自独立 metadata 探针。
-- 统一文件结构不变：来源摘要写入 `meta.capture`；详细记录和被拒绝的采集
-  保存在仓库之外的采集归档。
+- Added four independent v6 language indicator cases: `I_generic_values`,
+  `I_leading_continuations`, `I_drawing_presence`, and `I_plot_linestyles`. Each preserves 27,046
+  native BINANCE:BTCUSDT 60-minute bars, indexed contiguously from 0, and all output series match.
+- Loading history to the left confirmed that the earliest history available to the account is
+  2022-01-01, and that the actual last bar of the paused Replay is 2025-01-31 23:00 UTC. A first,
+  partial export of 300 rows was rejected. The drawing column-order issue was resolved by
+  adjusting the display order in TradingView and exporting again. The native files were not
+  trimmed, reordered, or padded with values.
+- The unmodified `P_request_result_types` source compiled successfully in an independent
+  Pine Editor check and joined the verified parse cases. It verifies only the bool/tuple result
+  types of request calls; it adds no secondary data or runtime request support.
+- `S_timestamp_trade_types` completed a native CSV → XLSX → CSV pairing. The CSV exports before and
+  after are identical byte for byte, and the XLSX Backtesting range matches the first and last of
+  the 27,046 chart bars. All 11 outputs, 3,758 closed trades, and report metrics match. The blank
+  script outputs on the final Replay bar are preserved as exported; the execution context is
+  recorded explicitly in `meta.execution`. The market quantity step comes from an independent
+  metadata probe.
+- The uniform file structure is unchanged: provenance summaries go in `meta.capture`; detailed
+  records and rejected captures are kept in the capture archive outside the repository.
 
 ## 2026-09-16
 
-- 独立复核 v5/v6 的 `P_err_request_financial`、`P_err_request_security`
-  和 `P_err_strategy_risk`，6 份原源码均在 TradingView 编译通过，
-  提升为 verified。ID、源码和编译预期不变，
-  来源保存在 `meta.capture`，完整记录留在归档。这仅验证编译，不扩展
-  `request.*` 的数据输入或运行能力。
+- Independently rechecked v5/v6 `P_err_request_financial`, `P_err_request_security`, and
+  `P_err_strategy_risk`. All 6 original sources compile successfully in TradingView and were
+  promoted to verified. The IDs, sources, and compile expectations are unchanged; provenance is
+  stored in `meta.capture`, and the full records remain in the archive. This verifies compilation
+  only; it does not extend data input or runtime support for `request.*`.
 
-- 修复周线 `max_cons_loss_days`：完整周期的净值下降计入连续亏损；已提交的全量
-  平仓单与触发时确定数量的风险订单依次成交，复现原生反向持仓及后续停机。
-- 修复该报告暴露的负净值下 run-up 百分比和无盈利交易时平均盈亏比边界。
-- `S_risk_max_cons_loss_days__2_weekly` 的原生源码、CSV、XLSX、采集记录和比较规则
-  均未改动；217 项独立严格检查及 218 项套件检查通过，提升为 verified。
-  此次修复使用既有原生采集。
-- 随后补采四组独立周线 CSV → XLSX → CSV：全量、部分计划平仓均通过全部
-  215 项严格检查，分别留下 -2、-1 仓位。无计划平仓的 count 1 / count 2
-  分别在 2024-01-15 / 01-22 风控平仓，全部序列与交易通过；但原生 Sharpe、
-  Sortino 为空、引擎为数值，各通过 213/215 项，保留为 unverified。
-  成交回调及多风险优先级仍无独立原生验证。
-- 用例恢复统一文件结构：来源摘要、哈希与配对事实合并进 `meta.capture`，
-  Replay 选择时间及暂停状态直接存入 `meta.execution`；不补造旧记录未知的
-  stepping 状态。额外 notes、manifest、audit 和 diff 移入仓库之外的采集归档。
-  原生源码、CSV、XLSX、日历及比较规则不变；
-  原 225 个 verified 检查保留，基线仅显式迁移 metadata 指纹并纳入新用例。
+- Fixed weekly `max_cons_loss_days`: an equity decline over a completed period counts toward the
+  losing streak. The already submitted full-size close order and the risk order whose quantity is
+  fixed when the rule triggers fill in sequence, reproducing the native reversed position and the
+  subsequent halt.
+- Fixed the boundaries exposed by that report for the run-up percentage at negative equity and for
+  the average profit/loss ratio when there are no winning trades.
+- The native source, CSV, XLSX, capture records, and comparison rules of
+  `S_risk_max_cons_loss_days__2_weekly` were not changed; it passes 217 independent strict checks
+  and 218 suite checks and was promoted to verified. This fix used the existing native capture.
+- Four independent weekly CSV → XLSX → CSV sets were then recaptured. The full and partial
+  scheduled closes each pass all 215 strict checks, leaving positions of -2 and -1 respectively.
+  Without a scheduled close, count 1 / count 2 are closed by the risk rule on 2024-01-15 / 01-22
+  respectively, and all series and trades pass. However, native Sharpe and Sortino are empty while
+  the engine returns numbers, so each passes 213/215 checks and remains unverified. Fill callbacks
+  and the priority among multiple risk rules still have no independent native verification.
+- Cases returned to the uniform file structure: provenance summaries, hashes, and pairing facts are
+  merged into `meta.capture`, and the Replay selection time and paused state are stored directly in
+  `meta.execution`. A stepping state that the old records do not establish is not fabricated. Extra
+  notes, manifest, audit, and diff files moved to the capture archive outside the repository. The
+  native sources, CSV, XLSX, calendars, and comparison rules are unchanged. Checks for the existing
+  225 verified cases are retained; the baseline only migrates the metadata fingerprint explicitly
+  and includes the new cases.
 
 ## 2026-09-13
 
-- 现有 harness、fixtures 和维护脚本归入 `@pine/golden` workspace；原 `tests/`
-  目录整体迁至 `packages/golden/fixtures/`。引擎与 CLI 分别归入 `@pine/engine`
-  和 `@pine/cli`，通过公开包入口调用。原生源码、行情、报告、metadata 和来源记录
-  保持原始字节；目录与构建迁移不改变比较断言或容差。
-- 比较规则指纹随 golden 构建产物携带，支持运行编译后的 CLI。基线的指纹迁移
-  在完整回归确认后显式接受，保留原有每条断言。
+- The existing harness, fixtures, and maintenance scripts moved into the `@pine/golden` workspace;
+  the former `tests/` directory moved as a whole to `packages/golden/fixtures/`. The engine and CLI
+  moved into `@pine/engine` and `@pine/cli` respectively and are called through public package
+  entry points. Native sources, market data, reports, metadata, and provenance records keep their
+  original bytes; the directory and build migration does not change comparison assertions or
+  tolerances.
+- The comparison-rule fingerprint is carried with the golden build output, so the compiled CLI can
+  run. The baseline fingerprint migration was accepted explicitly after a full regression run
+  confirmed it, and every existing assertion was kept.
 
 ## 2026-09-12
 
-- 交易日历改为用例内显式输入：v5/v6 的 `I_volume`、`M_time__aapl_60`、
-  `M_time__aapl_D` 和 `S_risk_max_intraday_filled_orders` 共 8 个用例在 metadata
-  声明本地 `calendar.json`，内容与原独立采集逐字节一致。原先自动注入日历的另外
-  56 个用例经完整引擎输出对照确认不需要日历；移除全局目录与按品种匹配逻辑。
-  此次仅迁移输入及来源指纹，原生预期和每条比较断言保持不变；见[日历输入](calendar-inputs.md)。
-- AAPL 日线 v5/v6 以各自原样源码、休市刷新上下文重采，各保留 11,523 行和 63 列。
-- Crypto v5/v6 采用同一计算区间的 CSV → XLSX → CSV 稳定配对；v5 新修订只移除
-  无法编译的 mincontract plot，其余 12 列及交易逻辑不变。
-- 新增 v5 mincontract 编译错误与独立 v6 数值用例；原 v5 成功输出的来源归属仍有争议。
-- 基线迁移明确映射了 plot 位置和原生 Expectancy 名称；比较精度和 verified 未放宽。
-  调整范围现见各 fixture 的 metadata。
-- 两版偏移标准差由引擎计算修复，原始 numeric fixture 未改，202 个 verified 全部通过。
+- Trading calendars became explicit inputs inside each case: the 8 v5/v6 cases `I_volume`,
+  `M_time__aapl_60`, `M_time__aapl_D`, and `S_risk_max_intraday_filled_orders` declare a local
+  `calendar.json` in their metadata, identical byte for byte to the original independent capture.
+  A comparison of complete engine outputs confirmed that the other 56 cases that previously
+  received a calendar automatically do not need one; the global directory and the per-symbol
+  matching logic were removed. This change migrated only inputs and provenance fingerprints; native
+  expectations and every comparison assertion are unchanged. See
+  [calendar inputs](calendar-inputs.md).
+- AAPL daily v5/v6 were recaptured from their own unmodified sources in a context refreshed during
+  a market closure; each keeps 11,523 rows and 63 columns.
+- Crypto v5/v6 use a stable CSV → XLSX → CSV pairing over the same calculation range. The new v5
+  revision removes only the mincontract plot that does not compile; the other 12 columns and the
+  trading logic are unchanged.
+- Added a v5 mincontract compile-error case and an independent v6 numeric case. The provenance
+  attribution of the original successful v5 output remains disputed.
+- The baseline migration explicitly mapped plot positions and the native Expectancy names;
+  comparison precision and verified status were not relaxed. The scope of the adjustments is now
+  recorded in each fixture's metadata.
+- The shifted standard deviation for both versions was fixed in the engine calculation; the
+  original numeric fixtures are unchanged, and all 202 verified cases pass.
 
-## 初始源码校准
+## Initial source calibration
 
-- I_collections 使用两行的 array.sum 汇总矩阵；matrix.sum 本身是逐元素矩阵加法。
-- I_lang_series 将动态历史偏移限制在 10,000，避免原生 RE10007；列名为 dynamic_offset_capped。
-- syminfo.session 表示 regular/extended 模式，时段字符串单独保存在 session_hours。
-- P_err_input_in_function 的实际编译结果为成功，保留原 ID。
-- P_err_continuation_4spaces 在 v5 报错、v6 成功；EMA 的 series length 两版均报类型错误。
+- I_collections sums the matrix with array.sum over its two rows; matrix.sum itself is element-wise
+  matrix addition.
+- I_lang_series caps the dynamic history offset at 10,000 to avoid native RE10007; the column is
+  named dynamic_offset_capped.
+- syminfo.session reports the regular/extended mode; the session string is stored separately in
+  session_hours.
+- P_err_input_in_function actually compiles successfully; its original ID is kept.
+- P_err_continuation_4spaces is a compile error in v5 and compiles successfully in v6; an EMA
+  series length is a type error in both versions.
 
-采集、入库和回归规则见[采集规范](collecting-golden-sop.md)。
+Capture, adoption, and regression rules are in the [capture procedure](collecting-golden-sop.md).

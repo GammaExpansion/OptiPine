@@ -1,107 +1,107 @@
-# Parse 层测试用例清单 (INDEX)
+# Parse tier case list (INDEX)
 
-[← 返回 parse/README.md](./README.md) | [返回测试集导航](../README.md)
+[← Back to parse/README.md](./README.md) | [Back to the suite overview](../README.md)
 
-本清单收录 Parse 语法编译层共 143 个独立测试目录（v5 72 个，v6 71 个）。新增 `P_syn_int_division` 已在 Pine Editor 独立编译通过；核对状态以各自 `meta.json` 为准，此处不验证运行结果。
-
----
-
-## 1. 排版与格式兼容 (`P_fmt_*`)
-
-| ID | 版本 | 期望结果 | 已审计 | 测试内容与判定要点 |
-|---|---|---|---|---|
-| `P_fmt_minimal` | v5 / v6 | `ok` | yes | 最小合法 Pine 脚本骨架编译 |
-| `P_fmt_crlf` | v5 / v6 | `ok` | yes | CRLF（`\r\n`）Windows 换行符支持 |
-| `P_fmt_tabs_mixed` | v5 / v6 | `ok` | yes | 同一脚本内 Tab 制表符与 4 空格缩进混用兼容 |
-| `P_fmt_continuation` | v5 / v6 | `ok` | yes | 续行缩进兼容：全局 2 空格、块内 7 空格、三元运算与参数列表跨行 |
-| `P_fmt_comment_before_version` | v5 / v6 | `ok` | yes | 许可证注释头：`//@version` 前存在大段许可注释与空行（开源脚本标准形态） |
-| `P_fmt_quotes_escapes` | v5 / v6 | `ok` | yes | 单双引号混合、转义字符、字符串内含 `#` 与 `//` 及 Unicode 非 ASCII 字符 |
-| `P_fmt_number_literals` | v5 / v6 | `ok` | yes | 数字字面量（科学计数法 `1e-5`、`.5`、大数）与 `#RRGGBB / #RRGGBBAA` 颜色字面量 |
-| `P_fmt_comments` | v5 / v6 | `ok` | yes | 行尾注释、代码块内部注释、块内空行、字符串内部 `//` |
-| `P_fmt_annotations` | v5 / v6 | `ok` | yes | 文档注解识别：`//@type`, `//@field`, `//@function`, `//@param`, `//@returns`, `//@variable` |
-| `P_fmt_args_named_positional` | v5 / v6 | `ok` | yes | 函数调用参数：位置参数、命名参数、先位置后命名、命名参数乱序与内置函数命名参数 |
-| `P_fmt_long_line` | v5 / v6 | `ok` | yes | 超长单行复合表达式解析鲁棒性 |
+This list covers the 143 independent test directories of the parse (syntax and compilation) tier: 72 for v5 and 71 for v6. The new `P_syn_int_division` compiled successfully in an independent Pine Editor check. Each case's `meta.json` is authoritative for its verification status; runtime results are not verified here.
 
 ---
 
-## 2. 核心语法全集 (`P_syn_*`)
+## 1. Layout and formatting compatibility (`P_fmt_*`)
 
-| ID | 版本 | 期望结果 | 已审计 | 测试内容与判定要点 |
+| ID | Version | Expected result | Audited | What is tested and key criteria |
 |---|---|---|---|---|
-| `P_syn_functions` | v5 / v6 | `ok` | yes | 单行/多行函数、默认参数、命名参数乱序、参数类型与限定符、函数内 `[]`、函数嵌套调用 |
-| `P_syn_tuples` | v5 / v6 | `ok` | yes | 元组（Tuple）多返回值与解构：自定义函数返回、`ta.macd / supertrend / bb / dmi` 解构 |
-| `P_syn_types_udt_methods` | v5 / v6 | `ok` | yes | 自定义类型（UDT）：`type` 声明（带默认值）、`Type.new()`、`method` 对象方法、字段赋值、UDT 实例的 `[]` 历史回溯 |
-| `P_syn_enum` | v5 / v6 | `ok` | yes | 枚举（Enum）声明（带/不带标题）、`input.enum`、枚举 `switch` 分支匹配、`str.tostring(enum)` |
-| `P_syn_switch` | v5 / v6 | `ok` | yes | `switch` 带表达式 / 无表达式（类似 if-else 链） / 默认分支 `=>` / 作为表达式返回值或独立语句 |
-| `P_syn_if_else` | v5 / v6 | `ok` | yes | `if / else if / else` 作为表达式与语句、深层嵌套、分支返回不同字符串 |
-| `P_syn_loops` | v5 / v6 | `ok` | yes | `for` / `for...by` 负步长 / `for...in` 遍历 / `for [i,v] in` 索引值遍历 / `while` / `break` / `continue` |
-| `P_syn_var_varip` | v5 / v6 | `ok` | yes | `var` 与 `varip` 跨 Bar 持久化、显式类型声明、持久化集合、复合赋值（`+=`, `-=` 等） |
-| `P_syn_types_explicit` | v5 / v6 | `ok` | yes | 显式类型标注：基础标量、`int[]` / `array<float>` / `matrix` / `map`、绘图引用类型、各类型的 `na` |
-| `P_syn_inputs_all` | v5 / v6 | `ok` | yes | 全部 `input.*` 变体及 `minval/maxval/step/options/tooltip/inline/group/confirm/display` 配置项 |
-| `P_syn_drawings` | v5 / v6 | `ok` | yes | 全部绘图 API 语法：`table/line/label/box/linefill/polyline/plotshape/plotchar/plotcandle` 等 |
-| `P_syn_alerts_log` | v5 / v6 | `ok` | yes | 告警与日志指令：`alert`, `alertcondition`, `log.*`, `runtime.error` |
-| `P_syn_arrays` | v5 / v6 | `ok` | yes | `array.*` 常用 API 语法解析 |
-| `P_syn_matrix_map` | v5 / v6 | `ok` | yes | `matrix.*` 与 `map.*` 常用 API 语法解析 |
-| `P_syn_strings` | v5 / v6 | `ok` | yes | `str.*` 常用 API（含正则提取、`str.format`, `str.format_time`） |
-| `P_syn_math_color` | v5 / v6 | `ok` | yes | `math.*` 全集与 `color.*` 颜色构造及分量提取函数 |
-| `P_syn_operators` | v5 / v6 | `ok` | yes | 算术、比较、逻辑、三元运算、一元负号、括号优先级及函数返回值的直接 `[]` 索引 |
-| `P_syn_history_scopes` | v5 / v6 | `ok` | yes | 作用域与历史：函数内变量的 `[]`、函数内 `var`（按 call site 独立）、`if` 分支同名局部变量、循环体内 `[]` |
-| `P_syn_conditional_calls` | v5 / v6 | `ok` | yes | `ta.*` 在 `if / switch` 分支内部调用（官方仅报警告，语法合法且编译通过） |
-| `P_syn_library` | v5 / v6 | `ok` | yes | `library` 库声明：`export` 导出函数 / 自定义类型 / 方法 |
-| `P_syn_strategy_full` | v5 / v6 | `ok` | yes | `strategy()` 全参数声明、`entry/exit/order/close/close_all/cancel/cancel_all` 全参数调用及 `strategy.*` 状态访问 |
-| `P_syn_builtin_vars` | v5 / v6 | `ok` | yes | 内置变量全集：OHLCV、`time`、`barstate.*`、`syminfo.*`、`timeframe.*`、日期序列、`session.*` 等 |
-| `P_syn_time_functions` | v5 / v6 | `ok` | yes | `timestamp()` 三种重载、`time(tf, session, tz)`、日期函数形式、`timeframe.in_seconds(tf)` |
+| `P_fmt_minimal` | v5 / v6 | `ok` | yes | Compiles the smallest valid Pine script skeleton |
+| `P_fmt_crlf` | v5 / v6 | `ok` | yes | Support for CRLF (`\r\n`) Windows line endings |
+| `P_fmt_tabs_mixed` | v5 / v6 | `ok` | yes | Mixed tab and 4-space indentation in one script |
+| `P_fmt_continuation` | v5 / v6 | `ok` | yes | Continuation indentation: 2 spaces at global scope, 7 spaces inside a block, ternary expressions and argument lists spanning lines |
+| `P_fmt_comment_before_version` | v5 / v6 | `ok` | yes | License comment header: a long license comment and blank lines before `//@version` (the standard form of open-source scripts) |
+| `P_fmt_quotes_escapes` | v5 / v6 | `ok` | yes | Mixed single and double quotes, escape characters, strings containing `#` and `//`, and non-ASCII Unicode characters |
+| `P_fmt_number_literals` | v5 / v6 | `ok` | yes | Number literals (scientific notation `1e-5`, `.5`, large numbers) and `#RRGGBB / #RRGGBBAA` color literals |
+| `P_fmt_comments` | v5 / v6 | `ok` | yes | End-of-line comments, comments inside code blocks, blank lines inside blocks, `//` inside strings |
+| `P_fmt_annotations` | v5 / v6 | `ok` | yes | Recognition of documentation annotations: `//@type`, `//@field`, `//@function`, `//@param`, `//@returns`, `//@variable` |
+| `P_fmt_args_named_positional` | v5 / v6 | `ok` | yes | Function call arguments: positional, named, positional followed by named, named arguments out of order, and named arguments to built-in functions |
+| `P_fmt_long_line` | v5 / v6 | `ok` | yes | Parsing robustness for a very long single-line compound expression |
 
 ---
 
-## 3. 编译错误 (`P_err_*`)
+## 2. Core syntax coverage (`P_syn_*`)
 
-| ID | 版本 | 期望结果 | 已审计 | 说明 |
+| ID | Version | Expected result | Audited | What is tested and key criteria |
 |---|---|---|---|---|
-| `P_err_indent_2spaces` | v5 / v6 | `error@3` | yes | 语法错误：代码块缩进仅 2 空格（被解析器当作续行处理导致语法错） |
-| `P_err_continuation_4spaces` | v5<br>v6 | `error@3`<br>`ok` | yes | **版本差异**：续行缩进 4 空格在 v5 报语法错误（指向上行），而在 v6 允许放行 |
-| `P_err_unclosed_paren` | v5 / v6 | `error@3` | yes | 语法错误：括号未闭合 |
-| `P_err_unterminated_string` | v5 / v6 | `error@3` | yes | 语法错误：字符串字面量未闭合 |
-| `P_err_positional_after_named` | v5 / v6 | `error@3` | yes | 语法错误：命名参数后方再次出现位置参数 |
-| `P_err_undeclared_identifier` | v5 / v6 | `error@3` | yes | 未声明错误：使用了未声明的变量或标识符 |
-| `P_err_reassign_undeclared` | v5 / v6 | `error@3` | yes | 未声明错误：`:=` 赋值给未声明的变量 |
-| `P_err_use_before_def` | v5 / v6 | `error@3` | yes | 未声明错误：函数在声明之前被调用 |
-| `P_err_recursion` | v5 / v6 | `error@3` | yes | 未声明错误：尝试递归调用（函数体内找不到自身标识符） |
-| `P_err_undefined_namespace_function` | v5 / v6 | `error@3` | yes | 未声明错误：命名空间下不存在该函数 |
-| `P_err_type_string_to_float` | v5 / v6 | `error@3` | yes | 类型错误：尝试将 `string` 赋值给 `float` 变量 |
-| `P_err_wrong_arg_type` | v5 / v6 | `error@3` | yes | 类型错误：实参与形参类型不符（例如传递 `string` 给 `series float`） |
-| `P_err_float_as_int_length` | v5 / v6 | `error@3` | yes | 类型错误：传递 `series float` 给要求 `int` 的长度参数 |
-| `P_err_input_defval_series` | v5 / v6 | `error@3` | yes | 类型错误：`input` 默认值必须为 `const`，错误传递了 `series` |
-| `P_err_wrong_arity` | v5 / v6 | `error@3` | yes | 类型错误：缺少必填参数（重载解析失败归入 `type`） |
-| `P_err_tuple_arity` | v5 / v6 | `error@3` | yes | 类型错误：元组解构变量个数与返回值个数不一致 |
-| `P_err_assign_type_change` | v5 / v6 | `error@4` | yes | 类型错误：使用 `:=` 试图改变已声明变量的类型 |
-| `P_err_redeclare_variable` | v5 / v6 | `error@4` | yes | 语义错误：在同一作用域内重复声明同名变量 |
-| `P_err_plot_in_local_scope` | v5 / v6 | `error@4` | yes | 语义错误：在局部作用域（如函数或条件分支内部）调用 `plot` |
-| `P_err_input_in_function` | v5 / v6 | `ok` | yes | 实测校准：函数内书写 `input` 在 TradingView 中允许编译通过 |
-| `P_err_strategy_in_indicator` | v5 / v6 | `error@2` | yes | 语义错误：在 `indicator()` 脚本中调用 `strategy.entry()` |
-| `P_err_no_declaration` | v5 / v6 | `error@1` | yes | 语义错误：缺少 `indicator()` / `strategy()` / `library()` 脚本声明头 |
-| `P_err_two_declarations` | v5<br>v6 | `error@1`<br>`error@3` | yes | 语义错误：同时声明了 `indicator()` 和 `strategy()` |
-| `P_err_no_version` | v5 | `error@1` | no | 缺少 `//@version`：TradingView 按 v1 处理，`indicator()` 在 v1 中不存在，行号按 v1 语义推断 |
-| `P_err_version_4` | v5 | `ok` | no | `//@version=4` 旧版脚本（`study` 声明），TradingView 正常编译；放在 v5 目录只因目录必须二选一 |
-| `P_err_request_security` | v5 / v6 | `ok` | yes | v5/v6 原生独立编译通过；仅验证编译，不验证请求数据运行结果 |
-| `P_request_result_types` | v6 | `ok` | yes | request 的 bool/tuple 返回类型、用户函数返回 tuple；仅编译验证 |
-| `P_syn_int_division` | v6 | `ok` | yes | 非 const 整数除法可初始化显式 int 声明；仅编译验证，不代表 float 可以隐式转成 int |
-| `P_err_request_financial` | v5 / v6 | `ok` | yes | v5/v6 原生独立编译通过；仅验证编译，不验证请求数据运行结果 |
-| `P_err_strategy_risk` | v5 / v6 | `ok` | yes | v5/v6 原生独立编译通过；此用例仅验证风控调用的编译结果 |
-| `P_err_import` | v5 / v6 | `ok` | no | `import TradingView/ta/8` 官方库，TradingView 正常编译通过 |
+| `P_syn_functions` | v5 / v6 | `ok` | yes | Single-line/multi-line functions, default parameters, named arguments out of order, parameter types and qualifiers, `[]` inside functions, nested function calls |
+| `P_syn_tuples` | v5 / v6 | `ok` | yes | Tuple multiple return values and destructuring: user-defined function returns, destructuring `ta.macd / supertrend / bb / dmi` |
+| `P_syn_types_udt_methods` | v5 / v6 | `ok` | yes | User-defined types (UDTs): `type` declarations (with default values), `Type.new()`, `method` object methods, field assignment, `[]` history references on UDT instances |
+| `P_syn_enum` | v5 / v6 | `ok` | yes | Enum declarations (with/without titles), `input.enum`, matching enum values in `switch` branches, `str.tostring(enum)` |
+| `P_syn_switch` | v5 / v6 | `ok` | yes | `switch` with an expression / without an expression (like an if-else chain) / default branch `=>` / used as an expression value or as a standalone statement |
+| `P_syn_if_else` | v5 / v6 | `ok` | yes | `if / else if / else` as expressions and statements, deep nesting, branches returning different strings |
+| `P_syn_loops` | v5 / v6 | `ok` | yes | `for` / `for...by` with a negative step / `for...in` iteration / `for [i,v] in` index-value iteration / `while` / `break` / `continue` |
+| `P_syn_var_varip` | v5 / v6 | `ok` | yes | `var` and `varip` persistence across bars, explicit type declarations, persistent collections, compound assignment (`+=`, `-=`, etc.) |
+| `P_syn_types_explicit` | v5 / v6 | `ok` | yes | Explicit type annotations: basic scalars, `int[]` / `array<float>` / `matrix` / `map`, drawing reference types, `na` of each type |
+| `P_syn_inputs_all` | v5 / v6 | `ok` | yes | All `input.*` variants and the `minval/maxval/step/options/tooltip/inline/group/confirm/display` options |
+| `P_syn_drawings` | v5 / v6 | `ok` | yes | Syntax of all drawing APIs: `table/line/label/box/linefill/polyline/plotshape/plotchar/plotcandle`, and others |
+| `P_syn_alerts_log` | v5 / v6 | `ok` | yes | Alert and logging calls: `alert`, `alertcondition`, `log.*`, `runtime.error` |
+| `P_syn_arrays` | v5 / v6 | `ok` | yes | Parsing of common `array.*` APIs |
+| `P_syn_matrix_map` | v5 / v6 | `ok` | yes | Parsing of common `matrix.*` and `map.*` APIs |
+| `P_syn_strings` | v5 / v6 | `ok` | yes | Common `str.*` APIs (including regex extraction, `str.format`, `str.format_time`) |
+| `P_syn_math_color` | v5 / v6 | `ok` | yes | All `math.*` functions, plus the `color.*` constructors and component extraction functions |
+| `P_syn_operators` | v5 / v6 | `ok` | yes | Arithmetic, comparison, logical, and ternary operators, unary minus, parenthesized precedence, and direct `[]` indexing of function return values |
+| `P_syn_history_scopes` | v5 / v6 | `ok` | yes | Scopes and history: `[]` on variables inside functions, `var` inside functions (independent per call site), same-named local variables in `if` branches, `[]` inside loop bodies |
+| `P_syn_conditional_calls` | v5 / v6 | `ok` | yes | `ta.*` called inside `if / switch` branches (TradingView only reports a warning; the syntax is valid and compiles successfully) |
+| `P_syn_library` | v5 / v6 | `ok` | yes | `library` declaration: `export` of functions / user-defined types / methods |
+| `P_syn_strategy_full` | v5 / v6 | `ok` | yes | `strategy()` declaration with all parameters, `entry/exit/order/close/close_all/cancel/cancel_all` calls with all parameters, and `strategy.*` state access |
+| `P_syn_builtin_vars` | v5 / v6 | `ok` | yes | All built-in variables: OHLCV, `time`, `barstate.*`, `syminfo.*`, `timeframe.*`, date series, `session.*`, and others |
+| `P_syn_time_functions` | v5 / v6 | `ok` | yes | The three `timestamp()` overloads, `time(tf, session, tz)`, date function forms, `timeframe.in_seconds(tf)` |
 
 ---
 
-## 4. 版本演进行为探针 (`P_ver_*`)
+## 3. Compile errors (`P_err_*`)
 
-| ID | 版本 | 期望结果 | 已审计 | v5 与 v6 语言行为演进差异 |
+| ID | Version | Expected result | Audited | Description |
 |---|---|---|---|---|
-| `P_ver_bool_na` | v5<br>v6 | `ok`<br>`error@3` | yes | 布尔三态：v5 允许 `bool` 赋 `na`；v6 实行严格二态，报错拒绝 |
-| `P_ver_int_as_bool` | v5<br>v6 | `ok`<br>`error@4` | yes | 隐式转换：v5 允许 `int` 隐式当作 `bool` 条件；v6 必须显式比较，报错拒绝 |
-| `P_ver_duplicate_param` | v5<br>v6 | `ok`<br>`error@3` | yes | 重复参数：同一调用传入重复命名参数，v5 仅报警通过，v6 报编译错误 |
-| `P_ver_history_literal` | v5<br>v6 | `ok`<br>`error@3` | yes | 回溯字面量：`10[1]` 对字面量使用 `[]`，v5 允许，v6 判定语义错误 |
-| `P_ver_udt_field_history` | v5<br>v6 | `ok`<br>`error@6` | yes | UDT 字段回溯：`obj.field[1]`，v5 允许，v6 判定语义错误（必须对对象整体回溯 `obj[1].field`） |
-| `P_ver_plot_offset_series` | v5<br>v6 | `ok`<br>`error@3` | yes | `plot(offset=...)` 传入序列：v5 允许（仅取末值），v6 强制要求 const/simple 报错拒绝 |
-| `P_ver_ema_series_length` | v5 / v6 | `error@4` | yes | `ta.ema` 长度传 series：v5 与 v6 均严格拒绝（确认一致性） |
-| `P_ver_when_param` | v5<br>v6 | `ok`<br>`error@3` | yes | `when` 参数废弃：`strategy.entry(when=...)` 在 v5 允许（已废弃标记），v6 完全移除 |
-| `P_ver_mincontract` | v5 | `error@3` | yes | 当前 v5 不提供 `syminfo.mincontract`；v6 成功执行与全历史数值见 indicator `I_syminfo_mincontract`；错误证据为采集者逐字记录，无截图 |
+| `P_err_indent_2spaces` | v5 / v6 | `error@3` | yes | Syntax error: a code block indented by only 2 spaces (the parser treats it as a continuation line, which causes a syntax error) |
+| `P_err_continuation_4spaces` | v5<br>v6 | `error@3`<br>`ok` | yes | **Version difference**: a continuation line indented by 4 spaces is a syntax error in v5 (pointing to the line above), while v6 accepts it |
+| `P_err_unclosed_paren` | v5 / v6 | `error@3` | yes | Syntax error: unclosed parenthesis |
+| `P_err_unterminated_string` | v5 / v6 | `error@3` | yes | Syntax error: unterminated string literal |
+| `P_err_positional_after_named` | v5 / v6 | `error@3` | yes | Syntax error: a positional argument appears after a named argument |
+| `P_err_undeclared_identifier` | v5 / v6 | `error@3` | yes | Undeclared error: uses an undeclared variable or identifier |
+| `P_err_reassign_undeclared` | v5 / v6 | `error@3` | yes | Undeclared error: `:=` assigns to an undeclared variable |
+| `P_err_use_before_def` | v5 / v6 | `error@3` | yes | Undeclared error: a function is called before its declaration |
+| `P_err_recursion` | v5 / v6 | `error@3` | yes | Undeclared error: attempted recursive call (the function's own identifier is not found inside its body) |
+| `P_err_undefined_namespace_function` | v5 / v6 | `error@3` | yes | Undeclared error: the function does not exist in the namespace |
+| `P_err_type_string_to_float` | v5 / v6 | `error@3` | yes | Type error: attempts to assign a `string` to a `float` variable |
+| `P_err_wrong_arg_type` | v5 / v6 | `error@3` | yes | Type error: the argument type does not match the parameter type (for example, passing a `string` to a `series float`) |
+| `P_err_float_as_int_length` | v5 / v6 | `error@3` | yes | Type error: passes a `series float` to a length parameter that requires an `int` |
+| `P_err_input_defval_series` | v5 / v6 | `error@3` | yes | Type error: an `input` default value must be `const`, but a `series` is passed |
+| `P_err_wrong_arity` | v5 / v6 | `error@3` | yes | Type error: a required argument is missing (overload resolution failures are classified as `type`) |
+| `P_err_tuple_arity` | v5 / v6 | `error@3` | yes | Type error: the number of tuple destructuring variables differs from the number of returned values |
+| `P_err_assign_type_change` | v5 / v6 | `error@4` | yes | Type error: uses `:=` to try to change the type of a declared variable |
+| `P_err_redeclare_variable` | v5 / v6 | `error@4` | yes | Semantic error: a variable with the same name is declared twice in one scope |
+| `P_err_plot_in_local_scope` | v5 / v6 | `error@4` | yes | Semantic error: `plot` is called in a local scope (such as inside a function or a conditional branch) |
+| `P_err_input_in_function` | v5 / v6 | `ok` | yes | Calibrated by testing: `input` written inside a function compiles successfully in TradingView |
+| `P_err_strategy_in_indicator` | v5 / v6 | `error@2` | yes | Semantic error: `strategy.entry()` is called in an `indicator()` script |
+| `P_err_no_declaration` | v5 / v6 | `error@1` | yes | Semantic error: the `indicator()` / `strategy()` / `library()` script declaration is missing |
+| `P_err_two_declarations` | v5<br>v6 | `error@1`<br>`error@3` | yes | Semantic error: declares both `indicator()` and `strategy()` |
+| `P_err_no_version` | v5 | `error@1` | no | Missing `//@version`: TradingView treats the script as v1, where `indicator()` does not exist; the line number is inferred from v1 semantics |
+| `P_err_version_4` | v5 | `ok` | no | A legacy `//@version=4` script (`study` declaration) that TradingView compiles normally; it is in the v5 directory only because each case must be in one of the two directories |
+| `P_err_request_security` | v5 / v6 | `ok` | yes | Compiles successfully in independent native v5/v6 checks; verifies compilation only, not runtime results for requested data |
+| `P_request_result_types` | v6 | `ok` | yes | bool/tuple result types of request calls, and a user function returning a tuple; compile-only verification |
+| `P_syn_int_division` | v6 | `ok` | yes | Nonconstant integer division can initialize an explicit int declaration; compile-only verification; does not mean a float can be implicitly converted to int |
+| `P_err_request_financial` | v5 / v6 | `ok` | yes | Compiles successfully in independent native v5/v6 checks; verifies compilation only, not runtime results for requested data |
+| `P_err_strategy_risk` | v5 / v6 | `ok` | yes | Compiles successfully in independent native v5/v6 checks; this case verifies only the compile result of risk-management calls |
+| `P_err_import` | v5 / v6 | `ok` | no | `import TradingView/ta/8` official library; TradingView compiles it successfully |
+
+---
+
+## 4. Version evolution probes (`P_ver_*`)
+
+| ID | Version | Expected result | Audited | v5 vs. v6 language behavior change |
+|---|---|---|---|---|
+| `P_ver_bool_na` | v5<br>v6 | `ok`<br>`error@3` | yes | Three-state booleans: v5 allows assigning `na` to a `bool`; v6 enforces strict two-state booleans and rejects it with a compile error |
+| `P_ver_int_as_bool` | v5<br>v6 | `ok`<br>`error@4` | yes | Implicit conversion: v5 allows an `int` to act implicitly as a `bool` condition; v6 requires an explicit comparison and rejects it with a compile error |
+| `P_ver_duplicate_param` | v5<br>v6 | `ok`<br>`error@3` | yes | Duplicate argument: a call passes the same named argument twice; v5 only warns and compiles, v6 reports a compile error |
+| `P_ver_history_literal` | v5<br>v6 | `ok`<br>`error@3` | yes | History reference on a literal: `10[1]` applies `[]` to a literal; v5 allows it, v6 rejects it as a semantic error |
+| `P_ver_udt_field_history` | v5<br>v6 | `ok`<br>`error@6` | yes | UDT field history reference: `obj.field[1]`; v5 allows it, v6 rejects it as a semantic error (the history reference must apply to the whole object: `obj[1].field`) |
+| `P_ver_plot_offset_series` | v5<br>v6 | `ok`<br>`error@3` | yes | `plot(offset=...)` given a series: v5 allows it (using only the last value); v6 requires const/simple and rejects it with a compile error |
+| `P_ver_ema_series_length` | v5 / v6 | `error@4` | yes | `ta.ema` with a series length: v5 and v6 both strictly reject it (confirms consistency) |
+| `P_ver_when_param` | v5<br>v6 | `ok`<br>`error@3` | yes | Deprecated `when` parameter: `strategy.entry(when=...)` is allowed in v5 (marked as deprecated) and removed entirely in v6 |
+| `P_ver_mincontract` | v5 | `error@3` | yes | Current v5 does not provide `syminfo.mincontract`; the successful v6 run and full-history values are in the indicator case `I_syminfo_mincontract`; the error evidence is a verbatim record by the person who captured it, with no screenshot |
