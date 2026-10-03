@@ -1,7 +1,7 @@
 import { useI18n } from '../../i18n/I18nProvider.tsx';
-import styles from './BacktestSidebar.module.css';
+import styles from './Sidebar.module.css';
 
-export function BacktestSidebar() {
+export function Sidebar() {
   const { t } = useI18n();
   return (
     <div className={styles.sections}>

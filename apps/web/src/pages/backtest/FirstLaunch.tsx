@@ -1,9 +1,9 @@
 import { Button } from '../../components/Button.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
-import styles from './EmptyChart.module.css';
+import styles from './FirstLaunch.module.css';
 
-export function EmptyChart() {
+export function FirstLaunch() {
   const { t } = useI18n();
   const steps = [
     {
