@@ -87,6 +87,14 @@ async function open(
   await page
     .getByRole('button', { name: language === 'en' ? 'Start' : '开始优化', exact: true })
     .click();
+  // A live analysis is not a completed run; Top 20 and preview/apply require finished results.
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => (window as unknown as SummaryWindow).summaryOptimization().run.status),
+      { timeout: workerWaitTimeout },
+    )
+    .toBe('done');
   await waitForTopEquity(page, info);
   await page.evaluate(() => document.fonts.ready);
   return errors;
