@@ -60,6 +60,8 @@ export interface Call extends Node {
   implicitReceiver?: boolean;
   /** User function body checked with this call's concrete parameter types. */
   specializedBody?: Statement[];
+  /** Plot argument qualifiers let execution retain series colours without repeating constants. */
+  plotQualifiers?: ('const' | 'input' | 'simple' | 'series')[];
 }
 export interface Tuple extends Node {
   kind: 'tuple';
