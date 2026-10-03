@@ -25,6 +25,7 @@ import { checkpoint, MutationJournal } from './rollback.ts';
 import { assertReadable, ignoredEffect, effectResult } from './effects.ts';
 import { EnumRegistry } from './enums.ts';
 import { chartPoint } from './chart-point.ts';
+import { PlotStyles } from './plot-style.ts';
 
 /** Evaluations and statements per bar before a script is stopped as runaway. */
 const STEP_LIMIT = 2_000_000;
@@ -50,6 +51,7 @@ class Interpreter {
   functionHistoryNames = new Map<Statement[], Set<string>>();
   constants = new Map<string, Expression>();
   plots = new Map<string, RunResult['plots'][number]>();
+  plotStyles = new PlotStyles();
   /** The script's declared `overlay`; plots also join the price pane with `force_overlay`. */
   overlay = false;
   warnings = new Map<string, RunWarning>();
@@ -184,7 +186,12 @@ class Interpreter {
         return node.valueType === 'na'
           ? NaN
           : node.valueType === 'color'
-            ? color(parseInt(String(node.value).replace('#', '').slice(0, 6), 16))
+            ? color(
+                parseInt(String(node.value).slice(1, 7), 16),
+                String(node.value).length === 9
+                  ? (1 - parseInt(String(node.value).slice(7), 16) / 255) * 100
+                  : 0,
+              )
             : node.value;
       case 'identifier': {
         const binding = scope.find(node.name);
@@ -504,6 +511,7 @@ class Interpreter {
       const value = positional[0] ?? named.series;
       assertReadable(value);
       plot.values[this.index] = missing(value) ? null : value;
+      this.plotStyles.record(plot, node, name, positional, named, this.index);
       return key;
     }
     if (ignoredEffect(name)) {
@@ -728,7 +736,10 @@ class Interpreter {
         const rollback = () => {
           this.journal?.restore();
           restore?.();
-          for (const plot of this.plots.values()) plot.values[this.index] = null;
+          for (const plot of this.plots.values()) {
+            plot.values[this.index] = null;
+            if (plot.colors) plot.colors[this.index] = null;
+          }
         };
         const onFill = recalculate
           ? () => {

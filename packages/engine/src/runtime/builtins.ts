@@ -165,9 +165,14 @@ export function pure(
       case 't':
         return a[0]?.transparency ?? NaN;
       case 'new':
-        return color(rgb, num(a[1]));
+        return color((named.color ?? a[0])?.rgb ?? NaN, num(named.transp ?? a[1]));
       case 'rgb':
-        return color(round(x) * 65536 + round(num(a[1])) * 256 + round(num(a[2])), num(a[3] ?? 0));
+        return color(
+          round(num(named.red ?? a[0])) * 65536 +
+            round(num(named.green ?? a[1])) * 256 +
+            round(num(named.blue ?? a[2])),
+          num(named.transp ?? a[3] ?? 0),
+        );
       case 'from_gradient': {
         const t = Math.max(0, Math.min(1, (x - num(a[1])) / (num(a[2]) - num(a[1]))));
         const aa = a[3]?.rgb ?? 0,
