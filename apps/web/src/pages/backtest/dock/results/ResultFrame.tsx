@@ -19,6 +19,9 @@ export function ResultFrame({
   const outdated = useBacktestStore((state) => (state.preview ? null : state.outdated));
   const restore = useBacktestStore((state) => state.actions.restoreResultInputs);
   const stale = Boolean(outdated?.reasons.length);
+  const running = useBacktestStore(
+    (state) => (state.preview?.run ?? state.run).status === 'running',
+  );
   if (!result || empty) return <EmptyResults />;
   return (
     <section className={styles.frame} data-outdated={stale}>
@@ -45,12 +48,14 @@ export function ResultFrame({
           <span className={styles.secondary}>{t('report.rerun')}</span>
           {outdated!.inputs.length > 0 && (
             <Button variant="link" onClick={restore}>
-              {t('report.restoreInputs')}
+              {outdated!.inputs.length === 1 && outdated!.inputs[0].computed !== undefined
+                ? t('report.restoreInputValue', { value: String(outdated!.inputs[0].computed) })
+                : t('report.restoreInputs')}
             </Button>
           )}
         </div>
       )}
-      <div className={styles.content} data-dimmed={stale}>
+      <div className={styles.content} data-dimmed={stale || running}>
         {children}
       </div>
     </section>

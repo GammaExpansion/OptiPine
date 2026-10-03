@@ -44,6 +44,20 @@ function file(name: string, raw: string) {
 const csv =
   'time,open,high,low,close,Volume\n1790935200,100,103,99,102,5\n1790938800,102,104,101,103,6';
 
+test('accepted example requests reopen with the matching preset in both data dialogs', async () => {
+  const actions = getMarketDataStore().getState().actions;
+  await actions.fetch(exampleRequest(testNow));
+  actions.accept();
+  await mount();
+  expect(screen.getByRole('button', { name: '2Y' })).toHaveAttribute('aria-pressed', 'true');
+  act(() => {
+    uiStore.getState().setDialogOpen('marketData', false);
+    uiStore.getState().setDialogOpen('dateRange', true);
+  });
+  await screen.findByRole('dialog');
+  expect(await screen.findByRole('button', { name: '2Y' })).toHaveAttribute('aria-pressed', 'true');
+});
+
 test('StrictMode preserves an incoming refetch and real unmount clears its preview', async () => {
   let resolve!: (response: Response) => void;
   restore();
