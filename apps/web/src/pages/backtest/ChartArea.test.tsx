@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { forwardRef, useImperativeHandle } from 'react';
 import { beforeEach, expect, test, vi } from 'vitest';
 import type { PriceChartHandle, PriceChartProps } from '../../charts/PriceChart.tsx';
@@ -41,7 +41,10 @@ test('the first-launch steps show until there are a script and data', async () =
   expect(screen.getByRole('heading', { name: 'Run backtest' })).toBeInTheDocument();
   expect(chart.props).toBeNull();
   await loadScript();
-  expect(chart.props).toMatchObject({ symbol: 'BTCUSDT 1h', plots: [], trades: [] });
+  // The chart's chunk loads lazily, so it can appear a moment after the data.
+  await waitFor(() =>
+    expect(chart.props).toMatchObject({ symbol: 'BTCUSDT 1h', plots: [], trades: [] }),
+  );
   expect(chart.props!.bars).toHaveLength(120);
   expect(screen.queryByRole('button', { name: 'Reset zoom' })).not.toBeInTheDocument();
 });

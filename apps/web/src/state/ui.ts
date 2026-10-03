@@ -5,10 +5,18 @@ import { defaultLanguage, type Language } from '../i18n/translate.ts';
 
 export type Page = 'backtest' | 'optimize';
 export type DockTab = 'report' | 'equity' | 'trades' | 'code' | 'issues';
-export type Dialog = 'script' | 'marketData' | 'dateRange' | 'properties';
+export type Dialog = 'script' | 'marketData' | 'dateRange' | 'properties' | 'failedCombinations';
+/** Pane sizes in pixels, kept per page; each page reads the fields of its own panes. */
 export interface PaneSizes {
   right: number;
+  /** Backtest: the chart above the dock. */
   chart: number;
+  /** Optimize: the summary chart above the leaderboard and the map (R1). */
+  summary: number;
+  /** Optimize: the leaderboard beside the map and sensitivity. */
+  leaderboard: number;
+  /** Optimize: the parameter map above sensitivity. */
+  map: number;
 }
 export interface UiState {
   page: Page;
@@ -23,7 +31,14 @@ export interface UiState {
   setLanguage: (language: Language) => void;
 }
 
-export const defaultPaneSizes: PaneSizes = { right: 336, chart: 430 };
+export const defaultPaneSizes: PaneSizes = {
+  right: 336,
+  chart: 430,
+  summary: 232,
+  leaderboard: 624,
+  map: 314,
+};
+const paneNames = Object.keys(defaultPaneSizes) as (keyof PaneSizes)[];
 export const uiStorageKey = 'optipine.ui';
 
 /** Private browsing and disabled storage must not prevent the workbench from opening. */
@@ -57,6 +72,16 @@ function validSize(value: unknown, fallback: number): number {
     : fallback;
 }
 
+/** Each size from `sizes`, or from `fallback` where it is missing or unusable. */
+function validSizes(
+  sizes: Partial<Record<keyof PaneSizes, unknown>> | undefined,
+  fallback: PaneSizes,
+): PaneSizes {
+  const valid = { ...fallback };
+  for (const name of paneNames) valid[name] = validSize(sizes?.[name], fallback[name]);
+  return valid;
+}
+
 export function createUiStore(
   storage: StateStorage = browserStorage,
   locale = globalThis.navigator?.language ?? 'en',
@@ -78,10 +103,7 @@ export function createUiStore(
           set((state) => ({
             paneSizes: {
               ...state.paneSizes,
-              [page]: {
-                right: validSize(sizes.right, state.paneSizes[page].right),
-                chart: validSize(sizes.chart, state.paneSizes[page].chart),
-              },
+              [page]: validSizes(sizes, state.paneSizes[page]),
             },
           })),
         setDialogOpen: (dialog, open) =>
@@ -99,10 +121,7 @@ export function createUiStore(
         partialize: ({ language, paneSizes }) => ({ language, paneSizes }),
         merge(persisted, current) {
           const saved = persisted as Partial<UiState> | undefined;
-          const panes = (page: Page) => ({
-            right: validSize(saved?.paneSizes?.[page]?.right, defaultPaneSizes.right),
-            chart: validSize(saved?.paneSizes?.[page]?.chart, defaultPaneSizes.chart),
-          });
+          const panes = (page: Page) => validSizes(saved?.paneSizes?.[page], defaultPaneSizes);
           return {
             ...current,
             language:
