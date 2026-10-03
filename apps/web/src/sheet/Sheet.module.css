@@ -1,0 +1,357 @@
+.sheet {
+  min-height: 100%;
+  background: var(--canvas);
+}
+.reference {
+  width: 1440px;
+  min-height: 1120px;
+  height: 1120px;
+  padding: 36px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 400px 400px minmax(0, 1fr);
+  gap: 48px;
+}
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.block > h2 {
+  font-size: 12px;
+  color: var(--caption);
+  border-bottom: 1px solid var(--divider);
+  padding-bottom: 6px;
+  font-weight: 400;
+}
+.palette {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.swatch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.color {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid var(--control-border);
+  flex: none;
+}
+.swatch .caption {
+  line-height: 1.35;
+}
+.caption {
+  font-size: 12px;
+  color: var(--caption);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.ramp {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+  color: var(--secondary);
+  font-size: 12px;
+}
+.ramp > div {
+  display: flex;
+  gap: 2px;
+}
+.ramp span {
+  flex: 1;
+  height: 14px;
+}
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.typeRow {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.typeRow > :last-child {
+  font-size: 12px;
+  color: var(--caption);
+}
+.figure {
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.dialogTitle {
+  font-size: 15px;
+  font-weight: 600;
+}
+.typeRow small {
+  font-size: 12px;
+  color: var(--secondary);
+}
+.typeRow code {
+  font: 12.5px/19px var(--font-code);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+}
+.rowLabel {
+  width: 64px;
+  flex: none;
+  color: var(--caption);
+  font-size: 12px;
+}
+.field {
+  width: 200px;
+  flex: none;
+}
+.focused input {
+  outline: none;
+}
+.focused > div > div {
+  border-color: var(--primary);
+}
+.expression {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--caption);
+  font-size: 12px;
+}
+.rangeField {
+  width: 56px;
+}
+.stepField {
+  width: 44px;
+}
+.hover {
+  background: var(--hover);
+}
+.hoverPrimary {
+  background: var(--primary-hover);
+}
+.menuPreview {
+  width: 220px;
+  min-width: 220px;
+  z-index: auto;
+}
+.menuPreview > :first-child {
+  background: var(--menu-highlight);
+}
+.menuPreview > button {
+  white-space: nowrap;
+}
+.runGrid {
+  display: grid;
+  grid-template-columns: 560px 336px 336px;
+  gap: 48px;
+}
+.status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--caption);
+}
+.status:has(svg) {
+  color: var(--text);
+}
+.status button {
+  font-size: 12px;
+}
+.amber {
+  color: var(--link);
+}
+.danger {
+  color: var(--danger-text);
+}
+.profit {
+  color: var(--profit);
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  background: var(--primary);
+  border-radius: 50%;
+}
+.runBlock {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px 16px;
+  background: var(--panel);
+  border: 1px solid var(--divider);
+}
+.runBlock button {
+  height: 36px;
+  padding: 0 16px;
+}
+.runNumbers {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.runNumbers > div {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.runNumbers strong {
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.runNumbers > div > span {
+  color: var(--secondary);
+}
+.runNumbers > span {
+  font-size: 12px;
+  line-height: 1.35;
+}
+.progressBlock {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--divider);
+  background: var(--panel);
+}
+.progressBlock > div:not([role='progressbar']) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.progressBlock .progressHeading {
+  gap: 8px;
+  font-size: 13px;
+}
+.progressHeading > span {
+  color: var(--secondary);
+  white-space: nowrap;
+}
+.progressHeading > strong:last-child {
+  margin-left: auto;
+}
+.progressBlock .progressFooter {
+  font-size: 12px;
+  gap: 12px;
+  white-space: nowrap;
+  color: var(--secondary);
+}
+.progressFooter .caption {
+  font-size: 11px;
+}
+.progressFooter button {
+  height: 28px;
+  margin-left: auto;
+}
+.toastExamples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.toastAction {
+  height: 28px;
+}
+.extensions {
+  padding: 36px 40px;
+  border-top: 1px solid var(--divider);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1440px;
+}
+.extraGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 36px 48px;
+}
+.flex {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.icons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.icons > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--secondary);
+}
+.dock {
+  height: 100px;
+}
+.dock p {
+  padding: 14px;
+}
+@media (max-width: 1439px) {
+  .reference {
+    width: 100%;
+    min-height: auto;
+    height: auto;
+    padding: 24px;
+  }
+  .grid,
+  .runGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px;
+  }
+  .grid > :last-child,
+  .runGrid > :first-child {
+    grid-column: 1 / -1;
+  }
+  .extraGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 767px) {
+  .reference,
+  .extensions {
+    padding: 20px 16px;
+  }
+  .grid,
+  .runGrid,
+  .extraGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .rowLabel {
+    width: 100%;
+  }
+  .typeRow {
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+  .field {
+    max-width: 100%;
+  }
+  .icons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

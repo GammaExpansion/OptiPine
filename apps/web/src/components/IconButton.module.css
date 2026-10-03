@@ -8,7 +8,14 @@
   color: var(--secondary);
   flex: none;
 }
-.button:hover {
+.button:hover:not(:disabled):not([aria-disabled='true']) {
   background: var(--hover);
   color: var(--text);
+}
+.button[aria-pressed='true'] {
+  color: var(--link);
+}
+.button:disabled,
+.button[aria-disabled='true'] {
+  opacity: 0.45;
 }

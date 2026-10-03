@@ -1,0 +1,12 @@
+.section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 28px;
+}
+.title {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}

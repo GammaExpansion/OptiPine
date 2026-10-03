@@ -1,0 +1,28 @@
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.neutral {
+  background: var(--hover);
+  color: var(--secondary);
+}
+.amber {
+  background: var(--amber-background);
+  color: var(--amber-text);
+}
+.danger {
+  background: var(--danger-background);
+  color: var(--danger-note-text);
+}
+.body {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.note > svg {
+  margin-top: 2px;
+}

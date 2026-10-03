@@ -55,5 +55,21 @@
 .content {
   flex: 1;
   min-height: 0;
-  outline: none;
+}
+.bad {
+  color: var(--danger-ink);
+  background: var(--loss);
+  border-radius: 8px;
+  padding: 0 5px;
+  font-weight: 600;
+}
+.tab:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--hover);
+}
+.tab:disabled {
+  opacity: 0.45;
+}
+.tabs {
+  overflow-x: auto;
 }
