@@ -14,3 +14,13 @@ vi.stubGlobal(
     disconnect() {}
   },
 );
+// CodeMirror measures text through ranges, which jsdom does not lay out. Node-environment
+// suites have no DOM at all.
+if (typeof Range !== 'undefined') {
+  Range.prototype.getClientRects = () => ({
+    length: 0,
+    item: () => null,
+    [Symbol.iterator]: [][Symbol.iterator],
+  });
+  Range.prototype.getBoundingClientRect = () => new DOMRect();
+}

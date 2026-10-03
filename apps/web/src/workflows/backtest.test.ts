@@ -239,6 +239,31 @@ test('changes mark the result outdated, and the inputs it used can be restored (
   assert.deepEqual(session.getState().outdated?.reasons, ['data']);
 });
 
+test('one override resets alone, including one over a value the script computes', async () => {
+  const ready = await readySession();
+  const { session } = ready;
+  session.setSource(
+    strategySource.replace('initial_capital=10000', 'initial_capital=math.max(10000, 1)'),
+  );
+  await ready.answerAll();
+  assert.deepEqual(session.getState().scriptProperties?.initialCapital, {
+    kind: 'expression',
+    line: 2,
+  });
+  session.setProperty('initialCapital', 25000);
+  session.setProperty('slippage', 2);
+  const before = session.getState();
+  session.resetProperty('pyramiding');
+  assert.equal(session.getState(), before);
+  session.resetProperty('initialCapital');
+  assert.deepEqual(session.getState().propertyOverrides, { slippage: 2 });
+  const capital = session.getState().properties.find((field) => field.id === 'initialCapital')!;
+  assert.equal(capital.overridden, false);
+  assert.equal(capital.value, undefined);
+  session.resetProperty('slippage');
+  assert.deepEqual(session.getState().propertyOverrides, {});
+});
+
 test('property overrides reach the engine and are recorded', async () => {
   const ready = await readySession();
   const { session } = ready;

@@ -50,9 +50,21 @@ it.each(examples.filter((example) => example.id !== 'ma-cross'))(
       ]);
       for (const plot of plots.filter((plot) => plot.kind === 'markers'))
         expect(plot.markers.length).toBeGreaterThan(0);
+      expect(plots[3].markers[0]).toMatchObject({
+        shape: 'triangleup',
+        location: 'belowbar',
+        color: '#00e676',
+      });
+      expect(plots[4].markers[0]).toMatchObject({
+        shape: 'triangledown',
+        location: 'abovebar',
+        color: '#f23645',
+      });
     } else {
       expect(plots.map((plot) => plot.title)).toEqual(['Basis', 'Upper', 'Lower']);
       expect(plots.every((plot) => plot.kind === 'line' && plot.pane === 0)).toBe(true);
+      expect(plots.map((plot) => plot.color)).toEqual(['#089981', '#787b86', '#787b86']);
+      expect(plots[0].linewidth).toBe(2);
     }
   },
 );

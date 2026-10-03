@@ -1,33 +1,28 @@
 .code {
   height: 100%;
+  min-height: 0;
   background: var(--code-background);
-  padding-top: 10px;
-  font-family: var(--font-code);
-  font-size: 12.5px;
-  line-height: 19px;
 }
-.line {
+/* B3: the compile status at the right of the dock bar. */
+.status {
   display: flex;
-  height: 19px;
-  border-left: 2px solid transparent;
-  white-space: pre;
-  background: rgb(255 255 255 / 3.5%);
+  align-items: center;
+  gap: 6px;
+  margin-right: 8px;
+  font-size: 12px;
+  color: var(--caption);
+  white-space: nowrap;
 }
-.number {
-  width: 46px;
+.dot {
+  width: 6px;
+  height: 6px;
   flex: none;
-  text-align: right;
-  padding-right: 14px;
-  color: var(--code-caption);
-  font-variant-numeric: tabular-nums;
+  border-radius: 50%;
+  background: var(--profit);
 }
-.placeholder {
-  color: var(--code-caption);
+.status[data-state='compiling'] .dot {
+  background: var(--primary);
 }
-.placeholder i {
-  display: inline-block;
-  width: 1.5px;
-  height: 15px;
-  background: var(--text);
-  vertical-align: -3px;
+.status[data-state='failed'] .dot {
+  background: var(--loss);
 }

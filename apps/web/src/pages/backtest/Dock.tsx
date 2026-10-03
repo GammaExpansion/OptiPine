@@ -1,9 +1,10 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Group, Panel, usePanelRef } from 'react-resizable-panels';
 import { DockTabs } from '../../components/DockTabs.tsx';
 import { IconButton } from '../../components/IconButton.tsx';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { useBacktestStore } from '../../state/backtest.ts';
+import { useSelectionStore } from '../../state/selection.ts';
 import { defaultPaneSizes, useUiStore, type DockTab } from '../../state/ui.ts';
 import { backtestIssues } from '../../workflows/backtest.ts';
 import { ResizeHandle } from '../../shell/ResizeHandle.tsx';
@@ -13,12 +14,18 @@ import { EquityTab } from './dock/EquityTab.tsx';
 import { TradesTab } from './dock/TradesTab.tsx';
 import { CodeTab } from './dock/CodeTab.tsx';
 import { IssuesTab } from './dock/IssuesTab.tsx';
+import { DockActionsHost } from './dock/DockActions.tsx';
+import actionStyles from './dock/DockActions.module.css';
+import { closedTradeCount } from './states/chart-view.ts';
 
 const dockTabs: DockTab[] = ['report', 'equity', 'trades', 'code', 'issues'];
 
 export function Dock({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const issueCount = useBacktestStore((state) => backtestIssues(state).length);
+  const tradeCount = useBacktestStore(closedTradeCount);
+  const codeLine = useSelectionStore((state) => state.codeLine);
+  const [actionsHost, setActionsHost] = useState<HTMLElement | null>(null);
   const tab = useUiStore((state) => state.dockTab);
   const setTab = useUiStore((state) => state.setDockTab);
   const setSizes = useUiStore((state) => state.setPaneSizes);
@@ -40,6 +47,14 @@ export function Dock({ children }: { children: ReactNode }) {
     chart.current?.resize(previousSize.current);
     persist(previousSize.current);
   };
+  // Choosing a tab, by its label or from elsewhere (Go to line, View issues), opens a collapsed
+  // dock; what the dock showed when it mounted does not.
+  const shown = useRef({ tab, line: codeLine?.seq });
+  useEffect(() => {
+    const previous = shown.current;
+    shown.current = { tab, line: codeLine?.seq };
+    if (dockCollapsed && (previous.tab !== tab || previous.line !== codeLine?.seq)) restore();
+  });
   return (
     <Group
       orientation="vertical"
@@ -90,21 +105,21 @@ export function Dock({ children }: { children: ReactNode }) {
             value,
             label: t(`dock.${value}`),
             ...(value === 'issues' ? { count: issueCount, bad: issueCount > 0 } : {}),
+            ...(value === 'trades' && tradeCount !== null ? { count: tradeCount } : {}),
           }))}
-          onChange={(value) => {
-            setTab(value as DockTab);
-            if (dockCollapsed) restore();
-          }}
+          onChange={(value) => setTab(value as DockTab)}
           collapsed={dockCollapsed}
           actions={
-            maximized || dockCollapsed ? (
-              <IconButton
-                icon={maximized ? 'chevron' : 'up'}
-                label={t(maximized ? 'dock.restore' : 'dock.expand')}
-                onClick={restore}
-              />
+            dockCollapsed ? (
+              <IconButton icon="up" label={t('dock.expand')} onClick={restore} />
+            ) : maximized ? (
+              <>
+                <span ref={setActionsHost} className={actionStyles.host} />
+                <IconButton icon="chevron" label={t('dock.restore')} onClick={restore} />
+              </>
             ) : (
               <>
+                <span ref={setActionsHost} className={actionStyles.host} />
                 <IconButton
                   icon="maximize"
                   label={t('dock.maximize')}
@@ -127,11 +142,13 @@ export function Dock({ children }: { children: ReactNode }) {
             )
           }
         >
-          {tab === 'report' && <ReportTab />}
-          {tab === 'equity' && <EquityTab />}
-          {tab === 'trades' && <TradesTab />}
-          {tab === 'code' && <CodeTab />}
-          {tab === 'issues' && <IssuesTab />}
+          <DockActionsHost.Provider value={dockCollapsed ? null : actionsHost}>
+            {tab === 'report' && <ReportTab />}
+            {tab === 'equity' && <EquityTab />}
+            {tab === 'trades' && <TradesTab />}
+            {tab === 'code' && <CodeTab />}
+            {tab === 'issues' && <IssuesTab />}
+          </DockActionsHost.Provider>
         </DockTabs>
       </Panel>
     </Group>

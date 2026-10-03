@@ -28,7 +28,12 @@ export interface OptimizerAnalysisInput {
   objective: string;
   direction: 'maximize' | 'minimize';
   constraints: MetricConstraint[];
-  rankBy?: 'in' | 'secondary';
+  /**
+   * What ranks the sets: `in`, the objective's IS value (the default); `secondary`, the OOS value,
+   * or for validation None the neighbourhood mean; `neighborhood`, the mean of the IS objective
+   * over each set and its ±1 step neighbours, whatever the validation.
+   */
+  rankBy?: 'in' | 'secondary' | 'neighborhood';
   axes?: { x?: string; y?: string; z?: string };
   /** Keep the user's explicit axis assignment instead of fitting the longer axis horizontally. */
   preserveAxisOrientation?: boolean;
@@ -108,20 +113,24 @@ export function deriveOptimizerTrials(state: OptimizerAnalysisInput): TrialRecor
     state.constraints,
   );
 }
+/** `neighbors` reuses neighbourhood means already computed for `trials`. */
 export function rankOptimizerTrials(
   state: OptimizerAnalysisInput,
   trials = deriveOptimizerTrials(state),
+  neighbors?: ReadonlyMap<TrialRecord, number | null>,
 ): TrialRecord[] {
-  if (state.rankBy !== 'secondary') return leaderboard(trials, { direction: state.direction });
-  const none = (state.resultMode ?? state.mode) === 'none';
-  const neighbors = none
-    ? neighborhoodValues(trials, (state.resultSpace ?? state.space)?.activeAxes)
+  if (state.rankBy !== 'secondary' && state.rankBy !== 'neighborhood')
+    return leaderboard(trials, { direction: state.direction });
+  const byNeighborhood =
+    state.rankBy === 'neighborhood' || (state.resultMode ?? state.mode) === 'none';
+  const values = byNeighborhood
+    ? (neighbors ?? neighborhoodValues(trials, (state.resultSpace ?? state.space)?.activeAxes))
     : undefined;
   const original = new Map(trials.map((trial) => [trial.trialId, trial]));
   return leaderboard(
     trials.map((trial) => ({
       ...trial,
-      objectiveValue: none ? (neighbors?.get(trial) ?? null) : trial.outOfSampleValue,
+      objectiveValue: values ? (values.get(trial) ?? null) : trial.outOfSampleValue,
     })),
     { direction: state.direction },
   ).map((trial) => original.get(trial.trialId)!);
@@ -149,9 +158,11 @@ export function analyzeOptimizer(state: OptimizerAnalysisInput): OptimizerAnalys
     valid(state.axes?.z) && state.axes!.z !== x && state.axes!.z !== y ? state.axes!.z : undefined;
   const neighbors = neighborhoodValues(trials, active),
     ranked =
-      state.rankBy !== 'secondary'
-        ? leaderboard(trials, { direction: state.direction })
-        : rankOptimizerTrials(state, trials);
+      state.rankBy === 'neighborhood'
+        ? rankOptimizerTrials(state, trials, neighbors)
+        : state.rankBy !== 'secondary'
+          ? leaderboard(trials, { direction: state.direction })
+          : rankOptimizerTrials(state, trials);
   const selected = ranked.find((trial) => trial.trialId === state.selectedTrialId) ?? ranked[0];
   const sensitivity = buildSensitivitySummary(
     trials,

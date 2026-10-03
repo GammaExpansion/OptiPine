@@ -458,6 +458,18 @@ export class BacktestSession implements Observable<BacktestState> {
     this.#update({ propertyOverrides: {} });
   }
 
+  /**
+   * Drop one override, so the script's own value applies again, a literal or an expression the
+   * engine evaluates during the run.
+   */
+  resetProperty(id: PropertyId): void {
+    const { propertyOverrides } = this.getState();
+    if (propertyOverrides[id] === undefined) return;
+    const next: PropertyOverrides = { ...propertyOverrides };
+    delete next[id];
+    this.#update({ propertyOverrides: next });
+  }
+
   /** Make `input` the data for the next run; an existing result is then outdated. */
   setDataset(input: DatasetInput): void {
     this.#update({ dataset: { revision: ++this.#datasetRevision, input } });
