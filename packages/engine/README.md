@@ -18,6 +18,21 @@ import { compile, describe, run, runWithEquity, sweep } from '@pine/engine';
 | `sweep(source, common, parameters)` | Compile once, then execute every `ParameterSet` (`{ inputs?, settings? }` overrides) with fresh state. Returns `{ compilation, runs }`. |
 | `describe(source)`                  | Compile without running and read literal `strategy()` settings, `input.*` descriptors and plot titles. See below.                       |
 
+### Compile diagnostics
+
+Parsing stops at the first syntax error, which is then the only diagnostic. Past parsing, the
+checker goes on after each failing statement or expression and reports every independent
+`undeclared`, `type` and `semantic` error in one pass, sorted by line and column, at most 50. A
+failed expression poisons its value: a variable declared from it, arithmetic or a call on it, or a
+function whose body failed report nothing more, so a misspelt name is one error at each use, not
+a cascade through everything computed from it. Each error in a user function's body is reported
+once, however many calls check it.
+
+When compilation fails, the `request.*` calls the engine cannot run are listed among the errors
+as `unsupported`. A script whose only problem is a request still compiles, and its run ends with
+the `unsupported` diagnostic as before. `compile`, `describe`, `run`, `runWithEquity` and `sweep`
+all return the whole list.
+
 ### RunInput
 
 - `bars`: `{ time, open, high, low, close, volume }[]` in ascending order; `time` is Unix seconds.

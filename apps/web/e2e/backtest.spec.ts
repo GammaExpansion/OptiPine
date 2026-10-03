@@ -7,6 +7,13 @@ test.use({ baseURL: origins.preview });
 
 const trend = readFileSync(new URL('../examples/trend-breakout.pine', import.meta.url), 'utf8');
 const broken = trend.replace('basis = ta.sma(src, length)', 'basis = ta.sma(src, lenght)');
+/** The mock's B10: the misspelt length on two lines, and a request the engine cannot run. */
+const b10 = broken
+  .replace('dev   = mult * ta.stdev(src, length)', 'dev   = mult * ta.stdev(src, lenght)')
+  .replace(
+    'lower = basis - dev\n',
+    'lower = basis - dev\ndaily = request.security(syminfo.tickerid, "D", close)\n',
+  );
 const failing = trend.replace(
   'if longSignal',
   'if bar_index == 1202\n    runtime.error("trail_points must be greater than 0")\nif longSignal',
@@ -98,6 +105,36 @@ test('a compile error shows in the code and in Issues, and editing fixes it (B10
   await expect(page.getByText('v6 compiled')).toBeVisible();
   await expect(editor.locator('.cm-line-er')).toHaveCount(0);
   await expect(page.getByRole('tab', { name: /^Issues/ })).toHaveText('Issues0');
+  expect(errors).toEqual([]);
+});
+
+test('a failed compile shows every error at once, and the unsupported request (B10)', async ({
+  page,
+}, info) => {
+  const errors = await open(page, b10);
+  await expect(facts(page)).toHaveText('2 compile errors');
+  await page.getByRole('tab', { name: /^Issues/ }).click();
+  const rows = page.getByRole('list', { name: 'Issues' }).getByRole('button');
+  await expect(rows).toHaveCount(3);
+  await expect(rows.nth(0)).toContainText('Compile error');
+  await expect(rows.nth(0)).toContainText('Line 15, column 21');
+  await expect(rows.nth(1)).toContainText('Compile error');
+  await expect(rows.nth(1)).toContainText('Line 16, column 30');
+  await expect(rows.nth(2)).toContainText('Unsupported');
+  await expect(rows.nth(2)).toContainText('request.security() is not supported.');
+  await expect(page.getByText(/^Fix the errors to run\. “Unsupported” means/)).toBeVisible();
+  const excerpt = page.getByRole('textbox', { name: 'Code around line 15' });
+  await expect(excerpt.locator('.cm-squiggle')).toHaveText([
+    'lenght',
+    'lenght',
+    'request.security',
+  ]);
+  await page.screenshot({ path: info.outputPath('B10-all-en.png') });
+  await page.getByRole('tab', { name: 'Pine code' }).click();
+  const editor = page.getByRole('textbox', { name: 'Pine code editor' });
+  await expect(editor.locator('.cm-line-er')).toHaveCount(2);
+  await expect(editor.locator('.cm-squiggle')).toHaveText(['lenght', 'lenght', 'request.security']);
+  await expect(editor.locator('.cm-line-fx')).toContainText('request.security');
   expect(errors).toEqual([]);
 });
 

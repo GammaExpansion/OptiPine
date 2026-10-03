@@ -18,6 +18,8 @@ interface ValueType {
   qualifier: Qualifier;
   elements?: ValueType[];
   bindingQualifier?: Qualifier;
+  /** The value of an expression that already failed: what uses it reports nothing more. */
+  poisoned?: true;
 }
 type Scope = Map<string, ValueType>;
 const ranks: Qualifier[] = ['const', 'input', 'simple', 'series'];
@@ -25,6 +27,15 @@ const valueType = (base: string, qualifier: Qualifier = 'series'): ValueType => 
   base,
   qualifier,
 });
+/**
+ * Unknown with the weakest qualifier, so no type or qualifier check fails on it: one undeclared
+ * name is one error, not one more for every expression that uses it.
+ */
+const poisoned = (): ValueType => ({ base: 'unknown', qualifier: 'const', poisoned: true });
+/** Compilation reports at most this many diagnostics. */
+export const diagnosticLimit = 50;
+const order = (a: Diagnostic, b: Diagnostic): number =>
+  a.line - b.line || (a.column ?? 0) - (b.column ?? 0);
 const qualify = (...values: ValueType[]): Qualifier =>
   ranks[Math.max(0, ...values.map((v) => ranks.indexOf(v.qualifier)))];
 const numeric = (type: ValueType): boolean => ['int', 'float', 'na', 'unknown'].includes(type.base);
@@ -227,12 +238,63 @@ export class Checker {
   declarationLine = 1;
   functionScope = -1;
   loopDepth = 0;
+  /**
+   * The errors found. A failing statement or expression is reported and checking goes on past
+   * it (`block`, `expression`), so one pass finds every independent error.
+   */
+  errors: Diagnostic[] = [];
+  /** Calls the engine cannot run, reported with the errors when there are any. */
+  unsupported: Diagnostic[] = [];
+  /** Functions, types and enums whose declaration failed: their uses report nothing more. */
+  poisonedNames = new Set<string>();
+  #reported = new Set<string>();
   constructor(program: Program) {
     this.program = program;
     this.plotDependencies = new PlotDependencies(program);
   }
   fail(kind: Diagnostic['kind'], node: Node, message: string): never {
     throw new CompileError(kind, node.line, message, node.column);
+  }
+  /** A function body is checked at every call; each of its errors is reported once. */
+  report(diagnostic: Diagnostic, into = this.errors): void {
+    const key = JSON.stringify([
+      diagnostic.kind,
+      diagnostic.line,
+      diagnostic.column,
+      diagnostic.message,
+    ]);
+    if (this.#reported.has(key)) return;
+    this.#reported.add(key);
+    into.push(diagnostic);
+  }
+  /**
+   * The errors with the unsupported calls beside them, by line and column, at most
+   * `diagnosticLimit`; empty when the script has no error.
+   */
+  diagnostics(): Diagnostic[] {
+    if (!this.errors.length) return [];
+    return [...this.errors, ...this.unsupported].sort(order).slice(0, diagnosticLimit);
+  }
+  /**
+   * Run `check`. A compile error in it is reported, the scopes and loop and function depth are put
+   * back as they were, and the result is null.
+   */
+  recover<T>(check: () => T): T | null {
+    const scopes = this.scopes;
+    const depth = scopes.length;
+    const functionScope = this.functionScope;
+    const loopDepth = this.loopDepth;
+    try {
+      return check();
+    } catch (error) {
+      if (!(error instanceof CompileError)) throw error;
+      this.report(error.diagnostic);
+      this.scopes = scopes;
+      scopes.length = depth;
+      this.functionScope = functionScope;
+      this.loopDepth = loopDepth;
+      return null;
+    }
   }
   find(name: string): ValueType | undefined {
     for (let i = this.scopes.length - 1; i >= 0; i--) {
@@ -261,21 +323,22 @@ export class Checker {
     // Pine attributes script-wide declaration errors to the script start in v5;
     // v6 points duplicate declarations at the second declaration instead.
     if (!declarations.length)
-      throw new CompileError(
-        'semantic',
-        1,
-        'A script requires one indicator(), strategy(), or library() declaration.',
-      );
+      this.report({
+        kind: 'semantic',
+        line: 1,
+        message: 'A script requires one indicator(), strategy(), or library() declaration.',
+      });
     if (declarations.length > 1)
-      throw new CompileError(
-        'semantic',
-        this.program.version === 5 ? 1 : declarations[1].line,
-        'A script must have exactly one declaration.',
-      );
+      this.report({
+        kind: 'semantic',
+        line: this.program.version === 5 ? 1 : declarations[1].line,
+        message: 'A script must have exactly one declaration.',
+      });
     const declaration = declarations[0];
-    if (declaration.kind === 'expression' && declaration.expression.kind === 'call')
+    if (declaration?.kind === 'expression' && declaration.expression.kind === 'call') {
       this.scriptKind = qualifiedName(declaration.expression.callee)!;
-    this.declarationLine = declaration.line;
+      this.declarationLine = declaration.line;
+    }
     this.block(this.program.body, false);
   }
   compatible(expected: string, actual: ValueType): boolean {
@@ -284,9 +347,13 @@ export class Checker {
     if (expected === actual.base || (expected === 'float' && actual.base === 'int')) return true;
     return expected === 'bool' && this.program.version === 5 && numeric(actual);
   }
+  /** Report an error that leaves the checked expression's type intact, and go on. */
+  flag(kind: Diagnostic['kind'], node: Node, message: string): void {
+    this.report({ kind, line: node.line, column: node.column, message });
+  }
   condition(type: ValueType, node: Node): void {
     if (!this.compatible('bool', type))
-      this.fail('type', node, 'This condition requires a boolean value.');
+      this.flag('type', node, 'This condition requires a boolean value.');
   }
   checkEnumTypes(left: ValueType, right: ValueType, node: Node): void {
     const containsEnum = (type: ValueType): boolean =>
@@ -297,7 +364,7 @@ export class Checker {
       !['na', 'unknown'].includes(left.base) &&
       !['na', 'unknown'].includes(right.base)
     )
-      this.fail('type', node, 'Enum values require members of the same enum.');
+      this.flag('type', node, 'Enum values require members of the same enum.');
     if (left.elements && right.elements)
       left.elements.forEach((element, index) => {
         const other = right.elements![index];
@@ -307,15 +374,32 @@ export class Checker {
   block(body: Statement[], nested = true): ValueType {
     if (nested) this.scopes.push(new Map());
     let result = valueType('na', 'const');
-    for (const statement of body) result = this.statement(statement);
+    for (const statement of body)
+      result = this.recover(() => this.statement(statement)) ?? this.poison(statement);
     if (nested) this.scopes.pop();
     return result;
+  }
+  /**
+   * After a statement failed, what it declared exists as poisoned: later uses report no
+   * undeclared name, unknown function or type mismatch of their own.
+   */
+  poison(statement: Statement): ValueType {
+    const scope = this.scopes[this.scopes.length - 1];
+    if (statement.kind === 'declaration')
+      for (const name of statement.names) if (!scope.has(name)) scope.set(name, poisoned());
+    if (statement.kind === 'function' || statement.kind === 'type' || statement.kind === 'enum')
+      this.poisonedNames.add(statement.name);
+    return poisoned();
   }
   statement(node: Statement): ValueType {
     switch (node.kind) {
       case 'declaration': {
         const type = this.expression(node.value);
-        if (node.names.length > 1 && (!type.elements || type.elements.length !== node.names.length))
+        if (
+          node.names.length > 1 &&
+          !type.poisoned &&
+          (!type.elements || type.elements.length !== node.names.length)
+        )
           this.fail('type', node, 'Tuple arity does not match the declaration.');
         if (node.type && !this.compatible(node.type, type))
           this.fail('type', node, `Cannot assign ${type.base} to ${node.type}.`);
@@ -348,6 +432,7 @@ export class Checker {
       case 'assignment': {
         const target = this.expression(node.target);
         const value = this.expression(node.value);
+        if (target.poisoned) return value;
         if (target.bindingQualifier === 'const')
           this.fail('semantic', node, 'Cannot reassign a const variable.');
         if (
@@ -383,6 +468,7 @@ export class Checker {
           this.fail('semantic', node, `${node.name} is already declared as an enum.`);
         if (this.scopes.length !== 1)
           this.fail('semantic', node, 'Functions must be declared in global scope.');
+        const errors = this.errors.length;
         this.scopes.push(new Map());
         this.functionScope = this.scopes.length - 1;
         for (const param of node.params) {
@@ -399,6 +485,9 @@ export class Checker {
         const result = this.block(node.body, false);
         this.scopes.pop();
         this.functionScope = -1;
+        // A body with errors, such as a call of the function itself (Pine has no recursion), is
+        // not checked again at each call: its calls report nothing more.
+        if (this.errors.length > errors) return this.poison(node);
         this.functions.set(node.name, {
           declaration: node,
           result,
@@ -468,7 +557,11 @@ export class Checker {
         return valueType('na', 'const');
     }
   }
+  /** An expression's type; one that fails is reported, and poisoned for whatever uses it. */
   expression(node: Expression): ValueType {
+    return this.recover(() => this.evaluate(node)) ?? poisoned();
+  }
+  evaluate(node: Expression): ValueType {
     switch (node.kind) {
       case 'literal':
         return valueType(node.valueType, 'const');
@@ -488,7 +581,7 @@ export class Checker {
           return valueType(node.property === 'price' ? 'float' : 'int');
         const field = this.types.get(object.base)?.fields.find((f) => f.name === node.property);
         if (field) return valueType(field.type ?? 'unknown', object.qualifier);
-        if (object.base === 'unknown') return valueType('unknown');
+        if (object.base === 'unknown') return object.poisoned ? poisoned() : valueType('unknown');
         this.fail('undeclared', node, `Unknown field ${node.property} on ${object.base}.`);
       }
       case 'history': {
@@ -508,6 +601,7 @@ export class Checker {
       }
       case 'unary': {
         const argument = this.expression(node.argument);
+        if (argument.poisoned) return argument;
         if (node.operator === 'not') {
           this.condition(argument, node);
           return valueType('bool', argument.qualifier);
@@ -518,6 +612,7 @@ export class Checker {
       case 'binary': {
         const left = this.expression(node.left);
         const right = this.expression(node.right);
+        if (left.poisoned || right.poisoned) return poisoned();
         const q = qualify(left, right);
         if (['and', 'or'].includes(node.operator)) {
           this.condition(left, node);
@@ -610,10 +705,13 @@ export class Checker {
     if (node.callee.kind === 'member' && node.callee.property === 'new') {
       const type = qualifiedName(node.callee.object);
       if (type && this.types.has(type)) return valueType(type);
+      if (type && this.poisonedNames.has(type)) return poisoned();
     }
+    if (this.poisonedNames.has(name)) return poisoned();
     let fn = this.functions.get(name);
     if (node.callee.kind === 'member' && !functions.has(name)) {
       const receiver = this.expression(node.callee.object);
+      if (receiver.poisoned || this.poisonedNames.has(node.callee.property)) return poisoned();
       const candidate = this.functions.get(node.callee.property);
       fn =
         candidate?.declaration.method &&
@@ -689,6 +787,17 @@ export class Checker {
     }
     if (!functions.has(name))
       this.fail('undeclared', node, `Unknown function ${name || '<expression>'}.`);
+    // The engine cannot run these; a script that fails anyway hears it with its errors (B10).
+    if (name.startsWith('request.'))
+      this.report(
+        {
+          kind: 'unsupported',
+          line: node.line,
+          column: node.column,
+          message: `${name}() is not supported.`,
+        },
+        this.unsupported,
+      );
     if (name.startsWith('strategy.') && this.scriptKind === 'indicator')
       throw new CompileError(
         'semantic',
