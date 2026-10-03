@@ -1,9 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { OptimizationStoreState } from '../src/state/optimization.ts';
 import type { BacktestHooks } from './backtest-hooks.ts';
+import { origins } from './ports.ts';
 
 // Small synthetic grids isolate result edge cases; the integrated example test uses setup UI.
-test.use({ baseURL: 'http://127.0.0.1:5176' });
+test.use({ baseURL: origins.dev });
 type SummaryWindow = Window & {
   backtestHooks: BacktestHooks;
   summaryOptimization: () => OptimizationStoreState;

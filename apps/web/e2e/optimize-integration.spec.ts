@@ -5,8 +5,9 @@ import '../src/i18n/catalogs.ts';
 import { translateId } from '../src/i18n/translate.ts';
 import type { BacktestStoreState } from '../src/state/backtest.ts';
 import type { OptimizationStoreState } from '../src/state/optimization.ts';
+import { origins } from './ports.ts';
 
-test.use({ baseURL: 'http://127.0.0.1:5176' });
+test.use({ baseURL: origins.dev });
 type Hooks = Window & {
   optimization: () => OptimizationStoreState;
   backtest: () => BacktestStoreState;
