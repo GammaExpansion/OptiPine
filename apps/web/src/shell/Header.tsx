@@ -1,21 +1,17 @@
-import type { ReactNode } from 'react';
 import { Icon } from '../components/Icon.tsx';
 import { PageTabs } from '../components/PageTabs.tsx';
 import { SegmentedControl } from '../components/SegmentedControl.tsx';
 import { useI18n } from '../i18n/I18nProvider.tsx';
+import { useOptimizationStore } from '../state/optimization.ts';
 import { useUiStore } from '../state/ui.ts';
 import { HeaderData } from './HeaderData.tsx';
+import { optimizeNeedsAttention } from './optimize-status.ts';
 import { RunControls } from './RunControls.tsx';
 import styles from './Header.module.css';
 
-export function Header({
-  canOptimize = false,
-  facts,
-}: {
-  canOptimize?: boolean;
-  facts?: ReactNode;
-}) {
+export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
   const { t, language } = useI18n();
+  const optimizeChanged = useOptimizationStore(optimizeNeedsAttention);
   const page = useUiStore((state) => state.page);
   const setPage = useUiStore((state) => state.setPage);
   const setLanguage = useUiStore((state) => state.setLanguage);
@@ -37,13 +33,14 @@ export function Header({
             label: t('shell.optimize'),
             disabled: !canOptimize,
             disabledReason: t('shell.runMissing'),
+            changed: optimizeChanged,
           },
         ]}
       />
       <div className={styles.divider} />
       <HeaderData />
       <div className={styles.spacer} />
-      <RunControls facts={facts} />
+      <RunControls />
       <SegmentedControl
         label={t('shell.language')}
         value={language}

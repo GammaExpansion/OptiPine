@@ -1,8 +1,9 @@
 /**
  * The Optimize page (WEB.md 2.4, 2.5), laid out as R1. Slot owners:
  *
- * - setup: this composition and its splits, `range/DataRangeBar` at the top of the main column,
- *   `states/` (the O1 empty results; R5 dims the whole results area here, so the panels below do
+ * - setup: this composition and its splits, `range/DataRangeBar` at the top of the main column
+ *   with the walk-forward `range/WindowPlan` over the empty results, `states/` (the O1 empty
+ *   results; R5 dims the whole results area here, so the panels below do
  *   not dim themselves), the right panel `sidebar/` with the run block at its foot, and
  *   `filters/AddConditionTrigger`, the + Condition that both the leaderboard and the right panel
  *   use to open R10's popover;
@@ -19,11 +20,12 @@ import { useOptimizationStore } from '../../state/optimization.ts';
 import { Workbench } from '../../shell/Workbench.tsx';
 import { LeaderboardPanel } from './leaderboard/LeaderboardPanel.tsx';
 import { MapPanel } from './map/MapPanel.tsx';
-import { OptimizeSidebar } from './OptimizeSidebar.tsx';
 import { resultsOutdated, showsResults } from './page-view.ts';
 import { DataRangeBar } from './range/DataRangeBar.tsx';
+import { WindowPlan } from './range/WindowPlan.tsx';
 import { SelectionBar } from './selection/SelectionBar.tsx';
 import { SensitivityPanel } from './sensitivity/SensitivityPanel.tsx';
+import { OptimizeSidebar } from './sidebar/OptimizeSidebar.tsx';
 import { Split } from './Split.tsx';
 import { EmptyResults } from './states/EmptyResults.tsx';
 import { SummaryPanel } from './summary/SummaryPanel.tsx';
@@ -71,7 +73,14 @@ function OptimizeMain() {
   return (
     <div className={styles.page}>
       <DataRangeBar />
-      {results ? <Results /> : <EmptyResults />}
+      {results ? (
+        <Results />
+      ) : (
+        <>
+          <WindowPlan />
+          <EmptyResults />
+        </>
+      )}
     </div>
   );
 }

@@ -11,8 +11,9 @@ import styles from './Shell.module.css';
 
 export function Shell({ canOptimize }: { canOptimize?: boolean }) {
   const page = useUiStore((state) => state.page);
+  // Optimize opens once there are a script and data; its run block says what else is missing.
   const hasWorkspace = useBacktestStore(
-    (state) => state.compile.status === 'compiled' && state.dataset !== null,
+    (state) => state.source.trim() !== '' && state.dataset !== null,
   );
   useEffect(() => installShortcuts(), []);
   return (

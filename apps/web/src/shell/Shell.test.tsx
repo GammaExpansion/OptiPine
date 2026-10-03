@@ -7,6 +7,11 @@ import { fakeServices } from '../state/test-support.ts';
 import { I18nProvider } from '../i18n/I18nProvider.tsx';
 import { defaultPaneSizes, uiStorageKey, uiStore } from '../state/ui.ts';
 import { Shell } from './Shell.tsx';
+import {
+  loadOptimization,
+  optimization,
+  runOptimization,
+} from '../pages/optimize/test-support.tsx';
 
 let restoreServices: () => void;
 beforeEach(() => {
@@ -112,4 +117,26 @@ test('dock tabs select empty results and issues without exposing an editor workf
   expect(screen.getByRole('tabpanel')).toHaveTextContent('No issues');
   await user.click(screen.getByRole('tab', { name: 'Trades' }));
   expect(screen.getByRole('tabpanel')).toHaveTextContent('Run a backtest to see results here.');
+});
+
+test('Optimize opens with a script and data, and is marked while results are outdated', async () => {
+  const user = userEvent.setup();
+  await user.pointer({ coords: { clientX: 500, clientY: 500 } });
+  render(
+    <I18nProvider>
+      <Shell />
+    </I18nProvider>,
+  );
+  const optimize = () => screen.getByRole('button', { name: 'Optimize' });
+  expect(optimize()).toBeDisabled();
+  await loadOptimization();
+  expect(optimize()).toBeEnabled();
+  await user.click(optimize());
+  expect(screen.getByRole('heading', { name: 'No optimization has run yet' })).toBeVisible();
+  const marked = () => optimize().querySelector('[aria-hidden="true"]');
+  expect(marked()).toBeNull();
+  await runOptimization();
+  expect(marked()).toBeNull();
+  act(() => optimization().actions.setRange('Length', { to: 5 }));
+  expect(marked()).not.toBeNull();
 });
