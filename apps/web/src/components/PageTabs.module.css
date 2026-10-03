@@ -8,12 +8,19 @@
 .tab {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   padding: 0 2px;
   height: 48px;
   font-size: 14px;
   color: var(--secondary);
   position: relative;
   white-space: nowrap;
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
 }
 .tab:hover {
   color: var(--text);

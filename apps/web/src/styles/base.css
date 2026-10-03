@@ -20,7 +20,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 button,
-input {
+input,
+textarea,
+select {
   font: inherit;
   color: inherit;
 }
@@ -35,10 +37,31 @@ button {
 button:disabled {
   cursor: default;
 }
-button:focus-visible,
-[role='separator']:focus-visible {
+:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: -2px;
+}
+input {
+  min-width: 0;
+}
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--link-hover);
+}
+[aria-disabled='true'] {
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 h1,
 h2,

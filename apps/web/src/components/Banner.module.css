@@ -1,0 +1,43 @@
+.banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--divider);
+  font-size: 12px;
+}
+.neutral {
+  background: var(--hover);
+  color: var(--secondary);
+}
+.amber {
+  background: var(--amber-background);
+  color: var(--amber-text);
+  border-color: var(--amber-border);
+}
+.danger {
+  background: var(--danger-background);
+  color: var(--danger-text);
+  border-color: var(--danger-border);
+}
+.copy {
+  flex: 1;
+  min-width: min(240px, 100%);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.title {
+  font-weight: 500;
+}
+.body {
+  color: var(--secondary);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}

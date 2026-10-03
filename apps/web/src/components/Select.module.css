@@ -1,0 +1,46 @@
+.trigger {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  background: var(--field);
+  font-size: 13px;
+  width: 100%;
+  min-width: 0;
+}
+.trigger > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.trigger[data-state='open'] {
+  border-color: var(--primary);
+}
+.trigger[aria-invalid='true'] {
+  border-color: var(--loss);
+}
+.trigger:disabled {
+  opacity: 0.45;
+}
+.chevron {
+  color: var(--caption);
+}
+.content {
+  min-width: var(--radix-select-trigger-width);
+  max-height: min(360px, var(--radix-select-content-available-height));
+  overflow: hidden;
+}
+.check {
+  margin-left: auto;
+  color: var(--link);
+}
+.scroll {
+  display: flex;
+  justify-content: center;
+  padding: 4px;
+  color: var(--caption);
+}
