@@ -1,0 +1,65 @@
+﻿import { useEffect, useRef, useState } from 'react';
+import { Button } from '../../components/Button.tsx';
+import { Dialog } from '../../components/Dialog.tsx';
+import { Note } from '../../components/Note.tsx';
+import { useI18n } from '../../i18n/I18nProvider.tsx';
+import { openScript } from '../../state/backtest.ts';
+import { registerFilePicker } from '../../shell/shortcuts.ts';
+import { setScriptPicker } from './actions.ts';
+
+export function ScriptFilePicker() {
+  const { t } = useI18n();
+  const input = useRef<HTMLInputElement>(null);
+  const revision = useRef(0);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    const pick = () => input.current?.click();
+    const unregister = registerFilePicker(pick);
+    const release = setScriptPicker(pick);
+    return () => {
+      revision.current++;
+      unregister();
+      release();
+    };
+  }, []);
+  const read = async (file: File | undefined) => {
+    if (!file) return;
+    const version = ++revision.current;
+    try {
+      if (!file.name.toLowerCase().endsWith('.pine')) {
+        setFailed(true);
+        return;
+      }
+      const source = await file.text();
+      if (revision.current === version)
+        openScript({ source, fileName: file.name, origin: { kind: 'file' } });
+    } catch {
+      if (revision.current === version) setFailed(true);
+    }
+  };
+  return (
+    <>
+      <input
+        ref={input}
+        type="file"
+        accept=".pine"
+        hidden
+        aria-label={t('script.openFile')}
+        onChange={(event) => {
+          void read(event.target.files?.[0]);
+          event.target.value = '';
+        }}
+      />
+      <Dialog
+        open={failed}
+        onOpenChange={setFailed}
+        title={t('script.openFile')}
+        closeLabel={t('data.close')}
+        footer={<Button onClick={() => setFailed(false)}>{t('data.close')}</Button>}
+        size="small"
+      >
+        <Note tone="danger">{t('script.fileError')}</Note>
+      </Dialog>
+    </>
+  );
+}

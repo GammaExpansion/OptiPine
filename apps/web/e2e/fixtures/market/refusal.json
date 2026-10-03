@@ -1,0 +1,7 @@
+{
+  "error": {
+    "name": "CodedError",
+    "code": "feedRegionBlocked",
+    "uiText": { "kind": "message", "id": "feedRegionBlocked", "values": { "status": 451 } }
+  }
+}

@@ -1,0 +1,37 @@
+﻿.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.editor {
+  width: 100%;
+  min-height: 280px;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 4px;
+  background: var(--field);
+  color: var(--text);
+  font: 12.5px/1.6 var(--font-code);
+}
+.trigger {
+  min-width: 0;
+}
+.filename {
+  max-width: 175px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--caption);
+  flex: none;
+}
+.dot[data-status='compiled'] {
+  background: var(--profit);
+}
+.dot[data-status='failed'] {
+  background: var(--loss);
+}
