@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import type { ScriptDescription } from '@pine/engine';
 import type { TrialResult } from '@pine/optimizer';
 import type { OptimizationResult } from '@pine/workers';
+import { origins } from './ports.ts';
 
 test('production app loads without errors or third-party requests and remembers language', async ({
   page,
@@ -14,7 +15,7 @@ test('production app loads without errors or third-party requests and remembers 
   });
   const scripts: string[] = [];
   page.on('request', (request) => {
-    if (!request.url().startsWith('http://127.0.0.1:5174/')) external.push(request.url());
+    if (!request.url().startsWith(`${origins.production}/`)) external.push(request.url());
     else if (request.url().endsWith('.js')) scripts.push(new URL(request.url()).pathname);
   });
   // The root's text when it first has any, before a catalog could still change.
@@ -67,7 +68,7 @@ test('built module Workers describe, run, analyze and optimize a tiny strategy',
   const errors: string[] = [];
   page.on('worker', (worker) => workers.push(worker.url()));
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('http://127.0.0.1:5175/e2e/harness.html');
+  await page.goto(`${origins.preview}/e2e/harness.html`);
   const result = await page.evaluate(
     () =>
       (
@@ -99,7 +100,7 @@ test('built module Workers describe, run, analyze and optimize a tiny strategy',
 test('panes resize, reset, collapse, maximize and remember sizes independently per page', async ({
   page,
 }, testInfo) => {
-  await page.goto('http://127.0.0.1:5175/e2e/harness.html');
+  await page.goto(`${origins.preview}/e2e/harness.html`);
   const right = page.getByRole('complementary');
   const width = () => right.evaluate((element) => element.getBoundingClientRect().width);
   await expect.poll(width).toBe(336);
@@ -167,12 +168,8 @@ test('panes resize, reset, collapse, maximize and remember sizes independently p
 });
 
 test('dev, preview and production preserve the market API prefix', async ({ request }) => {
-  expect((await request.get('http://127.0.0.1:5174/e2e/harness.html')).status()).toBe(404);
-  for (const origin of [
-    'http://127.0.0.1:5174',
-    'http://127.0.0.1:5175',
-    'http://127.0.0.1:5176',
-  ]) {
+  expect((await request.get(`${origins.production}/e2e/harness.html`)).status()).toBe(404);
+  for (const origin of [origins.production, origins.preview, origins.dev]) {
     const response = await request.get(`${origin}/api/market/bars?feed=invalid`);
     expect(response.status()).toBe(400);
     expect(await response.json()).toMatchObject({

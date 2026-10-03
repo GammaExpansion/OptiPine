@@ -1,8 +1,9 @@
 import { readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+import { origins } from './ports.ts';
 
 test.use({
-  baseURL: 'http://127.0.0.1:5175',
+  baseURL: origins.preview,
   viewport: { width: 1440, height: 1120 },
   reducedMotion: 'reduce',
 });
@@ -118,7 +119,7 @@ test('G5 comparison at 1440 × 1120 with identical self-hosted fonts', async ({
   }
   expect(existsSync(new URL('../.e2e-dist/sheet.html', import.meta.url))).toBe(true);
   expect(existsSync(new URL('../dist/sheet.html', import.meta.url))).toBe(false);
-  expect((await request.get('http://127.0.0.1:5174/sheet.html')).status()).toBe(404);
+  expect((await request.get(`${origins.production}/sheet.html`)).status()).toBe(404);
 });
 
 test('browser keyboard flows cover grouped select, symbol search, dialogs, popover and queue', async ({

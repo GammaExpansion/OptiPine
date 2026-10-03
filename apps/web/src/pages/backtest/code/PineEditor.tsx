@@ -39,6 +39,8 @@ export type PineEditorProps = {
   selectOnReveal?: boolean;
   /** The owner whose editor state outlives this component; omit for a fresh state per mount. */
   keepAs?: object;
+  /** Take focus on mount with the cursor at the end, as the static editor it replaces had it. */
+  autoFocus?: boolean;
   className?: string;
 } & Partial<EditorHandlers>;
 
@@ -52,6 +54,7 @@ export function PineEditor({
   reveal = null,
   selectOnReveal = false,
   keepAs,
+  autoFocus = false,
   onChange = ignore,
   onRun = ignore,
   onDropFile = ignore,
@@ -85,6 +88,10 @@ export function PineEditor({
       scrollTo: reuse?.scroll,
     });
     view.current = editor;
+    if (autoFocus) {
+      editor.focus();
+      editor.dispatch({ selection: { anchor: editor.state.doc.length } });
+    }
     return () => {
       if (keepAs)
         kept.set(keepAs, {
