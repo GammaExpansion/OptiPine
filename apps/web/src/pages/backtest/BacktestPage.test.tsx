@@ -7,7 +7,6 @@ import { fakeServices } from '../../state/test-support.ts';
 import { defaultPaneSizes, uiStore, type DockTab } from '../../state/ui.ts';
 import { BacktestPage } from './BacktestPage.tsx';
 import { ChartArea } from './ChartArea.tsx';
-import { FirstLaunch } from './FirstLaunch.tsx';
 import { Sidebar } from './Sidebar.tsx';
 import { ReportTab } from './dock/ReportTab.tsx';
 import { EquityTab } from './dock/EquityTab.tsx';
@@ -16,7 +15,6 @@ import { CodeTab } from './dock/CodeTab.tsx';
 import { IssuesTab } from './dock/IssuesTab.tsx';
 
 vi.mock('./ChartArea.tsx', () => ({ ChartArea: vi.fn(() => null) }));
-vi.mock('./FirstLaunch.tsx', () => ({ FirstLaunch: vi.fn(() => null) }));
 vi.mock('./Sidebar.tsx', () => ({ Sidebar: vi.fn(() => null) }));
 vi.mock('./dock/ReportTab.tsx', () => ({ ReportTab: vi.fn(() => null) }));
 vi.mock('./dock/EquityTab.tsx', () => ({ EquityTab: vi.fn(() => null) }));
@@ -39,14 +37,13 @@ afterEach(() => {
   restore();
 });
 
-test('the page composes independent chart, launch, sidebar and active dock slots', () => {
+test('the page composes independent chart, sidebar and active dock slots', () => {
   render(
     <I18nProvider>
       <BacktestPage />
     </I18nProvider>,
   );
   expect(ChartArea).toHaveBeenCalled();
-  expect(FirstLaunch).toHaveBeenCalled();
   expect(Sidebar).toHaveBeenCalled();
   expect(CodeTab).toHaveBeenCalled();
   expect(ReportTab).not.toHaveBeenCalled();

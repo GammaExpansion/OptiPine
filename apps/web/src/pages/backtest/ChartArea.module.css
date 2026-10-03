@@ -1,0 +1,14 @@
+.area {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+}
+/* B1: trade markers and reset zoom at the right of the legend row. */
+.tools {
+  position: absolute;
+  z-index: 4;
+  top: 2px;
+  right: 12px;
+  display: flex;
+  gap: 2px;
+}

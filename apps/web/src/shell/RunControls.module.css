@@ -1,0 +1,61 @@
+/* G5 "Run status at the right of the top bar". */
+.status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--caption);
+}
+.strong {
+  color: var(--text);
+}
+.amber {
+  color: var(--link);
+}
+.danger {
+  color: var(--danger-text);
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--primary);
+}
+/* B8: an indeterminate line along the header's lower edge while a backtest runs. */
+.progress {
+  position: fixed;
+  z-index: 5;
+  top: calc(var(--header-height) - 1px);
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--amber-tag);
+  overflow: hidden;
+  pointer-events: none;
+}
+.progress::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 34%;
+  background: var(--primary);
+  animation: sweep 1.4s ease-in-out infinite;
+}
+@keyframes sweep {
+  from {
+    left: -34%;
+  }
+  to {
+    left: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress::after {
+    left: 27%;
+    animation: none;
+  }
+}
