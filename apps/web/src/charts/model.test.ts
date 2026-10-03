@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { MarketBar } from '@pine/engine';
+import type { MarketBar, PlotLineStyle } from '@pine/engine';
 import type { TradeRow } from '../workflows/trades.ts';
 import {
   calendarLayout,
@@ -79,6 +79,100 @@ describe('plot projection', () => {
         (point) => point.value === undefined,
       ),
     ).toBe(true);
+  });
+  it('uses declared types even for numeric signals or entirely missing values', () => {
+    const mapped = mapPlots(bars, [
+      {
+        title: 'shape',
+        values: [0, 2, null, -1],
+        style: {
+          kind: 'shape',
+          style: 'triangleup',
+          location: 'belowbar',
+          size: 'small',
+          text: 'Buy',
+          color: '#12345680',
+        },
+      },
+      {
+        title: 'char',
+        values: [0, 2, null, -1],
+        style: { kind: 'char', char: '★', location: 'absolute' },
+        colors: ['#111111', null, null, '#222222'],
+      },
+      {
+        title: 'empty',
+        values: [null, null, null, null],
+        style: { kind: 'shape', style: 'square' },
+      },
+    ]);
+    expect(mapped.map((p) => p.kind)).toEqual(['markers', 'markers', 'markers']);
+    expect(mapped[0].markers).toEqual(
+      [2, 4].map((time) => ({
+        time,
+        value: 9,
+        location: 'belowbar',
+        shape: 'triangleup',
+        size: 'small',
+        text: 'Buy',
+        color: '#12345680',
+      })),
+    );
+    expect(mapped[1].markers.map((m) => [m.value, m.char, m.color])).toEqual([
+      [0, '★', '#111111'],
+      [2, '★', 'transparent'],
+      [-1, '★', '#222222'],
+    ]);
+    expect(mapped[2].markers).toEqual([]);
+  });
+  it('uses each numeric series style, width and per-bar colour without losing na gaps', () => {
+    const styles: PlotLineStyle[] = [
+      'line',
+      'linebr',
+      'stepline',
+      'steplinebr',
+      'area',
+      'areabr',
+      'histogram',
+      'columns',
+      'circles',
+      'cross',
+    ];
+    const mapped = mapPlots(
+      bars,
+      styles.map((style) => ({
+        title: style,
+        values: [1, null, 3, 4],
+        style: { kind: 'plot', style, linewidth: 3, color: '#aaaaaa' },
+        colors: ['#11111180', null, '#333333', null],
+      })),
+    );
+    expect(mapped.map((p) => p.kind)).toEqual([
+      'line',
+      'line',
+      'line',
+      'line',
+      'area',
+      'area',
+      'histogram',
+      'columns',
+      'circles',
+      'cross',
+    ]);
+    expect(mapped.filter((p) => p.stepped).map((p) => p.title)).toEqual(['stepline', 'steplinebr']);
+    expect(mapped.every((p) => p.linewidth === 3)).toBe(true);
+    expect(mapped[6].points).toEqual([
+      { time: 1, value: 1, color: '#11111180' },
+      { time: 2 },
+      { time: 3, value: 3, color: '#333333' },
+      { time: 4, value: 4, color: 'transparent' },
+    ]);
+    expect(mapped[0].points[0].color).toBe('transparent');
+    expect(mapped[9].markers.map((m) => m.value)).toEqual([1, 3, 4]);
+    const [hidden] = mapPlots(bars, [
+      { title: 'na', values: [1, 2, 3, 4], style: { kind: 'plot', color: null } },
+    ]);
+    expect(hidden.points.every((p) => p.color === 'transparent')).toBe(true);
   });
   it('projects a full 100,000-bar result without losing alignment or creating one series per gap', () => {
     const large = Array.from({ length: 100_000 }, (_, time) => ({ ...bars[0], time }));
