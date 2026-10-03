@@ -12,7 +12,9 @@ that contract and never show partial output.
 units, zero signs and missing-value dashes. It returns catalog messages. Report labels use the
 English board's short metric names in both languages, per WEB.md section 6. Only net profit and
 open P&L get profit/loss colors in the report, as in B1. `ResultFrame` shows the B9 amber notice,
-dims retained figures and calls the existing restore-inputs action.
+dims retained figures and calls the existing restore-inputs action. A single changed input shows
+“Reset to {value}” using the result's input value; several changes use the generic restore action.
+Retained figures also dim during a run (B8).
 
 Trades uses TanStack Table 8 and TanStack Virtual 3. Thirty-pixel rows, eight overscan rows on each
 side and a sticky header bound the mounted DOM. The grid owns keyboard focus: arrows select,
@@ -99,9 +101,10 @@ both dock CSV downloads, B6 chart hover/focus, integrated B9/B12 and 10,000 actu
 both ends. Its `scroll-performance.json` is saved with the screenshots.
 
 The Equity regression loads Trend Breakout with `loadExample` on the dev server. `/api/market`
-is intercepted with recorded BTCUSDT hourly OHLCV from the golden `M_time__btcusdt_60` fixture;
-external requests remain blocked. The clock is fixed at 2026-09-01, giving 17,520 bars from
-2024-09-01 through 2026-08-31. In both languages it checks 730 daily cells, 24 monthly labels,
+is intercepted by `e2e/market-fixtures.ts` with the app's recorded BTCUSDT hourly responses;
+external requests remain blocked. The clock is fixed at 2026-10-03 14:37 UTC, giving 17,520 bars from
+2024-10-03 14:00 through 2026-10-03 13:00 UTC. In both languages it checks 731 daily cells, 25 monthly
+values (24 labels fit; the final three-day month is hidden),
 toolbar/facts order, no scrolling, hidden/zero-width initialization, resizing, shared zoom,
 unit/language/tab persistence, reset, and fitting a new run. Fresh `equity-example-en.png` and
 `equity-example-zh.png` show that actual example run; its values differ from the B5 sample.

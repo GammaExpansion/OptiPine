@@ -16,8 +16,14 @@ import type { TradeRow } from '../workflows/trades.ts';
 import { useI18n } from '../i18n/I18nProvider.tsx';
 import { formatNumber } from '../i18n/translate.ts';
 import { declaredColor, lowerBound, mapPlots, tradeMarkers, tradeRange } from './model.ts';
-import { priceFormat } from './formatting.ts';
-import { chartOptions, chartTheme, timeFormat, zoomChart } from './runtime.ts';
+import { barChange, priceFormat, priceTickLabels } from './formatting.ts';
+import {
+  chartOptions,
+  chartTheme,
+  keepTimeLabelsInside,
+  timeFormat,
+  zoomChart,
+} from './runtime.ts';
 import { tradePrimitive } from './tradePrimitive.ts';
 import { plotPrimitive } from './plotPrimitive.ts';
 import { addPlotSeries } from './plotSeries.ts';
@@ -28,7 +34,9 @@ export interface PriceChartProps {
   plots: readonly PlotOutput[];
   trades: readonly TradeRow[];
   symbol: string;
+  timeframe?: string;
   timezone: string;
+  dimMarkers?: boolean;
   mintick?: number;
   hoveredTrade?: TradeRow | null;
   className?: string;
@@ -40,7 +48,18 @@ export interface PriceChartHandle {
 }
 
 export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function PriceChart(
-  { bars, plots, trades, symbol, timezone, mintick = 0.01, hoveredTrade = null, className },
+  {
+    bars,
+    plots,
+    trades,
+    symbol,
+    timeframe,
+    timezone,
+    dimMarkers = false,
+    mintick = 0.01,
+    hoveredTrade = null,
+    className,
+  },
   ref,
 ) {
   const { t, text } = useI18n();
@@ -54,11 +73,15 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
     times: number[];
     cursor: number;
     showLegend: (index: number) => void;
+    markers?: ISeriesMarkersPluginApi<Time>;
+    tradeMarkers?: SeriesMarker<Time>[];
   } | null>(null);
   const [focused, setFocused] = useState<TradeRow | null>(null);
   const selected = hoveredTrade ?? focused;
   const selectedRef = useRef(selected);
   selectedRef.current = selected;
+  const dimRef = useRef(dimMarkers);
+  dimRef.current = dimMarkers;
   const number = (value: number) => formatNumber(value, { maximumFractionDigits: 2 });
   const price = priceFormat(mintick).formatter;
   const resetView = () => {
@@ -85,7 +108,9 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
   useEffect(() => {
     const element = host.current!;
     const theme = chartTheme(element);
-    const chart = createChart(element, chartOptions(element, timezone));
+    const options = chartOptions(element, timezone);
+    const chart = createChart(element, options);
+    const releaseTimeLabels = keepTimeLabelsInside(chart, options.timeScale!.tickMarkFormatter!);
     // Adjacent panes must not paint partial tick labels across their shared boundary.
     chart.applyOptions({ rightPriceScale: { entireTextOnly: true } });
     const candles = chart.addSeries(CandlestickSeries, {
@@ -111,6 +136,7 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
     runtime.current = { chart, candles, overlay, times: [], cursor: -1, showLegend: () => {} };
     return () => {
       runtime.current = null;
+      releaseTimeLabels();
       chart.remove();
     };
   }, [timezone, mintick, t]);
@@ -122,6 +148,19 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
     const times = bars.map((bar) => bar.time);
     current.times = times;
     candles.setData(bars.map((bar) => ({ ...bar, time: bar.time as UTCTimestamp })));
+    const format = priceFormat(mintick);
+    candles.applyOptions({
+      priceFormat: {
+        ...format,
+        tickmarksFormatter: (values: number[]) =>
+          priceTickLabels(
+            values,
+            format.tickmarksFormatter(values),
+            (value) => candles.priceToCoordinate(value),
+            bars.at(-1)?.close,
+          ),
+      },
+    });
     const mapped = mapPlots(bars, plots);
     const series: ISeriesApi<SeriesType>[] = [];
     const primitives: {
@@ -156,17 +195,20 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
         primitives.push({ series: target, primitive });
       }
     }
-    plugins.push(
-      createSeriesMarkers(
-        candles,
-        markers.sort((a, b) => Number(a.time) - Number(b.time)),
-      ),
+    current.tradeMarkers = markers.sort((a, b) => Number(a.time) - Number(b.time));
+    current.markers = createSeriesMarkers(
+      candles,
+      current.tradeMarkers.map((marker) => ({
+        ...marker,
+        color: dimRef.current ? `${marker.color}66` : marker.color,
+      })),
     );
+    plugins.push(current.markers);
     chart.panes()[0].setStretchFactor(3);
     chart.panes()[1]?.setStretchFactor(1);
     overlay.setData(trades, times.at(-1) ?? 0);
     overlay.select(selectedRef.current);
-    const format = timeFormat(timezone);
+    overlay.setDimmed(dimRef.current);
     const showLegend = (index: number) => {
       const bar = bars[index];
       if (!bar || !legend.current || !paneLegend.current) return;
@@ -179,7 +221,12 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
         if (color) span.style.color = color;
         parent.append(span);
       };
-      add(legend.current, symbol);
+      const identity = document.createElement('span');
+      const ticker = document.createElement('strong');
+      ticker.textContent = symbol;
+      identity.append(ticker);
+      if (timeframe) add(identity, timeframe);
+      legend.current.append(identity);
       add(
         legend.current,
         t('charts.ohlc', {
@@ -190,7 +237,12 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
         }),
         bar.close >= bar.open ? theme.profit : theme.loss,
       );
-      add(legend.current, format.format(bar.time * 1000));
+      const change = barChange(bar.close, bars[index - 1]?.close);
+      add(
+        legend.current,
+        change === null ? t('charts.na') : t('charts.percent', { value: change }),
+        change?.startsWith('−') ? theme.loss : theme.profit,
+      );
       for (let i = 0; i < plots.length; i++) {
         if (mapped[i].kind === 'markers') continue;
         const value = plots[i].values[index];
@@ -227,7 +279,18 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
       legend.current?.replaceChildren();
       paneLegend.current?.replaceChildren();
     };
-  }, [bars, plots, trades, symbol, timezone, mintick, t, text]);
+  }, [bars, plots, trades, symbol, timeframe, timezone, mintick, t, text]);
+
+  useEffect(() => {
+    const current = runtime.current;
+    current?.overlay.setDimmed(dimMarkers);
+    current?.markers?.setMarkers(
+      (current.tradeMarkers ?? []).map((marker) => ({
+        ...marker,
+        color: dimMarkers ? `${marker.color}66` : marker.color,
+      })),
+    );
+  }, [dimMarkers]);
 
   useEffect(() => {
     runtime.current?.overlay.select(selected);
@@ -242,6 +305,7 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
       className={`${styles.price} ${className ?? ''}`}
       data-testid="price-chart"
       data-focused-trade={focused?.number}
+      data-markers-dimmed={dimMarkers}
     >
       <div className={styles.legend} ref={legend} />
       <div className={styles.paneLegend} ref={paneLegend} />

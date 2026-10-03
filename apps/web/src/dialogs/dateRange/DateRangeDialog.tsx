@@ -20,7 +20,7 @@ export function DateRangeDialog() {
   const fetchData = useMarketDataStore((state) => state.actions.fetch);
   const [now] = useState(getServices().now);
   const [selection, setSelection] = useState(() =>
-    origin?.kind === 'provider' ? selectionFrom(origin.request) : null,
+    origin?.kind === 'provider' ? selectionFrom(origin.request, now) : null,
   );
   if (!selection || !dataset || origin?.kind !== 'provider') return null;
   const checked = selectionRequest(selection, now);

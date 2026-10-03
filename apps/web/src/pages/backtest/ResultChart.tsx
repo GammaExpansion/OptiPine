@@ -4,6 +4,7 @@ import { PriceChart, type PriceChartHandle } from '../../charts/PriceChart.tsx';
 import { IconButton } from '../../components/IconButton.tsx';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { useSelectionStore } from '../../state/selection.ts';
+import { useBacktestStore } from '../../state/backtest.ts';
 import { tradeRows, type TradeRow } from '../../workflows/trades.ts';
 import { ChartNoteCard } from './states/ChartNoteCard.tsx';
 import { timeframeLabel, tradeContext, type ChartView } from './states/chart-view.ts';
@@ -21,6 +22,11 @@ export function ResultChart({ view }: { view: Extract<ChartView, { kind: 'chart'
   const { t } = useI18n();
   const chart = useRef<PriceChartHandle>(null);
   const [markers, setMarkers] = useState(true);
+  const dimMarkers = useBacktestStore(
+    (state) =>
+      (state.preview?.run ?? state.run).status === 'running' ||
+      (!state.preview && Boolean(state.outdated?.reasons.length)),
+  );
   const { input, result, note } = view;
   const trades = useMemo(
     () => (result ? tradeRows(result.output.trades, tradeContext(input)) : noTrades),
@@ -49,7 +55,9 @@ export function ResultChart({ view }: { view: Extract<ChartView, { kind: 'chart'
         plots={result?.output.plots ?? noPlots}
         trades={markers ? trades : noTrades}
         hoveredTrade={hoveredRow ?? null}
-        symbol={`${ticker} ${timeframeLabel(input.timeframe)}`.trim()}
+        symbol={ticker}
+        timeframe={timeframeLabel(input.timeframe)}
+        dimMarkers={dimMarkers}
         timezone={input.syminfo.timezone ?? 'Etc/UTC'}
         mintick={input.syminfo.mintick}
       />

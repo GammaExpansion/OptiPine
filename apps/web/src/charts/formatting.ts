@@ -8,6 +8,33 @@ const formatter = (precision: number, fixed = false) =>
   });
 const minus = (value: string) => value.replace('-', '−');
 
+/** Change is measured from the preceding close, as in B1; the first/zero close has no ratio. */
+export function barChange(close: number, previous: number | undefined): string | null {
+  if (previous === undefined || previous === 0) return null;
+  const value = ((close - previous) / previous) * 100;
+  return minus(
+    new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+      signDisplay: 'always',
+    }).format(value),
+  );
+}
+
+/** Reserve the last-price badge's height plus half a tick label and a small visual gap. */
+export function priceTickLabels(
+  values: readonly number[],
+  labels: string[],
+  coordinate: (value: number) => number | null,
+  lastPrice: number | undefined,
+): string[] {
+  const last = lastPrice === undefined ? null : coordinate(lastPrice);
+  return labels.map((label, index) => {
+    const tick = coordinate(values[index]);
+    return last !== null && tick !== null && Math.abs(tick - last) < 16 ? '' : label;
+  });
+}
+
 /** Find the least precision that preserves this tick grid, ignoring binary arithmetic noise. */
 export function tickLabels(values: readonly number[], maxPrecision: number): string[] {
   let precision = 0;

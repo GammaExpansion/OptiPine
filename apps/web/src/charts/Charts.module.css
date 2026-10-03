@@ -26,6 +26,10 @@
   align-content: center;
 }
 .legend > span:first-child {
+  display: flex;
+  gap: 6px;
+}
+.legend strong {
   font-weight: 600;
   color: var(--text);
 }
@@ -33,6 +37,11 @@
   position: absolute;
   margin-top: 32px;
   z-index: 2;
+  background: var(--canvas);
+  border-radius: var(--radius);
+}
+.paneLegend:empty {
+  display: none;
 }
 .tradeDetail {
   position: absolute;

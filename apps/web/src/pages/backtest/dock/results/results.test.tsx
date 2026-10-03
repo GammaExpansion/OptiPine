@@ -122,13 +122,41 @@ test('report renders all groups, keeps English metric names in Chinese, and rest
   act(() => getBacktestStore().getState().actions.setInput('Length', 7));
   expect(screen.getByRole('status')).toHaveTextContent('Current results use Length 5.');
   expect(document.querySelector('[data-dimmed="true"]')).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: 'Restore result inputs' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Reset to 5' }));
   expect(screen.queryByRole('status')).toBeNull();
   act(() => uiStore.getState().setLanguage('zh'));
   expect(
     within(screen.getByRole('table', { name: '收益' })).getByText('Gross profit'),
   ).toBeVisible();
 });
+
+test.each(['en', 'zh'] as const)(
+  'restore uses the run value for one change and generic copy for several (%s)',
+  async (language) => {
+    await run();
+    act(() => getBacktestStore().getState().actions.setInput('Length', 8));
+    await act(() => getBacktestStore().getState().actions.run());
+    act(() => uiStore.getState().setLanguage(language));
+    render(
+      <I18nProvider>
+        <ReportTab />
+      </I18nProvider>,
+    );
+    act(() => getBacktestStore().getState().actions.setInput('Length', 9));
+    expect(
+      screen.getByRole('button', { name: language === 'en' ? 'Reset to 8' : '恢复为 8' }),
+    ).toBeVisible();
+    act(() => getBacktestStore().getState().actions.setInput('Multiplier', 2));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: language === 'en' ? 'Restore result inputs' : '恢复结果所用参数',
+      }),
+    );
+    expect(screen.queryByRole('status')).toBeNull();
+    act(() => getBacktestStore().setState({ run: { status: 'running', startedAt: 0 } }));
+    expect(document.querySelector('[data-dimmed="true"]')).toBeTruthy();
+  },
+);
 
 test('a no-trade report shows engine zeroes and absent ratios as dashes', async () => {
   await run('//@version=6\nstrategy("No trades", initial_capital=10000)\nplot(close)');
