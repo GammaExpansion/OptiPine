@@ -245,3 +245,11 @@ test('the duration estimate spreads the measured cost over the threads', () => {
   assert.equal(estimateDurationMs(null, 10_000, 700, 7), null);
   assert.equal(estimateDurationMs(0.02, 10_000, 0, 7), null);
 });
+
+test('without data only an invalid share is an error', () => {
+  assert.equal(dataRange([], defaultValidation).error, null);
+  assert.deepEqual(
+    dataRange([], { ...defaultValidation, outOfSamplePercent: 0 }).error,
+    optimizerMessage('splitRatioRange'),
+  );
+});

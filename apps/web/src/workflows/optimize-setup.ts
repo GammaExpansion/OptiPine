@@ -2,6 +2,7 @@ import type { InputDescriptor, LiteralValue, MarketBar } from '@pine/engine';
 import { errorText, type Message, type Text } from '@pine/messages';
 import {
   generateSearchSpace,
+  isOptimizerError,
   sampleRandom,
   splitBars,
   type SearchRange,
@@ -406,7 +407,9 @@ export function dataRange(bars: readonly MarketBar[], validation: ValidationSett
       error: null,
     };
   } catch (error) {
-    return { all, inSample: null, outOfSample: null, error: errorText(error) };
+    // Without data only the share itself can be wrong; the missing data has its own reason.
+    const missing = !bars.length && isOptimizerError(error, 'splitNeedsBars');
+    return { all, inSample: null, outOfSample: null, error: missing ? null : errorText(error) };
   }
 }
 

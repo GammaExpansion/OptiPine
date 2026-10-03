@@ -48,6 +48,9 @@ export const workflowMessageIds = [
   'optimize.gridSwitchedToRandom',
   'optimize.sampleCountPositive',
   'optimize.filterValueInvalid',
+  'optimize.fixErrors',
+  'optimize.running',
+  'optimize.walkForwardUnavailable',
 ] as const;
 export type WorkflowMessageId = (typeof workflowMessageIds)[number];
 
