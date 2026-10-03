@@ -50,6 +50,8 @@ class Interpreter {
   functionHistoryNames = new Map<Statement[], Set<string>>();
   constants = new Map<string, Expression>();
   plots = new Map<string, RunResult['plots'][number]>();
+  /** The script's declared `overlay`; plots also join the price pane with `force_overlay`. */
+  overlay = false;
   warnings = new Map<string, RunWarning>();
   enums = new EnumRegistry();
   broker?: Broker;
@@ -456,6 +458,9 @@ class Interpreter {
       );
       return obj;
     }
+    // `overlay` is the declaration's third parameter; Pine's default is a separate pane.
+    if ((name === 'indicator' || name === 'strategy') && this.index === 0)
+      this.overlay = (named.overlay ?? positional[2]) === true;
     if (name === 'indicator' || name === 'library') return null;
     if (name === 'strategy') {
       if (this.index === 0) {
@@ -492,6 +497,7 @@ class Interpreter {
         plot = {
           title: String(named.title ?? positional[1] ?? 'Plot'),
           values: Array(this.input.bars.length).fill(null),
+          overlay: this.overlay || named.force_overlay === true,
         };
         this.plots.set(key, plot);
       }

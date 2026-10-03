@@ -33,7 +33,9 @@ import { compile, describe, run, runWithEquity, sweep } from '@pine/engine';
 
 ### RunResult
 
-- `plots`: `{ title, values }` per plot, one value per bar.
+- `plots`: `{ title, values, overlay }` per plot, one value per bar. `overlay` is true when the plot
+  is drawn over the price chart: the script declares `overlay = true`, or the plot call sets
+  `force_overlay = true`; otherwise the plot belongs in its own pane.
 - `trades` and `metrics`: strategy fills and the TradingView report metrics, keyed as
   `Section/Name/Column`.
 - `diagnostics`: `{ kind, line, message }`. `syntax`, `undeclared`, `type` and `semantic` come

@@ -149,6 +149,9 @@ export interface Trade {
 export interface PlotOutput {
   title: string;
   values: (number | string | boolean | null)[];
+  /** Drawn over the price chart: the script declares `overlay = true`, or the plot call sets
+   * `force_overlay = true`. Engine results always set it; otherwise the plot has its own pane. */
+  overlay?: boolean;
 }
 
 export interface RunResult {
