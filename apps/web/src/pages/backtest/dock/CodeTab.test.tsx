@@ -76,6 +76,7 @@ test('a .pine file dropped on the empty editor opens before CodeMirror loads', a
 test('editing recompiles in the background and each input shows its current value', async () => {
   await loadScript();
   await renderCodeTab();
+  expect(screen.getByRole('region', { name: 'Pine code editor' })).toHaveAttribute('tabindex', '0');
   expect(screen.getByText('Current 5')).toBeInTheDocument();
   expect(screen.getByText('Current 1.00')).toBeInTheDocument();
   expect(screen.getByText('Current close')).toBeInTheDocument();

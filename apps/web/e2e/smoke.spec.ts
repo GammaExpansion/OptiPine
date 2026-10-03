@@ -100,6 +100,16 @@ test('built module Workers describe, run, analyze and optimize a tiny strategy',
 test('panes resize, reset, collapse, maximize and remember sizes independently per page', async ({
   page,
 }, testInfo) => {
+  // Exercise the pending catalog path without relying on network speed or a fixed sleep.
+  let onCatalogRequest!: () => void;
+  const catalogRequested = new Promise<void>((resolve) => (onCatalogRequest = resolve));
+  let releaseCatalog!: () => void;
+  const catalogReleased = new Promise<void>((resolve) => (releaseCatalog = resolve));
+  await page.route('**/assets/zh-*.js', async (route) => {
+    onCatalogRequest();
+    await catalogReleased;
+    await route.continue();
+  });
   await page.goto(`${origins.preview}/e2e/harness.html`);
   const right = page.getByRole('complementary');
   const width = () => right.evaluate((element) => element.getBoundingClientRect().width);
@@ -117,9 +127,16 @@ test('panes resize, reset, collapse, maximize and remember sizes independently p
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: testInfo.outputPath('O1-en.png') });
   await page.getByRole('radio', { name: '中', exact: true }).click();
+  await catalogRequested;
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  releaseCatalog();
+  // fonts.ready can resolve for the old language while the new catalog is still loading.
+  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
+  await expect(page.getByRole('button', { name: '回测', exact: true })).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: testInfo.outputPath('O1-zh.png') });
   await page.getByRole('radio', { name: 'EN', exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await page.getByRole('button', { name: 'Backtest', exact: true }).click();
   await expect.poll(width).toBeCloseTo(resized, 0);
   const bounds = await separator.boundingBox();
