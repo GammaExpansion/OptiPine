@@ -59,8 +59,8 @@ hour**. Until both a script and data exist, the run action explains what is miss
 
 **Script menu (S2)** shows the Pine version, input and plot counts and compile time, then **Open
 .pine file** (Ctrl + O), **Paste from clipboard and replace**, **Download .pine**, and the example
-strategies: Trend Breakout, RSI Reversal and MA Cross. An example loads its source and fetches its
-data through the proxy (4.7).
+strategies: Trend Breakout, RSI Reversal and MA Cross. An example loads its source and fetches the
+last two years of BTCUSDT 1h through the proxy (4.7).
 
 ### 2.2 Market data (S3–S10)
 
@@ -69,12 +69,15 @@ ETFs, indices and forex (Yahoo Finance), and **Upload CSV**.
 
 - **Provider tabs (S3–S6).** Market (spot or USDⓈ-M perpetual), symbol search, timeframe and range
   (1M, 1Y, 2Y, All, Custom). The tab states the provider's limits: up to 100,000 bars per fetch, only
-  closed bars, and Yahoo's shorter history for intraday timeframes. Fetching shows how many bars
-  have arrived out of the expected count, with **Cancel fetch** (S4). The preview (S5) shows the bar
-  count, the UTC range, the session (24 × 7 or the exchange's sessions), whether the data came from
-  the cache, and the symbol info (tick size, point value, minimum order size, timezone), which is
-  editable. For Yahoo, the preview states that prices are not adjusted and that the tick size is
-  estimated because Yahoo does not publish trading rules (S6).
+  closed bars, and Yahoo's shorter history for intraday timeframes. A fetch shows a progress bar
+  with **Cancel fetch** (S4). For now the bar is simulated, because the data arrives in one
+  response: it advances on a timer, slows before the end, and fills when the data arrives. Its label
+  gives only the expected count ("Fetching about 20,500 bars"); S4's received count waits for real
+  progress (section 7). The preview (S5) shows the bar count, the UTC range, the session (24 × 7 or
+  the exchange's sessions), whether the data came from the cache, and the symbol info (tick size,
+  point value, minimum order size, timezone), which is editable. For Yahoo, the preview states that
+  prices are not adjusted and that the tick size is estimated because Yahoo does not publish trading
+  rules (S6).
 - **Upload CSV (S7).** Accepts TradingView's "Export chart data" format: `time` in Unix seconds,
   `open`, `high`, `low`, `close` and `Volume`; other columns are ignored. The user sets the symbol,
   timeframe and symbol type, enters the symbol info by hand, and may add a trading calendar JSON
@@ -407,9 +410,14 @@ development and preview a Vite plugin mounts it; in production `server/` serves 
 the middleware on `127.0.0.1:5174` (`PORT` and `HOST` override). Without the middleware, as on a
 static host, CSV upload still works and the provider tabs say the data service is unavailable.
 
-The example strategies are new Pine sources written for the app, stored in `examples/`, each with
-the data request it uses (BTCUSDT 1h on Binance spot). Loading an example fetches that data through
-the proxy like any other request, so examples need the data service.
+The example strategies are new Pine sources written for the app, stored in `examples/`. Each runs
+on BTCUSDT 1h from Binance spot over the two years ending now: the range ends at the current time
+rounded down to the hour, so the last bar is the latest closed one, and starts two years earlier,
+about 17,500 bars. The feed cache is keyed by both ends of the range, so loading an example again
+within the same hour reuses the cached data, and later loads fetch the newer range; example results
+change as new bars close. Examples fetch through the proxy like any other request. Without the data
+service, the example's source still loads and the market data dialog opens with the provider tabs
+marked unavailable, leaving **Upload CSV**.
 
 ### 4.8 Persistence
 
@@ -478,9 +486,10 @@ for any `zh-*` locale, otherwise English) and remembers the choice.
   when the script declares `overlay = true` or the plot call sets `force_overlay = true`. The chart
   puts the other plots in a pane under the price (B7).
 - **Top 20 equity.** No change needed (4.5).
-- **Fetch progress.** S4 shows bars received out of the expected count, but `FeedClient.load`
-  returns the whole dataset at once. `@pine/market-data` needs a way to report progress, for example
-  fetching long ranges in slices through the proxy and merging them in the client.
+- **Fetch progress.** Not needed yet: the fetch indicator is simulated (2.2). S4's received count
+  needs real progress, which `FeedClient.load` cannot report because it returns the whole dataset at
+  once; `@pine/market-data` could fetch long ranges in slices through the proxy and merge them in
+  the client.
 
 ## 8. Testing
 
@@ -489,7 +498,8 @@ for any `zh-*` locale, otherwise English) and remembers the choice.
 - Components and pages have Vitest tests with Testing Library for behavior: outdated results,
   filters that apply without a re-run, preview and apply, every error state, and both languages.
 - Playwright tests load each page against recorded Binance and Yahoo responses, run a backtest and
-  a small optimization, and check that no console errors appear.
+  a small optimization, and check that no console errors appear. They fix the clock, so an example
+  requests the same range as its recording.
 - Layout is checked against the mock at 1440 × 900, 1024 × 768 and 390 × 844 in both languages: no
   clipped labels and no horizontal page scroll.
 
@@ -506,6 +516,4 @@ for any `zh-*` locale, otherwise English) and remembers the choice.
 
 ## 10. Open points
 
-- **Fetch progress** (section 7): slicing in the client or a streamed response from the proxy.
-- **Example data**: which date range each example fetches, and what S1 shows when the data service
-  is unavailable.
+None at present. Real fetch progress is deferred; section 7 notes what it would need.
