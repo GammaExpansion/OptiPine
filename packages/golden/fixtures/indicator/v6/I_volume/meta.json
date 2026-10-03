@@ -1,0 +1,77 @@
+{
+  "schema_version": 2,
+  "id": "I_volume",
+  "kind": "indicator",
+  "pine_version": 6,
+  "description": "成交量族：vwap（变量、source、anchor、三输出）、obv/accdist/pvt/nvi/pvi/wad/wvad/iii、vwma、mfi、累加",
+  "tags": [
+    "micro",
+    "ta"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BATS:AAPL",
+    "ticker": "AAPL",
+    "prefix": "BATS",
+    "type": "stock",
+    "currency": "USD",
+    "basecurrency": "",
+    "timezone": "America/New_York",
+    "mintick": 0.01,
+    "pricescale": 100,
+    "minmove": 1,
+    "pointvalue": 1,
+    "session": "regular",
+    "session_hours": "0930-1600",
+    "description": "Apple Inc."
+  },
+  "timeframe": "60",
+  "chart_timezone": "America/Los_Angeles",
+  "session_calendar": {
+    "file": "calendar.json"
+  },
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-03T22:46:42.0459926Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "bar_index",
+      "vwap_var",
+      "vwap_close",
+      "vwap_hlc3_session",
+      "vwap3_mid",
+      "vwap3_upper",
+      "vwap3_lower",
+      "vwap_weekly_anchor",
+      "obv",
+      "accdist",
+      "pvt",
+      "nvi",
+      "pvi",
+      "wad",
+      "wvad",
+      "iii",
+      "vwma20",
+      "mfi14",
+      "cum_volume",
+      "sum20_volume",
+      "rel_volume"
+    ]
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": ""
+}

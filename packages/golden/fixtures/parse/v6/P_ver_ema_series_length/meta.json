@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "id": "P_ver_ema_series_length",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "ta.ema 收到 series 长度：v5/v6 均报类型错误",
+  "tags": [
+    "ver"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 4
+    }
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 验证：错误定位到第 4 行"
+}

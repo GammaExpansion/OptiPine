@@ -1,0 +1,72 @@
+{
+  "schema_version": 2,
+  "id": "S_pyramiding_fifo",
+  "kind": "strategy",
+  "pine_version": 6,
+  "description": "pyramiding=3 + 10% equity：三笔 entry 定仓（整数股、按成交价）、第四笔被忽略、close('E2') 在 FIFO 下的实际平仓对象、order 减仓不反转、entry 反转的 transaction 量、order 不受 pyramiding 限制",
+  "tags": [
+    "micro",
+    "broker",
+    "sizing",
+    "pyramiding"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BATS:AAPL",
+    "ticker": "AAPL",
+    "prefix": "BATS",
+    "type": "stock",
+    "currency": "USD",
+    "basecurrency": "",
+    "timezone": "America/New_York",
+    "mintick": 0.01,
+    "pricescale": 100,
+    "minmove": 1,
+    "pointvalue": 1,
+    "session": "regular",
+    "session_hours": "0930-1600",
+    "mincontract": 1,
+    "description": "Apple Inc."
+  },
+  "timeframe": "60",
+  "chart_timezone": "America/Los_Angeles",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-04T10:24:38Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "default_entry_qty_close",
+      "default_entry_qty_open",
+      "bar_index",
+      "cycle",
+      "phase",
+      "pos",
+      "avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closedtrades",
+      "opentrades"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-04T10:24:38Z"
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": "close_entries_rule=FIFO；与另一份只差这一个参数"
+}

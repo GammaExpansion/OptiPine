@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "id": "P_err_strategy_risk",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "strategy.risk.* 风控指令：TradingView 正常编译通过",
+  "tags": [
+    "err"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": "2026-09-16 在 TradingView Pine Editor 独立确认原版本源码编译通过；编辑器回读逐行一致（文件末尾换行除外）。仅记录编译结果，不验证请求数据或策略的运行输出。 PINE_VERSION_OUTDATED 仅为版本提示。",
+  "capture": {
+    "archive": ".golden/captures/parse-confirmation-2026-09-16/parse/v5/P_err_strategy_risk",
+    "files": {
+      "source.pine": "efee86d337c41473b81da276250c972605e52a901d17d6767533cadcda9ef220"
+    },
+    "compiler": {
+      "observed_on": "2026-09-16",
+      "observed_at": "2026-09-16T09:17:33.998Z",
+      "pine_version": 5,
+      "result": "ok",
+      "saved_script": "parse-20260916-v5-risk",
+      "success_log": "2:17:27 AMAdded to chart.",
+      "warnings": [
+        "PINE_VERSION_OUTDATED"
+      ]
+    },
+    "source_check": "Editor clipboard readback matches source after LF normalization and omitting the terminal newline."
+  }
+}

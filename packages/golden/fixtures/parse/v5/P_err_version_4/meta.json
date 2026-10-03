@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_err_version_4",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "//@version=4 旧版脚本（study 声明）：TradingView 正常编译通过",
+  "tags": [
+    "err"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": false,
+  "notes": "v4 脚本放在 v5 目录仅因目录必须二选一；尚未在 Pine Editor 重新确认。"
+}

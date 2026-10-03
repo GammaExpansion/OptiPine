@@ -1,0 +1,38 @@
+//@version=6
+strategy("Consecutive loss days isolation r1", overlay=false, initial_capital=100000, default_qty_type=strategy.fixed, default_qty_value=2, pyramiding=0, commission_type=strategy.commission.percent, commission_value=0, slippage=0, margin_long=0, margin_short=0, calc_on_order_fills=false, calc_on_every_tick=false, process_orders_on_close=false)
+
+lossPeriods = input.int(2, "Consecutive losing periods", minval=1)
+closeQuantity = input.int(0, "Scheduled close quantity", minval=0, maxval=2)
+start = input.time(1704067200000, "Start")
+
+strategy.risk.max_cons_loss_days(lossPeriods)
+
+var int activeIndex = -1
+if time >= start
+    activeIndex += 1
+    if activeIndex == 0
+        strategy.entry("held", strategy.long, qty=2)
+        strategy.order("remote", strategy.long, qty=1, limit=close * 0.1)
+    if activeIndex == 2 and closeQuantity > 0
+        strategy.close("held", qty=closeQuantity, comment="scheduled close")
+    if activeIndex >= 4
+        strategy.entry("after halt", strategy.long, qty=1)
+
+last = strategy.closedtrades - 1
+plot(1, "probe_revision")
+plot(bar_index, "bar_index")
+plot(activeIndex, "active_index")
+plot(lossPeriods, "loss_periods")
+plot(closeQuantity, "scheduled_close_quantity")
+plot(strategy.position_size, "position_size")
+plot(strategy.position_avg_price, "position_avg_price")
+plot(strategy.equity, "equity")
+plot(strategy.openprofit, "openprofit")
+plot(strategy.netprofit, "netprofit")
+plot(strategy.closedtrades, "closed_trades")
+plot(strategy.opentrades, "open_trades")
+plot(last >= 0 ? strategy.closedtrades.profit(last) : na, "last_profit")
+plot(last >= 0 ? strategy.closedtrades.entry_price(last) : na, "last_entry_price")
+plot(last >= 0 ? strategy.closedtrades.exit_price(last) : na, "last_exit_price")
+plot(last >= 0 ? strategy.closedtrades.entry_bar_index(last) : na, "last_entry_bar")
+plot(last >= 0 ? strategy.closedtrades.exit_bar_index(last) : na, "last_exit_bar")

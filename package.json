@@ -1,0 +1,34 @@
+{
+  "name": "optipine",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24.5"
+  },
+  "workspaces": [
+    "packages/engine",
+    "packages/messages",
+    "packages/optimizer",
+    "packages/market-data",
+    "packages/workers",
+    "packages/golden",
+    "apps/cli"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace @pine/engine && npm run build --workspace @pine/messages && npm run build --workspace @pine/optimizer && npm run build --workspace @pine/market-data && npm run build --workspace @pine/workers && npm run build --workspace @pine/golden && npm run build --workspace @pine/cli",
+    "typecheck": "npm run build && npm run typecheck --workspaces",
+    "test": "npm run build && npm run test --workspaces",
+    "golden": "node apps/cli/dist/main.js run",
+    "pine": "node apps/cli/dist/main.js",
+    "check": "node apps/cli/dist/main.js check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "prettier": "^3.9.6",
+    "typescript": "^5.9.2"
+  }
+}

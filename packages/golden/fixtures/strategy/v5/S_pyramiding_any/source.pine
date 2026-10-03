@@ -1,0 +1,53 @@
+//@version=5
+// pyramiding=3 + percent_of_equity：多笔 entry 的定仓、超限被忽略、close(id) 在 ANY 下平的是谁、order 不反转、entry 反转的 transaction 量、order 不受 pyramiding 限制
+strategy("S_pyramiding_any", overlay = false,
+  initial_capital = 100000, currency = currency.NONE,
+  default_qty_type = strategy.percent_of_equity, default_qty_value = 10, pyramiding = 3,
+  commission_type = strategy.commission.percent, commission_value = 0, slippage = 0,
+  margin_long = 0, margin_short = 0, close_entries_rule = "ANY",
+  process_orders_on_close = false, calc_on_order_fills = false, calc_on_every_tick = false,
+  backtest_fill_limits_assumption = 0, use_bar_magnifier = false, fill_orders_on_standard_ohlc = false)
+int cycleLen = 40
+int phase = bar_index % cycleLen
+int cycle = math.floor(bar_index / cycleLen)
+
+if phase == 0
+    strategy.entry("E1", strategy.long)
+if phase == 2
+    strategy.entry("E2", strategy.long)
+if phase == 4
+    strategy.entry("E3", strategy.long)
+if phase == 6
+    strategy.entry("E4", strategy.long)                       // 第 4 笔：超过 pyramiding，应被忽略
+if phase == 8
+    strategy.close("E2")                                      // FIFO：实际平掉的是最早的那笔的数量
+if phase == 12
+    strategy.order("O1", strategy.short, qty = 5)             // order 不反转：减仓 5
+if phase == 16
+    strategy.entry("S1", strategy.short)                      // entry 反转：一笔 transaction 平掉剩余并开空
+if phase == 22
+    strategy.entry("S2", strategy.short)                      // 空头加仓
+if phase == 28
+    strategy.close_all(comment = "c1")
+if phase == 32
+    strategy.order("O2", strategy.long, qty = 3)
+if phase == 34
+    strategy.order("O3", strategy.long, qty = 3)              // order 不受 pyramiding 限制
+if phase == 38
+    strategy.close_all(comment = "c2")
+if phase == 39
+    strategy.cancel_all()
+plot(strategy.default_entry_qty(close), "default_entry_qty_close")
+plot(strategy.default_entry_qty(open), "default_entry_qty_open")
+
+// ---- 对齐列 ----
+plot(bar_index, "bar_index")
+plot(cycle, "cycle")
+plot(phase, "phase")
+plot(strategy.position_size, "pos")
+plot(strategy.position_avg_price, "avg_price")
+plot(strategy.equity, "equity")
+plot(strategy.openprofit, "openprofit")
+plot(strategy.netprofit, "netprofit")
+plot(strategy.closedtrades, "closedtrades")
+plot(strategy.opentrades, "opentrades")

@@ -1,0 +1,30 @@
+//@version=6
+indicator("Community drawing presence r1", overlay=true)
+
+type Graphic
+    line segment
+method delete(Graphic graphic) =>
+    graphic.segment.delete()
+
+var box activeBox = na
+var line activeLine = na
+var int creations = 0
+wasMissing = na(activeBox)
+if na(x=activeBox)
+    activeBox := box.new(bar_index, high, bar_index + 1, low)
+    activeLine := line.new(bar_index, low, bar_index + 1, high)
+    creations += 1
+present = not na(activeBox) and not na(activeLine)
+if bar_index % 4 == 2
+    copy = Graphic.new(activeLine.copy())
+    copy.delete()
+    box.delete(activeBox)
+    line.delete(activeLine)
+    activeBox := na
+    activeLine := na
+
+plot(bar_index, "probe_index")
+plot(wasMissing ? 1 : 0, "missing_before")
+plot(present ? 1 : 0, "present_after_creation")
+plot(na(activeBox) ? 1 : 0, "missing_after_reset")
+plot(creations, "creations")

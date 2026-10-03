@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "id": "P_err_tuple_arity",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "tuple 解构个数不匹配",
+  "tags": [
+    "err"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 3
+    }
+  },
+  "verified": true,
+  "notes": ""
+}

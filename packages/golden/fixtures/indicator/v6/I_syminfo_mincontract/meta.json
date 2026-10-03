@@ -1,0 +1,79 @@
+{
+  "schema_version": 2,
+  "id": "I_syminfo_mincontract",
+  "kind": "indicator",
+  "pine_version": 6,
+  "description": "Independent full-history v6 availability and numeric mincontract observation.",
+  "tags": [
+    "metadata",
+    "version",
+    "crypto"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BINANCE:BTCUSDT",
+    "ticker": "BTCUSDT",
+    "prefix": "BINANCE",
+    "type": "crypto",
+    "currency": "USDT",
+    "basecurrency": "BTC",
+    "timezone": "Etc/UTC",
+    "mintick": 0.01,
+    "pricescale": 100,
+    "minmove": 1,
+    "pointvalue": 1,
+    "session": "regular",
+    "session_hours": "0000-0000:1234567",
+    "mincontract": 0.00001,
+    "description": "Bitcoin / TetherUS"
+  },
+  "timeframe": "60",
+  "chart_timezone": "Etc/UTC",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-12T23:07:12Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "observed_mincontract"
+    ]
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": "Independent v6 native metadata study applied after strategy export, same paused Replay selection and complete market range. No bar-state reads or strategy scheduling. Quantity-step engine input comes from the earlier independent 447-row v6 probe, not this expected column. This is new v6 coverage, not preservation of an invalid v5 successful-use assertion.",
+  "capture": {
+    "archive": ".golden/captures/fixture-migration-2026-09-16/indicator/v6/I_syminfo_mincontract",
+    "archive_commit": "f33f245eeffec94176e31549c711c4a0471e4a55",
+    "files": {
+      "source.pine": "5f3450787feab64f18793dab55f2a33ce8b860622d63e54523054058b81c4b3a",
+      "data.csv": "299ed60d561a73e9cb81a1588c49e4f8ff9642632e66475a6caec7c886f1f5ea"
+    },
+    "market_inputs": {
+      "mincontract": {
+        "archive": ".golden/captures/manual-2026-09-12-followup/03-mincontract-v6",
+        "source_sha256": "5f3450787feab64f18793dab55f2a33ce8b860622d63e54523054058b81c4b3a",
+        "data_sha256": "3d8ad76a941352b82b15c9eee6651de20231d29cb8a9704a159c8dfe2d624932",
+        "rows": 447,
+        "observed_value": 0.00001,
+        "basis": "Independent v6 metadata probe; not derived from strategy expected outputs."
+      }
+    },
+    "observation": {
+      "mode": "paused-replay",
+      "selected_at": "2026-09-04T00:00:00Z",
+      "all_rows_have_indicator_output": true
+    }
+  }
+}

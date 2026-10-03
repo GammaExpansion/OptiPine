@@ -1,0 +1,7 @@
+//@version=6
+indicator("Eigen complex probe r1")
+m = matrix.new<float>(2, 2, 0.0)
+m.set(0, 1, -1.0)
+m.set(1, 0, 1.0)
+plot(m.eigenvalues().get(0), "complex_0")
+plot(m.eigenvalues().get(1), "complex_1")

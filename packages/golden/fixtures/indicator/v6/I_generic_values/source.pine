@@ -1,0 +1,29 @@
+//@version=6
+indicator("Community generic values r1")
+
+const string SUFFIX = ":1234567"
+appendDays(session) => session + SUFFIX
+identity(value) => value
+first(items) => items.get(0)
+wrapped(items) => first(items)
+
+sessionInput = input.string("0000-2359", "Session text")
+sessionText = identity(appendDays(sessionInput))
+int number = identity(7)
+int firstNumber = wrapped(array.from(bar_index, 7))
+string firstText = wrapped(array.from(sessionText, "unused"))
+simple string period = timeframe.period
+series int index = bar_index
+const array<int> values = array.new<int>()
+values.push(index)
+string textSize = size.small
+
+plot(bar_index, "probe_index")
+plot(str.length(sessionText), "session_length")
+plot(sessionText == sessionInput + SUFFIX ? 1 : 0, "session_equal")
+plot(number, "identity_integer")
+plot(firstNumber, "array_integer")
+plot(str.length(firstText), "array_string_length")
+plot(str.length(period), "period_length")
+plot(values.last(), "const_reference_last")
+plot(str.length(textSize), "size_string_length")

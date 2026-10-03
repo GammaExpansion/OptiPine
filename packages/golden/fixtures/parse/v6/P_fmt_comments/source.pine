@@ -1,0 +1,11 @@
+//@version=6
+indicator("P_fmt_comments") // trailing comment
+// full-line comment
+f(x) =>
+    // comment inside function
+    y = x * 2 // trailing
+
+    // blank line above and comment
+    y
+s = "// not a comment"
+plot(f(close) + str.length(s)) // done

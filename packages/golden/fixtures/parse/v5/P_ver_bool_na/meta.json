@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_ver_bool_na",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "bool 赋 na：v5 允许 / v6 错误",
+  "tags": [
+    "ver"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

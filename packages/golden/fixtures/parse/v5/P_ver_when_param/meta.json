@@ -1,0 +1,22 @@
+{
+  "schema_version": 2,
+  "id": "P_ver_when_param",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "strategy.entry 的 when 参数：v5 允许（已弃用）/ v6 移除",
+  "tags": [
+    "ver",
+    "strategy"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

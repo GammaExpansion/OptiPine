@@ -1,0 +1,38 @@
+{
+  "schema_version": 2,
+  "id": "P_err_request_financial",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "request.financial 财务数据请求：TradingView 正常编译通过",
+  "tags": [
+    "err"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": "2026-09-16 在 TradingView Pine Editor 独立确认原版本源码编译通过；编辑器回读逐行一致（文件末尾换行除外）。仅记录编译结果，不验证请求数据或策略的运行输出。 PINE_VERSION_OUTDATED 仅为版本提示。",
+  "capture": {
+    "archive": ".golden/captures/parse-confirmation-2026-09-16/parse/v5/P_err_request_financial",
+    "files": {
+      "source.pine": "93afeb5033d886ec40a74d98ee6f8c3ca725d7279a32f10380918236faa46309"
+    },
+    "compiler": {
+      "observed_on": "2026-09-16",
+      "pine_version": 5,
+      "result": "ok",
+      "saved_script": "parse-20260916-v5-financial",
+      "success_log": "2:15:15 AMAdded to chart.",
+      "warnings": [
+        "PINE_VERSION_OUTDATED"
+      ]
+    },
+    "source_check": "Editor clipboard readback matches source after LF normalization and omitting the terminal newline."
+  }
+}

@@ -1,0 +1,29 @@
+//@version=6
+strategy("Community timestamp and trade types r1", initial_capital=1000000, default_qty_type=strategy.fixed, default_qty_value=1, margin_long=0, margin_short=0)
+
+start = input.time(timestamp("2020-01-01 00:00"), "Start")
+finish = input.time(timestamp("2025-01-01 00:00"), "Finish")
+textualStart = timestamp("01 Jan 2020 00:00 GMT+0000")
+offsetStart = timestamp("31 Dec 2019 19:00 -0500")
+inRange = time >= start and time <= finish
+if inRange and bar_index % 7 == 0
+    strategy.entry("L", strategy.long)
+if bar_index % 7 == 3
+    strategy.close("L")
+
+int entryBar = strategy.opentrades.entry_bar_index(0)
+int entryTime = strategy.opentrades.entry_time(0)
+string entryID = strategy.opentrades.entry_id(0)
+int lastSignal = ta.valuewhen(inRange and bar_index % 7 == 0, bar_index, 0)
+
+plot(bar_index, "probe_index")
+plot(start, "start_ms")
+plot(finish, "finish_ms")
+plot(textualStart - offsetStart, "explicit_zone_difference")
+plot(inRange ? 1 : 0, "in_range")
+plot(entryBar, "entry_bar")
+plot(entryTime, "entry_time")
+plot(na(entryBar) ? na : str.length(entryID), "entry_id_length")
+plot(lastSignal, "last_signal_bar")
+plot(strategy.position_size, "position")
+plot(strategy.netprofit, "netprofit")

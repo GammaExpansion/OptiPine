@@ -1,0 +1,20 @@
+//@version=5
+indicator("P_syn_tuples")
+minmax(a, b) =>
+    [math.min(a, b), math.max(a, b)]
+[lo, hi] = minmax(open, close)
+[macdLine, signalLine, histLine] = ta.macd(close, 12, 26, 9)
+[st, dir] = ta.supertrend(3, 10)
+[mid, up, dn] = ta.bb(close, 20, 2)
+[dip, dim, adx] = ta.dmi(14, 14)
+plot(lo)
+plot(hi)
+plot(macdLine)
+plot(signalLine)
+plot(histLine)
+plot(st)
+plot(dir)
+plot(mid)
+plot(up)
+plot(dn)
+plot(adx)

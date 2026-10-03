@@ -1,0 +1,33 @@
+# Normalize line endings to LF everywhere; the rules below keep native bytes where required.
+* text=auto eol=lf
+*.xlsx binary
+
+*.md text eol=lf
+*.json text eol=lf
+*.pine text eol=lf
+packages/golden/fixtures/parse/v*/P_fmt_crlf/source.pine text eol=crlf
+# Preserve the byte identity of the paired native capture across checkouts.
+packages/golden/fixtures/strategy/v6/S_sizing_crypto/data.csv -text
+packages/golden/fixtures/strategy/v5/S_sizing_crypto/data.csv -text
+packages/golden/fixtures/indicator/v6/I_syminfo_mincontract/data.csv -text
+packages/golden/fixtures/indicator/v5/M_time__aapl_D/data.csv -text
+packages/golden/fixtures/indicator/v6/M_time__aapl_D/data.csv -text
+# Native language captures include independent v5/v6 and input-override exports.
+packages/golden/fixtures/indicator/v*/I_language_support*/data.csv -text
+packages/golden/fixtures/indicator/v6/I_eigen*/data.csv -text
+packages/golden/fixtures/strategy/v6/S_risk_max_drawdown__cash/data.csv -text
+packages/golden/fixtures/strategy/v6/S_risk_max_intraday_loss__cash/data.csv -text
+packages/golden/fixtures/strategy/v6/S_limit_verification*/data.csv -text
+packages/golden/fixtures/strategy/v6/S_risk_max_drawdown__percent/data.csv -text
+packages/golden/fixtures/strategy/v6/S_risk_max_intraday_loss__percent/data.csv -text
+packages/golden/fixtures/strategy/v6/S_risk_limits__control/data.csv -text
+packages/golden/fixtures/strategy/v6/S_risk_max_intraday_loss__cash_march/data.csv -text
+packages/golden/fixtures/strategy/v6/S_risk_max_intraday_loss__cash_april/data.csv -text
+packages/golden/fixtures/strategy/v6/S_risk_max_intraday_loss__cash_weekly/data.csv -text
+packages/golden/fixtures/strategy/v6/S_risk_max_cons_loss_days*/data.csv -text
+# Preserve native bytes for the six language regression fixtures.
+packages/golden/fixtures/indicator/v6/I_generic_values/data.csv -text
+packages/golden/fixtures/indicator/v6/I_leading_continuations/data.csv -text
+packages/golden/fixtures/indicator/v6/I_drawing_presence/data.csv -text
+packages/golden/fixtures/indicator/v6/I_plot_linestyles/data.csv -text
+packages/golden/fixtures/strategy/v6/S_timestamp_trade_types/data.csv -text

@@ -1,0 +1,3 @@
+//@version=5
+indicator("P_err_positional_after_named")
+plot(title = "x", close)

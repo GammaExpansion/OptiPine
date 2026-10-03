@@ -1,0 +1,22 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_arrays",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "array.* 主要 API",
+  "tags": [
+    "syn",
+    "collections"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

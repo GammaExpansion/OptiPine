@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_enum",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "enum 定义（带/不带标题）、input.enum、switch on enum、str.tostring(enum)",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 验证：enum 脚本整体编译通过"
+}

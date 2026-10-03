@@ -1,0 +1,77 @@
+{
+  "schema_version": 2,
+  "id": "S_exit_brackets",
+  "kind": "strategy",
+  "pine_version": 6,
+  "description": "exit 括号单：0.15% 的紧括号让 stop/limit 常在同一 bar 内都可触发（4-tick 路径决定哪个成交）；40 tick 相对值与 0.5% 绝对值并存（v5 绝对优先，v6 取先触发）；多空各一",
+  "tags": [
+    "micro",
+    "broker",
+    "exit"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BATS:AAPL",
+    "ticker": "AAPL",
+    "prefix": "BATS",
+    "type": "stock",
+    "currency": "USD",
+    "basecurrency": "",
+    "timezone": "America/New_York",
+    "mintick": 0.01,
+    "pricescale": 100,
+    "minmove": 1,
+    "pointvalue": 1,
+    "session": "regular",
+    "session_hours": "0930-1600",
+    "mincontract": 1,
+    "description": "Apple Inc."
+  },
+  "timeframe": "60",
+  "chart_timezone": "America/Los_Angeles",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-04T08:43:37Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "tight_stop_long",
+      "tight_limit_long",
+      "mixed_stop_abs",
+      "mixed_limit_abs",
+      "tight_stop_short",
+      "tight_limit_short",
+      "dist_open_high",
+      "dist_open_low",
+      "bar_index",
+      "cycle",
+      "phase",
+      "pos",
+      "avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closedtrades",
+      "opentrades"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-04T08:44:28Z"
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": "dist_open_high / dist_open_low 两列给 harness 判定 O→H→L→C 还是 O→L→H→C"
+}

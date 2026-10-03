@@ -1,0 +1,25 @@
+{
+  "schema_version": 2,
+  "id": "P_err_indent_2spaces",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "块缩进 2 空格（被当作续行）",
+  "tags": [
+    "err",
+    "fmt"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 3
+    }
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 验证：错误定位到第 3 行"
+}

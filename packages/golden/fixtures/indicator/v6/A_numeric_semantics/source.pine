@@ -1,0 +1,101 @@
+//@version=6
+// ============================================================================
+// probe_A_numeric_semantics — 探针 A（indicator，只看 CSV）
+//
+// 回答 §7 里的：整数除法(按 qualifier)、% 负数、math.round half 规则、int() 负数、
+// round_to_mintick 实现、除零结果、na 参与 max/min/avg/比较/逻辑、
+// EMA/RMA/SMA 中间插 na 的种子规则、ta.stdev 算法、累加顺序。
+//
+// 用法
+//   1. 加到任意图表即可（常量部分与品种无关；rtm_* 几行假设 mintick = 0.01，美股/ETF 都满足）。
+//      建议 1h，几千根 bar 就够。
+//   2. 图表滚到最左加载完 → Export chart data（UNIX 时间）。
+//   3. v6 变体：把第一行改成 //@version=6，并删除文件末尾 "v5-only" 块。
+//   4. 若 "div_1_zeroI" 那一行导致编译/运行错误，直接删掉——报错本身就是答案。
+//
+// 读法：常量列每根 bar 值相同，取第 0 行即可；序列列从第 0 行逐 bar 比。
+// 共 63 个 plot（上限 64）。
+// ============================================================================
+indicator("probe_A_numeric_semantics", overlay = false)
+
+// ---- 辅助量：用 series 构造 0 和 na，避免编译期常量折叠 ----
+float naF    = na
+float zeroF  = close - close                     // series 0.0
+int   zeroI  = int(zeroF)                        // series 0
+int   inpFive = input.int(5, "five (input int)")  // input 限定符
+int   serFive = int(math.min(bar_index, 0)) + 5   // series int，值恒为 5
+
+// ---- 1. 除法：v5 只有 const/const 截断 ----
+plot(5 / 2,        "div_c5_c2")        // v5 期望 2，v6 期望 2.5
+plot(inpFive / 2,  "div_i5_c2")        // input/const：v5 期望 2.5
+plot(serFive / 2,  "div_s5_c2")        // series/const：v5 期望 2.5
+plot(-7 / 2,       "div_cm7_c2")       // v5：-3（截断）还是 -4（floor）？
+plot(7 / -2,       "div_c7_cm2")
+plot(1.0 / 3,      "div_1_3_float")    // 顺带看 CSV 输出多少位
+plot(1 / zeroF,    "div_1_zeroF")      // 空(na) 还是 Infinity？
+plot(-1 / zeroF,   "div_m1_zeroF")
+plot(1 / zeroI,    "div_1_zeroI")      // int/int 除零：报错则删本行
+
+// ---- 2. 取模 ----
+plot(7 % 3,        "mod_7_3")
+plot(-7 % 3,       "mod_m7_3")         // -1（符号随被除数）还是 2？
+plot(7 % -3,       "mod_7_m3")
+plot(-7 % -3,      "mod_m7_m3")
+plot(7.5 % 2,      "mod_7p5_2")
+plot(-7.5 % 2,     "mod_m7p5_2")
+
+// ---- 3. 取整：half 规则 ----
+plot(math.round(0.5),   "round_0p5")   // 1 = half-up/away；0 = half-even
+plot(math.round(1.5),   "round_1p5")
+plot(math.round(2.5),   "round_2p5")   // 3 = half-up/away；2 = half-even
+plot(math.round(-0.5),  "round_m0p5")  // -1 = away-from-zero；0 = half-up(toward +inf)
+plot(math.round(-2.5),  "round_m2p5")  // -3 = away；-2 = half-up
+plot(math.round(2.345, 2),  "round2_2p345")   // 二进制 2.34500000000000019 → 精确取整 2.35；缩放后 234.5 也是 2.35
+plot(math.round(2.355, 2),  "round2_2p355")   // 二进制 2.35499999999999998 → 精确 2.35；缩放 half-up 2.36  ← 区分点
+plot(math.round(1.005, 2),  "round2_1p005")   // 二进制 1.00499999999999989 → 精确 1.00；缩放 half-up 1.01  ← 区分点
+plot(math.round(-1.005, 2), "round2_m1p005")
+plot(int(1.5),          "int_1p5")
+plot(int(-1.5),         "int_m1p5")    // -1 = 截断；-2 = floor
+plot(math.floor(-1.5),  "floor_m1p5")  // 对照，应为 -2
+
+// ---- 4. round_to_mintick 函数 vs 成交价取整（实测成交价用 floor(x/tick+0.5)*tick）----
+plot(syminfo.mintick,                 "mintick")
+plot(math.round_to_mintick(23.755),   "rtm_23p755")   // 精确二进制取整 23.75；缩放 half-up 23.76 ← 区分点
+plot(math.round_to_mintick(23.745),   "rtm_23p745")   // 两种都是 23.75（对照）
+plot(math.round_to_mintick(24.095),   "rtm_24p095")   // 精确 24.09；缩放 24.10 ← 区分点
+plot(math.round_to_mintick(20.005),   "rtm_20p005")   // 精确 20.00；缩放 20.01 ← 区分点
+plot(math.round_to_mintick(-0.005),   "rtm_m0p005")   // 负数方向
+
+// ---- 5. 整数宽度 / 浮点精度 ----
+plot(2147483647 + 1,        "int32_overflow")     // 2147483648 = 不是 32 位
+plot(math.pow(2, 53) + 1,   "float_2p53_plus1")   // 9007199254740992 = double
+
+// ---- 6. na 传播 ----
+plot(math.max(1, naF),          "max_1_na")            // v5 实测 math.max 含 na → na；v6 待看
+plot(math.min(1, naF),          "min_1_na")
+plot(math.avg(1, naF),          "avg_1_na")
+plot(naF + 1,                   "na_plus_1")
+plot(nz(naF),                   "nz_na")
+plot(naF > 1 ? 1 : 0,           "na_gt_1_ternary")     // 比较结果为 na/false 时 ternary 走 else → 0
+plot(naF == naF ? 1 : 0,        "na_eq_na_ternary")
+plot(naF != naF ? 1 : 0,        "na_ne_na_ternary")    // v6 可能为 1（not-equal 对 na）
+plot(not (naF > 1) ? 1 : 0,     "not_na_gt_1_ternary") // v5：not na = na → 0；v6：not false = true → 1
+plot(na(naF + 1) ? 1 : 0,       "isna_na_plus_1")
+
+// ---- 7. 序列：种子规则与算法 ----
+float src1 = bar_index % 50 == 25 ? na : close       // 每 50 根一个孤立 na
+float src2 = bar_index % 100 < 30 ? na : close       // 每 100 根一段 30 根的 na（> length）
+plot(bar_index,                    "bar_index")
+plot(src1,                         "src1")
+plot(src2,                         "src2")
+plot(ta.ema(close, 20),            "ema20_close")       // 基线：第 19 根 = SMA(20) 种子
+plot(ta.ema(src1, 20),             "ema20_src1")        // 孤立 na：跳过？重置？输出 na 几根？
+plot(ta.ema(src2, 20),             "ema20_src2")        // 长 na 段后：立刻接续 / 重新 SMA 种子 / 等 20 个非 na
+plot(ta.rma(src1, 20),             "rma20_src1")
+plot(ta.rma(src2, 20),             "rma20_src2")
+plot(ta.sma(src2, 20),             "sma20_src2")        // 窗口含 na 时 SMA 是 na 还是跳过 na
+plot(ta.stdev(close, 20),          "stdev20")           // 总体标准差；与朴素两遍法残差 5e-10
+plot(ta.stdev(close + 1e6, 20),    "stdev20_offset1e6") // 放大抵消误差，区分算法（两遍法 / 平方和 / Welford / reference 伪代码）
+plot(ta.stdev(close, 20, false),   "stdev20_unbiased")
+plot(ta.cum(close),                "cum_close")         // 2 万根的累加顺序
+plot(math.sum(close, 20),          "sum20")             // 滑窗和：增量更新还是重算

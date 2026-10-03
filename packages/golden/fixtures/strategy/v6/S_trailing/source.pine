@@ -1,0 +1,46 @@
+//@version=6
+// trailing stop：trail_price（激活价）/ trail_points（激活距离，tick）+ trail_offset（tick），多空各一
+strategy("S_trailing", overlay = false,
+  initial_capital = 100000, currency = currency.NONE,
+  default_qty_type = strategy.fixed, default_qty_value = 1, pyramiding = 1,
+  commission_type = strategy.commission.percent, commission_value = 0, slippage = 0,
+  margin_long = 0, margin_short = 0, close_entries_rule = "FIFO",
+  process_orders_on_close = false, calc_on_order_fills = false, calc_on_every_tick = false,
+  backtest_fill_limits_assumption = 0, use_bar_magnifier = false, fill_orders_on_standard_ohlc = false)
+int cycleLen = 40
+int phase = bar_index % cycleLen
+int cycle = math.floor(bar_index / cycleLen)
+
+float trailPxL = close * (1 + 0.003)
+float trailPxS = close * (1 - 0.003)
+if phase == 0
+    strategy.entry("L", strategy.long)
+    strategy.exit("TrailPx", "L", trail_price = trailPxL, trail_offset = 30)
+if phase == 12
+    strategy.close_all(comment = "c1")
+if phase == 14
+    strategy.entry("S", strategy.short)
+    strategy.exit("TrailPxS", "S", trail_price = trailPxS, trail_offset = 30)
+if phase == 26
+    strategy.close_all(comment = "c2")
+if phase == 28
+    strategy.entry("L", strategy.long)
+    strategy.exit("TrailPts", "L", trail_points = 30, trail_offset = 20)
+if phase == 38
+    strategy.close_all(comment = "c3")
+if phase == 39
+    strategy.cancel_all()
+plot(trailPxL, "trail_price_long")
+plot(trailPxS, "trail_price_short")
+
+// ---- 对齐列 ----
+plot(bar_index, "bar_index")
+plot(cycle, "cycle")
+plot(phase, "phase")
+plot(strategy.position_size, "pos")
+plot(strategy.position_avg_price, "avg_price")
+plot(strategy.equity, "equity")
+plot(strategy.openprofit, "openprofit")
+plot(strategy.netprofit, "netprofit")
+plot(strategy.closedtrades, "closedtrades")
+plot(strategy.opentrades, "opentrades")

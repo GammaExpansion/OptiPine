@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "id": "S_risk_allow_entry_in",
+  "kind": "strategy",
+  "pine_version": 5,
+  "description": "strategy.risk.allow_entry_in(long)：持多时反向 entry 只平仓（Signal 文案、数量）、空仓时做空 entry 被忽略",
+  "tags": [
+    "micro",
+    "broker",
+    "risk"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BATS:AAPL",
+    "ticker": "AAPL",
+    "prefix": "BATS",
+    "type": "stock",
+    "currency": "USD",
+    "basecurrency": "",
+    "timezone": "America/New_York",
+    "mintick": 0.01,
+    "pricescale": 100,
+    "minmove": 1,
+    "pointvalue": 1,
+    "session": "regular",
+    "session_hours": "0930-1600",
+    "mincontract": 1,
+    "description": "Apple Inc."
+  },
+  "timeframe": "60",
+  "chart_timezone": "America/Los_Angeles",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-04T05:14:43Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "bar_index",
+      "cycle",
+      "phase",
+      "pos",
+      "avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closedtrades",
+      "opentrades"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-04T05:15:22Z"
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": ""
+}

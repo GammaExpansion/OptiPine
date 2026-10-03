@@ -1,0 +1,13 @@
+//@version=6
+indicator("Eigen boundaries probe r1")
+single = matrix.new<float>(1, 1, 3.5)
+zero = matrix.new<float>(2, 2, 0.0)
+integer = matrix.new<int>(2, 2, 1)
+integer.set(1, 1, 2)
+plot(1, "revision")
+plot(bar_index, "probe_index")
+plot(single.eigenvalues().get(0), "singleton")
+plot(zero.eigenvalues().get(0), "zero_0")
+plot(zero.eigenvalues().get(1), "zero_1")
+plot(integer.eigenvalues().get(0), "int_0")
+plot(integer.eigenvalues().get(1), "int_1")

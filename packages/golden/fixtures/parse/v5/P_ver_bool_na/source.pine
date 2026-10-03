@@ -1,0 +1,4 @@
+//@version=5
+indicator("P_ver_bool_na")
+bool b = na
+plot(b ? 1 : 0)

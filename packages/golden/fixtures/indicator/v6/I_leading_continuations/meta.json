@@ -1,0 +1,63 @@
+{
+  "schema_version": 2,
+  "id": "I_leading_continuations",
+  "kind": "indicator",
+  "pine_version": 6,
+  "description": "Leading operators and ternary continuations with local scopes.",
+  "tags": [
+    "language",
+    "community-regression"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BINANCE:BTCUSDT",
+    "timezone": "Etc/UTC",
+    "currency": "USDT"
+  },
+  "timeframe": "60",
+  "chart_timezone": "Etc/UTC",
+  "inputs": {},
+  "verified": true,
+  "notes": "Exact v6 source and continuation indentation independently checked in Pine Editor, compiled and ran on TradingView standard BINANCE:BTCUSDT 60 candles. Same paused Replay and fully loaded chart as I_generic_values, without navigation or reload; native probe_index 0..27045 is contiguous. No inputs; Volume MA disabled. Exported timestamp records download completion; native click-time window is archived. Full native series match the engine under the existing comparison rules.",
+  "capture": {
+    "archive": ".golden/captures/community-language-2026-09-19/I_leading_continuations",
+    "files": {
+      "source.pine": "01a8b1c37383c4e4da3504644dd055d8828f0a99b4621edaaf9937529d3bd0dc",
+      "data.csv": "1412896a5cf9189f511cf60644836c393d0bf1312f3b66e87756837d0f97a966"
+    },
+    "observation": {
+      "mode": "paused-replay",
+      "selected_at": "2025-02-01T00:00:00Z",
+      "rows": 27046,
+      "first_bar": 1640995200,
+      "last_bar": 1738364400,
+      "first_probe_index": 0,
+      "last_probe_index": 27045,
+      "full_history_confirmed": true
+    }
+  },
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-20T02:57:34.032Z",
+    "plan": "unrecorded",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "probe_index",
+      "selected",
+      "branch",
+      "local_branch"
+    ]
+  }
+}

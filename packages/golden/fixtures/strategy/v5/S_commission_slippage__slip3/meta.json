@@ -1,0 +1,75 @@
+{
+  "schema_version": 2,
+  "id": "S_commission_slippage__slip3",
+  "kind": "strategy",
+  "pine_version": 5,
+  "description": "佣金与滑点：同一 source 在 Properties 里分别设 0/0、0.1% 佣金、0.05 USD/contract、1 USD/order、3 tick 滑点；market/stop 吃滑点而 limit 不吃、三种佣金的计费基数与进出两次收取",
+  "tags": [
+    "micro",
+    "broker",
+    "commission",
+    "properties-override"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BATS:AAPL",
+    "ticker": "AAPL",
+    "prefix": "BATS",
+    "type": "stock",
+    "currency": "USD",
+    "basecurrency": "",
+    "timezone": "America/New_York",
+    "mintick": 0.01,
+    "pricescale": 100,
+    "minmove": 1,
+    "pointvalue": 1,
+    "session": "regular",
+    "session_hours": "0930-1600",
+    "mincontract": 1,
+    "description": "Apple Inc."
+  },
+  "timeframe": "60",
+  "chart_timezone": "America/Los_Angeles",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-04T06:40:10Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "stop_long",
+      "limit_long",
+      "stop_short",
+      "limit_short",
+      "last_trade_commission",
+      "bar_index",
+      "cycle",
+      "phase",
+      "pos",
+      "avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closedtrades",
+      "opentrades"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-04T06:40:37Z"
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": "五个目录同源，只有 Properties 不同；Properties → Slippage = 3 ticks，Commission 0"
+}

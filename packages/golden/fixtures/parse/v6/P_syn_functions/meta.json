@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_functions",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "单行/多行函数、默认参数、命名参数乱序、参数类型与限定符、函数内 []、函数嵌套调用",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

@@ -1,0 +1,4 @@
+//@version=6
+indicator("P_err_unterminated_string")
+s = "abc
+plot(str.length(s))

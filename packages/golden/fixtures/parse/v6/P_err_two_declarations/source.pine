@@ -1,0 +1,4 @@
+//@version=6
+indicator("a")
+strategy("b")
+plot(close)

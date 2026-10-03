@@ -1,0 +1,16 @@
+//@version=6
+indicator("P_syn_switch")
+mode = input.string("a", options = ["a", "b", "c"])
+v1 = switch mode
+    "a" => close
+    "b" => open
+    => hl2
+v2 = switch
+    close > open => 1
+    close < open => -1
+    => 0
+switch mode
+    "a" => label.new(bar_index, high, "a")
+    "b" => label.new(bar_index, low, "b")
+plot(v1)
+plot(v2)

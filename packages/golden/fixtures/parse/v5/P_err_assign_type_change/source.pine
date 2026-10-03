@@ -1,0 +1,5 @@
+//@version=5
+indicator("P_err_assign_type_change")
+x = 1
+x := "a"
+plot(x)

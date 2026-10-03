@@ -1,0 +1,111 @@
+{
+  "schema_version": 2,
+  "id": "S_sizing_crypto",
+  "kind": "strategy",
+  "pine_version": 6,
+  "description": "crypto 定仓：5% equity 得到的小数 qty 精度、显式 0.0123456 的舍入、1e-7 是否被跳过；同时给出 BTCUSDT 的 mintick 与 mincontract（数量步长）",
+  "tags": [
+    "micro",
+    "broker",
+    "sizing",
+    "crypto"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BINANCE:BTCUSDT",
+    "ticker": "BTCUSDT",
+    "prefix": "BINANCE",
+    "type": "crypto",
+    "currency": "USDT",
+    "basecurrency": "BTC",
+    "timezone": "Etc/UTC",
+    "mintick": 0.01,
+    "pricescale": 100,
+    "minmove": 1,
+    "pointvalue": 1,
+    "session": "regular",
+    "session_hours": "0000-0000:1234567",
+    "mincontract": 0.00001,
+    "description": "Bitcoin / TetherUS"
+  },
+  "timeframe": "60",
+  "chart_timezone": "Etc/UTC",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-12T12:13:40Z",
+    "plan": "not recorded",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "default_entry_qty_close",
+      "syminfo_mintick",
+      "syminfo_mincontract",
+      "bar_index",
+      "cycle",
+      "phase",
+      "pos",
+      "avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closedtrades",
+      "opentrades"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-12T12:27:20Z"
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": "2026-09-12 在 BINANCE:BTCUSDT 60 / UTC 重新成对采集，Replay 选择 2026-09-04 00:00 并暂停。报告前后 CSV 字节相同，完整 23448 根；末根 OHLCV 保留，常规策略收盘计算尚未执行。报告区间与行情首尾一致。mincontract 来自独立三行 v6 探针的 447 行观测，mintick/pointvalue/currency 由新报告 Properties 确认。账户级别未独立记录。原数据与哈希、采集上下文及更新原因保存在采集归档；无数值清洗或比较放宽。",
+  "execution": {
+    "mode": "replay-selection",
+    "selected_at": "2026-09-04T00:00:00Z",
+    "paused": true
+  },
+  "capture": {
+    "archive": ".golden/captures/fixture-migration-2026-09-16/strategy/v6/S_sizing_crypto",
+    "archive_commit": "f33f245eeffec94176e31549c711c4a0471e4a55",
+    "files": {
+      "source.pine": "8fdb5c6fae17553b32334608c2fed528b288d466d86d060b463585a34cd10735",
+      "data.csv": "72fa082b9fc9062429e65eff7dfd5e69afd8adc3cb068bdc94c52c488ad46b5a",
+      "report.xlsx": "eada08a8bcd19962a890d99012669a2c2b418fcbbbb32d191a828cde8193d3d0"
+    },
+    "paired_exports": {
+      "before": "2026-09-12T12:13:40Z",
+      "report": "2026-09-12T12:27:20Z",
+      "after": "2026-09-12T12:28:14Z",
+      "byte_identical": true
+    },
+    "observations": [
+      "Replay was paused; no advancement occurred between the paired exports. Stepping before those exports was not recorded."
+    ],
+    "market_inputs": {
+      "mincontract": {
+        "archive": ".golden/captures/manual-2026-09-12-followup/03-mincontract-v6",
+        "source_sha256": "5f3450787feab64f18793dab55f2a33ce8b860622d63e54523054058b81c4b3a",
+        "data_sha256": "3d8ad76a941352b82b15c9eee6651de20231d29cb8a9704a159c8dfe2d624932",
+        "rows": 447,
+        "observed_value": 0.00001,
+        "basis": "Independent v6 metadata probe; not derived from strategy expected outputs."
+      }
+    },
+    "replaces": {
+      "commit": "de6af78fa296375cbe539dead8dc54d16f39bd41",
+      "path": "tests/strategy/v6/S_sizing_crypto",
+      "reason": "Replace separately timed live chart/report exports with an independently reverified paired capture. Original source and strict comparison rules retained."
+    }
+  }
+}

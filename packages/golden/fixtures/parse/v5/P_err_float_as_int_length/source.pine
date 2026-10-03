@@ -1,0 +1,4 @@
+//@version=5
+indicator("P_err_float_as_int_length")
+ma = ta.sma(close, close)
+plot(ma)

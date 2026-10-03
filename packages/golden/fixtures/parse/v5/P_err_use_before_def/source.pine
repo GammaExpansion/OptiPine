@@ -1,0 +1,5 @@
+//@version=5
+indicator("P_err_use_before_def")
+y = f(close)
+f(x) => x * 2
+plot(y)

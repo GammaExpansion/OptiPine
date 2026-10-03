@@ -1,0 +1,113 @@
+//@version=5
+indicator("I_lang_series")
+plot(bar_index, "bar_index")
+
+// ---- 求值次数：函数通过全局 array 累计被调用次数（array 是引用类型，函数内可修改）----
+// slot 0: and 右侧   1: or 右侧   2: 三元未选分支   3: 函数参数   4: if 块内   5: switch 分支   6/7: 嵌套 and/or
+var counters = array.new_int(8, 0)
+tick(int slot) =>
+    array.set(counters, slot, array.get(counters, slot) + 1)
+    true
+b_and = close > open and tick(0)
+b_or  = close > open or tick(1)
+b_ter = close > open ? true : tick(2)
+b_arg = math.max(1, tick(3) ? 1 : 0) > 0
+if close > open
+    tick(4)
+switch
+    close > open => tick(5)
+    => false
+b_nest = (close > open and tick(6)) or tick(7)
+plot(array.get(counters, 0), "calls_and_rhs")
+plot(array.get(counters, 1), "calls_or_rhs")
+plot(array.get(counters, 2), "calls_ternary_unchosen")
+plot(array.get(counters, 3), "calls_fn_arg")
+plot(array.get(counters, 4), "calls_if_block")
+plot(array.get(counters, 5), "calls_switch_branch")
+plot(array.get(counters, 6), "calls_nested_and")
+plot(array.get(counters, 7), "calls_nested_or")
+plot((b_and ? 1 : 0) + (b_or ? 2 : 0) + (b_ter ? 4 : 0) + (b_arg ? 8 : 0) + (b_nest ? 16 : 0), "bool_bits")
+plot(ta.cum(close > open ? 1 : 0), "count_up")
+
+// ---- L01：条件调用的历史断裂 ----
+r_cond = if close > open
+    ta.rsi(close, 14)
+r_full = ta.rsi(close, 14)
+tern_sma = close > open ? ta.sma(close, 5) : ta.sma(open, 5)
+sw_ema = switch
+    close > open => ta.ema(close, 5)
+    close < open => ta.ema(open, 5)
+    => na
+plot(r_cond, "rsi_in_if")
+plot(r_full, "rsi_full")
+plot(tern_sma, "sma_in_ternary")
+plot(sw_ema, "ema_in_switch")
+
+// ---- L05：函数内 var 按调用实例独立 ----
+g() =>
+    var int calls = 0
+    calls += 1
+    calls
+c1 = g()
+c2 = g()
+c3 = close > open ? g() : 0
+h(float x) =>
+    var float m = na
+    m := math.max(nz(m), x)
+    m
+plot(c1, "fn_var_site1")
+plot(c2, "fn_var_site2")
+plot(c3, "fn_var_site3_conditional")
+plot(h(close), "fn_var_max_close")
+plot(h(open), "fn_var_max_open")
+
+// ---- 局部块变量的历史 ----
+float lv_out = na
+if close > open
+    lv = high - low
+    lv_out := lv + nz(lv[1], -1000)
+plot(lv_out, "local_var_history")
+
+// ---- 循环、动态偏移、表达式/函数结果的 [] ----
+s5 = 0.0
+for i = 0 to 4
+    s5 += close[i]
+plot(s5, "loop_sum5")
+dynamicOffset = math.min(bar_index, 10000)
+plot(close[dynamicOffset], "dynamic_offset_capped")
+plot((close - open)[2], "expr_history2")
+plot(ta.sma(close, 5)[3], "fn_result_history3")
+
+// ---- 自引用序列、var 的 [1]、var 用 series 初始化、varip ----
+float cnt = na
+cnt := nz(cnt[1]) + 1
+var float acc = 0.0
+acc := nz(acc[1], 100) + close
+var float first_close_var = close
+varip int vip = 0
+vip += 1
+plot(cnt, "self_ref_counter")
+plot(acc, "var_history_acc")
+plot(first_close_var, "var_init_series")
+plot(vip, "varip_counter")
+
+// ---- tuple 函数带历史、UDT 对象历史、if 无 else → na ----
+f(src) =>
+    d = src - src[1]
+    [d, d[1]]
+[d0, d1] = f(close)
+type P
+    float y
+p = P.new(close)
+prev = p[1]
+plot(d0, "tuple_d0")
+plot(d1, "tuple_d1_history")
+plot(na(prev) ? na : prev.y, "udt_object_history")
+w = if close > open
+    1
+plot(w, "if_no_else")
+
+// ---- series / input 整数除法 ----
+seven = input.int(7, "seven")
+plot((bar_index % 7) / 2, "div_series_int")
+plot(seven / 2, "div_input_int")

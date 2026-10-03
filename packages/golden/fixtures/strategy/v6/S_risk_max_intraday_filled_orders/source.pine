@@ -1,0 +1,42 @@
+//@version=6
+// strategy.risk.max_intraday_filled_orders(3)：按交易所日期划日，每日前 5 根各下一单（entry/close 交替），第 4 笔成交应被阻止，次日恢复
+strategy("S_risk_max_intraday_filled_orders", overlay = false,
+  initial_capital = 100000, currency = currency.NONE,
+  default_qty_type = strategy.fixed, default_qty_value = 10, pyramiding = 1,
+  commission_type = strategy.commission.percent, commission_value = 0, slippage = 0,
+  margin_long = 0, margin_short = 0, close_entries_rule = "FIFO",
+  process_orders_on_close = false, calc_on_order_fills = false, calc_on_every_tick = false,
+  backtest_fill_limits_assumption = 0, use_bar_magnifier = false, fill_orders_on_standard_ohlc = false)
+strategy.risk.max_intraday_filled_orders(3)
+int cycleLen = 1
+int phase = 0
+int cycle = 0
+bool newDay = barstate.isfirst or dayofmonth != dayofmonth[1]
+bool inTestWindow = year >= 2020
+var int barInDay = 0
+barInDay := newDay ? 0 : barInDay + 1
+if inTestWindow and barInDay == 0
+    strategy.entry("L", strategy.long)                        // 成交 #1（下一根 open）
+if inTestWindow and barInDay == 1
+    strategy.close_all(comment = "c1")                        // 成交 #2
+if inTestWindow and barInDay == 2
+    strategy.entry("L", strategy.long)                        // 成交 #3
+if inTestWindow and barInDay == 3
+    strategy.close_all(comment = "c2")                        // 第 4 笔：应被阻止，仓位留到次日
+if inTestWindow and barInDay == 4
+    strategy.entry("L", strategy.long)                        // 第 5 笔：应被阻止
+plot(barInDay, "bar_in_day")
+plot(newDay ? 1 : 0, "new_day")
+plot(dayofmonth, "dayofmonth")
+
+// ---- 对齐列 ----
+plot(bar_index, "bar_index")
+plot(cycle, "cycle")
+plot(phase, "phase")
+plot(strategy.position_size, "pos")
+plot(strategy.position_avg_price, "avg_price")
+plot(strategy.equity, "equity")
+plot(strategy.openprofit, "openprofit")
+plot(strategy.netprofit, "netprofit")
+plot(strategy.closedtrades, "closedtrades")
+plot(strategy.opentrades, "opentrades")

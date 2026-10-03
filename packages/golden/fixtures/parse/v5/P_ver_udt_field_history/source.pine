@@ -1,0 +1,6 @@
+//@version=5
+indicator("P_ver_udt_field_history")
+type P
+    float y
+p = P.new(close)
+plot(p.y[1])

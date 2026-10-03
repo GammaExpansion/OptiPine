@@ -1,0 +1,58 @@
+//@version=6
+strategy("Limit verification probe r2", overlay=false, initial_capital=1000000, default_qty_type=strategy.fixed, default_qty_value=1, pyramiding=0, commission_type=strategy.commission.percent, commission_value=0, slippage=0, margin_long=0, margin_short=0, calc_on_order_fills=false, calc_on_every_tick=false, process_orders_on_close=false, backtest_fill_limits_assumption=1)
+
+// Change "Verify price for limit orders" in Properties; keep this source intact.
+mode = input.int(0, "Mode: 0 resting, 1 marketable, 2 stop-limit, 3 exit limit", minval=0, maxval=3)
+offsetTicks = input.int(10, "Offset ticks", minval=1)
+cycle = input.int(8, "Cycle bars", minval=4)
+start = input.time(1704067200000, "Start") // 2024-01-01 00:00 UTC
+
+var int activeIndex = -1
+var float submittedLimit = na
+var float submittedStop = na
+var int submittedSide = 0
+if time >= start
+    activeIndex += 1
+    phase = activeIndex % cycle
+    side = int(math.floor(activeIndex / cycle)) % 2 == 0 ? 1 : -1
+    if phase == 0
+        strategy.cancel_all()
+        strategy.close_all(comment="cycle cleanup")
+        submittedLimit := na
+        submittedStop := na
+        submittedSide := 0
+    if phase == 1
+        submittedSide := side
+        if mode == 0
+            submittedLimit := side == 1 ? low : high
+            strategy.entry("E", side == 1 ? strategy.long : strategy.short, qty=1, limit=submittedLimit)
+        else if mode == 1
+            submittedLimit := close + side * offsetTicks * syminfo.mintick
+            strategy.entry("E", side == 1 ? strategy.long : strategy.short, qty=1, limit=submittedLimit)
+        else if mode == 2
+            submittedStop := close + side * offsetTicks * syminfo.mintick
+            submittedLimit := close
+            strategy.entry("E", side == 1 ? strategy.long : strategy.short, qty=1, limit=submittedLimit, stop=submittedStop)
+        else
+            submittedLimit := close + side * offsetTicks * syminfo.mintick
+            strategy.entry("E", side == 1 ? strategy.long : strategy.short, qty=1)
+            strategy.exit("X", "E", qty=1, limit=submittedLimit)
+
+last = strategy.closedtrades - 1
+plot(2, "probe_revision")
+plot(mode, "probe_mode")
+plot(bar_index, "bar_index")
+plot(activeIndex, "active_index")
+plot(syminfo.mintick, "mintick")
+plot(submittedSide, "submitted_side")
+plot(submittedLimit, "submitted_limit")
+plot(submittedStop, "submitted_stop")
+plot(strategy.position_size, "position_size")
+plot(strategy.position_avg_price, "position_avg_price")
+plot(strategy.equity, "equity")
+plot(strategy.netprofit, "netprofit")
+plot(strategy.closedtrades, "closed_trades")
+plot(last >= 0 ? strategy.closedtrades.entry_price(last) : na, "last_entry_price")
+plot(last >= 0 ? strategy.closedtrades.exit_price(last) : na, "last_exit_price")
+plot(last >= 0 ? strategy.closedtrades.entry_bar_index(last) : na, "last_entry_bar")
+plot(last >= 0 ? strategy.closedtrades.exit_bar_index(last) : na, "last_exit_bar")

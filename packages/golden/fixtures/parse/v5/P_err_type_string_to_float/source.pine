@@ -1,0 +1,4 @@
+//@version=5
+indicator("P_err_type_string_to_float")
+float x = "abc"
+plot(x)

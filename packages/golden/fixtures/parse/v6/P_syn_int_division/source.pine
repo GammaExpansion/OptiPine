@@ -1,0 +1,4 @@
+//@version=6
+indicator("Int division type probe")
+int x = timeframe.in_seconds(timeframe.period) / 61
+plot(x)

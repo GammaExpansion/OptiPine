@@ -1,0 +1,15 @@
+//@version=6
+indicator("P_fmt_number_literals")
+a = 1e3
+b = 1E-3
+c = .5
+d = 0.5e2
+f = 42
+g = -3.25
+h = 1e21
+c1 = #FF0000
+c2 = #ff000080
+c3 = color.new(#00FF00, 50)
+plot(a + b + c + d + f + g + h / 1e21, color = c1)
+plot(close, color = c2)
+plot(open, color = c3)

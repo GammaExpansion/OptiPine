@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_fmt_comments",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "行尾注释、块内注释、块内空行、字符串里的 //",
+  "tags": [
+    "fmt"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

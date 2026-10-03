@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_fmt_annotations",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "//@type //@field //@function //@param //@returns //@variable 文档注解",
+  "tags": [
+    "fmt"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

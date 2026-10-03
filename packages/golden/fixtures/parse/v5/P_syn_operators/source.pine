@@ -1,0 +1,13 @@
+//@version=5
+indicator("P_syn_operators")
+a = 1 + 2 * 3 - 4 / 2 % 3
+b = -a
+c = (close > open and not (high < low)) or (volume >= 0 and volume <= 1e12) or close != open or close == open
+d = close > open ? 1 : close < open ? -1 : 0
+e = (close - open)[1] + ta.sma(close, 5)[2] + close[3] + hl2[0]
+f = a > 2 ? "gt" : "le"
+g = 1.5 * (2 + 3) / (4 - 1)
+h = a >= 1 and a <= 10
+i = not h
+j = math.max(1, 2) > 1 ? true : false
+plot(a + b + d + e + g + (c ? 1 : 0) + (h ? 1 : 0) + (i ? 1 : 0) + (j ? 1 : 0) + str.length(f))

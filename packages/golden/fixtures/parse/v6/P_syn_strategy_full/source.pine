@@ -1,0 +1,41 @@
+//@version=6
+strategy("P_syn_strategy_full", overlay = true, initial_capital = 10000, currency = currency.NONE,
+  default_qty_type = strategy.percent_of_equity, default_qty_value = 10, pyramiding = 2,
+  commission_type = strategy.commission.percent, commission_value = 0.1, slippage = 1,
+  margin_long = 0, margin_short = 0, close_entries_rule = "FIFO", process_orders_on_close = false,
+  calc_on_order_fills = false, calc_on_every_tick = false, backtest_fill_limits_assumption = 0,
+  use_bar_magnifier = false, fill_orders_on_standard_ohlc = false, max_bars_back = 500, risk_free_rate = 2)
+longCond  = ta.crossover(close, ta.sma(close, 20))
+shortCond = ta.crossunder(close, ta.sma(close, 20))
+if longCond
+    strategy.entry("L", strategy.long, qty = 1, limit = close * 0.999, stop = close * 1.001, oca_name = "oca", oca_type = strategy.oca.cancel, comment = "enter long", alert_message = "long")
+    strategy.exit("LX", from_entry = "L", qty_percent = 50, profit = 100, loss = 50, trail_points = 200, trail_offset = 50, oca_name = "exits", comment = "exit", comment_profit = "tp", comment_loss = "sl", comment_trailing = "trail", alert_message = "exit")
+    strategy.exit("LX2", "L", limit = close * 1.02, stop = close * 0.98)
+if shortCond
+    strategy.order("S", strategy.short, qty = 1, comment = "order short")
+    strategy.close("L", comment = "close L", qty_percent = 100, immediately = false)
+if bar_index % 100 == 0
+    strategy.close_all(comment = "flat")
+    strategy.cancel("L")
+    strategy.cancel_all()
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+plot(strategy.equity)
+plot(strategy.openprofit)
+plot(strategy.netprofit)
+plot(strategy.grossprofit)
+plot(strategy.grossloss)
+plot(strategy.closedtrades)
+plot(strategy.opentrades)
+plot(strategy.wintrades)
+plot(strategy.losstrades)
+plot(strategy.eventrades)
+plot(strategy.max_drawdown)
+plot(strategy.max_runup)
+plot(strategy.initial_capital)
+plot(strategy.opentrades > 0 ? strategy.opentrades.entry_price(0) : na)
+plot(strategy.closedtrades > 0 ? strategy.closedtrades.exit_price(strategy.closedtrades - 1) : na)
+plot(strategy.closedtrades > 0 ? strategy.closedtrades.profit(strategy.closedtrades - 1) : na)
+plot(strategy.opentrades > 0 ? strategy.opentrades.entry_bar_index(0) : na)
+plot(strategy.default_entry_qty(close))
+plot(str.length(strategy.position_entry_name))

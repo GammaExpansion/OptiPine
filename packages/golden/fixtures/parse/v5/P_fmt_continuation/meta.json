@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_fmt_continuation",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "续行：全局 2 空格；块内 7 空格；三元/参数列表跨行",
+  "tags": [
+    "fmt"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 验证：全局与块内续行均编译通过"
+}

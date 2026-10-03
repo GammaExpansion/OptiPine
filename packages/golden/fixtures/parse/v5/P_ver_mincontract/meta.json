@@ -1,0 +1,40 @@
+{
+  "schema_version": 2,
+  "id": "P_ver_mincontract",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "Current TradingView v5 rejects syminfo.mincontract on line 3; successful v6 counterpart independently exported.",
+  "tags": [
+    "version",
+    "syminfo"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 3
+    }
+  },
+  "verified": true,
+  "notes": "Collector verbatim compile diagnostics retained in capture.compile_errors; no screenshot available. Minimal v5 probe and earlier original v5 strategy both report undeclared identifiers. Warning PINE_VERSION_OUTDATED is not the compile error. Original disputed strategy source is archived separately.",
+  "capture": {
+    "archive": ".golden/captures/fixture-migration-2026-09-16/parse/v5/P_ver_mincontract",
+    "archive_commit": "f33f245eeffec94176e31549c711c4a0471e4a55",
+    "files": {
+      "source.pine": "215804c32243c1bf18df06029a156451670f3ca4b5778ce7cde4b662b81223b2"
+    },
+    "compile_errors": {
+      "line": 3,
+      "messages": [
+        "Undeclared identifier 'syminfo'",
+        "Undeclared identifier 'syminfo.mincontract'"
+      ],
+      "evidence": "Collector verbatim editor text; no screenshot. The outdated-version message is a warning, not the failure."
+    }
+  }
+}

@@ -1,0 +1,40 @@
+//@version=5
+indicator("Language support probe r1")
+enum Average
+    sma = "Simple average"
+    ema = "Exponential average"
+    none
+selected = input.enum(Average.sma, "Average", options=[Average.sma, Average.ema])
+selectedCode = selected == Average.sma ? 1 : selected == Average.ema ? 2 : 3
+current = bar_index % 2 == 0 ? Average.sma : Average.ema
+identity(Average value) => value
+values = array.from(current, Average.none)
+plot(1, "revision")
+plot(bar_index, "probe_index")
+plot(selectedCode, "enum_input")
+plot(str.tostring(Average.sma) == "Simple average" ? 1 : 0, "enum_title")
+plot(str.tostring(Average.none) == "none" ? 1 : 0, "enum_untitled")
+plot(identity(current) == current ? 1 : 0, "enum_function")
+plot(values.get(0) == current ? 1 : 0, "enum_collection")
+plot(current[1] == Average.sma ? 1 : 0, "enum_history")
+m = matrix.new<float>(2, 2, 0.0)
+m.set(0, 0, 2.0)
+m.set(0, 1, 1.0)
+m.set(1, 0, 1.0)
+m.set(1, 1, 2.0)
+plot(m.eigenvalues().get(0), "symmetric_0")
+plot(m.eigenvalues().get(1), "symmetric_1")
+d = matrix.new<float>(3, 3, 0.0)
+d.set(0, 0, 4.0)
+d.set(1, 1, -2.0)
+d.set(2, 2, 1.0)
+plot(d.eigenvalues().get(0), "diagonal_0")
+plot(d.eigenvalues().get(1), "diagonal_1")
+plot(d.eigenvalues().get(2), "diagonal_2")
+n = matrix.new<float>(2, 2, 0.0)
+n.set(0, 0, 1.0)
+n.set(0, 1, 2.0)
+n.set(1, 0, 3.0)
+n.set(1, 1, 4.0)
+plot(n.eigenvalues().get(0), "nonsymmetric_0")
+plot(n.eigenvalues().get(1), "nonsymmetric_1")

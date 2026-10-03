@@ -1,0 +1,8 @@
+//@version=5
+indicator("P_fmt_args_named_positional", "PFA", true)
+plot(close, "close", color.red, 2)
+plot(open, title = "open", color = color.green, linewidth = 1)
+plot(series = high, title = "high")
+plot(low, color = color.blue, title = "low")
+ma = ta.sma(source = close, length = 10)
+plot(ma)

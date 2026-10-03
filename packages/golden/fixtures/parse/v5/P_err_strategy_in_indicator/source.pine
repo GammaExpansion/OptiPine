@@ -1,0 +1,5 @@
+//@version=5
+indicator("P_err_strategy_in_indicator")
+if close > open
+    strategy.entry("L", strategy.long)
+plot(close)

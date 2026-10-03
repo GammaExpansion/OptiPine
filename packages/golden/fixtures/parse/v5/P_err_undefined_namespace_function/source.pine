@@ -1,0 +1,3 @@
+//@version=5
+indicator("P_err_undefined_namespace_function")
+plot(ta.foo(close))

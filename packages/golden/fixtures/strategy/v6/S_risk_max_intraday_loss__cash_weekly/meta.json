@@ -1,0 +1,121 @@
+{
+  "schema_version": 2,
+  "id": "S_risk_max_intraday_loss__cash_weekly",
+  "kind": "strategy",
+  "pine_version": 6,
+  "description": "Weekly cash intraday loss 100: each chart bar is a risk period, including negative opening equity and recovery to positive equity.",
+  "tags": [
+    "broker",
+    "risk",
+    "native-r2",
+    "weekly"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BINANCE:BTCUSDT",
+    "timezone": "Etc/UTC",
+    "currency": "USDT",
+    "mintick": 0.01,
+    "pointvalue": 1,
+    "mincontract": 0.00001
+  },
+  "timeframe": "1W",
+  "chart_timezone": "Etc/UTC",
+  "inputs": {
+    "Mode: 0 control, 1 drawdown cash, 2 drawdown percent, 3 day loss cash, 4 day loss percent, 5 losing days": 3,
+    "Cash limit": 100,
+    "Percent limit": 1,
+    "Consecutive losing days": 2,
+    "Cycle bars": 4,
+    "Direction: 0 alternate, 1 long, -1 short": 0,
+    "Start": 1704067200000
+  },
+  "settings": {
+    "initial_capital": 10000,
+    "default_qty_type": "fixed",
+    "default_qty_value": 1,
+    "pyramiding": 0,
+    "commission_type": "percent",
+    "commission_value": 0,
+    "slippage": 0,
+    "margin_long": 0,
+    "margin_short": 0,
+    "calc_on_order_fills": false,
+    "calc_on_every_tick": false,
+    "process_orders_on_close": false,
+    "backtest_fill_limits_assumption": 0,
+    "currency": "NONE"
+  },
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-15T17:37:22Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "probe_revision",
+      "probe_mode",
+      "bar_index",
+      "active_index",
+      "daily_time",
+      "requested_side",
+      "position_size",
+      "position_avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closed_trades",
+      "open_trades",
+      "last_profit",
+      "last_entry_price",
+      "last_exit_price",
+      "last_entry_bar",
+      "last_exit_bar"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-15T17:37:46Z"
+  },
+  "verified": true,
+  "execution": {
+    "mode": "replay-selection",
+    "selected_at": "2025-01-06T00:00:00Z",
+    "paused": true,
+    "stepped": false
+  },
+  "notes": "Native revision 2 captured in TradingView on 2026-09-15, BINANCE:BTCUSDT 1W / UTC, Replay selected 2025-01-06 00:00 UTC and never stepped. Native paired CSVs are byte-identical, with 380 bars from 2017-09-25 to 2024-12-30 and bar_index starting at zero. Weekly bars and the Replay selection are UTC Monday boundaries; selection is exactly one week after the final market row, whose script columns remain blank with strategy close pending. Mode 3 is the sole nondefault input; source and effective settings are explicit. Native observations include negative opening equity disabling the cash threshold and later positive opening equity restoring it; the percentage bankruptcy rule is independent. All 217 numeric comparisons and strict provenance validation passed. No native data edits or comparison relaxation. mincontract uses independent market metadata provenance.",
+  "capture": {
+    "archive": ".golden/captures/fixture-migration-2026-09-16/strategy/v6/S_risk_max_intraday_loss__cash_weekly",
+    "archive_commit": "f33f245eeffec94176e31549c711c4a0471e4a55",
+    "files": {
+      "source.pine": "9f354d31066517981eacb783f32a03091b6462d4c874f0ecab266355fa81308d",
+      "data.csv": "28aa30a156a13406cff29cc924bf8d94d8e1bb8f966620b18a90c9eb42f4a88d",
+      "report.xlsx": "15ff106d834dc9e87cafbb82ab752a28845dc611743bfa3e9efb8950641e0c0f"
+    },
+    "paired_exports": {
+      "before": "2026-09-15T17:37:22Z",
+      "report": "2026-09-15T17:37:46Z",
+      "after": "2026-09-15T17:38:14Z",
+      "byte_identical": true
+    },
+    "source_revision": 2,
+    "market_inputs": {
+      "mincontract": {
+        "fixture": "indicator/v6/I_syminfo_mincontract",
+        "basis": "Independent native v6 metadata probe; see its capture.market_inputs for the separate 447-row measurement. Not inferred from strategy outputs."
+      }
+    }
+  }
+}

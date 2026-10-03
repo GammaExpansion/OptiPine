@@ -1,0 +1,71 @@
+{
+  "schema_version": 2,
+  "id": "I_eigen_complex",
+  "kind": "indicator",
+  "pine_version": 6,
+  "description": "A rotation matrix with a complex conjugate eigenvalue pair produces two zero real components in the native output.",
+  "tags": [
+    "matrix",
+    "eigenvalues",
+    "boundary"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BINANCE:BTCUSDT",
+    "ticker": "BTCUSDT",
+    "prefix": "BINANCE",
+    "type": "crypto",
+    "currency": "USDT",
+    "basecurrency": "BTC",
+    "timezone": "Etc/UTC"
+  },
+  "timeframe": "60",
+  "chart_timezone": "Etc/UTC",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-15T17:51:29Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "complex_0",
+      "complex_1"
+    ]
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": "Native v6 export from paused Replay; all 27,704 account-limited history rows include both outputs. This source has no index plot: complete history is established by the exact native OHLCV text matching I_eigen_boundaries, whose probe_index runs 0..27703. No output columns were added, and the strict index-requiring probe verifier was not used for this capture. Static ticker/currency/timezone metadata is inherited from I_language_support; the probe reads no syminfo, price-scale, quantity-step, or calendar field.",
+  "capture": {
+    "archive": ".golden/captures/fixture-migration-2026-09-16/indicator/v6/I_eigen_complex",
+    "archive_commit": "f33f245eeffec94176e31549c711c4a0471e4a55",
+    "files": {
+      "source.pine": "296905d4e3f76d4cb4522d12a72de3ace239bb9c35307dcd2e9710596110a3b8",
+      "data.csv": "af73aee256da19b51bca22dede6651a70f716b24f90e20889af1dce839596955"
+    },
+    "observation": {
+      "mode": "paused-replay",
+      "selected_at": "2024-03-01T00:00:00Z",
+      "rows": 27704,
+      "all_rows_have_indicator_output": true
+    },
+    "history_evidence": {
+      "fixture": "indicator/v6/I_eigen_boundaries",
+      "data_sha256": "c2569756ce22f31c0c7d7f65d5323d190d2eb6ed5fd302e80bf7f0506d2ca8f4",
+      "basis": "Exact native OHLCV column text matches every row of the independently indexed fixture.",
+      "first_probe_index": 0,
+      "last_probe_index": 27703,
+      "source_has_index_plot": false
+    }
+  }
+}

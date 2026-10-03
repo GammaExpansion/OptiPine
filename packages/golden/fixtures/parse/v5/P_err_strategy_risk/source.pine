@@ -1,0 +1,6 @@
+//@version=5
+strategy("P_err_strategy_risk")
+strategy.risk.max_drawdown(10, strategy.percent_of_equity)
+if close > open
+    strategy.entry("L", strategy.long)
+plot(strategy.position_size)

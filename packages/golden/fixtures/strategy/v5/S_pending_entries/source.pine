@@ -1,0 +1,86 @@
+//@version=5
+// 挂单进场的生命周期：limit/stop/stop-limit 放在市价上方/下方、挂着不重发直到成交、同 ID 改价、cancel、平仓后 exit 自动取消
+strategy("S_pending_entries", overlay = false,
+  initial_capital = 100000, currency = currency.NONE,
+  default_qty_type = strategy.fixed, default_qty_value = 1, pyramiding = 1,
+  commission_type = strategy.commission.percent, commission_value = 0, slippage = 0,
+  margin_long = 0, margin_short = 0, close_entries_rule = "FIFO",
+  process_orders_on_close = false, calc_on_order_fills = false, calc_on_every_tick = false,
+  backtest_fill_limits_assumption = 0, use_bar_magnifier = false, fill_orders_on_standard_ohlc = false)
+int cycleLen = 68
+int phase = bar_index % cycleLen
+int cycle = math.floor(bar_index / cycleLen)
+
+float pxM04 = close * (1 - 0.004)
+float pxP04 = close * (1 + 0.004)
+float pxP03 = close * (1 + 0.003)
+float pxP06 = close * (1 + 0.006)
+float pxM10 = close * (1 - 0.010)
+float pxM05 = close * (1 - 0.005)
+float pxM20 = close * (1 - 0.020)
+float pxP01 = close * (1 + 0.001)
+if phase == 0
+    strategy.entry("LimBuyBelow", strategy.long, limit = pxM04)          // 常规：低于市价的买入限价，等价格下来
+if phase == 8
+    strategy.close_all(comment = "c1")
+    strategy.cancel("LimBuyBelow")
+if phase == 10
+    strategy.entry("LimBuyAbove", strategy.long, limit = pxP04)          // 高于市价的买入限价：应像市价单下个 tick 成交
+if phase == 14
+    strategy.close_all(comment = "c2")
+    strategy.cancel("LimBuyAbove")
+if phase == 16
+    strategy.entry("StopBuyAbove", strategy.long, stop = pxP04)          // 常规：高于市价的买入止损，等价格上去
+    strategy.exit("GhostExit", "StopBuyAbove", stop = pxM20)             // 平仓后应被自动取消，后续不得再成交
+if phase == 24
+    strategy.close_all(comment = "c3")
+    strategy.cancel("StopBuyAbove")
+if phase == 26
+    strategy.entry("StopBuyBelow", strategy.long, stop = pxM04)          // 低于市价的买入止损：应立即触发
+if phase == 30
+    strategy.close_all(comment = "c4")
+    strategy.cancel("StopBuyBelow")
+if phase == 32
+    strategy.entry("StopLimit", strategy.long, stop = pxP03, limit = pxP06)   // stop-limit：触发后 limit 在上方
+if phase == 40
+    strategy.close_all(comment = "c5")
+    strategy.cancel("StopLimit")
+if phase == 42
+    strategy.entry("Mod", strategy.long, limit = pxM10)                  // 先挂 1% 下方
+if phase == 44
+    strategy.entry("Mod", strategy.long, limit = pxM05)                  // 同 ID 改价到 0.5% 下方
+if phase == 50
+    strategy.close_all(comment = "c6")
+    strategy.cancel("Mod")
+if phase == 52
+    strategy.entry("LimSellAbove", strategy.short, limit = pxP04)        // 常规：高于市价的卖出限价
+if phase == 58
+    strategy.close_all(comment = "c7")
+    strategy.cancel("LimSellAbove")
+if phase == 60
+    strategy.entry("StopLimitLow", strategy.long, stop = pxP03, limit = pxP01)   // stop-limit：limit 在 stop 之下，触发后等回撤
+if phase == 66
+    strategy.close_all(comment = "c8")
+    strategy.cancel("StopLimitLow")
+if phase == 67
+    strategy.cancel_all()
+plot(pxM04, "px_m0p4")
+plot(pxP04, "px_p0p4")
+plot(pxP03, "px_p0p3")
+plot(pxP06, "px_p0p6")
+plot(pxM10, "px_m1p0")
+plot(pxM05, "px_m0p5")
+plot(pxM20, "px_m2p0")
+plot(pxP01, "px_p0p1")
+
+// ---- 对齐列 ----
+plot(bar_index, "bar_index")
+plot(cycle, "cycle")
+plot(phase, "phase")
+plot(strategy.position_size, "pos")
+plot(strategy.position_avg_price, "avg_price")
+plot(strategy.equity, "equity")
+plot(strategy.openprofit, "openprofit")
+plot(strategy.netprofit, "netprofit")
+plot(strategy.closedtrades, "closedtrades")
+plot(strategy.opentrades, "opentrades")

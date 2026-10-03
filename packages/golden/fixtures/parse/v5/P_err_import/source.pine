@@ -1,0 +1,4 @@
+//@version=5
+indicator("P_err_import")
+import TradingView/ta/8 as tvta
+plot(close)

@@ -1,0 +1,4 @@
+//@version=5
+indicator("P_err_request_financial")
+rev = request.financial(syminfo.tickerid, "TOTAL_REVENUE", "FQ")
+plot(rev)

@@ -1,0 +1,4 @@
+//@version=5
+indicator("P_err_input_defval_series")
+len = input.int(bar_index)
+plot(len)

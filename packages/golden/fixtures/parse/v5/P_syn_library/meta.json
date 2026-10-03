@@ -1,0 +1,22 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_library",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "library 脚本：export 函数 / type / method（compile.json.kind 应为 library）",
+  "tags": [
+    "syn",
+    "library"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

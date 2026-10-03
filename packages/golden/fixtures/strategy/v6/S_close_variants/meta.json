@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "id": "S_close_variants",
+  "kind": "strategy",
+  "pine_version": 6,
+  "description": "平仓调用族：close(id) 默认 Signal 文案、带 comment、qty=4 与 qty_percent=50 的部分平仓、close_all 默认文案、immediately=true 的成交时点",
+  "tags": [
+    "micro",
+    "broker",
+    "close"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BATS:AAPL",
+    "ticker": "AAPL",
+    "prefix": "BATS",
+    "type": "stock",
+    "currency": "USD",
+    "basecurrency": "",
+    "timezone": "America/New_York",
+    "mintick": 0.01,
+    "pricescale": 100,
+    "minmove": 1,
+    "pointvalue": 1,
+    "session": "regular",
+    "session_hours": "0930-1600",
+    "mincontract": 1,
+    "description": "Apple Inc."
+  },
+  "timeframe": "60",
+  "chart_timezone": "America/Los_Angeles",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-04T08:27:21Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "bar_index",
+      "cycle",
+      "phase",
+      "pos",
+      "avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closedtrades",
+      "opentrades"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-04T08:27:58Z"
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": "若 immediately 参数编译失败，删除该行与其 if（phase 25），并告知"
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "id": "P_err_no_version",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "缺少 //@version：TradingView 按 v1 处理，indicator() 在 v1 中不存在，编译报错",
+  "tags": [
+    "err"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 1
+    }
+  },
+  "verified": false,
+  "notes": "脚本无版本声明，放在 v5 目录仅因目录必须二选一；错误行号按 TradingView v1 语义推断，尚未在 Pine Editor 重新确认。"
+}

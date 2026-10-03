@@ -1,0 +1,17 @@
+//@version=6
+indicator("P_syn_var_varip")
+var count = 0
+var float lastHigh = na
+varip int ticks = 0
+var string label1 = "x"
+var arr = array.new_float(0)
+count += 1
+ticks += 1
+if high > nz(lastHigh, 0)
+    lastHigh := high
+array.push(arr, close)
+plot(count)
+plot(lastHigh)
+plot(ticks)
+plot(array.size(arr))
+plot(str.length(label1))

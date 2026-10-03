@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "id": "P_err_float_as_int_length",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "series float 给 int 参数",
+  "tags": [
+    "err"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 3
+    }
+  },
+  "verified": true,
+  "notes": ""
+}

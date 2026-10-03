@@ -1,0 +1,2 @@
+indicator("P_err_no_version")
+plot(close)

@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "id": "P_err_wrong_arity",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "缺少必填参数（重载解析失败 → type）",
+  "tags": [
+    "err"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 3
+    }
+  },
+  "verified": true,
+  "notes": ""
+}

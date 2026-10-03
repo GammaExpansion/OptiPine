@@ -1,0 +1,22 @@
+{
+  "schema_version": 2,
+  "id": "P_err_import",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "import TradingView/ta/8 官方库：TradingView 正常编译通过",
+  "tags": [
+    "err",
+    "library"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": false,
+  "notes": "历史上曾按引擎策略标为 unsupported；现按 TradingView 行为记录，尚未在 Pine Editor 重新确认库版本 8 是否仍可解析。"
+}

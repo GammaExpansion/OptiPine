@@ -1,0 +1,19 @@
+//@version=5
+indicator("P_fmt_annotations")
+//@type A point in price/time
+//@field x bar index
+//@field y price
+type Point
+    int x
+    float y
+
+//@function Doubles a value
+//@param v value to double
+//@returns doubled value
+double(float v) =>
+    v * 2
+
+//@variable the last close doubled
+d = double(close)
+p = Point.new(bar_index, close)
+plot(d + p.y)

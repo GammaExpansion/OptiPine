@@ -1,0 +1,77 @@
+{
+  "schema_version": 2,
+  "id": "S_pending_entries",
+  "kind": "strategy",
+  "pine_version": 6,
+  "description": "挂单进场生命周期：limit/stop/stop-limit 在市价上下两侧的触发与成交规则、挂单持续到成交/cancel、同 ID 改价、平仓后 exit 自动取消、stop-limit 的 limit>stop 与 limit<stop 两种路径",
+  "tags": [
+    "micro",
+    "broker",
+    "pending"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BATS:AAPL",
+    "ticker": "AAPL",
+    "prefix": "BATS",
+    "type": "stock",
+    "currency": "USD",
+    "basecurrency": "",
+    "timezone": "America/New_York",
+    "mintick": 0.01,
+    "pricescale": 100,
+    "minmove": 1,
+    "pointvalue": 1,
+    "session": "regular",
+    "session_hours": "0930-1600",
+    "mincontract": 1,
+    "description": "Apple Inc."
+  },
+  "timeframe": "60",
+  "chart_timezone": "America/Los_Angeles",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-04T09:35:05Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "px_m0p4",
+      "px_p0p4",
+      "px_p0p3",
+      "px_p0p6",
+      "px_m1p0",
+      "px_m0p5",
+      "px_m2p0",
+      "px_p0p1",
+      "bar_index",
+      "cycle",
+      "phase",
+      "pos",
+      "avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closedtrades",
+      "opentrades"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-04T09:35:41Z"
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": "每个 cycle 68 根：8 个子场景，各自 close_all + cancel 收尾；StopLimit(limit>stop) 与 StopLimitLow(limit<stop) 共用 px_p0p3 作 stop"
+}

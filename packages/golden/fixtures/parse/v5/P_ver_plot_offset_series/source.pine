@@ -1,0 +1,3 @@
+//@version=5
+indicator("P_ver_plot_offset_series")
+plot(close, offset = bar_index % 5)

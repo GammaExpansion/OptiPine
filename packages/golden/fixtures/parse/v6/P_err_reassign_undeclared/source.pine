@@ -1,0 +1,4 @@
+//@version=6
+indicator("P_err_reassign_undeclared")
+x := 5
+plot(x)

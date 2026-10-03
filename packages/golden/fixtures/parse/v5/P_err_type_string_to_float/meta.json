@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "id": "P_err_type_string_to_float",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "字符串赋给 float",
+  "tags": [
+    "err"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 3
+    }
+  },
+  "verified": true,
+  "notes": ""
+}

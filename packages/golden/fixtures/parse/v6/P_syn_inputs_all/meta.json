@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_inputs_all",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "全部 input.* 及 minval/maxval/step/options/tooltip/inline/group/confirm/display",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

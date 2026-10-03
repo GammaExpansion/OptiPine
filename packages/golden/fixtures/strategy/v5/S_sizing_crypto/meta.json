@@ -1,0 +1,108 @@
+{
+  "schema_version": 2,
+  "id": "S_sizing_crypto",
+  "kind": "strategy",
+  "pine_version": 5,
+  "description": "crypto v5 r2：percent_of_equity 小数数量、显式 0.0123456 舍入、低于最小单位的订单；mincontract 仅为独立市场输入，v5 不提供该标识符。",
+  "tags": [
+    "micro",
+    "broker",
+    "sizing",
+    "crypto"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BINANCE:BTCUSDT",
+    "ticker": "BTCUSDT",
+    "prefix": "BINANCE",
+    "type": "crypto",
+    "currency": "USDT",
+    "basecurrency": "BTC",
+    "timezone": "Etc/UTC",
+    "mintick": 0.01,
+    "pricescale": 100,
+    "minmove": 1,
+    "pointvalue": 1,
+    "session": "regular",
+    "session_hours": "0000-0000:1234567",
+    "mincontract": 0.00001,
+    "description": "Bitcoin / TetherUS"
+  },
+  "timeframe": "60",
+  "chart_timezone": "Etc/UTC",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-12T23:02:46Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "default_entry_qty_close",
+      "syminfo_mintick",
+      "bar_index",
+      "cycle",
+      "phase",
+      "pos",
+      "avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closedtrades",
+      "opentrades"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-12T23:03:35Z"
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": "Native v5 r2 capture: exactly the unavailable mincontract plot removed; all orders and remaining plots unchanged. Exact private v5 source confirmed. Paired CSV exports bracket report; Replay selected at 2026-09-04 00:00 UTC, paused without advancement. Symbol/tick/currency/point value/settings from Properties; quantity step from independent 447-row v6 probe, never this fixture expected outputs. Old source/version attribution retained in Git and archive.",
+  "execution": {
+    "mode": "replay-selection",
+    "selected_at": "2026-09-04T00:00:00Z",
+    "paused": true,
+    "stepped": false
+  },
+  "capture": {
+    "archive": ".golden/captures/fixture-migration-2026-09-16/strategy/v5/S_sizing_crypto",
+    "archive_commit": "f33f245eeffec94176e31549c711c4a0471e4a55",
+    "files": {
+      "source.pine": "ed25ffc6d9e9043eb0d2eb4d8361ca30d39fda2bb7fdebce7ae7b48f2634733a",
+      "data.csv": "e2a25d76aac90b8aecaaeba5c83b5a1f2a939a4bf9d58b9bfe060fb4ef20bebd",
+      "report.xlsx": "eada08a8bcd19962a890d99012669a2c2b418fcbbbb32d191a828cde8193d3d0"
+    },
+    "paired_exports": {
+      "before": "2026-09-12T23:02:46Z",
+      "report": "2026-09-12T23:03:35Z",
+      "after": "2026-09-12T23:04:24Z",
+      "byte_identical": true
+    },
+    "market_inputs": {
+      "mincontract": {
+        "archive": ".golden/captures/manual-2026-09-12-followup/03-mincontract-v6",
+        "source_sha256": "5f3450787feab64f18793dab55f2a33ce8b860622d63e54523054058b81c4b3a",
+        "data_sha256": "3d8ad76a941352b82b15c9eee6651de20231d29cb8a9704a159c8dfe2d624932",
+        "rows": 447,
+        "observed_value": 0.00001,
+        "basis": "Independent v6 metadata probe; not derived from strategy expected outputs."
+      }
+    },
+    "replaces": {
+      "commit": "db3d86da3660e787af97caf78ebc1712ab8cd80b",
+      "path": "tests/strategy/v5/S_sizing_crypto",
+      "reason": "Explicit source/version attribution correction and stable paired native measurement; old v5 successful mincontract assertion is invalid for the current compiler, separately covered by a v6 indicator and v5 compile-error probe."
+    }
+  }
+}

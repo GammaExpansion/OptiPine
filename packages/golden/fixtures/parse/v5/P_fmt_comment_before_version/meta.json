@@ -1,0 +1,22 @@
+{
+  "schema_version": 2,
+  "id": "P_fmt_comment_before_version",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "//@version 前有许可注释和空行（社区脚本标准头）",
+  "tags": [
+    "fmt",
+    "community-shape"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": "validator 的“首行 //@version”规则应改为“第一个非空非注释行”"
+}

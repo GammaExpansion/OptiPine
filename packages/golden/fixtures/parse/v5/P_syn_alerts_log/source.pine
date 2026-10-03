@@ -1,0 +1,13 @@
+//@version=5
+indicator("P_syn_alerts_log")
+cond = ta.crossover(close, ta.sma(close, 20))
+alertcondition(cond, "Cross up", "Price crossed above SMA")
+if cond
+    alert("crossed " + str.tostring(close), alert.freq_once_per_bar)
+if barstate.islastconfirmedhistory
+    log.info("last confirmed bar {0}", bar_index)
+    log.warning("warn")
+    log.error("err")
+if bar_index < 0
+    runtime.error("never")
+plot(cond ? 1 : 0)

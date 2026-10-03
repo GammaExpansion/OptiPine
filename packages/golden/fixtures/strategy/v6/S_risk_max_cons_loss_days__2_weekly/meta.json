@@ -1,0 +1,121 @@
+{
+  "schema_version": 2,
+  "id": "S_risk_max_cons_loss_days__2_weekly",
+  "kind": "strategy",
+  "pine_version": 6,
+  "description": "Weekly consecutive losing days with unrealized losses and a simultaneous full-size scheduled close/native risk order that opens a reverse position.",
+  "tags": [
+    "broker",
+    "risk",
+    "native-r2",
+    "weekly"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BINANCE:BTCUSDT",
+    "timezone": "Etc/UTC",
+    "currency": "USDT",
+    "mintick": 0.01,
+    "pointvalue": 1,
+    "mincontract": 0.00001
+  },
+  "timeframe": "1W",
+  "chart_timezone": "Etc/UTC",
+  "inputs": {
+    "Mode: 0 control, 1 drawdown cash, 2 drawdown percent, 3 day loss cash, 4 day loss percent, 5 losing days": 5,
+    "Cash limit": 100,
+    "Percent limit": 1,
+    "Consecutive losing days": 2,
+    "Cycle bars": 4,
+    "Direction: 0 alternate, 1 long, -1 short": 0,
+    "Start": 1704067200000
+  },
+  "settings": {
+    "initial_capital": 10000,
+    "default_qty_type": "fixed",
+    "default_qty_value": 1,
+    "pyramiding": 0,
+    "commission_type": "percent",
+    "commission_value": 0,
+    "slippage": 0,
+    "margin_long": 0,
+    "margin_short": 0,
+    "calc_on_order_fills": false,
+    "calc_on_every_tick": false,
+    "process_orders_on_close": false,
+    "backtest_fill_limits_assumption": 0,
+    "currency": "NONE"
+  },
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-15T17:39:34Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "probe_revision",
+      "probe_mode",
+      "bar_index",
+      "active_index",
+      "daily_time",
+      "requested_side",
+      "position_size",
+      "position_avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closed_trades",
+      "open_trades",
+      "last_profit",
+      "last_entry_price",
+      "last_exit_price",
+      "last_entry_bar",
+      "last_exit_bar"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-15T17:39:47Z"
+  },
+  "verified": true,
+  "execution": {
+    "mode": "replay-selection",
+    "selected_at": "2025-01-06T00:00:00Z",
+    "paused": true,
+    "stepped": false
+  },
+  "notes": "Native revision 2 compiles and runs on BINANCE:BTCUSDT 1W / UTC. Replay selected 2025-01-06 00:00 UTC, paused and never stepped. Both native CSVs bracket the report and are byte-identical: 380 bars from 2017-09-25 to 2024-12-30, bar_index starts at zero, final pending Replay outputs left blank. Mode 5 is the sole nondefault input; all source inputs and effective settings are explicit. The engine now reproduces the observed losses while the position remains open across weeks, followed by a full-size scheduled close and risk close at the same opening price, leaving a short position after the halt. All 217 strict series, trade and report checks passed on 2026-09-16 with the original native evidence and comparisons unchanged. Separate full-close and partial-close isolation captures now confirm the fixed risk quantity; fill callbacks and simultaneous risk-rule priority still lack separate native verification. mincontract uses independent native metadata provenance.",
+  "capture": {
+    "archive": ".golden/captures/fixture-migration-2026-09-16/strategy/v6/S_risk_max_cons_loss_days__2_weekly",
+    "archive_commit": "f33f245eeffec94176e31549c711c4a0471e4a55",
+    "files": {
+      "source.pine": "9f354d31066517981eacb783f32a03091b6462d4c874f0ecab266355fa81308d",
+      "data.csv": "b6cc944e6304ea66c9227a1477164203558649b4e08b2b4f8aa75683df07e249",
+      "report.xlsx": "4455b484b1e057634b19c399b0a755ccf8a8b8128f0a6f8f0ebc3aee7219ccdd"
+    },
+    "paired_exports": {
+      "before": "2026-09-15T17:39:34Z",
+      "report": "2026-09-15T17:39:47Z",
+      "after": "2026-09-15T17:40:16Z",
+      "byte_identical": true
+    },
+    "source_revision": 2,
+    "market_inputs": {
+      "mincontract": {
+        "fixture": "indicator/v6/I_syminfo_mincontract",
+        "basis": "Independent native v6 metadata probe; see its capture.market_inputs for the separate 447-row measurement. Not inferred from strategy outputs."
+      }
+    }
+  }
+}

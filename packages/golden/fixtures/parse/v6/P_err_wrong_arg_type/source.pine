@@ -1,0 +1,4 @@
+//@version=6
+indicator("P_err_wrong_arg_type")
+ma = ta.sma("close", 10)
+plot(ma)

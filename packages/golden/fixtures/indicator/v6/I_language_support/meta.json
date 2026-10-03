@@ -1,0 +1,83 @@
+{
+  "schema_version": 2,
+  "id": "I_language_support",
+  "kind": "indicator",
+  "pine_version": 6,
+  "description": "Enum identity, input selection, display titles, function/collection/history values, and chained symmetric/nonsymmetric eigenvalue results.",
+  "tags": [
+    "language",
+    "enum",
+    "inputs",
+    "matrix"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BINANCE:BTCUSDT",
+    "ticker": "BTCUSDT",
+    "prefix": "BINANCE",
+    "type": "crypto",
+    "currency": "USDT",
+    "basecurrency": "BTC",
+    "timezone": "Etc/UTC"
+  },
+  "timeframe": "60",
+  "chart_timezone": "Etc/UTC",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-15T10:37:39Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "revision",
+      "probe_index",
+      "enum_input",
+      "enum_title",
+      "enum_untitled",
+      "enum_function",
+      "enum_collection",
+      "enum_history",
+      "symmetric_0",
+      "symmetric_1",
+      "diagonal_0",
+      "diagonal_1",
+      "diagonal_2",
+      "nonsymmetric_0",
+      "nonsymmetric_1"
+    ]
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": "Native v6 export from paused Replay; complete account-limited history starts at probe_index 0. All 15 indicator outputs include the last Replay bar. Feed timestamp gaps are preserved. Static ticker/currency/timezone metadata is inherited from indicator/v6/M_time__btcusdt_60 and agrees with capture notes; this probe reads no syminfo field, quantity step, price scale, or calendar. Input override is the exact UI display title.",
+  "capture": {
+    "archive": ".golden/captures/fixture-migration-2026-09-16/indicator/v6/I_language_support",
+    "archive_commit": "f33f245eeffec94176e31549c711c4a0471e4a55",
+    "files": {
+      "source.pine": "b9b88bbcbd2d769e997349d7bc607c13ff0bdef20b2a7c2386b5b026752f9c2a",
+      "data.csv": "3ba82c138e379a167eb52bb2f1793e5f10ac789e32ff1edad8ceffba4ae38a61"
+    },
+    "observation": {
+      "mode": "paused-replay",
+      "selected_at": "2024-03-01T00:00:00Z",
+      "rows": 27704,
+      "first_probe_index": 0,
+      "last_probe_index": 27703,
+      "all_rows_have_indicator_output": true
+    },
+    "input_evidence": {
+      "basis": "Exact enum title selected in native Inputs UI; each Pine version compiled and exported independently.",
+      "related_fixture": "indicator/v6/I_language_support__enum_override"
+    }
+  }
+}

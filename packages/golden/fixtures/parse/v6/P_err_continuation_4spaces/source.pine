@@ -1,0 +1,5 @@
+//@version=6
+indicator("P_err_continuation_4spaces")
+x = math.max(close,
+    open)
+plot(x)

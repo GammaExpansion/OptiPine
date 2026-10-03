@@ -1,0 +1,25 @@
+//@version=5
+indicator("P_syn_types_explicit")
+int i = 1
+float f = 1.5
+bool b = true
+string s = "s"
+color c = color.red
+int[] ia = array.new_int(0)
+array<float> fa = array.new<float>(0)
+matrix<float> m = matrix.new<float>(2, 2, 0.0)
+map<string, float> mp = map.new<string, float>()
+line ln = na
+label lb = na
+box bx = na
+table tb = na
+float nf = na
+int ni = na
+string ns = na
+color nc = na
+plot(i + f + (b ? 1 : 0) + str.length(s) + array.size(ia) + array.size(fa) + matrix.rows(m) + map.size(mp))
+plot(nf)
+plot(ni)
+plot(str.length(ns))
+plot(close, color = c)
+plot(open, color = nc)

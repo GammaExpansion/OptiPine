@@ -1,0 +1,5 @@
+//@version=5
+indicator("P_err_input_in_function")
+f() =>
+    input.int(5)
+plot(f())

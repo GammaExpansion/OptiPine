@@ -1,0 +1,64 @@
+{
+  "schema_version": 2,
+  "id": "I_drawing_presence",
+  "kind": "indicator",
+  "pine_version": 6,
+  "description": "Drawing ID presence, lifecycle and method receiver dispatch.",
+  "tags": [
+    "language",
+    "community-regression"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BINANCE:BTCUSDT",
+    "timezone": "Etc/UTC",
+    "currency": "USDT"
+  },
+  "timeframe": "60",
+  "chart_timezone": "Etc/UTC",
+  "inputs": {},
+  "verified": true,
+  "notes": "Exact v6 source independently compiled and ran on TradingView standard BINANCE:BTCUSDT 60 candles, paused Replay selected 2025-02-01 00:00 UTC without stepping. Left edge rechecked; native probe_index 0..27045 is contiguous. Native Visual order > Bring to front placed Volume before probe columns; source/settings and downloaded bytes unchanged. Earlier column-order attempt retained only in archive. This validates drawing ID presence/lifecycle series, not rendering or geometric getters. Exported timestamp records download completion; click-time window is archived. Full native series match the engine under the existing comparison rules.",
+  "capture": {
+    "archive": ".golden/captures/community-language-2026-09-19/I_drawing_presence",
+    "files": {
+      "source.pine": "4df9d4a71e78390801d28fccf0ca10929b7bf8312b1885b3e9b9c90c7c62a1b2",
+      "data.csv": "2244c786aa2957864dac24e97675ccc7008ddf6ae39eeb8aa3b4461004259c66"
+    },
+    "observation": {
+      "mode": "paused-replay",
+      "selected_at": "2025-02-01T00:00:00Z",
+      "rows": 27046,
+      "first_bar": 1640995200,
+      "last_bar": 1738364400,
+      "first_probe_index": 0,
+      "last_probe_index": 27045,
+      "full_history_confirmed": true
+    }
+  },
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-20T03:05:44.771Z",
+    "plan": "unrecorded",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "probe_index",
+      "missing_before",
+      "present_after_creation",
+      "missing_after_reset",
+      "creations"
+    ]
+  }
+}

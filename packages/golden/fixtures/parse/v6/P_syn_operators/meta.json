@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_operators",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "算术/比较/逻辑/三元/一元负号/括号表达式与函数结果的 []",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

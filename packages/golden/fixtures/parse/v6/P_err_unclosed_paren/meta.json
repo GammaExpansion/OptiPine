@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "id": "P_err_unclosed_paren",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "括号未闭合",
+  "tags": [
+    "err"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 3
+    }
+  },
+  "verified": true,
+  "notes": ""
+}

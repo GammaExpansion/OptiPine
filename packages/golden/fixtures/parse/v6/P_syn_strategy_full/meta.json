@@ -1,0 +1,22 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_strategy_full",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "strategy() 全参数、entry/exit/order/close/close_all/cancel/cancel_all 全参数、strategy.* 访问器",
+  "tags": [
+    "syn",
+    "strategy"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 验证：完整 strategy API 脚本编译通过"
+}

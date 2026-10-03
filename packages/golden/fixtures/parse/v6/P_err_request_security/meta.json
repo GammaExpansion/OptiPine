@@ -1,0 +1,40 @@
+{
+  "schema_version": 2,
+  "id": "P_err_request_security",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "request.security 跨周期请求：TradingView 正常编译通过",
+  "tags": [
+    "err"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": "2026-09-16 在 TradingView Pine Editor 独立确认原版本源码编译通过；编辑器回读逐行一致（文件末尾换行除外）。仅记录编译结果，不验证请求数据或策略的运行输出。",
+  "capture": {
+    "archive": ".golden/captures/parse-confirmation-2026-09-16/parse/v6/P_err_request_security",
+    "files": {
+      "source.pine": "92ff189afad9d94c47a3621cdae7b3a054deb412f2228074e932d5fbb0fad3c0"
+    },
+    "compiler": {
+      "observed_on": "2026-09-16",
+      "observed_at": "2026-09-16T09:19:55.759Z",
+      "pine_version": 6,
+      "result": "ok",
+      "saved_script": "parse-20260916-v6-security",
+      "success_log": "2:19:48 AM Added to chart.",
+      "warnings": []
+    },
+    "source_check": "Editor clipboard readback matches source after LF normalization and omitting the terminal newline.",
+    "observations": [
+      "Initial wrong-focus paste was corrected and source read back before save/compilation. Native log confirmed Compiled and Added to chart; runtime pane output was not confirmed."
+    ]
+  }
+}

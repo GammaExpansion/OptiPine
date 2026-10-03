@@ -1,0 +1,120 @@
+{
+  "schema_version": 2,
+  "id": "S_risk_max_intraday_loss__percent",
+  "kind": "strategy",
+  "pine_version": 6,
+  "description": "Percent intraday loss 1: losses from session-opening equity close the position and halt until the next session; intraday profits offset later floating losses.",
+  "tags": [
+    "broker",
+    "risk",
+    "native-r2"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BINANCE:BTCUSDT",
+    "timezone": "Etc/UTC",
+    "currency": "USDT",
+    "mintick": 0.01,
+    "pointvalue": 1,
+    "mincontract": 0.00001
+  },
+  "timeframe": "60",
+  "chart_timezone": "Etc/UTC",
+  "inputs": {
+    "Mode: 0 control, 1 drawdown cash, 2 drawdown percent, 3 day loss cash, 4 day loss percent, 5 losing days": 4,
+    "Cash limit": 100,
+    "Percent limit": 1,
+    "Consecutive losing days": 2,
+    "Cycle bars": 4,
+    "Direction: 0 alternate, 1 long, -1 short": 0,
+    "Start": 1704067200000
+  },
+  "settings": {
+    "initial_capital": 10000,
+    "default_qty_type": "fixed",
+    "default_qty_value": 1,
+    "pyramiding": 0,
+    "commission_type": "percent",
+    "commission_value": 0,
+    "slippage": 0,
+    "margin_long": 0,
+    "margin_short": 0,
+    "calc_on_order_fills": false,
+    "calc_on_every_tick": false,
+    "process_orders_on_close": false,
+    "backtest_fill_limits_assumption": 0,
+    "currency": "NONE"
+  },
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-15T17:24:17Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "probe_revision",
+      "probe_mode",
+      "bar_index",
+      "active_index",
+      "daily_time",
+      "requested_side",
+      "position_size",
+      "position_avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closed_trades",
+      "open_trades",
+      "last_profit",
+      "last_entry_price",
+      "last_exit_price",
+      "last_entry_bar",
+      "last_exit_bar"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-15T17:24:32Z"
+  },
+  "verified": true,
+  "execution": {
+    "mode": "replay-selection",
+    "selected_at": "2024-03-01T00:00:00Z",
+    "paused": true,
+    "stepped": false
+  },
+  "notes": "Native revision 2 captured in TradingView on 2026-09-15, BINANCE:BTCUSDT 60 / UTC, Replay selected 2024-03-01 00:00 UTC and never stepped. CSV exports bracketing the report are byte-identical. Full 27704-bar native export begins at bar_index 0; final market row retained with strategy close pending. All source inputs and effective settings are explicit. Strict verification of paired exports, source provenance, all series, trades and report metrics passed. No numeric cleanup or comparison relaxation. mincontract is independent market metadata from I_syminfo_mincontract / S_sizing_crypto capture provenance.",
+  "capture": {
+    "archive": ".golden/captures/fixture-migration-2026-09-16/strategy/v6/S_risk_max_intraday_loss__percent",
+    "archive_commit": "f33f245eeffec94176e31549c711c4a0471e4a55",
+    "files": {
+      "source.pine": "9f354d31066517981eacb783f32a03091b6462d4c874f0ecab266355fa81308d",
+      "data.csv": "f7959454212e7a2b97eadf961d2dc808eb88dcb5c686919d1b4981f0b905bc29",
+      "report.xlsx": "af87f8dcc54bf9e1eedd5216af408abdf146f628dbb97065a08b7704d62b7ef2"
+    },
+    "paired_exports": {
+      "before": "2026-09-15T17:24:17Z",
+      "report": "2026-09-15T17:24:32Z",
+      "after": "2026-09-15T17:25:01Z",
+      "byte_identical": true
+    },
+    "source_revision": 2,
+    "market_inputs": {
+      "mincontract": {
+        "fixture": "indicator/v6/I_syminfo_mincontract",
+        "basis": "Independent native v6 metadata probe; see its capture.market_inputs for the separate 447-row measurement. Not inferred from strategy outputs."
+      }
+    }
+  }
+}

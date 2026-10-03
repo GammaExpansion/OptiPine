@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_strings",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "str.* 主要 API（含正则、format、format_time）",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_if_else",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "if / else if / else 作为表达式和语句、嵌套、返回字符串",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

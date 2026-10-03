@@ -1,0 +1,28 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_int_division",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "A nonconstant integer quotient can initialize an explicitly declared int without an implicit truncating cast.",
+  "tags": ["language", "types", "division"],
+  "source": { "origin": "micro", "author": "", "license": "", "url": "" },
+  "expect": { "compile": "ok" },
+  "verified": true,
+  "notes": "Exact four-line source compiled in a fresh unsaved TradingView Pine v6 indicator. No Bar Magnifier or secondary market data is needed. This fixture gates compilation only; the chart legend observation is not a CSV golden series. The indicator title was neutralized after capture; the compiled expression is unchanged.",
+  "capture": {
+    "compiler": {
+      "observed_on": "2026-09-21",
+      "pine_version": 6,
+      "result": "ok",
+      "warnings": []
+    },
+    "method": "Browser capture: independent temporary indicator, source entered through Pine Editor and compiled on BINANCE:BTCUSDT 60. No published strategy artifact reused.",
+    "observations": [
+      "With 3600 seconds per bar, the chart legend displayed 59.02 for division by integer literal 61.",
+      "The same expression inside a called function compiled and displayed 59.02; divisor 7 displayed 514.29.",
+      "Explicit int(timeframe.in_seconds(timeframe.period) / 61) compiled and displayed 59.00.",
+      "Control int x = 1.5 failed: Cannot assign a value of the const float type to the x variable. The variable is declared with the const int type. (CE10173)"
+    ],
+    "limitations": ["Compile-only fixture: no chart CSV or strategy XLSX was exported."]
+  }
+}

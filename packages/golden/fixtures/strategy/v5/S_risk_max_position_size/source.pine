@@ -1,0 +1,40 @@
+//@version=5
+// strategy.risk.max_position_size(25)：40 股 entry 被截到 25；已满仓时的第二笔 entry 与 order 的处理；空头同样受限
+strategy("S_risk_max_position_size", overlay = false,
+  initial_capital = 100000, currency = currency.NONE,
+  default_qty_type = strategy.fixed, default_qty_value = 40, pyramiding = 2,
+  commission_type = strategy.commission.percent, commission_value = 0, slippage = 0,
+  margin_long = 0, margin_short = 0, close_entries_rule = "FIFO",
+  process_orders_on_close = false, calc_on_order_fills = false, calc_on_every_tick = false,
+  backtest_fill_limits_assumption = 0, use_bar_magnifier = false, fill_orders_on_standard_ohlc = false)
+strategy.risk.max_position_size(25)
+int cycleLen = 20
+int phase = bar_index % cycleLen
+int cycle = math.floor(bar_index / cycleLen)
+
+if phase == 0
+    strategy.entry("L1", strategy.long)                       // 40 → 25
+if phase == 3
+    strategy.entry("L2", strategy.long)                       // 已 25：被拒绝还是截到 0
+if phase == 6
+    strategy.order("O1", strategy.long, qty = 10)             // order 是否同样受限
+if phase == 10
+    strategy.close_all(comment = "c1")
+if phase == 12
+    strategy.entry("S1", strategy.short)                      // 空头 40 → 25
+if phase == 16
+    strategy.close_all(comment = "c2")
+if phase == 19
+    strategy.cancel_all()
+
+// ---- 对齐列 ----
+plot(bar_index, "bar_index")
+plot(cycle, "cycle")
+plot(phase, "phase")
+plot(strategy.position_size, "pos")
+plot(strategy.position_avg_price, "avg_price")
+plot(strategy.equity, "equity")
+plot(strategy.openprofit, "openprofit")
+plot(strategy.netprofit, "netprofit")
+plot(strategy.closedtrades, "closedtrades")
+plot(strategy.opentrades, "opentrades")

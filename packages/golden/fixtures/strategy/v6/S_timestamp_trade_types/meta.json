@@ -1,0 +1,108 @@
+{
+  "schema_version": 2,
+  "id": "S_timestamp_trade_types",
+  "kind": "strategy",
+  "pine_version": 6,
+  "description": "Timestamp string inputs, trade accessor types and date-gated orders.",
+  "tags": [
+    "language",
+    "community-regression"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BINANCE:BTCUSDT",
+    "timezone": "Etc/UTC",
+    "currency": "USDT",
+    "mintick": 0.01,
+    "pointvalue": 1,
+    "mincontract": 0.00001
+  },
+  "timeframe": "60",
+  "chart_timezone": "Etc/UTC",
+  "inputs": {},
+  "verified": true,
+  "notes": "Exact v6 source independently compiled and ran on TradingView standard BINANCE:BTCUSDT 60 candles with source default inputs/settings, no Bar Magnifier or Deep Backtesting. Full loaded history confirmed by leftward pans and native probe_index 0..27044, followed by the paused Replay boundary row with all 11 script outputs blank; raw final row retained. Paused selection 2025-02-01 00:00 UTC, never played or stepped. Native CSV-before and CSV-after are byte-identical around XLSX export. XLSX Properties confirms Backtesting range Jan 1, 2022, 00:00 through Jan 31, 2025, 23:00, exactly matching CSV; the UI range control displayed Dec 31, 2021 and is recorded separately without adjustment. Report has 3758 closed trades and -14156.20 USDT net profit. Tick/point value are explicit native report inputs; quantity step comes from an independent metadata probe. Exported timestamps record download completion; UI click windows and canvas rendering limitations remain in the archive. Full native series, trades and report metrics match the engine under the existing comparison rules.",
+  "capture": {
+    "archive": ".golden/captures/community-language-2026-09-19/S_timestamp_trade_types",
+    "files": {
+      "source.pine": "9f8b442c6b73d2dd84026d91ff28dc8dacd42d56abad293d4a3fd7b1209332c1",
+      "data.csv": "703701040b05bfc85741405411b7f2e8956091b00d7260d7fd974899f4091cf5",
+      "report.xlsx": "60e654c24dfd1b60e69713691ed506d5e8028e87d404d7f8ad6a1780684f9457"
+    },
+    "observation": {
+      "mode": "paused-replay",
+      "selected_at": "2025-02-01T00:00:00Z",
+      "rows": 27046,
+      "first_bar": 1640995200,
+      "last_bar": 1738364400,
+      "first_probe_index": 0,
+      "last_probe_index": null,
+      "full_history_confirmed": true
+    },
+    "paired_exports": {
+      "before": "2026-09-20T04:11:25.481Z",
+      "report": "2026-09-20T04:12:29.007Z",
+      "after": "2026-09-20T04:13:01.763Z",
+      "byte_identical": true
+    },
+    "market_inputs": {
+      "mincontract": {
+        "archive": ".golden/captures/manual-2026-09-12-followup/03-mincontract-v6",
+        "source_sha256": "5f3450787feab64f18793dab55f2a33ce8b860622d63e54523054058b81c4b3a",
+        "data_sha256": "3d8ad76a941352b82b15c9eee6651de20231d29cb8a9704a159c8dfe2d624932",
+        "rows": 447,
+        "observed_value": 0.00001,
+        "basis": "Independent v6 metadata probe; not derived from strategy expected outputs."
+      },
+      "mintick": {
+        "basis": "Native report.xlsx Properties: Tick size",
+        "value": 0.01
+      },
+      "pointvalue": {
+        "basis": "Native report.xlsx Properties: Point value",
+        "value": 1
+      }
+    }
+  },
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-20T04:11:25.481Z",
+    "plan": "unrecorded",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "probe_index",
+      "start_ms",
+      "finish_ms",
+      "explicit_zone_difference",
+      "in_range",
+      "entry_bar",
+      "entry_time",
+      "entry_id_length",
+      "last_signal_bar",
+      "position",
+      "netprofit"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-20T04:12:29.007Z"
+  },
+  "execution": {
+    "mode": "replay-selection",
+    "selected_at": "2025-02-01T00:00:00Z",
+    "paused": true,
+    "stepped": false
+  }
+}

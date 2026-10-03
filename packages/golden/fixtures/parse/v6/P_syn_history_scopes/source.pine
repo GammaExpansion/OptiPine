@@ -1,0 +1,26 @@
+//@version=6
+indicator("P_syn_history_scopes")
+f(src) =>
+    diff = src - src[1]
+    prevDiff = diff[1]
+    [diff, prevDiff]
+[d1, d2] = f(close)
+[d3, d4] = f(open)
+g() =>
+    var calls = 0
+    calls += 1
+    calls
+c1 = g()
+c2 = g()
+x = 0.0
+if close > open
+    localVar = high - low
+    x := localVar + nz(localVar[1])
+else
+    localVar = open - close
+    x := localVar
+for i = 1 to 3
+    x += close[i] - close[i + 1]
+plot(d1 + d2 + d3 + d4)
+plot(c1 + c2)
+plot(x)

@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "id": "P_err_two_declarations",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "同时有 indicator() 和 strategy()",
+  "tags": [
+    "err"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 1
+    }
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 验证：v5 错误定位到版本指令第 1 行"
+}

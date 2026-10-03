@@ -1,0 +1,7 @@
+//@version=6
+indicator("Community plot styles r1")
+
+plot(bar_index, "probe_index")
+plot(close, "solid", linestyle=plot.linestyle_solid)
+plot(close, "dashed", linestyle=plot.linestyle_dashed)
+plot(close, "dotted", linestyle=plot.linestyle_dotted)

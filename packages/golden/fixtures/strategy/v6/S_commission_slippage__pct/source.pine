@@ -1,0 +1,46 @@
+//@version=6
+// 同一 source，用 Properties 面板改 Commission / Slippage 导出多份：市价与 stop 吃滑点、limit 不吃；三种佣金类型的计费基数；进出各收一次
+strategy("S_commission_slippage", overlay = false,
+  initial_capital = 100000, currency = currency.NONE,
+  default_qty_type = strategy.fixed, default_qty_value = 10, pyramiding = 1,
+  commission_type = strategy.commission.percent, commission_value = 0, slippage = 0,
+  margin_long = 0, margin_short = 0, close_entries_rule = "FIFO",
+  process_orders_on_close = false, calc_on_order_fills = false, calc_on_every_tick = false,
+  backtest_fill_limits_assumption = 0, use_bar_magnifier = false, fill_orders_on_standard_ohlc = false)
+int cycleLen = 20
+int phase = bar_index % cycleLen
+int cycle = math.floor(bar_index / cycleLen)
+
+float stopL  = close * (1 - 0.01)
+float limitL = close * (1 + 0.01)
+float stopS  = close * (1 + 0.01)
+float limitS = close * (1 - 0.01)
+if phase == 0
+    strategy.entry("L", strategy.long)
+    strategy.exit("LX", "L", stop = stopL, limit = limitL)
+if phase == 8
+    strategy.close_all(comment = "c1")
+if phase == 10
+    strategy.entry("S", strategy.short)
+    strategy.exit("SX", "S", stop = stopS, limit = limitS)
+if phase == 18
+    strategy.close_all(comment = "c2")
+if phase == 19
+    strategy.cancel_all()
+plot(stopL, "stop_long")
+plot(limitL, "limit_long")
+plot(stopS, "stop_short")
+plot(limitS, "limit_short")
+plot(strategy.closedtrades > 0 ? strategy.closedtrades.commission(strategy.closedtrades - 1) : na, "last_trade_commission")
+
+// ---- 对齐列 ----
+plot(bar_index, "bar_index")
+plot(cycle, "cycle")
+plot(phase, "phase")
+plot(strategy.position_size, "pos")
+plot(strategy.position_avg_price, "avg_price")
+plot(strategy.equity, "equity")
+plot(strategy.openprofit, "openprofit")
+plot(strategy.netprofit, "netprofit")
+plot(strategy.closedtrades, "closedtrades")
+plot(strategy.opentrades, "opentrades")

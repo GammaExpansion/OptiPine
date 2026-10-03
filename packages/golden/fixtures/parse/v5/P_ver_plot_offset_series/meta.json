@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_ver_plot_offset_series",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "plot offset 给 series：v5 允许（只用最后一个值）/ v6 错误",
+  "tags": [
+    "ver"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 验证：v5 编译通过"
+}

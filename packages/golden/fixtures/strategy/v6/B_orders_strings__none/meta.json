@@ -1,0 +1,68 @@
+{
+  "schema_version": 2,
+  "id": "B_orders_strings__none",
+  "kind": "strategy",
+  "pine_version": 6,
+  "description": "Probe B 原样：市价/挂单价格取整方向、两档 Order execution delay 的成交时点、str.tostring / str.format 经 Signal 列的原文",
+  "tags": [
+    "probe",
+    "broker",
+    "rounding",
+    "strings"
+  ],
+  "source": {
+    "origin": "probe",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BATS:AAPL",
+    "ticker": "AAPL",
+    "prefix": "BATS",
+    "type": "stock",
+    "currency": "USD",
+    "basecurrency": "",
+    "timezone": "America/New_York",
+    "mintick": 0.01,
+    "pricescale": 100,
+    "minmove": 1,
+    "pointvalue": 1,
+    "session": "regular",
+    "session_hours": "0930-1600",
+    "mincontract": 1,
+    "description": "Apple Inc."
+  },
+  "timeframe": "60",
+  "chart_timezone": "America/Los_Angeles",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-04T07:53:22Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "bar_index",
+      "cycle",
+      "phase",
+      "pos",
+      "stop_raw_long",
+      "limit_raw_long",
+      "stop_raw_short",
+      "limit_raw_short"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-04T07:53:56Z"
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": "data.csv / report.xlsx = 已导出的 BATS_AAPL__60_probe_b_*.csv 与 probe_B_orders_strings_NASDAQ_AAPL_2026-08-30_*.xlsx，原样复制；v6 的 __none 尚未导出；Properties → Order execution delay = None"
+}

@@ -1,0 +1,123 @@
+{
+  "schema_version": 2,
+  "id": "S_limit_verification__1",
+  "kind": "strategy",
+  "pine_version": 6,
+  "description": "Resting long and short limits with one-tick verification explicitly declared in an independently compiled source copy.",
+  "tags": [
+    "broker",
+    "limit-verification",
+    "native-r2"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BATS:AAPL",
+    "timezone": "America/New_York",
+    "currency": "USD",
+    "mintick": 0.01,
+    "pointvalue": 1,
+    "mincontract": 1
+  },
+  "timeframe": "60",
+  "chart_timezone": "America/New_York",
+  "inputs": {
+    "Mode: 0 resting, 1 marketable, 2 stop-limit, 3 exit limit": 0,
+    "Offset ticks": 10,
+    "Cycle bars": 8,
+    "Start": 1704067200000
+  },
+  "settings": {
+    "initial_capital": 1000000,
+    "default_qty_type": "fixed",
+    "default_qty_value": 1,
+    "pyramiding": 0,
+    "commission_type": "percent",
+    "commission_value": 0,
+    "slippage": 0,
+    "margin_long": 0,
+    "margin_short": 0,
+    "calc_on_order_fills": false,
+    "calc_on_every_tick": false,
+    "process_orders_on_close": false,
+    "backtest_fill_limits_assumption": 1,
+    "currency": "NONE"
+  },
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-15T11:32:55Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "probe_revision",
+      "probe_mode",
+      "bar_index",
+      "active_index",
+      "mintick",
+      "submitted_side",
+      "submitted_limit",
+      "submitted_stop",
+      "position_size",
+      "position_avg_price",
+      "equity",
+      "netprofit",
+      "closed_trades",
+      "last_entry_price",
+      "last_exit_price",
+      "last_entry_bar",
+      "last_exit_bar"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-15T11:33:17Z"
+  },
+  "verified": true,
+  "execution": {
+    "mode": "replay-selection",
+    "selected_at": "2024-06-28T20:30:00Z",
+    "paused": true,
+    "stepped": false
+  },
+  "notes": "Native revision 2 captured on BATS:AAPL 60 / America/New_York, regular session, ADJ off. Replay selected 2024-06-28 16:30 New York and never stepped, immediately after the final 15:30 bar. Both CSVs bracketing the report are byte-identical, bar_index starts at zero, last market row retained with strategy close pending. The independently compiled source copy differs from repository r2 only in backtest_fill_limits_assumption=1. Notes confirm a new study whose Properties were never opened. Its report label Requested price and 1 tick beyond is also used by native N=2, so source provenance, not that label, establishes the numeric value. Report symbol NASDAQ:AAPL and chart/export BATS:AAPL are independently recorded. All numeric comparisons and strict provenance verification pass. No native data edits or tolerance changes.",
+  "capture": {
+    "archive": ".golden/captures/fixture-migration-2026-09-16/strategy/v6/S_limit_verification__1",
+    "archive_commit": "f33f245eeffec94176e31549c711c4a0471e4a55",
+    "files": {
+      "source.pine": "e8cc0e68b641e3cff519062243345c605c4aae89e89fb5419a927e23b5f989e3",
+      "data.csv": "7a09e1571bae7d55d82ac20a16b6a286cbb2d2c023f11f7ccb445a0e2db32ee0",
+      "report.xlsx": "e78c34c24fcdeac332a0c7f3fff15c46e972142333066437d62c89c3c3f56fa0"
+    },
+    "paired_exports": {
+      "before": "2026-09-15T11:32:55Z",
+      "report": "2026-09-15T11:33:17Z",
+      "after": "2026-09-15T11:33:42Z",
+      "byte_identical": true
+    },
+    "source_revision": 2,
+    "symbol_alias": {
+      "chart_export": "BATS:AAPL",
+      "report": "NASDAQ:AAPL"
+    },
+    "settings_evidence": {
+      "backtest_fill_limits_assumption": "Fresh source-default study with Properties never opened; source explicitly sets N=1. The native report uses the same Requested price and 1 tick beyond label for N=1 and N=2, so the label does not establish N. This source differs from the r2 N=2 probe only in this strategy constant."
+    },
+    "market_inputs": {
+      "mincontract": {
+        "fixture": "strategy/v6/S_pending_entries",
+        "basis": "Existing verified BATS:AAPL metadata; whole-share unit, not inferred from these capture outputs."
+      }
+    }
+  }
+}

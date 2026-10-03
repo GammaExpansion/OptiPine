@@ -1,0 +1,83 @@
+{
+  "schema_version": 2,
+  "id": "S_calc_on_order_fills",
+  "kind": "strategy",
+  "pine_version": 5,
+  "description": "calc_on_order_fills：每根 bar 的执行次数（calcs_on_bar）、第 1/2 次执行各自看到的 OHLC 与仓位（区分成交触发的重算发生在收盘计算之前还是之后）、重算里下的市价单成交在哪个 tick、barstate.isnew 在重算中的原始值；市价（下根 open 成交）与限价（盘中成交）两种触发",
+  "tags": [
+    "micro",
+    "broker",
+    "calc"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BATS:AAPL",
+    "ticker": "AAPL",
+    "prefix": "BATS",
+    "type": "stock",
+    "currency": "USD",
+    "basecurrency": "",
+    "timezone": "America/New_York",
+    "mintick": 0.01,
+    "pricescale": 100,
+    "minmove": 1,
+    "pointvalue": 1,
+    "session": "regular",
+    "session_hours": "0930-1600",
+    "mincontract": 1,
+    "description": "Apple Inc."
+  },
+  "timeframe": "60",
+  "chart_timezone": "America/Los_Angeles",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-04T03:04:30Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "calcs_on_bar",
+      "isnew_raw_last_calc",
+      "first_exec_last_calc",
+      "open_at_calc1",
+      "high_at_calc1",
+      "low_at_calc1",
+      "close_at_calc1",
+      "pos_at_calc1",
+      "open_at_calc2",
+      "high_at_calc2",
+      "low_at_calc2",
+      "close_at_calc2",
+      "pos_at_calc2",
+      "lim_below",
+      "bar_index",
+      "cycle",
+      "phase",
+      "pos",
+      "avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closedtrades",
+      "opentrades"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-04T03:06:12Z"
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": "第一次执行用 bar_index 变化识别，不用 barstate.isnew（历史 bar 上恒为 true）。Properties Script execution 原文：On bar close, On order fill。"
+}

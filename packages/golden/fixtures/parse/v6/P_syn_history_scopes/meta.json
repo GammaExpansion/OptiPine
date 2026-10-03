@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_history_scopes",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "函数内变量的 []、函数内 var（按调用实例）、if 各分支同名局部变量、局部变量的 []、循环内 []",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

@@ -1,0 +1,51 @@
+//@version=6
+strategy("Risk limits probe r2", overlay=false, initial_capital=10000, default_qty_type=strategy.fixed, default_qty_value=1, pyramiding=0, commission_type=strategy.commission.percent, commission_value=0, slippage=0, margin_long=0, margin_short=0, calc_on_order_fills=false, calc_on_every_tick=false, process_orders_on_close=false)
+
+// Risk calls must remain in global scope. Inactive rules use unreachable cash/count limits.
+mode = input.int(1, "Mode: 0 control, 1 drawdown cash, 2 drawdown percent, 3 day loss cash, 4 day loss percent, 5 losing days", minval=0, maxval=5)
+cashLimit = input.float(100, "Cash limit", minval=0.01)
+percentLimit = input.float(1, "Percent limit", minval=0.01, maxval=100)
+losingDays = input.int(2, "Consecutive losing days", minval=1)
+cycle = input.int(4, "Cycle bars", minval=3)
+direction = input.int(0, "Direction: 0 alternate, 1 long, -1 short", minval=-1, maxval=1)
+start = input.time(1704067200000, "Start") // 2024-01-01 00:00 UTC
+
+strategy.risk.max_drawdown(mode == 1 ? cashLimit : mode == 2 ? percentLimit : 1000000000000, mode == 2 ? strategy.percent_of_equity : strategy.cash)
+strategy.risk.max_intraday_loss(mode == 3 ? cashLimit : mode == 4 ? percentLimit : 1000000000000, mode == 4 ? strategy.percent_of_equity : strategy.cash)
+strategy.risk.max_cons_loss_days(mode == 5 ? losingDays : 1000000)
+
+var int activeIndex = -1
+var int requestedSide = 0
+if time >= start
+    activeIndex += 1
+    phase = activeIndex % cycle
+    side = direction != 0 ? direction : int(math.floor(activeIndex / cycle)) % 2 == 0 ? 1 : -1
+    if phase == 0
+        requestedSide := side
+        strategy.entry("E", side == 1 ? strategy.long : strategy.short, qty=1)
+        // The remote order exposes cancellation when a risk rule halts the strategy.
+        strategy.order("pending", side == 1 ? strategy.long : strategy.short, qty=1, limit=side == 1 ? close * 0.1 : close * 10)
+    if phase == cycle - 2
+        strategy.close_all(comment="scheduled close")
+    if phase == cycle - 1
+        strategy.cancel_all()
+
+last = strategy.closedtrades - 1
+plot(2, "probe_revision")
+plot(mode, "probe_mode")
+plot(bar_index, "bar_index")
+plot(activeIndex, "active_index")
+plot(time("D"), "daily_time")
+plot(requestedSide, "requested_side")
+plot(strategy.position_size, "position_size")
+plot(strategy.position_avg_price, "position_avg_price")
+plot(strategy.equity, "equity")
+plot(strategy.openprofit, "openprofit")
+plot(strategy.netprofit, "netprofit")
+plot(strategy.closedtrades, "closed_trades")
+plot(strategy.opentrades, "open_trades")
+plot(last >= 0 ? strategy.closedtrades.profit(last) : na, "last_profit")
+plot(last >= 0 ? strategy.closedtrades.entry_price(last) : na, "last_entry_price")
+plot(last >= 0 ? strategy.closedtrades.exit_price(last) : na, "last_exit_price")
+plot(last >= 0 ? strategy.closedtrades.entry_bar_index(last) : na, "last_entry_bar")
+plot(last >= 0 ? strategy.closedtrades.exit_bar_index(last) : na, "last_exit_bar")

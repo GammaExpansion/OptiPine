@@ -1,0 +1,128 @@
+//@version=5
+// ============================================================================
+// probe_B_orders_strings — 探针 B（strategy，看 XLSX Trades 表 + CSV）
+//
+// 回答 §7 里的：stop / limit 价格取整方向（四个方向：买 stop、卖 stop、卖 limit、买 limit）、
+// str.tostring / str.format 的确切输出（用 Signal 列当字符串 oracle）。
+// 顺带得到：默认 Order execution delay 下的完整成交规则（同一图表切换该设置各导一份）。
+//
+// 设计
+//   每 24 根 bar 一个 cycle：
+//     phase 0  市价做多，同 bar 挂 exit(stop = close*(1-p), limit = close*(1+p))
+//     phase 10 close_all
+//     phase 12 市价做空，同 bar 挂 exit(stop = close*(1+p), limit = close*(1-p))
+//     phase 22 close_all
+//   每个 cycle 用 4 个测试字符串：多头 entry ID、多头 exit ID、空头 entry ID、空头 exit ID，
+//   48 个字符串 12 个 cycle 走完一遍（288 根 bar），之后循环。
+//   stop/limit 的原始值（未取整）每根 bar 都 plot 出来，harness 取信号 bar 那一行。
+//
+// 用法
+//   1. 加到流动性好的美股/ETF 的 1h 图（RTH 即可，不需要 crypto）。
+//   2. 打开 Settings → Properties：确认 Slippage = 0、Commission = 0；账号若保存过默认值会覆盖代码，
+//      不一致就 Reset settings。无论如何以导出的 Properties sheet 为准。
+//   3. 图表滚到最左加载完 → Export chart data（UNIX）+ report Download XLSX，同一时刻。
+//   4. 想同时拿到两种成交时点：把 Order execution delay 切到 None 再导一份。
+//
+// 读法
+//   取整方向：只用"盘中触发"的 exit 成交（fill ≠ open 且 low < fill < high），
+//     fill 就是取整后的 stop/limit（slippage 0），和 CSV 里 stop_raw/limit_raw 的 floor/nearest/ceil 比。
+//   字符串：Trades.Signal 列 = entry ID / exit ID 原文；cycle 列 + 下面的列表索引反推是哪个表达式。
+//   p 默认 0.3%：1h 美股多数在 1~3 根内盘中触发；太快/太慢就调 input。
+// ============================================================================
+strategy("probe_B_orders_strings", overlay = false,
+  initial_capital = 100000, currency = currency.NONE,
+  default_qty_type = strategy.fixed, default_qty_value = 1, pyramiding = 1,
+  commission_type = strategy.commission.percent, commission_value = 0, slippage = 0,
+  margin_long = 0, margin_short = 0, close_entries_rule = "FIFO",
+  process_orders_on_close = false, calc_on_order_fills = false, calc_on_every_tick = false,
+  backtest_fill_limits_assumption = 0, use_bar_magnifier = false, fill_orders_on_standard_ohlc = false)
+
+float pct = input.float(0.3, "stop / limit distance %", minval = 0.05, step = 0.05) / 100
+
+// ---- 测试字符串（索引 0..47；4 个一组对应一个 cycle：多entry, 多exit, 空entry, 空exit）----
+float naF = na
+var string[] tests = array.from(str.tostring(1.0),                 //  0  "1" 还是 "1.0"
+  str.tostring(1.5),                                               //  1
+  str.tostring(-1.5),                                              //  2
+  str.tostring(2.0),                                               //  3
+  str.tostring(100),                                               //  4  int
+  str.tostring(-0.0),                                              //  5  "-0"?
+  str.tostring(0.1 + 0.2),                                         //  6  "0.30000000000000004" 还是截到几位
+  str.tostring(1.0 / 3),                                           //  7  默认小数位数
+  str.tostring(1 / 3),                                             //  8  v5 const 整数除法 → "0"?
+  str.tostring(5 / 2),                                             //  9
+  str.tostring(-7 / 2),                                            // 10
+  str.tostring(-7 % 3),                                            // 11
+  str.tostring(math.round(2.5)),                                   // 12
+  str.tostring(math.round(-2.5)),                                  // 13
+  str.tostring(math.pi),                                           // 14
+  str.tostring(1.23456789012345678),                               // 15  有效位数
+  str.tostring(123456789.123456789),                               // 16
+  str.tostring(1e10),                                              // 17  科学计数法?
+  str.tostring(1e21),                                              // 18
+  str.tostring(1e-7),                                              // 19
+  str.tostring(0.000001),                                          // 20
+  str.tostring(1000000.0),                                         // 21  千分位?
+  str.tostring(2147483647 + 1),                                    // 22
+  str.tostring(math.pow(2, 53) + 1),                               // 23
+  str.tostring(naF),                                               // 24  "NaN"?
+  str.tostring(true),                                              // 25
+  str.tostring(2.345, "#.##"),                                     // 26  二进制 2.34500…02：HALF_EVEN→2.35 / HALF_UP→2.35
+  str.tostring(2.355, "#.##"),                                     // 27  二进制 2.35499…98：HALF_EVEN→2.35 / 缩放 half-up→2.36
+  str.tostring(1.005, "#.##"),                                     // 28  二进制 1.00499…：→1 / 1.01
+  str.tostring(2.5, "#"),                                          // 29  HALF_EVEN→"2"；HALF_UP→"3"
+  str.tostring(3.5, "#"),                                          // 30  HALF_EVEN→"4"
+  str.tostring(-2.5, "#"),                                         // 31
+  str.tostring(2.5, "0.00"),                                       // 32
+  str.tostring(12345.678, "#.#"),                                  // 33
+  str.tostring(1234567.891, "#,###.##"),                           // 34  分组符
+  str.tostring(0.1234, format.percent),                            // 35
+  str.tostring(2.5, format.mintick),                               // 36  按品种 tick 格式
+  str.tostring(2.555, format.mintick),                             // 37  二进制 2.55500…016
+  str.tostring(1e6, format.volume),                                // 38  "1M"?
+  str.format("{0}", 1.0),                                          // 39
+  str.format("{0} {1}", 2.5, "x"),                                 // 40
+  str.format("{0,number,#.##}", 2.345),                            // 41
+  str.format("{0,number,0.00}", 1.005),                            // 42
+  str.format("{0,number,integer}", 2.5),                           // 43
+  str.format("{0,number,percent}", 0.1234),                        // 44
+  str.tostring(str.tonumber("1e3")),                               // 45  tonumber 是否认科学计数
+  str.tostring(str.tonumber("abc")),                               // 46  na → "NaN"
+  str.replace_all("a.b.c", ".", "-"))                              // 47
+
+// ---- 调度 ----
+int cycleLen = 24
+int phase    = bar_index % cycleLen
+int cycle    = math.floor(bar_index / cycleLen)
+int n        = array.size(tests)
+string idLongEntry  = array.get(tests, (4 * cycle + 0) % n)
+string idLongExit   = array.get(tests, (4 * cycle + 1) % n)
+string idShortEntry = array.get(tests, (4 * cycle + 2) % n)
+string idShortExit  = array.get(tests, (4 * cycle + 3) % n)
+
+// ---- 原始（未取整）订单价，每根都算，harness 取信号 bar ----
+float stopRawL  = close * (1 - pct)
+float limitRawL = close * (1 + pct)
+float stopRawS  = close * (1 + pct)
+float limitRawS = close * (1 - pct)
+
+if phase == 0
+    strategy.entry(idLongEntry, strategy.long)
+    strategy.exit(idLongExit, from_entry = idLongEntry, stop = stopRawL, limit = limitRawL)
+if phase == 10
+    strategy.close_all(comment = "close_" + str.tostring(cycle))
+if phase == 12
+    strategy.entry(idShortEntry, strategy.short)
+    strategy.exit(idShortExit, from_entry = idShortEntry, stop = stopRawS, limit = limitRawS)
+if phase == 22
+    strategy.close_all(comment = "close_" + str.tostring(cycle))
+
+// ---- 导出列 ----
+plot(bar_index,              "bar_index")
+plot(cycle,                  "cycle")
+plot(phase,                  "phase")
+plot(strategy.position_size, "pos")
+plot(stopRawL,               "stop_raw_long")
+plot(limitRawL,              "limit_raw_long")
+plot(stopRawS,               "stop_raw_short")
+plot(limitRawS,              "limit_raw_short")

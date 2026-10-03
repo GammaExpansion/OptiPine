@@ -1,0 +1,4 @@
+//@version=6
+indicator("P_ver_history_literal")
+x = 5[1]
+plot(x)

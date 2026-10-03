@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_switch",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "switch 带表达式 / 不带表达式 / 默认分支 / 作为语句",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

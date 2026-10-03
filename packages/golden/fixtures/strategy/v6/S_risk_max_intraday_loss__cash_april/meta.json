@@ -1,0 +1,121 @@
+{
+  "schema_version": 2,
+  "id": "S_risk_max_intraday_loss__cash_april",
+  "kind": "strategy",
+  "pine_version": 6,
+  "description": "Cash intraday loss 100 with an April 1 endpoint: the longer trading span exercises monthly Sharpe/Sortino observations.",
+  "tags": [
+    "broker",
+    "risk",
+    "native-r2",
+    "report-ratios"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BINANCE:BTCUSDT",
+    "timezone": "Etc/UTC",
+    "currency": "USDT",
+    "mintick": 0.01,
+    "pointvalue": 1,
+    "mincontract": 0.00001
+  },
+  "timeframe": "60",
+  "chart_timezone": "Etc/UTC",
+  "inputs": {
+    "Mode: 0 control, 1 drawdown cash, 2 drawdown percent, 3 day loss cash, 4 day loss percent, 5 losing days": 3,
+    "Cash limit": 100,
+    "Percent limit": 1,
+    "Consecutive losing days": 2,
+    "Cycle bars": 4,
+    "Direction: 0 alternate, 1 long, -1 short": 0,
+    "Start": 1704067200000
+  },
+  "settings": {
+    "initial_capital": 10000,
+    "default_qty_type": "fixed",
+    "default_qty_value": 1,
+    "pyramiding": 0,
+    "commission_type": "percent",
+    "commission_value": 0,
+    "slippage": 0,
+    "margin_long": 0,
+    "margin_short": 0,
+    "calc_on_order_fills": false,
+    "calc_on_every_tick": false,
+    "process_orders_on_close": false,
+    "backtest_fill_limits_assumption": 0,
+    "currency": "NONE"
+  },
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-15T17:34:25Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "probe_revision",
+      "probe_mode",
+      "bar_index",
+      "active_index",
+      "daily_time",
+      "requested_side",
+      "position_size",
+      "position_avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closed_trades",
+      "open_trades",
+      "last_profit",
+      "last_entry_price",
+      "last_exit_price",
+      "last_entry_bar",
+      "last_exit_bar"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-15T17:34:49Z"
+  },
+  "verified": true,
+  "execution": {
+    "mode": "replay-selection",
+    "selected_at": "2024-04-02T00:00:00Z",
+    "paused": true,
+    "stepped": false
+  },
+  "notes": "Native revision 2 captured in TradingView on 2026-09-15, BINANCE:BTCUSDT 60 / UTC, Replay selected 2024-04-02T00:00:00Z and never stepped. CSV exports bracketing the report are byte-identical. Full 28472-bar native export begins at bar_index 0; final market row retained with strategy close pending. Mode 3 is the sole nondefault input; all effective settings are explicit and native Properties unchanged. The different endpoint is an independently exported report-ratio observation, not a truncated or combined earlier fixture. Strict verification of paired exports, source provenance, all series, trades and report metrics passed. No numeric cleanup or comparison relaxation. mincontract is independent market metadata from I_syminfo_mincontract / S_sizing_crypto capture provenance.",
+  "capture": {
+    "archive": ".golden/captures/fixture-migration-2026-09-16/strategy/v6/S_risk_max_intraday_loss__cash_april",
+    "archive_commit": "f33f245eeffec94176e31549c711c4a0471e4a55",
+    "files": {
+      "source.pine": "9f354d31066517981eacb783f32a03091b6462d4c874f0ecab266355fa81308d",
+      "data.csv": "cc9c4bc430d664eb25546d9baa731403a64866431de065d02220bdd756f096a0",
+      "report.xlsx": "a6cc358cb1c26b0d6fd33c19e8c9eeb4e484eaf50166b9ebaa41c851606721b2"
+    },
+    "paired_exports": {
+      "before": "2026-09-15T17:34:25Z",
+      "report": "2026-09-15T17:34:49Z",
+      "after": "2026-09-15T17:35:18Z",
+      "byte_identical": true
+    },
+    "source_revision": 2,
+    "market_inputs": {
+      "mincontract": {
+        "fixture": "indicator/v6/I_syminfo_mincontract",
+        "basis": "Independent native v6 metadata probe; see its capture.market_inputs for the separate 447-row measurement. Not inferred from strategy outputs."
+      }
+    }
+  }
+}

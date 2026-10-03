@@ -1,0 +1,68 @@
+{
+  "schema_version": 2,
+  "id": "I_generic_values",
+  "kind": "indicator",
+  "pine_version": 6,
+  "description": "Untyped parameters, per-call inference, qualifiers and string constants.",
+  "tags": [
+    "language",
+    "community-regression"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BINANCE:BTCUSDT",
+    "timezone": "Etc/UTC",
+    "currency": "USDT"
+  },
+  "timeframe": "60",
+  "chart_timezone": "Etc/UTC",
+  "inputs": {},
+  "verified": true,
+  "notes": "Exact v6 source independently compiled and ran on TradingView standard BINANCE:BTCUSDT 60 candles with default inputs and Volume MA disabled. Paused Replay selected 2025-02-01 00:00 UTC, never stepped. Full available history confirmed by leftward pans and contiguous native probe_index 0..27045; the earlier 300-row partial attempt was rejected and retained only in the archive. Exported timestamp records download completion; native click-time window is in the archived capture record. Full native series match the engine under the existing comparison rules.",
+  "capture": {
+    "archive": ".golden/captures/community-language-2026-09-19/I_generic_values",
+    "files": {
+      "source.pine": "e7d7cfbda64ccce785fd30735f63321ffab140636cab16cfc927724986451aa0",
+      "data.csv": "33a842d9bdbe78b6c683ecb08a8fc5dd3c138a32bef6ef4c096c550514d2f6de"
+    },
+    "observation": {
+      "mode": "paused-replay",
+      "selected_at": "2025-02-01T00:00:00Z",
+      "rows": 27046,
+      "first_bar": 1640995200,
+      "last_bar": 1738364400,
+      "first_probe_index": 0,
+      "last_probe_index": 27045,
+      "full_history_confirmed": true
+    }
+  },
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-20T02:52:49.626Z",
+    "plan": "unrecorded",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "probe_index",
+      "session_length",
+      "session_equal",
+      "identity_integer",
+      "array_integer",
+      "array_string_length",
+      "period_length",
+      "const_reference_last",
+      "size_string_length"
+    ]
+  }
+}

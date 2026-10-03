@@ -1,0 +1,22 @@
+//@version=5
+indicator("P_syn_functions")
+double(x) => x * 2
+add(a, b = 1) =>
+    s = a + b
+    s
+clamp(float v, float lo, float hi) =>
+    math.min(math.max(v, lo), hi)
+smooth(src, simple int len) =>
+    ta.sma(src, len)
+withHistory(src) =>
+    diff = src - src[1]
+    diff
+compose(x) => double(add(x, b = 2))
+plot(double(close))
+plot(add(close))
+plot(add(close, 3))
+plot(add(b = 4, a = close))
+plot(clamp(close, low, high))
+plot(smooth(close, 5))
+plot(withHistory(close))
+plot(compose(close))

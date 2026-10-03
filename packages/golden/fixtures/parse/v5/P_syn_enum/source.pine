@@ -1,0 +1,14 @@
+//@version=5
+indicator("P_syn_enum")
+enum MaType
+    sma = "Simple"
+    ema = "Exponential"
+    wma
+maType = input.enum(MaType.sma, "MA type")
+len = input.int(20, "Length")
+ma = switch maType
+    MaType.sma => ta.sma(close, len)
+    MaType.ema => ta.ema(close, len)
+    MaType.wma => ta.wma(close, len)
+plot(ma)
+plot(str.length(str.tostring(maType)))

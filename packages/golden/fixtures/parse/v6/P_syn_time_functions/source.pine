@@ -1,0 +1,10 @@
+//@version=6
+indicator("P_syn_time_functions")
+t1 = timestamp(2024, 1, 15, 9, 30, 0)
+t2 = timestamp("UTC", 2024, 1, 15, 9, 30)
+t3 = timestamp("2024-01-15T09:30:00+00:00")
+t6 = time(timeframe.period, "0930-1600", "America/New_York")
+d = dayofweek(time, "America/New_York") + hour(time, "UTC") + minute(time) + second(time) + year(time) + month(time) + dayofmonth(time) + weekofyear(time)
+sec = timeframe.in_seconds("240")
+fmt = str.format_time(t1, "yyyy-MM-dd")
+plot(t1 + t2 + t3 + t6 + d + sec + str.length(fmt))

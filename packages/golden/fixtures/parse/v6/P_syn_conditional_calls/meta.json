@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_conditional_calls",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "ta.* 在 if / switch 分支内调用（编译通过，仅警告）",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

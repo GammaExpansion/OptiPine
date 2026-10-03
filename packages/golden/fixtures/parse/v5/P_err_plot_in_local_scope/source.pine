@@ -1,0 +1,4 @@
+//@version=5
+indicator("P_err_plot_in_local_scope")
+if close > open
+    plot(close)

@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_err_continuation_4spaces",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "续行缩进 4 空格：v6 允许",
+  "tags": [
+    "fmt"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 验证：v6 编译通过"
+}

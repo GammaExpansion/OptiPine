@@ -1,0 +1,25 @@
+//@version=5
+indicator("P_syn_types_udt_methods")
+type Bar
+    float o
+    float h
+    float l
+    float c
+    int   idx = 0
+    string tag = "n/a"
+
+method span(Bar b) =>
+    b.h - b.l
+
+method bullish(Bar b) => b.c > b.o
+
+newBar() => Bar.new(open, high, low, close, bar_index, "bar")
+
+b = newBar()
+b.tag := "updated"
+prev = b[1]
+r = na(prev) ? na : prev.span()
+plot(b.span())
+plot(b.bullish() ? 1 : 0)
+plot(r)
+plot(b.idx)

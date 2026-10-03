@@ -1,0 +1,22 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_drawings",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "全部绘图 API：table/line/label/box/linefill/polyline/fill/bgcolor/barcolor/hline/plotshape/plotchar/plotarrow/plotcandle/plotbar",
+  "tags": [
+    "syn",
+    "drawing"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 验证：绘图 API 脚本整体编译通过"
+}

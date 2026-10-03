@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_ver_int_as_bool",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "int 隐式转 bool：v5 允许 / v6 错误",
+  "tags": [
+    "ver"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 验证：v5 编译通过"
+}

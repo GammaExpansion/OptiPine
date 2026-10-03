@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_loops",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "for / for…by 负步长 / for…in / for [i,v] in / while / break / continue",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

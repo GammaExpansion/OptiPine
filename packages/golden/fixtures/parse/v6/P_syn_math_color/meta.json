@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_math_color",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "math.* 全集与 color.* 构造/分量",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

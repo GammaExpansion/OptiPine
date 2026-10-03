@@ -1,0 +1,3 @@
+//@version=4
+study("P_err_version_4")
+plot(close)

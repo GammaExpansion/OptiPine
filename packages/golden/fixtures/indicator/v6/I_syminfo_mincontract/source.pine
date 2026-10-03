@@ -1,0 +1,3 @@
+//@version=6
+indicator("Mincontract version probe")
+plot(syminfo.mincontract, "observed_mincontract")

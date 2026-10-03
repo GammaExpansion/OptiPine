@@ -1,0 +1,13 @@
+//@version=5
+library("P_syn_library", overlay = false)
+export double(float x) =>
+    x * 2
+//@function Returns the mid of two values
+export mid(float a, float b) =>
+    (a + b) / 2
+export type Pair
+    float a
+    float b
+export method sum(Pair p) =>
+    p.a + p.b
+plot(double(close))

@@ -1,0 +1,75 @@
+{
+  "schema_version": 2,
+  "id": "S_exit_partial",
+  "kind": "strategy",
+  "pine_version": 5,
+  "description": "exit 数量语义：19+20 的预留（第二个只剩 1 股）、qty_percent 各 50% 分批、无 from_entry 的 exit 对后续 entry 持续生效、from_entry 不匹配无效",
+  "tags": [
+    "micro",
+    "broker",
+    "exit"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BATS:AAPL",
+    "ticker": "AAPL",
+    "prefix": "BATS",
+    "type": "stock",
+    "currency": "USD",
+    "basecurrency": "",
+    "timezone": "America/New_York",
+    "mintick": 0.01,
+    "pricescale": 100,
+    "minmove": 1,
+    "pointvalue": 1,
+    "session": "regular",
+    "session_hours": "0930-1600",
+    "mincontract": 1,
+    "description": "Apple Inc."
+  },
+  "timeframe": "60",
+  "chart_timezone": "America/Los_Angeles",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-04T03:08:51Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "lim_a",
+      "lim_b",
+      "lim_p1",
+      "stop_p2",
+      "lim_any",
+      "lim_ghost",
+      "bar_index",
+      "cycle",
+      "phase",
+      "pos",
+      "avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closedtrades",
+      "opentrades"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-04T03:08:55Z"
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": "default_qty_value=20、pyramiding=2"
+}

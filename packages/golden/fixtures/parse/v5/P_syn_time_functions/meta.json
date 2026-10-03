@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_time_functions",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "timestamp 三种重载、time(tf, session, tz)、日期函数形式、timeframe.in_seconds(tf)",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

@@ -1,0 +1,4 @@
+//@version=6
+indicator("P_fmt_long_line")
+x = close + open + high + low + hl2 + hlc3 + ohlc4 + close[1] + open[1] + high[1] + low[1] + close[2] + open[2] + high[2] + low[2] + close[3] + open[3] + high[3] + low[3] + close[4] + open[4] + high[4] + low[4] + close[5] + open[5] + high[5] + low[5] + close[6] + open[6] + high[6] + low[6] + close[7] + open[7] + high[7] + low[7] + close[8] + open[8] + high[8] + low[8] + close[9] + open[9] + high[9] + low[9] + math.max(close, open, high, low, hl2, hlc3, ohlc4) + math.min(close, open, high, low, hl2, hlc3, ohlc4)
+plot(x)

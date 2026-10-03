@@ -1,0 +1,49 @@
+//@version=5
+// 各种平仓调用的成交时点与 Signal 文案：close(id) / close(id, comment) / close(id, qty) / close(id, qty_percent) / close_all / close(immediately=true)
+strategy("S_close_variants", overlay = false,
+  initial_capital = 100000, currency = currency.NONE,
+  default_qty_type = strategy.fixed, default_qty_value = 10, pyramiding = 1,
+  commission_type = strategy.commission.percent, commission_value = 0, slippage = 0,
+  margin_long = 0, margin_short = 0, close_entries_rule = "FIFO",
+  process_orders_on_close = false, calc_on_order_fills = false, calc_on_every_tick = false,
+  backtest_fill_limits_assumption = 0, use_bar_magnifier = false, fill_orders_on_standard_ohlc = false)
+int cycleLen = 30
+int phase = bar_index % cycleLen
+int cycle = math.floor(bar_index / cycleLen)
+
+if phase == 0
+    strategy.entry("L", strategy.long)
+if phase == 3
+    strategy.close("L")
+if phase == 6
+    strategy.entry("L", strategy.long)
+if phase == 9
+    strategy.close("L", comment = "cmt")
+if phase == 12
+    strategy.entry("L", strategy.long)
+if phase == 15
+    strategy.close("L", qty = 4)
+if phase == 17
+    strategy.close("L", qty_percent = 50)
+if phase == 19
+    strategy.close_all()
+if phase == 22
+    strategy.entry("L", strategy.long)
+if phase == 25
+    strategy.close("L", immediately = true)
+if phase == 28
+    strategy.close_all(comment = "flat")
+if phase == 29
+    strategy.cancel_all()
+
+// ---- 对齐列 ----
+plot(bar_index, "bar_index")
+plot(cycle, "cycle")
+plot(phase, "phase")
+plot(strategy.position_size, "pos")
+plot(strategy.position_avg_price, "avg_price")
+plot(strategy.equity, "equity")
+plot(strategy.openprofit, "openprofit")
+plot(strategy.netprofit, "netprofit")
+plot(strategy.closedtrades, "closedtrades")
+plot(strategy.opentrades, "opentrades")

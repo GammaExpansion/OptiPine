@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_err_input_in_function",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "input 在函数内：允许编译",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 验证：函数内调用 input.int 可以编译"
+}

@@ -1,0 +1,56 @@
+//@version=6
+// exit 括号单：同一 bar 内 stop 与 limit 都可触发时的 4-tick 路径；profit/loss（tick）与 limit/stop（绝对价）并存时的优先级（v5 绝对优先 / v6 先触发者）
+strategy("S_exit_brackets", overlay = false,
+  initial_capital = 100000, currency = currency.NONE,
+  default_qty_type = strategy.fixed, default_qty_value = 1, pyramiding = 1,
+  commission_type = strategy.commission.percent, commission_value = 0, slippage = 0,
+  margin_long = 0, margin_short = 0, close_entries_rule = "FIFO",
+  process_orders_on_close = false, calc_on_order_fills = false, calc_on_every_tick = false,
+  backtest_fill_limits_assumption = 0, use_bar_magnifier = false, fill_orders_on_standard_ohlc = false)
+int cycleLen = 30
+int phase = bar_index % cycleLen
+int cycle = math.floor(bar_index / cycleLen)
+
+float tightStopL  = close * (1 - 0.0015)
+float tightLimitL = close * (1 + 0.0015)
+float mixStopL    = close * (1 - 0.005)
+float mixLimitL   = close * (1 + 0.005)
+float tightStopS  = close * (1 + 0.0015)
+float tightLimitS = close * (1 - 0.0015)
+if phase == 0
+    strategy.entry("L", strategy.long)
+    strategy.exit("Tight", "L", stop = tightStopL, limit = tightLimitL)
+if phase == 10
+    strategy.close_all(comment = "c1")
+if phase == 12
+    strategy.entry("L", strategy.long)
+    strategy.exit("Mixed", "L", profit = 40, loss = 40, limit = mixLimitL, stop = mixStopL)
+if phase == 22
+    strategy.close_all(comment = "c2")
+if phase == 24
+    strategy.entry("S", strategy.short)
+    strategy.exit("TightS", "S", stop = tightStopS, limit = tightLimitS)
+if phase == 28
+    strategy.close_all(comment = "c3")
+if phase == 29
+    strategy.cancel_all()
+plot(tightStopL, "tight_stop_long")
+plot(tightLimitL, "tight_limit_long")
+plot(mixStopL, "mixed_stop_abs")
+plot(mixLimitL, "mixed_limit_abs")
+plot(tightStopS, "tight_stop_short")
+plot(tightLimitS, "tight_limit_short")
+plot(high - open, "dist_open_high")
+plot(open - low, "dist_open_low")
+
+// ---- 对齐列 ----
+plot(bar_index, "bar_index")
+plot(cycle, "cycle")
+plot(phase, "phase")
+plot(strategy.position_size, "pos")
+plot(strategy.position_avg_price, "avg_price")
+plot(strategy.equity, "equity")
+plot(strategy.openprofit, "openprofit")
+plot(strategy.netprofit, "netprofit")
+plot(strategy.closedtrades, "closedtrades")
+plot(strategy.opentrades, "opentrades")

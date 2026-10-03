@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "id": "P_err_use_before_def",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "函数定义前调用",
+  "tags": [
+    "err"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 3
+    }
+  },
+  "verified": true,
+  "notes": ""
+}

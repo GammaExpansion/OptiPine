@@ -1,0 +1,3 @@
+//@version=6
+indicator("P_err_unclosed_paren")
+plot(close

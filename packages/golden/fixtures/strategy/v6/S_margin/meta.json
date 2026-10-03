@@ -1,0 +1,71 @@
+{
+  "schema_version": 2,
+  "id": "S_margin",
+  "kind": "strategy",
+  "pine_version": 6,
+  "description": "保证金：margin 25%（4x 杠杆）+ 300% equity，多空各持 18 根；margin call 的触发条件与强平量、margin_liquidation_price 逐 bar 值、超出可用资金时的下单量",
+  "tags": [
+    "micro",
+    "broker",
+    "margin"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BATS:AAPL",
+    "ticker": "AAPL",
+    "prefix": "BATS",
+    "type": "stock",
+    "currency": "USD",
+    "basecurrency": "",
+    "timezone": "America/New_York",
+    "mintick": 0.01,
+    "pricescale": 100,
+    "minmove": 1,
+    "pointvalue": 1,
+    "session": "regular",
+    "session_hours": "0930-1600",
+    "mincontract": 1,
+    "description": "Apple Inc."
+  },
+  "timeframe": "60",
+  "chart_timezone": "America/Los_Angeles",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-04T06:59:47Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "margin_liquidation_price",
+      "default_entry_qty_close",
+      "bar_index",
+      "cycle",
+      "phase",
+      "pos",
+      "avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closedtrades",
+      "opentrades"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-04T06:59:54Z"
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": "Properties 应显示 Long/Short leverage = 4x；trades 里的强平记录 + margin_liquidation_price 列 + report 的 Margin calls / liquidated volume 一起比。导出后若全程没有 margin call，把 default_qty_value 提到 400 重导，不要收录没覆盖到目标行为的 golden"
+}

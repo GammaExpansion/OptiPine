@@ -1,0 +1,4 @@
+//@version=5
+indicator("P_err_wrong_arity")
+ma = ta.sma(close)
+plot(ma)

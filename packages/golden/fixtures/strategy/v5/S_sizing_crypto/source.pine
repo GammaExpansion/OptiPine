@@ -1,0 +1,41 @@
+//@version=5
+// crypto 上的数量规则：percent_of_equity 的小数 qty、显式小数 qty 的舍入、低于最小单位的单是否被跳过
+strategy("S_sizing_crypto", overlay = false,
+  initial_capital = 100000, currency = currency.NONE,
+  default_qty_type = strategy.percent_of_equity, default_qty_value = 5, pyramiding = 1,
+  commission_type = strategy.commission.percent, commission_value = 0, slippage = 0,
+  margin_long = 0, margin_short = 0, close_entries_rule = "FIFO",
+  process_orders_on_close = false, calc_on_order_fills = false, calc_on_every_tick = false,
+  backtest_fill_limits_assumption = 0, use_bar_magnifier = false, fill_orders_on_standard_ohlc = false)
+int cycleLen = 24
+int phase = bar_index % cycleLen
+int cycle = math.floor(bar_index / cycleLen)
+
+if phase == 0
+    strategy.entry("PctEq", strategy.long)                    // 5% equity → 小数 BTC
+if phase == 6
+    strategy.close_all(comment = "c1")
+if phase == 8
+    strategy.entry("Fixed", strategy.long, qty = 0.0123456)   // 显式小数：舍到什么精度
+if phase == 14
+    strategy.close_all(comment = "c2")
+if phase == 16
+    strategy.entry("Tiny", strategy.long, qty = 0.0000001)    // 低于最小单位：跳过还是舍入
+if phase == 20
+    strategy.close_all(comment = "c3")
+if phase == 23
+    strategy.cancel_all()
+plot(strategy.default_entry_qty(close), "default_entry_qty_close")
+plot(syminfo.mintick, "syminfo_mintick")
+
+// ---- 对齐列 ----
+plot(bar_index, "bar_index")
+plot(cycle, "cycle")
+plot(phase, "phase")
+plot(strategy.position_size, "pos")
+plot(strategy.position_avg_price, "avg_price")
+plot(strategy.equity, "equity")
+plot(strategy.openprofit, "openprofit")
+plot(strategy.netprofit, "netprofit")
+plot(strategy.closedtrades, "closedtrades")
+plot(strategy.opentrades, "opentrades")

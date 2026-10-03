@@ -1,0 +1,45 @@
+name: Compatibility regression
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch or pull request supersedes the run in progress.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Check formatting
+        run: npm run format:check
+      - name: Build engine, golden, CLI and web
+        run: npm run build
+      - name: Typecheck every workspace
+        run: npm run typecheck --workspaces
+      - name: Test every workspace without a browser
+        run: npm run test --workspaces
+      - name: Preserve every accepted assertion
+        run: |
+          mkdir -p .golden/runs/ci
+          npm run check -- --json .golden/runs/ci/report.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: golden-report
+          path: .golden/runs/ci/report.json
+          if-no-files-found: ignore
+          retention-days: 14

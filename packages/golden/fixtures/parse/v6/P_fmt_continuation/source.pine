@@ -1,0 +1,20 @@
+//@version=6
+indicator("P_fmt_continuation")
+a = close > open ?
+  1 :
+  close < open ?
+  -1 :
+  0
+b = math.max(close,
+  open, high,
+  low)
+plot(a)
+plot(b,
+  title = "b",
+  color = color.blue)
+f(x) =>
+    r = x > 0 ?
+       x :
+       -x
+    r
+plot(f(a))

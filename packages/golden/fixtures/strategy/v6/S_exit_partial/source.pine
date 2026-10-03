@@ -1,0 +1,63 @@
+//@version=6
+// exit 的数量预留、qty_percent 分批、无 from_entry 的 exit 持续作用于后续 entry、from_entry 不匹配无效
+strategy("S_exit_partial", overlay = false,
+  initial_capital = 100000, currency = currency.NONE,
+  default_qty_type = strategy.fixed, default_qty_value = 20, pyramiding = 2,
+  commission_type = strategy.commission.percent, commission_value = 0, slippage = 0,
+  margin_long = 0, margin_short = 0, close_entries_rule = "FIFO",
+  process_orders_on_close = false, calc_on_order_fills = false, calc_on_every_tick = false,
+  backtest_fill_limits_assumption = 0, use_bar_magnifier = false, fill_orders_on_standard_ohlc = false)
+int cycleLen = 48
+int phase = bar_index % cycleLen
+int cycle = math.floor(bar_index / cycleLen)
+
+float limA  = close * (1 + 0.003)
+float limB  = close * (1 + 0.006)
+float limP1 = close * (1 + 0.003)
+float stopP2 = close * (1 - 0.010)
+float limAny = close * (1 + 0.003)
+float limGhost = close * (1 + 0.001)
+if phase == 0
+    strategy.entry("L1", strategy.long)                       // 20 股
+    strategy.exit("A", "L1", qty = 19, limit = limA)          // 预留 19
+    strategy.exit("B", "L1", qty = 20, limit = limB)          // 只剩 1 股可用
+if phase == 12
+    strategy.close_all(comment = "c1")
+if phase == 14
+    strategy.entry("L2", strategy.long)
+    strategy.exit("P1", "L2", qty_percent = 50, limit = limP1)
+    strategy.exit("P2", "L2", qty_percent = 50, stop = stopP2)
+if phase == 24
+    strategy.close_all(comment = "c2")
+if phase == 26
+    strategy.entry("L3", strategy.long)
+    strategy.exit("Any", limit = limAny)                      // 无 from_entry：作用于所有 entry，持续到仓位关闭
+if phase == 30
+    strategy.entry("L4", strategy.long)                       // pyramiding=2，Any 是否也管它
+if phase == 36
+    strategy.close_all(comment = "c3")
+if phase == 38
+    strategy.entry("L5", strategy.long)
+    strategy.exit("Ghost", "NOPE", limit = limGhost)          // from_entry 不匹配：不应产生任何单
+if phase == 44
+    strategy.close_all(comment = "c4")
+if phase == 47
+    strategy.cancel_all()
+plot(limA, "lim_a")
+plot(limB, "lim_b")
+plot(limP1, "lim_p1")
+plot(stopP2, "stop_p2")
+plot(limAny, "lim_any")
+plot(limGhost, "lim_ghost")
+
+// ---- 对齐列 ----
+plot(bar_index, "bar_index")
+plot(cycle, "cycle")
+plot(phase, "phase")
+plot(strategy.position_size, "pos")
+plot(strategy.position_avg_price, "avg_price")
+plot(strategy.equity, "equity")
+plot(strategy.openprofit, "openprofit")
+plot(strategy.netprofit, "netprofit")
+plot(strategy.closedtrades, "closedtrades")
+plot(strategy.opentrades, "opentrades")

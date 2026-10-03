@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "id": "P_err_redeclare_variable",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "同一作用域重复声明",
+  "tags": [
+    "err"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 4
+    }
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 验证：重复声明错误定位到第 4 行"
+}

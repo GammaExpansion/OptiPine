@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "id": "P_err_positional_after_named",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "命名参数之后出现位置参数",
+  "tags": [
+    "err"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 3
+    }
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 验证：语法错误定位到第 3 行"
+}

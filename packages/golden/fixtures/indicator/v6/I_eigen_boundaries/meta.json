@@ -1,0 +1,80 @@
+{
+  "schema_version": 2,
+  "id": "I_eigen_boundaries",
+  "kind": "indicator",
+  "pine_version": 6,
+  "description": "Chained eigenvalues of singleton, zero, and integer matrices; fractional integer-matrix results and related empty-matrix runtime error evidence.",
+  "tags": [
+    "matrix",
+    "eigenvalues",
+    "boundary"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BINANCE:BTCUSDT",
+    "ticker": "BTCUSDT",
+    "prefix": "BINANCE",
+    "type": "crypto",
+    "currency": "USDT",
+    "basecurrency": "BTC",
+    "timezone": "Etc/UTC"
+  },
+  "timeframe": "60",
+  "chart_timezone": "Etc/UTC",
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-15T17:46:26Z",
+    "plan": "Premium",
+    "tv_release_month": "2026-09",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "revision",
+      "probe_index",
+      "singleton",
+      "zero_0",
+      "zero_1",
+      "int_0",
+      "int_1"
+    ]
+  },
+  "inputs": {},
+  "verified": true,
+  "notes": "Native v6 export from paused Replay; all 27,704 account-limited history rows include all seven outputs, with contiguous probe_index 0..27703. Integer matrix eigenvalues retain fractions in native plots; the export does not establish the static return element type. An independently archived capture records an independent probe that compiles but fails at runtime on bar 0, so it is preserved as evidence rather than a parse fixture. Static ticker/currency/timezone metadata is inherited from I_language_support; the probe reads no syminfo, price-scale, quantity-step, or calendar field.",
+  "capture": {
+    "archive": ".golden/captures/fixture-migration-2026-09-16/indicator/v6/I_eigen_boundaries",
+    "archive_commit": "f33f245eeffec94176e31549c711c4a0471e4a55",
+    "files": {
+      "source.pine": "69db2862d5191c65e500284f13445f5db7e6e64a6597f44487ea11c4d12063aa",
+      "data.csv": "c2569756ce22f31c0c7d7f65d5323d190d2eb6ed5fd302e80bf7f0506d2ca8f4"
+    },
+    "observation": {
+      "mode": "paused-replay",
+      "selected_at": "2024-03-01T00:00:00Z",
+      "rows": 27704,
+      "first_probe_index": 0,
+      "last_probe_index": 27703,
+      "all_rows_have_indicator_output": true
+    },
+    "related_runtime_error": {
+      "probe": "packages/golden/scripts/probes/eigen-empty.pine",
+      "source_sha256": "936f12b2e3613fc2e9a9d7219c1f6fb30d87b95b88ec654a4bd3aa831c7a5e13",
+      "compiled": true,
+      "code": "RE10088",
+      "bar_index": 0,
+      "line": 4,
+      "message": "Error on bar 0: In the 'matrix.eigenvalues()' function. Matrix is empty.",
+      "chart_exported": false
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "id": "P_err_undefined_namespace_function",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "命名空间下不存在的函数",
+  "tags": [
+    "err"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 3
+    }
+  },
+  "verified": true,
+  "notes": ""
+}

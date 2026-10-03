@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_types_explicit",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "全部显式类型声明：基础类型、int[] / array<float> / matrix / map、drawing 类型、各类型的 na",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

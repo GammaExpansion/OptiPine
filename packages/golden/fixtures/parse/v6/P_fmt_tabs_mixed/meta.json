@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_fmt_tabs_mixed",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "同一文件里 tab 块与 4 空格块混用",
+  "tags": [
+    "fmt"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": "SVIX 脚本实测混用可编译"
+}

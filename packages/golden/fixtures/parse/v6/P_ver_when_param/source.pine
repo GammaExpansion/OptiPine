@@ -1,0 +1,4 @@
+//@version=6
+strategy("P_ver_when_param")
+strategy.entry("L", strategy.long, when = close > open)
+plot(strategy.position_size)

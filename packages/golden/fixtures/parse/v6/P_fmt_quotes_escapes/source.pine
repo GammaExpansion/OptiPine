@@ -1,0 +1,8 @@
+//@version=6
+indicator('P_fmt_quotes_escapes')
+s1 = "double \"quoted\" and 'single' inside"
+s2 = 'single \'quoted\' and "double" inside'
+s3 = "backslash \\ and newline \n"
+s4 = "hash # is not a comment // nor this"
+s5 = "unicode: 日本語 ★ é"
+plot(str.length(s1) + str.length(s2) + str.length(s3) + str.length(s4) + str.length(s5))

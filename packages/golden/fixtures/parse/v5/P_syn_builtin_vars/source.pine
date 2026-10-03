@@ -1,0 +1,13 @@
+//@version=5
+indicator("P_syn_builtin_vars")
+v1 = open + high + low + close + volume + hl2 + hlc3 + ohlc4 + hlcc4
+v2 = time + time_close + bar_index + last_bar_index + last_bar_time + timenow
+v3 = (barstate.isfirst ? 1 : 0) + (barstate.islast ? 1 : 0) + (barstate.ishistory ? 1 : 0) + (barstate.isrealtime ? 1 : 0) + (barstate.isnew ? 1 : 0) + (barstate.isconfirmed ? 1 : 0) + (barstate.islastconfirmedhistory ? 1 : 0)
+v4 = syminfo.mintick + syminfo.pointvalue + syminfo.pricescale + syminfo.minmove + str.length(syminfo.ticker) + str.length(syminfo.tickerid) + str.length(syminfo.prefix) + str.length(syminfo.type) + str.length(syminfo.currency) + str.length(syminfo.basecurrency) + str.length(syminfo.session) + str.length(syminfo.timezone) + str.length(syminfo.description) + str.length(syminfo.root) + str.length(syminfo.volumetype)
+v5 = timeframe.multiplier + (timeframe.isintraday ? 1 : 0) + (timeframe.isdaily ? 1 : 0) + (timeframe.isweekly ? 1 : 0) + (timeframe.ismonthly ? 1 : 0) + (timeframe.isdwm ? 1 : 0) + (timeframe.isseconds ? 1 : 0) + (timeframe.isminutes ? 1 : 0) + str.length(timeframe.period) + timeframe.in_seconds()
+v6 = year + month + dayofmonth + dayofweek + hour + minute + second + weekofyear + dayofweek.monday + dayofweek.sunday
+v7 = ta.tr + ta.vwap + ta.obv + ta.accdist + ta.iii + ta.wad + ta.wvad + ta.nvi + ta.pvi + ta.pvt
+v8 = (session.ismarket ? 1 : 0) + (session.isfirstbar ? 1 : 0) + (session.islastbar ? 1 : 0) + (session.isfirstbar_regular ? 1 : 0) + (session.islastbar_regular ? 1 : 0) + (session.ispremarket ? 1 : 0) + (session.ispostmarket ? 1 : 0)
+v9 = (chart.is_standard ? 1 : 0) + (chart.is_heikinashi ? 1 : 0) + chart.left_visible_bar_time + chart.right_visible_bar_time
+plot(v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8 + v9, color = chart.fg_color)
+plot(close, color = chart.bg_color)

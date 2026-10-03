@@ -1,0 +1,3 @@
+//@version=5
+indicator("P_ver_duplicate_param")
+plot(close, title = "a", title = "b")

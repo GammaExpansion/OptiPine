@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_alerts_log",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "alert / alertcondition / log.* / runtime.error",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": ""
+}

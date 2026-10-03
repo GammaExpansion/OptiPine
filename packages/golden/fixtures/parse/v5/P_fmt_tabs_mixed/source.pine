@@ -1,0 +1,8 @@
+//@version=5
+indicator("P_fmt_tabs_mixed")
+var int n = 0
+if close > open
+	n += 1
+if close < open
+    n -= 1
+plot(n)

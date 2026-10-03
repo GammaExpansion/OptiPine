@@ -1,0 +1,16 @@
+//@version=5
+indicator("P_syn_conditional_calls")
+useEma = input.bool(true)
+ma = if useEma
+    ta.ema(close, 10)
+else
+    ta.sma(close, 10)
+r = 0.0
+if close > open
+    r := ta.rsi(close, 14)
+s = switch
+    close > open => ta.stdev(close, 10)
+    => ta.atr(10)
+plot(ma)
+plot(r)
+plot(s)

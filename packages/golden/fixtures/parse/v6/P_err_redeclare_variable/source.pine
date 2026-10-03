@@ -1,0 +1,5 @@
+//@version=6
+indicator("P_err_redeclare_variable")
+x = 1
+x = 2
+plot(x)

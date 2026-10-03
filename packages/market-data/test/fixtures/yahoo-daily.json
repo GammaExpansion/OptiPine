@@ -1,0 +1,109 @@
+{
+  "chart": {
+    "result": [
+      {
+        "meta": {
+          "currency": "USD",
+          "symbol": "AAPL",
+          "exchangeName": "NMS",
+          "fullExchangeName": "NasdaqGS",
+          "instrumentType": "EQUITY",
+          "firstTradeDate": 345479400,
+          "regularMarketTime": 1789761602,
+          "hasPrePostMarketData": true,
+          "gmtoffset": -14400,
+          "timezone": "EDT",
+          "exchangeTimezoneName": "America/New_York",
+          "regularMarketPrice": 336.13,
+          "regularMarketChangePercent": -0.258,
+          "fulldayPrice": 335.85,
+          "fulldayChange": -0.28,
+          "fulldayChangePercent": -0.083,
+          "fiftyTwoWeekHigh": 344.57,
+          "fiftyTwoWeekLow": 243.42,
+          "regularMarketDayHigh": 338.49,
+          "regularMarketDayLow": 332.53,
+          "regularMarketVolume": 86588203,
+          "longName": "Apple Inc.",
+          "shortName": "Apple Inc.",
+          "chartPreviousClose": 276.97,
+          "priceHint": 2,
+          "currentTradingPeriod": {
+            "pre": {
+              "timezone": "EDT",
+              "start": 1789977600,
+              "end": 1789997400,
+              "gmtoffset": -14400
+            },
+            "regular": {
+              "timezone": "EDT",
+              "start": 1789997400,
+              "end": 1790020800,
+              "gmtoffset": -14400
+            },
+            "post": {
+              "timezone": "EDT",
+              "start": 1790020800,
+              "end": 1790035200,
+              "gmtoffset": -14400
+            }
+          },
+          "dataGranularity": "1d",
+          "range": "",
+          "validRanges": [
+            "1d",
+            "5d",
+            "1mo",
+            "3mo",
+            "6mo",
+            "1y",
+            "2y",
+            "5y",
+            "10y",
+            "ytd",
+            "max"
+          ]
+        },
+        "timestamp": [
+          1764167400,
+          1764340200
+        ],
+        "indicators": {
+          "quote": [
+            {
+              "open": [
+                276.9599914550781,
+                277.260009765625
+              ],
+              "low": [
+                276.6300048828125,
+                275.989990234375
+              ],
+              "volume": [
+                33431400,
+                20135600
+              ],
+              "high": [
+                279.5299987792969,
+                279
+              ],
+              "close": [
+                277.54998779296875,
+                278.8500061035156
+              ]
+            }
+          ],
+          "adjclose": [
+            {
+              "adjclose": [
+                276.79656982421875,
+                278.0930480957031
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "error": null
+  }
+}

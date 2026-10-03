@@ -1,0 +1,18 @@
+//@version=6
+indicator("Codex calendar metadata probe", overlay=true)
+var table t = table.new(position.top_right, 2, 17,bgcolor=color.white)
+var array<string> dates = array.new_string(17, "")
+if year >= 2010 and year <= 2026 and (time_close-time) < 23400000
+    int r = year-2010
+    array.set(dates,r,array.get(dates,r)+str.format_time(time,"MM-dd",syminfo.timezone)+"="+str.format_time(time_close,"HH:mm",syminfo.timezone)+" ")
+if barstate.islast
+    for r=0 to 16
+        table.cell(t,0,r,str.tostring(2010+r),text_size=size.small)
+        table.cell(t,1,r,array.get(dates,r),text_size=size.small)
+plot(time, "session_open", display=display.data_window)
+plot(time_close, "session_close", display=display.data_window)
+plot(time_tradingday, "session_trading_day", display=display.data_window)
+plot(time("W"), "calendar_week_open", display=display.data_window)
+plot(time_close("W"), "calendar_week_close", display=display.data_window)
+plot(time("M"), "calendar_month_open", display=display.data_window)
+plot(time_close("M"), "calendar_month_close", display=display.data_window)

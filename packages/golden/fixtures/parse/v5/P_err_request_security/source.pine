@@ -1,0 +1,4 @@
+//@version=5
+indicator("P_err_request_security")
+d = request.security(syminfo.tickerid, "D", close)
+plot(d)

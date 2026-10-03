@@ -1,0 +1,127 @@
+{
+  "schema_version": 2,
+  "id": "S_risk_max_cons_loss_days__full_close_2_weekly",
+  "kind": "strategy",
+  "pine_version": 6,
+  "description": "Two losing weeks with a full scheduled close; the fixed risk order leaves a short position of two units.",
+  "tags": [
+    "broker",
+    "risk",
+    "weekly",
+    "consecutive-loss-isolation-r1"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "syminfo": {
+    "tickerid": "BINANCE:BTCUSDT",
+    "timezone": "Etc/UTC",
+    "currency": "USDT",
+    "mintick": 0.01,
+    "pointvalue": 1,
+    "mincontract": 0.00001
+  },
+  "timeframe": "1W",
+  "chart_timezone": "Etc/UTC",
+  "inputs": {
+    "Consecutive losing periods": 2,
+    "Scheduled close quantity": 2,
+    "Start": 1704067200000
+  },
+  "settings": {
+    "initial_capital": 100000,
+    "default_qty_type": "fixed",
+    "default_qty_value": 2,
+    "pyramiding": 0,
+    "commission_type": "percent",
+    "commission_value": 0,
+    "slippage": 0,
+    "margin_long": 0,
+    "margin_short": 0,
+    "calc_on_order_fills": false,
+    "calc_on_every_tick": false,
+    "process_orders_on_close": false,
+    "backtest_fill_limits_assumption": 0,
+    "currency": "NONE"
+  },
+  "data": {
+    "file": "data.csv",
+    "time_format": "unix_seconds",
+    "exported_at": "2026-09-16T08:38:21.486Z",
+    "columns": [
+      "time",
+      "open",
+      "high",
+      "low",
+      "close",
+      "Volume",
+      "probe_revision",
+      "bar_index",
+      "active_index",
+      "loss_periods",
+      "scheduled_close_quantity",
+      "position_size",
+      "position_avg_price",
+      "equity",
+      "openprofit",
+      "netprofit",
+      "closed_trades",
+      "open_trades",
+      "last_profit",
+      "last_entry_price",
+      "last_exit_price",
+      "last_entry_bar",
+      "last_exit_bar"
+    ]
+  },
+  "report": {
+    "file": "report.xlsx",
+    "exported_at": "2026-09-16T08:38:34.051Z"
+  },
+  "verified": true,
+  "execution": {
+    "mode": "replay-selection",
+    "selected_at": "2025-01-06T00:00:00Z",
+    "paused": true,
+    "stepped": false
+  },
+  "notes": "Native Pine v6 isolation probe, independently collected with the stated Inputs and unchanged source Properties. All 17 series and all trade comparisons match. All 215 strict checks pass. These cases do not establish profitable/flat streak resets, short entries, fill callbacks or competing risk rules.",
+  "capture": {
+    "archive": ".golden/captures/weekly-risk-2026-09-16/close-full-count2",
+    "source_revision": 1,
+    "files": {
+      "source.pine": "44958a914513cdb77d2fdf195b1e3a5665bd439ee056fa58829cc4a51fd3f090",
+      "data.csv": "9267b58f90135b1992123b31397f323a0ee097b690be5c95d9a87ebb431bf57d",
+      "report.xlsx": "6f8158f12f57f9aec891be1096c13653ed4f347b784c99a786b17d0ba0f44ae1"
+    },
+    "paired_exports": {
+      "before": "2026-09-16T08:38:21.486Z",
+      "report": "2026-09-16T08:38:34.051Z",
+      "after": "2026-09-16T08:38:49.711Z",
+      "byte_identical": true
+    },
+    "history_evidence": {
+      "rows": 386,
+      "first": "2017-08-14T00:00:00Z",
+      "last": "2024-12-30T00:00:00Z",
+      "first_bar_index": 0,
+      "last_complete_bar_index": 384,
+      "final_strategy_close_pending": true
+    },
+    "market_inputs": {
+      "mincontract": {
+        "fixture": "indicator/v6/I_syminfo_mincontract",
+        "basis": "Independent native v6 metadata probe; not inferred from strategy results."
+      }
+    },
+    "observations": [
+      "Private script editor text was copied back and compared with the supplied source after newline normalization; no subsequent source edits.",
+      "Properties were viewed and left at source defaults. Actual Inputs and report Properties were independently checked.",
+      "The native report overview displayed Aug 13 through Dec 29; downloaded XLSX Properties and UNIX CSV both span Aug 14 through Dec 30. No timestamps were adjusted.",
+      "Full local capture records preserve native download names and browser UTC click timestamps. Account tier was not independently recorded."
+    ]
+  }
+}

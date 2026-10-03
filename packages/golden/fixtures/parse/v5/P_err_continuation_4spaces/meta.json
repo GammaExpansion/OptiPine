@@ -1,0 +1,25 @@
+{
+  "schema_version": 2,
+  "id": "P_err_continuation_4spaces",
+  "kind": "parse",
+  "pine_version": 5,
+  "description": "续行缩进 4 空格：v5 报语法错误，定位到上一行",
+  "tags": [
+    "err",
+    "fmt"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 3
+    }
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 验证：错误定位到第 3 行"
+}

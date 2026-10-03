@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "id": "P_ver_duplicate_param",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "重复命名参数：v5 警告 / v6 错误",
+  "tags": [
+    "ver"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "error",
+    "error": {
+      "line": 3
+    }
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 验证：v6 在第 3 行报类型错误"
+}

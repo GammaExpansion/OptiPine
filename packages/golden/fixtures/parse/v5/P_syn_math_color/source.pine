@@ -1,0 +1,9 @@
+//@version=5
+indicator("P_syn_math_color")
+v = math.abs(-1) + math.acos(0.5) + math.asin(0.5) + math.atan(1) + math.avg(1, 2, 3) + math.ceil(1.2) + math.cos(1) + math.exp(1) + math.floor(1.8) + math.log(10) + math.log10(10) + math.max(1, 2, 3) + math.min(1, 2, 3) + math.pow(2, 10) + math.round(2.5) + math.round(2.345, 2) + math.round_to_mintick(close) + math.sign(-3) + math.sin(1) + math.sqrt(9) + math.sum(close, 3) + math.tan(1) + math.todegrees(math.pi) + math.toradians(180) + math.random(0, 1, 42) + math.e + math.phi + math.rphi + math.pi
+c1 = color.new(color.red, 50)
+c2 = color.rgb(255, 0, 0, 20)
+c3 = color.from_gradient(close, low, high, color.red, color.green)
+r = color.r(c1) + color.g(c2) + color.b(c3) + color.t(c1)
+plot(v + r)
+plot(close, color = c3)

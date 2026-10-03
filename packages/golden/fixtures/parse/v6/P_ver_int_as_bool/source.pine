@@ -1,0 +1,8 @@
+//@version=6
+indicator("P_ver_int_as_bool")
+x = 1
+y = if x
+    2
+else
+    3
+plot(y)

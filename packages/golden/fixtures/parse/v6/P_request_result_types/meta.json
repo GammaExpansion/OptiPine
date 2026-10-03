@@ -1,0 +1,42 @@
+{
+  "schema_version": 2,
+  "id": "P_request_result_types",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "request.security preserves tuple and boolean expression return types, including a user function returning a tuple.",
+  "tags": [
+    "language",
+    "request",
+    "types"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": "Exact v6 source independently compiled in TradingView Pine Editor; editor readback matches after newline normalization, no error or warning markers. Compile-only: request bool/tuple result types and the user-function tuple are verified; no secondary market data or runtime request support is claimed.",
+  "capture": {
+    "archive": ".golden/captures/community-language-2026-09-19/P_request_result_types",
+    "files": {
+      "source.pine": "df344b03e3eedeed843004a399a654bfe3f773c5c8cce4b0da30de31a8b2ee42"
+    },
+    "compiler": {
+      "observed_on": "2026-09-20",
+      "observed_at": "2026-09-20T04:06:32Z",
+      "pine_version": 6,
+      "result": "ok",
+      "saved_script": "Community request result types r1",
+      "success_log": "8:20:00 PM \"Untitled script\" opened | 9:06:15 PM Compiling... | 9:06:32 PM \"Community request result types r1\" saved.",
+      "warnings": []
+    },
+    "source_check": "All 8 content lines and terminal newline match the native Pine Editor DOM readback after CRLF normalization.",
+    "observations": [
+      "Compiled by saving the new private script; it was not added to the chart. No runtime or CSV/XLSX comparison."
+    ]
+  }
+}

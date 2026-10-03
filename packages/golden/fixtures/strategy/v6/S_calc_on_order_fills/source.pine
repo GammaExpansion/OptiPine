@@ -1,0 +1,91 @@
+//@version=6
+// calc_on_order_fills=true：同一 bar 的执行次数、每次执行看到的 OHLC 与仓位、成交后重算里下的市价单在哪个 tick 成交、barstate.isnew 在重算中的原始值
+strategy("S_calc_on_order_fills", overlay = false,
+  initial_capital = 100000, currency = currency.NONE,
+  default_qty_type = strategy.fixed, default_qty_value = 1, pyramiding = 1,
+  commission_type = strategy.commission.percent, commission_value = 0, slippage = 0,
+  margin_long = 0, margin_short = 0, close_entries_rule = "FIFO",
+  process_orders_on_close = false, calc_on_order_fills = true, calc_on_every_tick = false,
+  backtest_fill_limits_assumption = 0, use_bar_magnifier = false, fill_orders_on_standard_ohlc = false)
+int cycleLen = 8
+int phase = bar_index % cycleLen
+int cycle = math.floor(bar_index / cycleLen)
+
+// 用 bar_index 变化识别本 bar 的第一次执行（历史 bar 上 barstate.isnew 不可靠，另存原始值作 oracle）
+var int lastBar = -1
+var int calcs = 0
+var bool closeSent = false
+var float o1 = na
+var float h1 = na
+var float l1 = na
+var float c1 = na
+var float p1 = na
+var float o2 = na
+var float h2 = na
+var float l2 = na
+var float c2 = na
+var float p2 = na
+bool firstExec = bar_index != lastBar
+if firstExec
+    lastBar := bar_index
+    calcs := 0
+    closeSent := false
+    o1 := na
+    h1 := na
+    l1 := na
+    c1 := na
+    p1 := na
+    o2 := na
+    h2 := na
+    l2 := na
+    c2 := na
+    p2 := na
+calcs += 1
+if calcs == 1
+    o1 := open
+    h1 := high
+    l1 := low
+    c1 := close
+    p1 := strategy.position_size
+if calcs == 2
+    o2 := open
+    h2 := high
+    l2 := low
+    c2 := close
+    p2 := strategy.position_size
+float limBelow = close * (1 - 0.002)
+if firstExec and phase == 0 and strategy.position_size == 0
+    strategy.entry("L", strategy.long)                        // 市价：下一根 open 成交 → 触发重算
+if firstExec and phase == 4 and strategy.position_size == 0
+    strategy.entry("LL", strategy.long, limit = limBelow)     // 限价：盘中成交 → 触发重算
+if strategy.position_size > 0 and not closeSent
+    strategy.close_all(comment = "on_fill")                   // 成交后第一次看到持仓就平：看它在哪个 tick 成交；每 bar 最多一次
+    closeSent := true
+if phase == 7
+    strategy.cancel_all()
+plot(calcs, "calcs_on_bar")
+plot(barstate.isnew ? 1 : 0, "isnew_raw_last_calc")
+plot(firstExec ? 1 : 0, "first_exec_last_calc")
+plot(o1, "open_at_calc1")
+plot(h1, "high_at_calc1")
+plot(l1, "low_at_calc1")
+plot(c1, "close_at_calc1")
+plot(p1, "pos_at_calc1")
+plot(o2, "open_at_calc2")
+plot(h2, "high_at_calc2")
+plot(l2, "low_at_calc2")
+plot(c2, "close_at_calc2")
+plot(p2, "pos_at_calc2")
+plot(limBelow, "lim_below")
+
+// ---- 对齐列 ----
+plot(bar_index, "bar_index")
+plot(cycle, "cycle")
+plot(phase, "phase")
+plot(strategy.position_size, "pos")
+plot(strategy.position_avg_price, "avg_price")
+plot(strategy.equity, "equity")
+plot(strategy.openprofit, "openprofit")
+plot(strategy.netprofit, "netprofit")
+plot(strategy.closedtrades, "closedtrades")
+plot(strategy.opentrades, "opentrades")

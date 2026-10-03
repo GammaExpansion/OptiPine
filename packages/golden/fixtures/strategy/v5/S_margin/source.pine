@@ -1,0 +1,37 @@
+//@version=5
+// margin / leverage：25% 保证金（4x）+ 300% equity 满仓，多空各一段，看 margin call、被强平量、margin_liquidation_price
+strategy("S_margin", overlay = false,
+  initial_capital = 100000, currency = currency.NONE,
+  default_qty_type = strategy.percent_of_equity, default_qty_value = 300, pyramiding = 1,
+  commission_type = strategy.commission.percent, commission_value = 0, slippage = 0,
+  margin_long = 25, margin_short = 25, close_entries_rule = "FIFO",
+  process_orders_on_close = false, calc_on_order_fills = false, calc_on_every_tick = false,
+  backtest_fill_limits_assumption = 0, use_bar_magnifier = false, fill_orders_on_standard_ohlc = false)
+int cycleLen = 40
+int phase = bar_index % cycleLen
+int cycle = math.floor(bar_index / cycleLen)
+
+if phase == 0
+    strategy.entry("L", strategy.long)
+if phase == 18
+    strategy.close_all(comment = "c1")
+if phase == 20
+    strategy.entry("S", strategy.short)
+if phase == 38
+    strategy.close_all(comment = "c2")
+if phase == 39
+    strategy.cancel_all()
+plot(strategy.margin_liquidation_price, "margin_liquidation_price")
+plot(strategy.default_entry_qty(close), "default_entry_qty_close")
+
+// ---- 对齐列 ----
+plot(bar_index, "bar_index")
+plot(cycle, "cycle")
+plot(phase, "phase")
+plot(strategy.position_size, "pos")
+plot(strategy.position_avg_price, "avg_price")
+plot(strategy.equity, "equity")
+plot(strategy.openprofit, "openprofit")
+plot(strategy.netprofit, "netprofit")
+plot(strategy.closedtrades, "closedtrades")
+plot(strategy.opentrades, "opentrades")

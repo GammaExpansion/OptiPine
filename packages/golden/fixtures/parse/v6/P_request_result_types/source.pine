@@ -1,0 +1,8 @@
+//@version=6
+indicator("Community request result types r1")
+
+pair(value) => [value, bar_index]
+[requestedClose, requestedIndex] = request.security(syminfo.tickerid, "1D", pair(close))
+bool requestedUp = request.security(syminfo.tickerid, "1D", close > open)
+int typedIndex = requestedIndex
+plot(requestedUp ? requestedClose : typedIndex, "requested_value")

@@ -1,0 +1,25 @@
+# Dependencies and build output in every workspace
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Test output and local golden runs
+coverage/
+.golden/
+
+# Local tool state, npm cache and diagnostic logs
+.claude/
+.npm/
+npm-debug.log*
+
+# Operating system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Secrets and local environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key

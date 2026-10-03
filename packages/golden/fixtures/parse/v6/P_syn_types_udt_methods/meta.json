@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "id": "P_syn_types_udt_methods",
+  "kind": "parse",
+  "pine_version": 6,
+  "description": "type 定义（默认值）、Type.new、method、字段赋值、对象的 [] 历史",
+  "tags": [
+    "syn"
+  ],
+  "source": {
+    "origin": "micro",
+    "author": "",
+    "license": "",
+    "url": ""
+  },
+  "expect": {
+    "compile": "ok"
+  },
+  "verified": true,
+  "notes": "2026-09-03 在 TradingView Pine Editor 重新验证：method 避开保留字 range 后编译通过"
+}
