@@ -1,0 +1,185 @@
+.panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.panel > .heading {
+  padding: 10px 12px;
+  min-height: 44px;
+}
+.heading h2 {
+  font-size: 13px;
+  margin: 0;
+}
+.heading span,
+.field > span,
+.footer {
+  color: var(--caption);
+  font-size: 12px;
+}
+.heading > button:last-child {
+  margin-left: auto;
+}
+.filters,
+.chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.body table {
+  table-layout: auto;
+}
+.body td,
+.body th {
+  max-width: 160px;
+}
+.body [data-profit='true'] {
+  color: var(--profit);
+}
+.body [data-profit='false'],
+.loss {
+  color: var(--loss);
+}
+.rank {
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  min-width: 20px;
+  padding: 4px 0;
+}
+.rank:focus-visible {
+  outline: 1px solid var(--primary);
+}
+.more {
+  height: 24px;
+  padding: 0;
+}
+.parameters {
+  margin: 0;
+  min-width: 160px;
+  display: grid;
+  gap: 6px;
+}
+.parameters > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.parameters dt {
+  color: var(--secondary);
+}
+.parameters dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.footer {
+  padding: 5px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--divider);
+}
+.footer > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.empty {
+  padding: 24px clamp(20px, 5vw, 60px);
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.diagnosis {
+  display: grid;
+  margin-top: 16px;
+}
+.diagnosis > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--divider);
+}
+.diagnosis > div:last-child {
+  border-bottom: 1px solid var(--divider);
+}
+.diagnosis > div > div {
+  margin-left: auto;
+  text-align: right;
+}
+.diagnosis strong {
+  font-weight: 400;
+}
+.diagnosis p {
+  margin: 4px 0 0;
+  color: var(--secondary);
+  font-size: 12px;
+}
+.condition {
+  width: 292px;
+  max-width: calc(100vw - 56px);
+  display: grid;
+  gap: 12px;
+}
+.field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.conditionFields {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.failures td {
+  white-space: normal;
+  text-align: left;
+  padding: 12px 8px;
+}
+.failures th {
+  text-align: left;
+}
+.failures code {
+  display: block;
+  font-size: 12px;
+  color: var(--secondary);
+  overflow-wrap: anywhere;
+  margin-top: 4px;
+}
+.failureFooter {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.failureFooter p {
+  color: var(--caption);
+  flex: 1;
+  min-width: 240px;
+  margin: 0;
+}

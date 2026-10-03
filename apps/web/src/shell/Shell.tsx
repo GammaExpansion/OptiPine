@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { LazyPropertiesDialog } from '../dialogs/properties/LazyPropertiesDialog.tsx';
 import { BacktestPage } from '../pages/backtest/BacktestPage.tsx';
 import { OptimizePage } from '../pages/optimize/OptimizePage.tsx';
+import { FailedCombinationsDialog } from '../pages/optimize/leaderboard/FailedCombinationsDialog.tsx';
 import { useBacktestStore } from '../state/backtest.ts';
 import { useUiStore } from '../state/ui.ts';
 import { DialogsRoot } from './DialogsRoot.tsx';
@@ -19,7 +20,9 @@ export function Shell({ canOptimize }: { canOptimize?: boolean }) {
     <div className={styles.shell}>
       <Header canOptimize={canOptimize ?? hasWorkspace} />
       {page === 'backtest' ? <BacktestPage /> : <OptimizePage />}
-      <DialogsRoot slots={{ properties: LazyPropertiesDialog }} />
+      <DialogsRoot
+        slots={{ properties: LazyPropertiesDialog, failedCombinations: FailedCombinationsDialog }}
+      />
     </div>
   );
 }
