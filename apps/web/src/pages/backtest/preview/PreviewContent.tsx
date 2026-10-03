@@ -41,6 +41,7 @@ export function PreviewContent() {
     <>
       {preview && (
         <Banner
+          data-preview-banner
           role="status"
           className={styles.banner}
           title={t('preview.title', { set: setName(preview.origin) })}

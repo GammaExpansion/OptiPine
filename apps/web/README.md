@@ -64,4 +64,13 @@ Backtest page and Settings on the Optimize page hold the right panel (G3, G4). `
 checks S1, B1, O1 and R1 at 1440 × 900, 1024 × 768 and 390 × 844 in both languages for cut labels
 and page scroll, and drives the drawer and the phone tabs.
 
+The phone's Optimize results keep the summary above four tabs (G4). Its leaderboard uses the
+same 13-set pages as the desktop table, displaying all searched inputs in declaration order at
+the run's step precision. Selection and preview actions have 44 px targets. The summary's view
+switch and the selection actions each get their own row so both languages fit. The B16 banner
+adds to the phone chart's height, leaving its result tabs unobstructed.
+`e2e/phone-optimize.spec.ts` runs 18 combinations through the real Worker pool in both languages
+at 390 × 844, checks charts, cards, paging and preview/Back, and writes G4/B16 screenshots and an
+overflow report for the other phone tabs to `test-results/`.
+
 No files under `src/workflows/`, `examples/` or `src/pages/backtest/code/` belong to this scaffold.

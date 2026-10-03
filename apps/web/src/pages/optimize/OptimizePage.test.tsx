@@ -1,5 +1,6 @@
 import { act, fireEvent, screen } from '@testing-library/react';
 import { expect, test } from 'vitest';
+import { setViewportWidth } from '../../test/viewport.ts';
 import { defaultPaneSizes, uiStore } from '../../state/ui.ts';
 import { OptimizePage } from './OptimizePage.tsx';
 import {
@@ -41,4 +42,36 @@ test('results lay out R1 in remembered splits, and dim when settings change (R5)
   expect(results).toHaveAttribute('data-outdated');
   fireEvent.doubleClick(screen.getByRole('separator', { name: 'Resize summary and results' }));
   expect(uiStore.getState().paneSizes.optimize.summary).toBe(defaultPaneSizes.summary);
+});
+
+test('G4 keeps the chosen summary view above four tabs and restores the selected cards', async () => {
+  setViewportWidth(390);
+  await loadOptimization();
+  act(() => {
+    optimization().actions.removeFilter(1);
+    optimization().actions.removeFilter(0);
+  });
+  await runOptimization();
+  renderInEnglish(<OptimizePage />);
+  expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+    'Leaderboard',
+    'Parameter map',
+    'Sensitivity',
+    'Settings',
+  ]);
+  expect(separators()).toEqual([]);
+  fireEvent.click(screen.getByRole('button', { name: 'Select set #2' }));
+  fireEvent.click(screen.getByRole('radio', { name: 'Distribution' }));
+  const chart = screen.getByRole('img', { name: 'Distribution' });
+  act(() => uiStore.getState().setOptimizeTab('settings'));
+  expect(screen.getByRole('region', { name: 'Optimization run' })).toBeVisible();
+  expect(screen.getByRole('img', { name: 'Distribution' })).toBe(chart);
+  expect(screen.getByRole('button', { name: 'View backtest' })).toBeVisible();
+  act(() => uiStore.getState().setOptimizeTab('leaderboard'));
+  expect(screen.getByRole('button', { name: 'Select set #2' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  act(() => optimization().actions.setRange('Length', { to: 5 }));
+  expect(chart.closest('[data-results]')).toHaveAttribute('data-outdated');
 });

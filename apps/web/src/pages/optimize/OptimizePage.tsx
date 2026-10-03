@@ -16,9 +16,8 @@
  * The panels mount while there are results or a run fills them, and read the optimization store
  * themselves; none takes props. Dialog slots mount once at shell/DialogsRoot.
  *
- * Below 768 px `PhoneOptimize` (G4) mounts the same slots one per tab: Summary, Leaderboard,
- * Parameter map and Sensitivity each get the tab's whole width and height (390 px wide on G4, room
- * for the leaderboard's cards), Settings holds the data range over the right panel, and the
+ * Below 768 px `PhoneOptimize` (G4) keeps Summary above four tabs: Leaderboard (cards), Parameter
+ * map, Sensitivity and Settings. Settings holds the data range over the right panel, and the
  * selection bar stays along the bottom. From 768 to 1279 px the right panel is a drawer (G2).
  */
 import { useOptimizationStore } from '../../state/optimization.ts';

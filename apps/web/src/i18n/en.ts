@@ -753,6 +753,7 @@ export const en = {
   'optimize.leaderboard.rank': '#',
   'optimize.leaderboard.set': '#{rank}',
   'optimize.leaderboard.select': 'Select set #{rank}',
+  'optimize.leaderboard.parameter': '{title} {value}',
   'optimize.leaderboard.more': '+{count}',
   'optimize.leaderboard.parameters': 'Inputs',
   'optimize.leaderboard.in': 'IS',

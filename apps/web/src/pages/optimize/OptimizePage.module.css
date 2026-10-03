@@ -31,7 +31,7 @@
 .map {
   border-bottom: 1px solid var(--divider);
 }
-/* G4: one tab row; each tab holds one region, given the whole height to lay out as it needs. */
+/* G4: the persistent summary above one tab row and the selected set below the results. */
 .phone {
   flex: 1;
   min-height: 0;
@@ -43,6 +43,12 @@
   overflow-y: auto;
 }
 .region[data-outdated] {
+  opacity: 0.45;
+}
+.phoneSummary {
+  flex: none;
+}
+.phoneSummary[data-outdated] {
   opacity: 0.45;
 }
 .settings {

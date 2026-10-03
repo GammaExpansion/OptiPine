@@ -15,10 +15,9 @@ import { SummaryPanel } from './summary/SummaryPanel.tsx';
 import tabsStyles from '../../shell/PhoneTabs.module.css';
 import styles from './OptimizePage.module.css';
 
-const tabs: readonly OptimizeTab[] = ['summary', 'leaderboard', 'map', 'sensitivity', 'settings'];
+const tabs: readonly OptimizeTab[] = ['leaderboard', 'map', 'sensitivity', 'settings'];
 
 const regions = {
-  summary: SummaryPanel,
   leaderboard: LeaderboardPanel,
   map: MapPanel,
   sensitivity: SensitivityPanel,
@@ -44,17 +43,22 @@ function ResultsTab({ tab }: { tab: Exclude<OptimizeTab, 'settings'> }) {
 }
 
 /**
- * The Optimize page below 768 px (G4): Summary, Leaderboard, Parameter map, Sensitivity and
- * Settings, each tab holding one region's slot, and the selection bar along the bottom. Settings
- * holds the data range and the right panel.
+ * G4 keeps the summary above four tabs and the selection actions below them. Settings holds the
+ * data range and the right panel; changing tabs keeps the summary's chosen view mounted.
  */
 export function PhoneOptimize() {
   const { t } = useI18n();
   const tab = useUiStore((state) => state.optimizeTab);
   const setTab = useUiStore((state) => state.setOptimizeTab);
   const results = useOptimizationStore(showsResults);
+  const outdated = useOptimizationStore(resultsOutdated);
   return (
     <main className={styles.phone}>
+      {results && (
+        <div className={styles.phoneSummary} data-results data-outdated={outdated || undefined}>
+          <SummaryPanel />
+        </div>
+      )}
       <div className={tabsStyles.tabs}>
         <DockTabs
           label={t('layout.sections')}

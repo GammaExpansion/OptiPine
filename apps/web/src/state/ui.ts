@@ -7,7 +7,7 @@ export type Page = 'backtest' | 'optimize';
 /** The Backtest page's result tabs; `inputs` is the phone's tab for the right panel (G3). */
 export type DockTab = 'report' | 'equity' | 'trades' | 'inputs' | 'code' | 'issues';
 /** The Optimize page's tabs on a phone (G4); Settings holds the right panel. */
-export type OptimizeTab = 'summary' | 'leaderboard' | 'map' | 'sensitivity' | 'settings';
+export type OptimizeTab = 'leaderboard' | 'map' | 'sensitivity' | 'settings';
 export type Dialog = 'script' | 'marketData' | 'dateRange' | 'properties' | 'failedCombinations';
 /** Pane sizes in pixels, kept per page; each page reads the fields of its own panes. */
 export interface PaneSizes {
@@ -106,7 +106,7 @@ export function createUiStore(
         openDialogs: [],
         language: defaultLanguage(locale),
         drawerOpen: false,
-        optimizeTab: 'summary',
+        optimizeTab: 'leaderboard',
         // The drawer belongs to the page it was opened on.
         setPage: (page) => set({ page, drawerOpen: false }),
         setDockTab: (dockTab) => set({ dockTab }),

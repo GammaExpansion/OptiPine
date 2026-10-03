@@ -736,6 +736,7 @@ export const zh = {
   'optimize.leaderboard.rank': '#',
   'optimize.leaderboard.set': '#{rank}',
   'optimize.leaderboard.select': '选择第 {rank} 组',
+  'optimize.leaderboard.parameter': '{title} {value}',
   'optimize.leaderboard.more': '+{count}',
   'optimize.leaderboard.parameters': '参数',
   'optimize.leaderboard.in': '样本内',

@@ -102,7 +102,7 @@ test('a phone shows the Optimize page as tabs, the setup under Settings (G4)', a
     within(tabs)
       .getAllByRole('tab')
       .map((tab) => tab.textContent),
-  ).toEqual(['Summary', 'Leaderboard', 'Parameter map', 'Sensitivity', 'Settings']);
+  ).toEqual(['Leaderboard', 'Parameter map', 'Sensitivity', 'Settings']);
   expect(screen.getByRole('heading', { name: 'No optimization has run yet' })).toBeVisible();
   expect(screen.getByText(/under Settings/)).toBeVisible();
   await user.click(within(tabs).getByRole('tab', { name: 'Settings' }));
