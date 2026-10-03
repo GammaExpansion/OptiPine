@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Group, Panel, usePanelRef } from 'react-resizable-panels';
 import { DockTabs } from '../../components/DockTabs.tsx';
 import { IconButton } from '../../components/IconButton.tsx';
@@ -9,14 +9,24 @@ import { defaultPaneSizes, useUiStore, type DockTab } from '../../state/ui.ts';
 import { backtestIssues } from '../../workflows/backtest.ts';
 import { ResizeHandle } from '../../shell/ResizeHandle.tsx';
 import styles from '../../shell/Workbench.module.css';
-import { ReportTab } from './dock/ReportTab.tsx';
-import { EquityTab } from './dock/EquityTab.tsx';
-import { TradesTab } from './dock/TradesTab.tsx';
-import { CodeTab } from './dock/CodeTab.tsx';
-import { IssuesTab } from './dock/IssuesTab.tsx';
+import { EmptyResults } from './dock/results/EmptyResults.tsx';
 import { DockActionsHost } from './dock/DockActions.tsx';
 import actionStyles from './dock/DockActions.module.css';
-import { closedTradeCount } from './states/chart-view.ts';
+import { closedTradeCount, shownResult } from './states/chart-view.ts';
+
+const ReportTab = lazy(() =>
+  import('./dock/ReportTab.tsx').then((m) => ({ default: m.ReportTab })),
+);
+const EquityTab = lazy(() =>
+  import('./dock/EquityTab.tsx').then((m) => ({ default: m.EquityTab })),
+);
+const TradesTab = lazy(() =>
+  import('./dock/TradesTab.tsx').then((m) => ({ default: m.TradesTab })),
+);
+const CodeTab = lazy(() => import('./dock/CodeTab.tsx').then((m) => ({ default: m.CodeTab })));
+const IssuesTab = lazy(() =>
+  import('./dock/IssuesTab.tsx').then((m) => ({ default: m.IssuesTab })),
+);
 
 const dockTabs: DockTab[] = ['report', 'equity', 'trades', 'code', 'issues'];
 
@@ -24,6 +34,7 @@ export function Dock({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const issueCount = useBacktestStore((state) => backtestIssues(state).length);
   const tradeCount = useBacktestStore(closedTradeCount);
+  const hasResult = useBacktestStore((state) => shownResult(state) !== null);
   const codeLine = useSelectionStore((state) => state.codeLine);
   const [actionsHost, setActionsHost] = useState<HTMLElement | null>(null);
   const tab = useUiStore((state) => state.dockTab);
@@ -143,11 +154,16 @@ export function Dock({ children }: { children: ReactNode }) {
           }
         >
           <DockActionsHost.Provider value={dockCollapsed ? null : actionsHost}>
-            {tab === 'report' && <ReportTab />}
-            {tab === 'equity' && <EquityTab />}
-            {tab === 'trades' && <TradesTab />}
-            {tab === 'code' && <CodeTab />}
-            {tab === 'issues' && <IssuesTab />}
+            {/* S1 shows the empty dock without importing charts, tables or engine reporting. */}
+            <Suspense fallback={<EmptyResults />}>
+              {tab === 'report' && (hasResult ? <ReportTab /> : <EmptyResults />)}
+              {tab === 'equity' && (hasResult ? <EquityTab /> : <EmptyResults />)}
+              {tab === 'trades' && (hasResult ? <TradesTab /> : <EmptyResults />)}
+            </Suspense>
+            <Suspense fallback={null}>
+              {tab === 'code' && <CodeTab />}
+              {tab === 'issues' && <IssuesTab />}
+            </Suspense>
           </DockActionsHost.Provider>
         </DockTabs>
       </Panel>

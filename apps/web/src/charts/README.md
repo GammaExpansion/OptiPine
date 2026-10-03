@@ -16,10 +16,14 @@ chart.current?.resetView();
 ```
 
 `EquityCharts.tsx` takes `input: EquityInput` and its non-null `summary: EquitySummary` from
-`equitySummary(input)`. It renders the legend/units toolbar and charts, without the page's facts row.
+`equitySummary(input)`. It renders the legend/units toolbar, optional `afterToolbar` content (the
+page's facts row), and charts. Its default height is 342 px; a page can use `className` to fill its
+available height. Equity/drawdown panes share the space remaining after toolbar, facts and calendar.
 Both lightweight-charts instances share logical ranges and crosshairs. The SVG calendar and monthly
 returns project onto the same bar axis, including interpolated nontrading days. Changing units retains
-the visible range. `CalendarStrip` and `MonthlyReturns` can also be imported separately; their handles
+the visible range. Measured resize applies the full range by default, including initially hidden
+mounts. User ranges are retained by input identity through resize, language and tab changes until
+a new result or Reset zoom. `CalendarStrip` and `MonthlyReturns` can also be imported separately; their handles
 accept a `CalendarViewport` with the parent chart's width and calendar-day projection.
 
 ## Rendering decisions

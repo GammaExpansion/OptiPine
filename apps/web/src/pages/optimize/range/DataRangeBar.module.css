@@ -1,4 +1,6 @@
+/* The IS share of the bar is a darker IS blue, as R1 draws it beside the OOS amber. */
 .bar {
+  --is-range: #3b6f8c;
   height: 44px;
   flex: none;
   display: flex;
@@ -7,5 +9,49 @@
   padding: 0 12px;
   border-bottom: 1px solid var(--divider);
   font-size: 12px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+}
+.secondary {
   color: var(--secondary);
+}
+.caption {
+  color: var(--caption);
+}
+.error {
+  color: var(--danger-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.legend i {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 2px;
+}
+.track {
+  flex: 1;
+  min-width: 40px;
+  height: 8px;
+  display: flex;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.track > span {
+  flex: 1;
+}
+.inSample {
+  background: var(--is);
+}
+.inSampleDark {
+  background: var(--is-range);
+}
+.outOfSample {
+  background: var(--oos);
 }

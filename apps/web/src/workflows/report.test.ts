@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { runWithEquity } from '@pine/engine';
 import { metricRows } from '@pine/optimizer';
-import { strategyReport } from './report.ts';
+import { reportCsv, strategyReport, type ReportCsvHeaders } from './report.ts';
+import { csvNumber } from './csv.ts';
 import { strategySource, syntheticBars } from './test-support.ts';
 
 const input = {
@@ -130,4 +131,92 @@ test('a run without trades still lists every row', () => {
   assert.equal(report.keyFigures[4].value, 0);
   assert.equal(report.groups.flatMap((group) => group.rows).length, 24);
   assert.equal(strategyReport({}).keyFigures[0].value, undefined);
+});
+
+const headers: ReportCsvHeaders = {
+  metric: 'Metric',
+  all: 'All',
+  long: 'Long',
+  short: 'Short',
+  keyFigures: 'Key figures',
+  returns: 'Returns',
+  trades: 'Trades',
+  risk: 'Risk',
+};
+
+test('report CSV exports all key figures, secondary details and three groups from a real run', () => {
+  const report = strategyReport(metrics);
+  const csv = reportCsv(report, headers);
+  const sections = csv.trimEnd().split('\r\n,,,\r\n');
+  assert.equal(sections.length, 4);
+  assert.equal(sections[0].split('\r\n').length, 13); // title, header, 6 figures, 5 details
+  assert.ok(
+    sections[0].includes(`Net profit,${csvNumber(report.keyFigures[0].value as number)},,`),
+  );
+  const profitFactor = report.keyFigures[2];
+  assert.equal(profitFactor.detail.kind, 'sides');
+  if (profitFactor.detail.kind === 'sides')
+    assert.ok(
+      sections[0].includes(
+        `Profit factor,${[profitFactor.value, profitFactor.detail.long, profitFactor.detail.short]
+          .map((value) => (value == null ? '' : csvNumber(value as number)))
+          .join(',')}`,
+      ),
+    );
+  assert.ok(
+    sections[0].includes(`Total winners,${metrics['Trades analysis/Total winners/All USD']},,`),
+  );
+  assert.ok(
+    sections[0].includes(`Total losers,${metrics['Trades analysis/Total losers/All USD']},,`),
+  );
+  assert.ok(sections[0].includes('Sortino ratio,'));
+  for (const [index, group] of report.groups.entries()) {
+    const lines = sections[index + 1].split('\r\n');
+    assert.equal(lines[0], `${headers[group.id]},,,`);
+    assert.equal(lines[1], 'Metric,All,Long,Short');
+    assert.equal(lines.length, group.rows.length + 2);
+    assert.deepEqual(
+      lines.slice(2).map((line) => line.split(',')[0]),
+      group.rows.map((row) => row.id.slice(row.id.indexOf('/') + 1)),
+    );
+  }
+  assert.ok(
+    csv.includes(
+      `Sharpe ratio,${csvNumber(metrics['Risk-adjusted performance/Sharpe ratio/All USD'] as number)},,`,
+    ),
+  );
+});
+
+test('report CSV translates only headers, escapes fields and preserves percentage/sign/missing rules', () => {
+  const report = strategyReport({
+    'Performance/Net profit/All USD': 579.6200000000001,
+    'Performance/Net profit/All %': 5.7962,
+    'Performance/Max drawdown (intrabar)/All USD': 123.45,
+    'Performance/Max drawdown (intrabar)/All %': 1.23,
+    'Performance/Gross loss/All USD': 0,
+    'Performance/Gross loss/Long USD': 5,
+    'Performance/Gross loss/Short USD': -5,
+    'Trades analysis/Percent profitable/All %': 75,
+    'Trades analysis/Average profit / average loss/All USD': 'N/A, "missing"',
+    'Risk-adjusted performance/Sharpe ratio/All USD': NaN,
+    'Risk-adjusted performance/Sharpe ratio/Long USD': Infinity,
+  });
+  const csv = reportCsv(report, {
+    ...headers,
+    metric: '指标',
+    all: '全部',
+    long: '多',
+    short: '空',
+    keyFigures: '关键,指标\n"汇总"',
+  });
+  assert.ok(csv.startsWith('"关键,指标\n""汇总""",,,\r\n指标,全部,多,空\r\n'));
+  assert.ok(csv.includes('Net profit,579.62,,\r\nNet profit,5.7962%,,\r\n'));
+  assert.ok(
+    csv.includes('Max drawdown (intrabar),-123.45,,\r\nMax drawdown (intrabar),-1.23%,,\r\n'),
+  );
+  assert.ok(csv.includes('Gross loss,0,-5,-5\r\n'));
+  assert.ok(csv.includes('Percent profitable,75%,,\r\n'));
+  assert.ok(csv.includes('Average profit / average loss,"N/A, ""missing""",,\r\n'));
+  assert.ok(csv.includes('Sharpe ratio,,,\r\n'));
+  assert.ok(reportCsv(strategyReport({}), headers).includes('Net profit,,,\r\n'));
 });
