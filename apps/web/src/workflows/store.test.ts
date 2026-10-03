@@ -18,5 +18,6 @@ test('listeners hear every new state until they unsubscribe', () => {
 
 test('app message ids are unique and dotted by area', () => {
   assert.equal(new Set(workflowMessageIds).size, workflowMessageIds.length);
-  for (const id of workflowMessageIds) assert.match(id, /^(backtest|marketData)\.[a-z][\w.]*$/);
+  for (const id of workflowMessageIds)
+    assert.match(id, /^(backtest|marketData|optimize)\.[a-z][\w.]*$/);
 });
