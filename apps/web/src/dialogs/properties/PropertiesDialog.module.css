@@ -1,0 +1,164 @@
+/* B13 lays the properties over the right panel, below the header, rather than in a modal. */
+.panel {
+  position: fixed;
+  z-index: 30;
+  top: var(--header-height);
+  right: 0;
+  bottom: 0;
+  max-width: 100vw;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-left: 1px solid var(--divider);
+  outline: none;
+}
+.header {
+  height: 44px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px 0 8px;
+  border-bottom: 1px solid var(--row-border);
+}
+.title {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.description {
+  margin: 0;
+  font-size: 12px;
+  color: var(--caption);
+  white-space: nowrap;
+}
+.empty {
+  padding: 12px 16px;
+  color: var(--caption);
+}
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 16px 12px;
+}
+.group {
+  display: flex;
+  flex-direction: column;
+}
+.groupTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 22px;
+  margin: 12px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.groupTitle::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--divider);
+}
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 5px 0;
+}
+.line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 30px;
+}
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--secondary);
+  white-space: nowrap;
+}
+.changed {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--primary);
+}
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.static {
+  color: var(--secondary);
+  white-space: nowrap;
+}
+.suffix {
+  width: 28px;
+  color: var(--caption);
+}
+.number {
+  flex: none;
+}
+.number > div {
+  height: 30px;
+}
+/* Outranks the compact field's left-aligned lone input: B13 aligns values right. */
+.number input[role='spinbutton']:only-child {
+  text-align: right;
+  padding: 0 9px;
+}
+.select {
+  height: 30px;
+  flex: none;
+}
+.w64 {
+  width: 64px;
+}
+.w98 {
+  width: 98px;
+}
+.w104 {
+  width: 104px;
+}
+.w150 {
+  width: 150px;
+}
+.note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--caption);
+}
+.inlineLink {
+  font-size: 12px;
+}
+.error {
+  font-size: 12px;
+  color: var(--danger-text);
+}
+.footer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 16px;
+  padding: 10px 0 12px;
+  border-top: 1px solid var(--row-border);
+}
+.footer button {
+  height: 30px;
+}
+.count {
+  font-size: 12px;
+  color: var(--caption);
+}

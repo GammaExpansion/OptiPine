@@ -1,21 +1,129 @@
-.sections {
+.sidebar {
+  height: 100%;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 12px 16px;
+  padding: 12px 16px 16px;
 }
-.sections section {
+.part {
+  display: contents;
+}
+.stale {
+  opacity: 0.45;
+}
+.section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
 }
-.sections h2 {
-  height: 28px;
+.properties {
+  display: flex;
+  flex-direction: column;
+}
+.properties > :first-child {
+  margin-bottom: 4px;
+}
+.empty {
+  color: var(--caption);
+  margin-top: -6px;
+}
+.actions {
   display: flex;
   align-items: center;
-  font-size: 13px;
-  font-weight: 600;
+  gap: 12px;
 }
-.sections p {
+.count {
+  font-size: 12px;
+  color: var(--caption);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: var(--caption);
+  white-space: nowrap;
+}
+.reset:hover:not(:disabled) {
+  color: var(--text);
+}
+/* Inputs declared with `group`: the name in caption type over a rule, as in B1. */
+.group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--caption);
+}
+.group::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--divider);
+}
+.input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.changed {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--primary);
+}
+.hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--caption);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 28px;
+}
+.centered input {
+  text-align: center;
+}
+.error {
+  font-size: 12px;
+  color: var(--danger-text);
+}
+.summary > :last-child {
+  border-bottom: 1px solid var(--row-border);
+}
+.value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.script {
+  font-size: 12px;
   color: var(--caption);
 }

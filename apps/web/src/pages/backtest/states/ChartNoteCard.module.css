@@ -1,0 +1,20 @@
+.overlay {
+  position: absolute;
+  z-index: 4;
+  inset: 32px 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.card {
+  max-width: min(620px, calc(100% - 32px));
+  background: var(--panel);
+  border: 1px solid var(--divider);
+  border-radius: 6px;
+  box-shadow: var(--shadow-menu);
+  pointer-events: auto;
+}
+.card > div {
+  min-height: 0;
+}
