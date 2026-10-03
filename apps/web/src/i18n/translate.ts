@@ -1,16 +1,60 @@
 import { errorText, message, plainText, type MessageValues, type Text } from '@pine/messages';
-import { en, type MessageId } from './en.ts';
-import { zh } from './zh.ts';
+import type { MessageId } from './en.ts';
 
 export type Language = 'en' | 'zh';
 export type { MessageId } from './en.ts';
-export const catalogs = { en, zh };
+export type Catalog = Readonly<Record<MessageId, string>>;
 
 export function defaultLanguage(locale: string): Language {
   return /^zh(?:-|$)/i.test(locale) ? 'zh' : 'en';
 }
 
-/** Literal source text stays literal; package messages and nested groups are translated recursively. */
+/**
+ * The catalogs `translate` can use. The app loads the active language's before its first render
+ * and the other when the language first switches to it (`loadCatalog`), so the first screen
+ * carries one language; tests and the dev pages register both at once (`catalogs.ts`).
+ */
+const catalogs: Partial<Record<Language, Catalog>> = {};
+const loading: Partial<Record<Language, Promise<void>>> = {};
+const listeners = new Set<() => void>();
+
+export function registerCatalog(language: Language, catalog: Catalog): void {
+  catalogs[language] = catalog;
+  for (const listener of listeners) listener();
+}
+
+export function hasCatalog(language: Language): boolean {
+  return catalogs[language] !== undefined;
+}
+
+/** Call `listener` whenever a catalog becomes available; returns the unsubscribe. */
+export function onCatalog(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+/** Make `language`'s catalog available, fetching its chunk the first time; a failure may retry. */
+export function loadCatalog(language: Language): Promise<void> {
+  if (hasCatalog(language)) return Promise.resolve();
+  loading[language] ??= (
+    language === 'zh'
+      ? import('./zh.ts').then((module) => module.zh)
+      : import('./en.ts').then((module) => module.en)
+  ).then(
+    (catalog) => registerCatalog(language, catalog),
+    (error: unknown) => {
+      delete loading[language];
+      throw error;
+    },
+  );
+  return loading[language];
+}
+
+/**
+ * Literal source text stays literal; package messages and nested groups are translated
+ * recursively. An id the language's catalog lacks, or a catalog not loaded, keeps the message's
+ * plain fallback.
+ */
 export function translate(text: Text, language: Language): string {
   if (typeof text === 'string') return text;
   if (text.kind === 'message-group') {
@@ -19,7 +63,7 @@ export function translate(text: Text, language: Language): string {
       .join(translate(text.separator, language));
   }
   const catalog = catalogs[language];
-  if (!Object.hasOwn(catalog, text.id)) return plainText(text);
+  if (!catalog || !Object.hasOwn(catalog, text.id)) return plainText(text);
   return catalog[text.id as MessageId].replace(/\{(\w+)\}/g, (placeholder, key: string) => {
     if (!Object.hasOwn(text.values, key)) return placeholder;
     const value = text.values[key];

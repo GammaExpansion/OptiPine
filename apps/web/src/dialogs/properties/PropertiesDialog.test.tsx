@@ -97,3 +97,11 @@ test('Back to inputs and Escape close the panel', async () => {
   fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
   expect(uiStore.getState().openDialogs).toEqual([]);
 });
+
+test('on the Optimize page the panel goes back to the optimization settings', async () => {
+  await loadScript();
+  act(() => uiStore.setState({ page: 'optimize', openDialogs: ['properties'] }));
+  renderInEnglish(<PropertiesDialog />);
+  fireEvent.click(screen.getByRole('button', { name: 'Back to settings' }));
+  expect(uiStore.getState().openDialogs).toEqual([]);
+});

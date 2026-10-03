@@ -17,6 +17,10 @@ export interface PaneSizes {
   leaderboard: number;
   /** Optimize: the parameter map above sensitivity. */
   map: number;
+  /** Optimize, walk-forward: the stitched equity above the windows (W1). */
+  wfSummary: number;
+  /** Optimize, walk-forward: the per-window table beside stability and the window map. */
+  wfTable: number;
 }
 export interface UiState {
   page: Page;
@@ -37,6 +41,8 @@ export const defaultPaneSizes: PaneSizes = {
   summary: 232,
   leaderboard: 624,
   map: 314,
+  wfSummary: 362,
+  wfTable: 640,
 };
 const paneNames = Object.keys(defaultPaneSizes) as (keyof PaneSizes)[];
 export const uiStorageKey = 'optipine.ui';

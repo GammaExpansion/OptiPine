@@ -31,7 +31,7 @@ test('the Pine code tab states its compile in the dock bar (B3)', async () => {
   await loadScript();
   act(() => uiStore.getState().setDockTab('code'));
   renderInEnglish(<Dock>{null}</Dock>);
-  expect(within(bar()).getByText('v6 compiled')).toBeInTheDocument();
+  expect(await within(bar()).findByText('v6 compiled')).toBeInTheDocument();
   act(() => getBacktestStore().getState().actions.setSource('//@version=6\nplot(missing)'));
   await waitFor(() => expect(within(bar()).getByText('Compile failed')).toBeInTheDocument());
   act(() => uiStore.getState().setDockTab('report'));

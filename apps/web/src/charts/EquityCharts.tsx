@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   AreaSeries,
   LineStyle,
@@ -29,14 +29,20 @@ export interface EquityChartsProps {
   summary: EquitySummary;
   /** Disable while a PriceChart on the same screen supplies the single attribution link. */
   showAttribution?: boolean;
+  /** Page-owned facts, placed below the toolbar and above the flexible chart stack. */
+  afterToolbar?: ReactNode;
   className?: string;
 }
+
+// A tab can unmount while another dock tab is active. Retain only a user's view, by result.
+const userRanges = new WeakMap<EquityInput, LogicalRange>();
 
 /** The workflow owns all financial calculations; this component only projects its output. */
 export function EquityCharts({
   input,
   summary,
   showAttribution = true,
+  afterToolbar,
   className,
 }: EquityChartsProps) {
   const { t } = useI18n();
@@ -47,14 +53,15 @@ export function EquityCharts({
   const calendar = useRef<CalendarHandle>(null);
   const months = useRef<CalendarHandle>(null);
   const charts = useRef<IChartApi[]>([]);
-  const savedRange = useRef<LogicalRange | null>(null);
-  const previousInput = useRef(input);
+  const resetView = useRef(() => {});
 
   useEffect(() => {
     const eqHost = equityHost.current!;
     const ddHost = drawdownHost.current!;
     const theme = chartTheme(eqHost);
     const options = chartOptions(eqHost, input.timezone);
+    // Own sizing so fitting cannot race the library's asynchronous autoSize observer.
+    options.autoSize = false;
     options.layout = { ...options.layout, attributionLogo: false };
     const equity = createChart(eqHost, options);
     const drawdown = createChart(ddHost, options);
@@ -151,6 +158,9 @@ export function EquityCharts({
       );
     }
     const axis = dateAxis(localDates(input.times, input.timezone));
+    const fullRange = { from: 0 as Logical, to: Math.max(1, input.times.length - 1) as Logical };
+    let view = userRanges.get(input) ?? fullRange;
+    let activeChart: IChartApi | null = null;
     let frame = 0;
     const render = () => {
       frame = 0;
@@ -177,22 +187,18 @@ export function EquityCharts({
       if (!frame) frame = requestAnimationFrame(render);
     };
     let syncing = false;
-    const syncRange = (target: IChartApi) => (range: LogicalRange | null) => {
-      if (syncing || !range) return;
-      const other = target.timeScale().getVisibleLogicalRange();
-      if (
-        !other ||
-        Math.abs(other.from - range.from) > 0.001 ||
-        Math.abs(other.to - range.to) > 0.001
-      ) {
-        syncing = true;
+    const syncRange = (source: IChartApi, target: IChartApi) => (range: LogicalRange | null) => {
+      // Only the pane receiving user input may change the shared view. A resize or a queued
+      // range update from the other pane must never overwrite it with an intermediate range.
+      if (range && source === activeChart) {
+        view = range;
+        userRanges.set(input, range);
         target.timeScale().setVisibleLogicalRange(range);
-        syncing = false;
       }
       schedule();
     };
-    const eqRange = syncRange(drawdown);
-    const ddRange = syncRange(equity);
+    const eqRange = syncRange(equity, drawdown);
+    const ddRange = syncRange(drawdown, equity);
     equity.timeScale().subscribeVisibleLogicalRangeChange(eqRange);
     drawdown.timeScale().subscribeVisibleLogicalRangeChange(ddRange);
     const crosshair =
@@ -209,21 +215,39 @@ export function EquityCharts({
     const ddCross = crosshair(equity, eq, equityValues);
     equity.subscribeCrosshairMove(eqCross);
     drawdown.subscribeCrosshairMove(ddCross);
-    const resize = new ResizeObserver(schedule);
+    const applyView = () => {
+      activeChart = null;
+      equity.timeScale().setVisibleLogicalRange(view);
+      drawdown.timeScale().setVisibleLogicalRange(view);
+      schedule();
+    };
+    resetView.current = () => {
+      userRanges.delete(input);
+      view = fullRange;
+      applyView();
+    };
+    const sizeCharts = () => {
+      if (!eqHost.clientWidth || !eqHost.clientHeight || !ddHost.clientHeight) return;
+      activeChart = null;
+      equity.resize(eqHost.clientWidth, eqHost.clientHeight, true);
+      drawdown.resize(ddHost.clientWidth, ddHost.clientHeight, true);
+      applyView();
+    };
+    const resize = new ResizeObserver(sizeCharts);
     resize.observe(eqHost);
-    if (previousInput.current === input && savedRange.current) {
-      equity.timeScale().setVisibleLogicalRange(savedRange.current);
-      drawdown.timeScale().setVisibleLogicalRange(savedRange.current);
-    } else {
-      equity.timeScale().fitContent();
-      drawdown.timeScale().fitContent();
+    resize.observe(ddHost);
+    sizeCharts();
+    const activateEquity = () => (activeChart = equity);
+    const activateDrawdown = () => (activeChart = drawdown);
+    for (const event of ['pointerdown', 'wheel'] as const) {
+      eqHost.addEventListener(event, activateEquity, { capture: true, passive: true });
+      ddHost.addEventListener(event, activateDrawdown, { capture: true, passive: true });
     }
-    previousInput.current = input;
-    schedule();
     const keyboard = (event: KeyboardEvent) => {
+      activeChart = equity;
       if (event.key === '+' || event.key === '=') zoomChart(equity, 0.8);
       else if (event.key === '-') zoomChart(equity, 1.25);
-      else if (event.key === 'Home') equity.timeScale().fitContent();
+      else if (event.key === 'Home') resetView.current();
       else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
         const range = equity.timeScale().getVisibleLogicalRange();
         if (range) {
@@ -238,12 +262,16 @@ export function EquityCharts({
     eqHost.addEventListener('keydown', keyboard);
     ddHost.addEventListener('keydown', keyboard);
     return () => {
-      savedRange.current = equity.timeScale().getVisibleLogicalRange();
       cancelAnimationFrame(frame);
       resize.disconnect();
+      for (const event of ['pointerdown', 'wheel'] as const) {
+        eqHost.removeEventListener(event, activateEquity, true);
+        ddHost.removeEventListener(event, activateDrawdown, true);
+      }
       eqHost.removeEventListener('keydown', keyboard);
       ddHost.removeEventListener('keydown', keyboard);
       charts.current = [];
+      resetView.current = () => {};
       equity.remove();
       drawdown.remove();
     };
@@ -274,11 +302,12 @@ export function EquityCharts({
         <button
           className={styles.reset}
           aria-label={t('charts.resetZoom')}
-          onClick={() => charts.current[0]?.timeScale().fitContent()}
+          onClick={() => resetView.current()}
         >
           {t('charts.resetSymbol')}
         </button>
       </div>
+      {afterToolbar}
       <div className={styles.equityBody}>
         <div
           className={styles.equityCanvas}

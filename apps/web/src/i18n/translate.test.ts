@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { codedError, message, type MessageGroup } from '@pine/messages';
+import './catalogs.ts';
 import {
   defaultLanguage,
   formatDate,

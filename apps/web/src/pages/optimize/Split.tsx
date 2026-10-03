@@ -4,8 +4,8 @@ import { ResizeHandle } from '../../shell/ResizeHandle.tsx';
 import { defaultPaneSizes, useUiStore } from '../../state/ui.ts';
 import styles from './OptimizePage.module.css';
 
-/** The Optimize page's splits, each named by the pane before its handle. */
-export type SplitName = 'summary' | 'leaderboard' | 'map';
+/** The Optimize page's splits, each named by the pane before its handle; `wf` ones for W1. */
+export type SplitName = 'summary' | 'leaderboard' | 'map' | 'wfSummary' | 'wfTable';
 
 const labels = {
   summary: { resize: 'optimize.setup.resizeSummary', size: 'optimize.setup.summarySize' },
@@ -14,6 +14,8 @@ const labels = {
     size: 'optimize.setup.leaderboardSize',
   },
   map: { resize: 'optimize.setup.resizeMap', size: 'optimize.setup.mapSize' },
+  wfSummary: { resize: 'optimize.setup.resizeWfSummary', size: 'optimize.setup.wfSummarySize' },
+  wfTable: { resize: 'optimize.setup.resizeWfTable', size: 'optimize.setup.wfTableSize' },
 } as const;
 
 /**

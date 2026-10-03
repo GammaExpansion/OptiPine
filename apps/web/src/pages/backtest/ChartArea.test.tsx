@@ -1,8 +1,10 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { forwardRef, useImperativeHandle } from 'react';
 import { beforeEach, expect, test, vi } from 'vitest';
 import type { PriceChartHandle, PriceChartProps } from '../../charts/PriceChart.tsx';
 import { getBacktestStore } from '../../state/backtest.ts';
+import { getMarketDataStore } from '../../state/marketData.ts';
+import { testInput } from '../../state/test-support.ts';
 import { getSelectionStore } from '../../state/selection.ts';
 import { uiStore } from '../../state/ui.ts';
 import { ChartArea } from './ChartArea.tsx';
@@ -36,18 +38,41 @@ beforeEach(() => {
   chart.props = null;
 });
 
-test('the first-launch steps show until there are a script and data', async () => {
-  renderInEnglish(<ChartArea />);
-  expect(screen.getByRole('heading', { name: 'Run backtest' })).toBeInTheDocument();
-  expect(chart.props).toBeNull();
-  await loadScript();
-  // The chart's chunk loads lazily, so it can appear a moment after the data.
-  await waitFor(() =>
-    expect(chart.props).toMatchObject({ symbol: 'BTCUSDT 1h', plots: [], trades: [] }),
-  );
-  expect(chart.props!.bars).toHaveLength(120);
-  expect(screen.queryByRole('button', { name: 'Reset zoom' })).not.toBeInTheDocument();
-});
+test.each(['script', 'data'] as const)(
+  'the first-launch steps show until there are a script and data (%s first)',
+  async (first) => {
+    renderInEnglish(<ChartArea />);
+    const steps = () => {
+      const region = screen.getByRole('region', { name: 'Run backtest' });
+      expect(within(region).getByRole('button', { name: 'Paste code' })).toBeVisible();
+      expect(within(region).getByRole('button', { name: 'Open file' })).toBeVisible();
+      expect(within(region).getByRole('button', { name: 'Select market data' })).toBeVisible();
+      expect(within(region).getByRole('button', { name: 'Run backtest' })).toBeDisabled();
+    };
+    steps();
+    expect(chart.props).toBeNull();
+    const load = {
+      script: () => getBacktestStore().getState().actions.setSource(quietSource),
+      data: () => getMarketDataStore().getState().actions.useCsv(testInput, 'prices.csv'),
+    };
+    act(load[first]);
+    steps();
+    expect(chart.props).toBeNull();
+    act(load[first === 'script' ? 'data' : 'script']);
+    // ResultChart loads lazily; compilation can finish before that chunk renders.
+    await waitFor(() =>
+      expect(chart.props).toMatchObject({ symbol: 'BTCUSDT 1h', plots: [], trades: [] }),
+    );
+    expect(chart.props!.bars).toHaveLength(120);
+    expect(screen.queryByRole('heading', { name: 'Run backtest' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reset zoom' })).not.toBeInTheDocument();
+    await waitFor(() => expect(getBacktestStore().getState().readiness.ok).toBe(true));
+    await runBacktest();
+    expect(getBacktestStore().getState().result).not.toBeNull();
+    act(() => getBacktestStore().getState().actions.setSource(''));
+    steps();
+  },
+);
 
 test('the result draws its plots and trades, and follows the Trades tab’s hover and focus (B6)', async () => {
   await loadScript();
