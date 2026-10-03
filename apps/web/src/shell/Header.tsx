@@ -5,13 +5,14 @@ import { useI18n } from '../i18n/I18nProvider.tsx';
 import { useOptimizationStore } from '../state/optimization.ts';
 import { useUiStore } from '../state/ui.ts';
 import { HeaderData } from './HeaderData.tsx';
-import { optimizeNeedsAttention } from './optimize-status.ts';
 import { RunControls } from './RunControls.tsx';
 import styles from './Header.module.css';
 
 export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
   const { t, language } = useI18n();
-  const optimizeChanged = useOptimizationStore(optimizeNeedsAttention);
+  // R1, R5 and B16 mark Optimize while it holds complete results, outdated or not; a first run
+  // in progress has none yet (O8).
+  const optimizeResults = useOptimizationStore((state) => state.results !== null);
   const page = useUiStore((state) => state.page);
   const setPage = useUiStore((state) => state.setPage);
   const setLanguage = useUiStore((state) => state.setLanguage);
@@ -33,7 +34,7 @@ export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
             label: t('shell.optimize'),
             disabled: !canOptimize,
             disabledReason: t('shell.runMissing'),
-            changed: optimizeChanged,
+            changed: optimizeResults,
           },
         ]}
       />

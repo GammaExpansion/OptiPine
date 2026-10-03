@@ -1,13 +1,7 @@
 import { expect, test } from 'vitest';
 import { translate } from '../i18n/translate.ts';
 import type { OptimizationState, RunProgress } from '../workflows/optimize-session.ts';
-import {
-  clockText,
-  estimateText,
-  optimizeNeedsAttention,
-  optimizeStatus,
-  progressView,
-} from './optimize-status.ts';
+import { clockText, estimateText, optimizeStatus, progressView } from './optimize-status.ts';
 
 const progress = (change: Partial<RunProgress>): RunProgress => ({
   phase: 'in',
@@ -92,20 +86,6 @@ test('the header puts a run first, then a failure, outdated results, a cancel, t
     failed: 2,
     random: false,
   });
-});
-
-test('the Optimize switch is marked while a run goes or the results are outdated', () => {
-  expect(optimizeNeedsAttention(state({ run: done, results, outdated: { reasons: [] } }))).toBe(
-    false,
-  );
-  expect(
-    optimizeNeedsAttention(state({ run: done, results, outdated: { reasons: ['properties'] } })),
-  ).toBe(true);
-  expect(
-    optimizeNeedsAttention(
-      state({ run: { status: 'running', startedAt: 0, progress: progress({}) } }),
-    ),
-  ).toBe(true);
 });
 
 test('durations read as a clock, estimates rounded to what they deserve', () => {

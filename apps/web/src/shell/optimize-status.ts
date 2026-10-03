@@ -75,11 +75,6 @@ export function optimizeStatus({ run, results, outdated }: StatusState): Optimiz
   };
 }
 
-/** The Optimize switch's amber dot: a run is going, or the results are outdated. */
-export function optimizeNeedsAttention({ run, results, outdated }: StatusState): boolean {
-  return run.status === 'running' || (results !== null && !!outdated?.reasons.length);
-}
-
 /** A run's length as the header and the run block state it: 2:31, 10:09 or 1:02:05. */
 export function clockText(milliseconds: number): string {
   const total = Math.max(0, Math.round(milliseconds / 1000));
