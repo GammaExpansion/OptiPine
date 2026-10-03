@@ -152,7 +152,7 @@ export function fixtureMap(
         ...(z ? { z: zValue } : {}),
         value: Math.round(
           8900 -
-            Math.pow(xi - values(x).length / 2 + (surface === 'mean' ? 0 : window - 2), 2) * 120 -
+            Math.pow(xi - values(x).length / 2 + (surface === 'mean' ? 0.5 : window - 2), 2) * 120 -
             Math.pow(yi - 3, 2) * 350,
         ),
         count: surface === 'mean' ? 6 : 1,
