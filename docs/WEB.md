@@ -371,18 +371,18 @@ apps/web/
 
 ### 4.5 What each panel calls
 
-| Panel                                     | Package calls                                                                                                                                                           |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Compile status, inputs, property defaults | `EngineWorkerClient.describe` → `describe` in `@pine/engine`                                                                                                            |
-| Chart, report, equity, trades, issues     | `EngineWorkerClient.run` → `runWithEquity`; plot panes from `PlotOutput.overlay`; report rows from `metricRows`                                                         |
-| Search ranges and combination counts      | `generateSearchSpace`; parameter lists through the analysis job `parameters` (`enumerateGrid`, `sampleRandom`)                                                          |
-| IS / OOS validation                       | `splitBars`; the pool runs both ranges; the analysis job `records` joins them by trial id                                                                               |
-| Optimization run and progress             | `OptimizationWorkerPool.optimize` with `onTrial` and `onProgress`; `cancel`                                                                                             |
-| Leaderboard, filters, map, sensitivity    | Analysis job `view` (`analyzeOptimizer`), including the R10 preview of ranks a draft filter removes; `buildBinDetail` for R7; consecutive losses from `tradeStatistics` |
-| Top 20 equity                             | `OptimizationWorkerPool.reproduce`, which runs `runWithEquity`, for the 20 leading sets after a run and after a ranking change; a newer request cancels the older one   |
-| Walk-forward                              | Analysis jobs `plan`, `choose`, `finalize` and `stability`; the pool optimizes each window and reproduces each chosen set                                               |
-| Market data                               | `FeedClient`, `FeedImportSession`, `parseCsv`, `parseRunMetadata`, `parseSessionCalendar`, `createSymbolProfile`                                                        |
-| Errors                                    | Coded errors and `errorText` from `@pine/messages`, translated by the catalogs                                                                                          |
+| Panel                                     | Package calls                                                                                                                                                                                                                                          |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Compile status, inputs, property defaults | `EngineWorkerClient.describe` → `describe` in `@pine/engine`                                                                                                                                                                                           |
+| Chart, report, equity, trades, issues     | `EngineWorkerClient.run` → `runWithEquity`; plot panes from `PlotOutput.overlay`; report rows from `metricRows`                                                                                                                                        |
+| Search ranges and combination counts      | `generateSearchSpace`; parameter lists through the analysis job `parameters` (`enumerateGrid`, `sampleRandom`)                                                                                                                                         |
+| IS / OOS validation                       | `splitBars`; the pool runs both ranges; an `AnalysisRun` sends each trial once (`runOpen`, `runAppend`), the Worker joins the ranges by trial id, and `runClose` releases a replaced run                                                               |
+| Optimization run and progress             | `OptimizationWorkerPool.optimize` with `onTrial` and `onProgress`; `cancel`                                                                                                                                                                            |
+| Leaderboard, filters, map, sensitivity    | `runView`: a `summarizeOptimizerAnalysis` summary of the run (ranks, per-set columns, maps, sensitivity, R10's removed ranks), `rankBy: 'neighborhood'` for the neighbourhood mean; `buildBinDetail` for R7; consecutive losses from `tradeStatistics` |
+| Top 20 equity                             | `OptimizationWorkerPool.reproduce`, which runs `runWithEquity`, for the 20 leading sets after a run and after a ranking change; a newer request cancels the older one                                                                                  |
+| Walk-forward                              | Analysis jobs `plan` (bounds and bar indices from bar times), `choose`, `finalize` and `stability`; the pool optimizes each window and reproduces each chosen set                                                                                      |
+| Market data                               | `FeedClient`, `FeedImportSession`, `parseCsv`, `parseRunMetadata`, `parseSessionCalendar`, `createSymbolProfile`                                                                                                                                       |
+| Errors                                    | Coded errors and `errorText` from `@pine/messages`, translated by the catalogs                                                                                                                                                                         |
 
 The top-20 view needs equity per set, and optimization trials carry only metrics. `runWithEquity`
 returns one equity value per bar with metrics identical to the sweep's, at about 10% more time than
@@ -431,7 +431,11 @@ Measured with `runWithEquity` over the 43 v6 strategy fixtures on a 16-thread de
 takes about 0.2 s per 10,000 bars at the median and 0.35 s at the 90th percentile; real scripts can
 be heavier. The pool measures the first trial to estimate the run's duration (O1, O8). While a run
 streams, main-thread work stays under 50 ms per frame: tables are virtualized, live charts draw on
-canvas, and derived views are computed in the analysis Worker.
+canvas, and derived views are computed in the analysis Worker. The Worker keeps each run's trials,
+so a snapshot sends only the trials that arrived since the last one and receives a summary: at
+20,000 IS / OOS sets of 170 metrics each, a snapshot costs the page about 9 ms with 500 new trials
+and 5 ms to build the views, where sending every trial and receiving them back took 2.2 s
+(`packages/workers/bench/live-analysis.ts`).
 
 ## 5. Visual system
 
