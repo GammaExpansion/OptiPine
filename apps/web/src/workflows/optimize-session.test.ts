@@ -531,11 +531,12 @@ test('failed combinations are not ranked and keep their error (R11)', async () =
       failure.range,
       failure.kind,
       failure.line,
+      failure.bar,
       failure.message,
     ]),
     [
-      [4, 'close', 'all', 'runtime', 12, 'four'],
-      [4, 'hl2', 'all', 'runtime', 12, 'four'],
+      [4, 'close', 'all', 'runtime', 12, 20, 'four'],
+      [4, 'hl2', 'all', 'runtime', 12, 20, 'four'],
     ],
   );
   assert.equal(views?.failed, 2);
@@ -552,7 +553,7 @@ test('failed combinations are not ranked and keep their error (R11)', async () =
       { kind: 'Kind', line: 'Line', bar: 'Bar', message: 'Message' },
       { runtime: 'Runtime error' } as never,
     ),
-    /^Length,Source,Kind,Line,Bar,Message\r\n4,close,Runtime error,12,,four\r\n/,
+    /^Length,Source,Kind,Line,Bar,Message\r\n4,close,Runtime error,12,20,four\r\n/,
   );
 });
 

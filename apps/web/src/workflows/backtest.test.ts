@@ -280,7 +280,7 @@ test('a failed run keeps the previous result and reports line and diagnostics (B
   if (state.run.status !== 'failed') return;
   assert.equal(state.run.failure.diagnostics[0].kind, 'runtime');
   assert.equal(state.run.failure.diagnostics[0].line, 12);
-  assert.equal(state.run.failure.bar, null);
+  assert.equal(state.run.failure.bar, 120);
   assert.equal(state.result, previous);
   assert.deepEqual(state.outdated?.reasons, ['source']);
   assert.deepEqual(
