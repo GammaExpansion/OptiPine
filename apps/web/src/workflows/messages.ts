@@ -42,6 +42,8 @@ export const workflowMessageIds = [
   'backtest.property.slippage',
   'backtest.property.limitFillTicks',
   'backtest.property.orderDelay',
+  'marketData.dateInvalid',
+  'marketData.rangeEmpty',
 ] as const;
 export type WorkflowMessageId = (typeof workflowMessageIds)[number];
 
