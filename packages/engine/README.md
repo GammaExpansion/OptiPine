@@ -38,10 +38,13 @@ import { compile, describe, run, runWithEquity, sweep } from '@pine/engine';
   `force_overlay = true`; otherwise the plot belongs in its own pane.
 - `trades` and `metrics`: strategy fills and the TradingView report metrics, keyed as
   `Section/Name/Column`.
-- `diagnostics`: `{ kind, line, message }`. `syntax`, `undeclared`, `type` and `semantic` come
-  from compilation; `unsupported` marks a feature outside the engine's scope; `limit` is the
-  per-bar step budget; `runtime` is an error the script's execution raised; `internal` is a
-  fault inside the engine itself and worth reporting.
+- `diagnostics`: `{ kind, line, column?, bar?, message }`. `syntax`, `undeclared`, `type` and
+  `semantic` come from compilation; `unsupported` marks a feature outside the engine's scope;
+  `limit` is the per-bar step budget or broker order-processing budget; `runtime` is an error
+  the script's execution raised; `internal` is a fault inside the engine itself and worth reporting.
+  Diagnostics raised during a bar carry `bar`, the zero-based index into `RunInput.bars`
+  (the script's `bar_index`), including tick and order-fill recalculations. Compilation,
+  setup and final-report failures have no `bar`. `runWithEquity` and `sweep` preserve it.
 - `warnings`: side effects the engine deliberately ignores, such as drawing calls.
 
 ### describe

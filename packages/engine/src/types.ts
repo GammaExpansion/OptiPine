@@ -13,6 +13,9 @@ export interface Diagnostic {
     | 'internal';
   line: number;
   column?: number;
+  /** Zero-based index into RunInput.bars, equal to `bar_index` during execution.
+   * Absent for compilation and failures not tied to a bar. */
+  bar?: number;
   message: string;
 }
 
