@@ -1,0 +1,25 @@
+.viewport {
+  position: relative;
+  overflow: auto;
+  width: 100%;
+  min-height: 72px;
+  flex: none;
+}
+.spacer {
+  position: relative;
+}
+.canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  outline-offset: -2px;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
