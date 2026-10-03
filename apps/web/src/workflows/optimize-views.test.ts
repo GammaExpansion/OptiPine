@@ -418,7 +418,7 @@ test('failed combinations keep inputs and error, and export as CSV (R11)', () =>
     range: 'in',
     kind: 'runtime',
     line: 12,
-    bar: null,
+    bar: 50,
     message: 'bad, "four"',
   });
   assert.equal(
@@ -437,7 +437,7 @@ test('failed combinations keep inputs and error, and export as CSV (R11)', () =>
         internal: '',
       },
     ),
-    'Length,Multiplier,Source,Error,Line,Bar,Message\r\n4,,close,Runtime error,12,,"bad, ""four"""\r\n',
+    'Length,Multiplier,Source,Error,Line,Bar,Message\r\n4,,close,Runtime error,12,50,"bad, ""four"""\r\n',
   );
 });
 

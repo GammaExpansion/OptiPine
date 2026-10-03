@@ -282,10 +282,7 @@ function derive(state: BaseState): BacktestState {
   };
 }
 
-/**
- * The engine's `Diagnostic` has no bar yet; B11 and R11 need it. Once the engine adds `bar` to the
- * diagnostic that ends a run, this reads it without further changes here.
- */
+/** The zero-based execution bar for B11 and R11, or null when the diagnostic has no valid bar. */
 export function diagnosticBar(diagnostic: Diagnostic | undefined): number | null {
   const bar = (diagnostic as { bar?: unknown } | undefined)?.bar;
   return typeof bar === 'number' && Number.isSafeInteger(bar) ? bar : null;
