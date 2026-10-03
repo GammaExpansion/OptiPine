@@ -47,11 +47,11 @@ test('first launch explains missing prerequisites and allows the store run when 
   expect(screen.getByRole('button', { name: 'Run backtest' })).toHaveAccessibleDescription(
     'Open a script and select market data first',
   );
+  expect(screen.getByText('Scripts and backtests run only in your browser')).toBeVisible();
   await user.click(screen.getByRole('button', { name: /Load example/ }));
   await waitFor(() => expect(screen.getByRole('button', { name: 'Run backtest' })).toBeEnabled());
   await user.click(screen.getByRole('button', { name: 'Run backtest' }));
   await waitFor(() => expect(getBacktestStore().getState().result).not.toBeNull());
-  expect(screen.queryByRole('heading', { name: 'Run backtest' })).toBeNull();
 });
 
 test('pasted code asks before replacing an existing script and cancelling keeps the source', async () => {

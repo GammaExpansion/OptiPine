@@ -67,7 +67,9 @@ export function ScriptMenu() {
       trigger={
         <Button variant="toolbar" className={styles.trigger}>
           <Icon name="file" />
-          <span className={styles.filename}>{name}</span>
+          <span className={styles.filename} data-loaded={!!source}>
+            {name}
+          </span>
           {source && (
             <span
               className={styles.dot}

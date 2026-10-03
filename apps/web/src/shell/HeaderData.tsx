@@ -31,10 +31,10 @@ export function HeaderData() {
       <Button variant="toolbar" onClick={() => open('marketData', true)}>
         {input ? (
           <>
-            <strong>
+            <strong style={{ color: 'var(--text)' }}>
               {String(input.syminfo.ticker ?? input.syminfo.tickerid ?? request?.symbol ?? '')}
             </strong>
-            <span style={{ color: 'var(--caption)', fontSize: 12 }}>
+            <span style={{ color: 'var(--caption)' }}>
               {t(
                 origin?.kind === 'csv'
                   ? 'data.csvProvider'
@@ -69,12 +69,19 @@ export function HeaderData() {
         onClick={() => open('dateRange', true)}
       >
         <Icon name="calendar" />
-        {input
-          ? t('data.rangeValue', {
-              from: formatDate(input.bars[0].time * 1000).slice(2),
-              to: formatDate(input.bars.at(-1)!.time * 1000).slice(2),
-            })
-          : t('shell.dateRange')}
+        <span
+          style={{
+            color: input ? 'var(--text)' : undefined,
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {input
+            ? t('data.rangeValue', {
+                from: formatDate(input.bars[0].time * 1000),
+                to: formatDate(input.bars.at(-1)!.time * 1000),
+              })
+            : t('shell.dateRange')}
+        </span>
       </Button>
     </>
   );

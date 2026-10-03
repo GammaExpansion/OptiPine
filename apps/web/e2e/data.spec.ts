@@ -1,4 +1,4 @@
-﻿import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { installMarketFixtures, type MarketFixtureOptions } from './market-fixtures.ts';
 import { readFile } from 'node:fs/promises';
 
@@ -14,30 +14,69 @@ test.beforeEach(({ page }) => {
 });
 test.afterEach(() => expect(browserErrors).toEqual([]));
 
-async function openMarket(page: import('@playwright/test').Page) {
+async function openMarket(page: Page) {
   await page.getByRole('button', { name: 'Select market data', exact: true }).first().click();
   return page.getByRole('dialog', { name: 'Select market data' });
 }
 
-test('load the two-year example and press Run backtest', async ({ page }) => {
-  const requests = await installMarketFixtures(page);
-  const errors: string[] = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/');
-  await page.getByRole('button', { name: /Load example/ }).click();
-  const run = page.getByRole('button', { name: 'Run backtest', exact: true });
-  await expect(run).toBeEnabled();
-  await run.click();
-  const bars = requests.find((request) => request.pathname.endsWith('/bars'))!;
-  expect(Object.fromEntries(bars.searchParams)).toEqual({
-    feed: 'binance',
-    symbol: 'BTCUSDT',
-    timeframe: '60',
-    from: '1727964000',
-    to: '1791036000',
+async function expectHeaderFits(page: Page) {
+  const layout = await page.getByRole('banner').evaluate((header) => {
+    const children = Array.from(header.children)
+      .map((element) => element.getBoundingClientRect())
+      .filter((rect) => rect.width > 1 && rect.height > 1);
+    return {
+      width: header.clientWidth,
+      scrollWidth: header.scrollWidth,
+      right: children.at(-1)!.right,
+      gaps: children.slice(1).map((rect, index) => rect.left - children[index].right),
+    };
   });
-  expect(errors).toEqual([]);
-});
+  expect(layout.scrollWidth).toBe(layout.width);
+  expect(layout.right).toBeLessThanOrEqual(1428);
+  for (const gap of layout.gaps) expect(gap).toBeGreaterThanOrEqual(12);
+}
+
+for (const language of ['en', 'zh'] as const)
+  test(`load the two-year example and press Run backtest in ${language}`, async ({
+    page,
+  }, testInfo) => {
+    const requests = await installMarketFixtures(page);
+    await page.goto('/');
+    if (language === 'zh') await page.getByRole('radio', { name: '中', exact: true }).click();
+    await page.evaluate(() => document.fonts.ready);
+    const steps = page.getByRole('region', {
+      name: language === 'en' ? 'Run backtest' : '开始回测',
+      exact: true,
+    });
+    // The header action includes its shortcut; the first-launch action disappears once ready.
+    const run = page.getByRole('banner').getByRole('button', {
+      name: language === 'en' ? /^Run backtest/ : /^运行回测/,
+    });
+    await expect(steps).toBeVisible();
+    await expect(run).toBeDisabled();
+    await expectHeaderFits(page);
+    await page.screenshot({ path: testInfo.outputPath(`S1-${language}-1440.png`) });
+    await steps
+      .getByRole('button', { name: language === 'en' ? /Load example/ : /载入示例/ })
+      .click();
+    await expect(run).toBeEnabled();
+    await expect(steps).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '2024-10-03 – 2026-10-03' })).toBeVisible();
+    await run.click();
+    await expect(page.getByLabel(language === 'en' ? 'Last run' : '上次运行')).toHaveText(
+      language === 'en' ? /^17,520 bars, \d+\.\d s$/ : /^17,520 根 K 线，用时 \d+\.\d 秒$/,
+    );
+    await expectHeaderFits(page);
+    await page.screenshot({ path: testInfo.outputPath(`B1-${language}-1440.png`) });
+    const bars = requests.find((request) => request.pathname.endsWith('/bars'))!;
+    expect(Object.fromEntries(bars.searchParams)).toEqual({
+      feed: 'binance',
+      symbol: 'BTCUSDT',
+      timeframe: '60',
+      from: '1727964000',
+      to: '1791036000',
+    });
+  });
 
 test('search, fetch, edit preview and accept; repeat uses the cache', async ({
   page,
@@ -165,7 +204,7 @@ test('timeframe and date range refetch the same provider and await acceptance', 
     'true',
   );
   expect(requests.at(-1)!.searchParams.get('timeframe')).toBe('240');
-  await page.getByRole('button', { name: /24-10-03/ }).click();
+  await page.getByRole('button', { name: /2024-10-03/ }).click();
   const range = page.getByRole('dialog', { name: 'Change date range' });
   await range.getByRole('button', { name: '1M', exact: true }).click();
   await page.screenshot({ path: testInfo.outputPath('S10-en.png') });

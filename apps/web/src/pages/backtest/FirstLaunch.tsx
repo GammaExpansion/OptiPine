@@ -12,14 +12,12 @@ export function FirstLaunch() {
   const loadExample = useBacktestStore((state) => state.actions.loadExample);
   const readiness = useBacktestStore((state) => state.readiness);
   const run = useBacktestStore((state) => state.actions.run);
-  const result = useBacktestStore((state) => state.result);
   const source = useBacktestStore((state) => state.source);
   const dataset = useBacktestStore((state) => state.dataset);
   const reason =
     !source.trim() && !dataset
       ? t('shell.runMissing')
       : readiness.reasons.map(text).join(t('data.separator'));
-  if (result) return null;
   const steps = [
     {
       title: t('backtest.strategy'),
@@ -41,7 +39,7 @@ export function FirstLaunch() {
     },
     {
       title: t('backtest.run'),
-      hint: readiness.ok ? t('backtest.runHint') : reason,
+      hint: t('backtest.runHint'),
       actions: (
         <Button
           variant="primary"

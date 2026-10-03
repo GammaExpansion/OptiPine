@@ -22,6 +22,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.filename[data-loaded='true'] {
+  color: var(--text);
+}
 .dot {
   width: 7px;
   height: 7px;
