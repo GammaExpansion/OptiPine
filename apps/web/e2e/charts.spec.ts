@@ -24,6 +24,44 @@ test('charts render, synchronize, focus trades, switch panes and handle 100,000 
       labels.set(this.canvas, recent);
       original.apply(this, args);
     };
+    const triangles = new WeakMap<HTMLCanvasElement, Set<string>>();
+    (window as unknown as { chartTriangles: typeof triangles }).chartTriangles = triangles;
+    const paths = new WeakMap<CanvasRenderingContext2D, number>();
+    const begin = CanvasRenderingContext2D.prototype.beginPath;
+    const move = CanvasRenderingContext2D.prototype.moveTo;
+    const line = CanvasRenderingContext2D.prototype.lineTo;
+    const fill = CanvasRenderingContext2D.prototype.fill;
+    CanvasRenderingContext2D.prototype.beginPath = function () {
+      paths.set(this, 0);
+      begin.call(this);
+    };
+    CanvasRenderingContext2D.prototype.moveTo = function (...args) {
+      paths.set(this, (paths.get(this) ?? 0) + 1);
+      move.apply(this, args);
+    };
+    CanvasRenderingContext2D.prototype.lineTo = function (...args) {
+      paths.set(this, (paths.get(this) ?? 0) + 1);
+      line.apply(this, args);
+    };
+    CanvasRenderingContext2D.prototype.fill = function (
+      pathOrRule?: Path2D | CanvasFillRule,
+      rule?: CanvasFillRule,
+    ) {
+      if (paths.get(this) === 3) {
+        const colors = triangles.get(this.canvas) ?? new Set<string>();
+        colors.add(String(this.fillStyle));
+        triangles.set(this.canvas, colors);
+      }
+      Reflect.apply(
+        fill,
+        this,
+        pathOrRule === undefined
+          ? []
+          : typeof pathOrRule === 'string'
+            ? [pathOrRule]
+            : [pathOrRule, rule],
+      );
+    };
   });
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => {
@@ -41,6 +79,18 @@ test('charts render, synchronize, focus trades, switch panes and handle 100,000 
   );
   await expect(priceChart).toContainText('O 97,048.25');
   await expect(priceChart).toContainText('C 96,976.73');
+  await expect(priceChart.locator('span').filter({ hasText: /^Basis / })).toHaveCSS(
+    'color',
+    'rgb(8, 153, 129)',
+  );
+  await expect(priceChart.locator('span').filter({ hasText: /^Upper / })).toHaveCSS(
+    'color',
+    'rgb(120, 123, 134)',
+  );
+  await expect(priceChart.locator('span').filter({ hasText: /^Lower / })).toHaveCSS(
+    'color',
+    'rgb(120, 123, 134)',
+  );
   const renderedText = () =>
     priceChart.evaluate((root) => {
       const { chartLabels } = window as unknown as {
@@ -160,16 +210,33 @@ test('charts render, synchronize, focus trades, switch panes and handle 100,000 
           let buy = false;
           let sell = false;
           for (let i = 0; i < pixels.length; i += 4) {
-            if (pixels[i] === 217 && pixels[i + 1] === 195 && pixels[i + 2] === 140) buy = true;
-            if (pixels[i] === 108 && pixels[i + 1] === 182 && pixels[i + 2] === 221) sell = true;
+            if (pixels[i] === 0 && pixels[i + 1] === 230 && pixels[i + 2] === 118) buy = true;
+            if (pixels[i] === 242 && pixels[i + 1] === 54 && pixels[i + 2] === 69) sell = true;
           }
           return buy && sell;
+        }),
+    )
+    .toBe(true);
+  await expect
+    .poll(() =>
+      priceChart
+        .locator('canvas')
+        .first()
+        .evaluate((canvas: HTMLCanvasElement) => {
+          const { chartTriangles } = window as unknown as {
+            chartTriangles: WeakMap<HTMLCanvasElement, Set<string>>;
+          };
+          const colors = chartTriangles.get(canvas);
+          return colors?.has('#00e676') && colors.has('#f23645');
         }),
     )
     .toBe(true);
   await expect(page.locator('[class*="drawdownShade"]')).toBeVisible();
   expect(await page.getByTestId('price-chart').locator('canvas').count()).toBeGreaterThan(6);
   await page.screenshot({ path: info.outputPath('B7-charts-en.png') });
+  await page.getByRole('group', { name: /^BTCUSDT price chart/ }).press('+');
+  await page.getByRole('group', { name: /^BTCUSDT price chart/ }).press('+');
+  await page.screenshot({ path: info.outputPath('B7-signals-detail-en.png') });
   await page.getByRole('combobox', { name: 'Language' }).selectOption('zh');
   await expect(page.getByTestId('price-chart')).toBeVisible({ timeout: 30_000 });
   await page.screenshot({ path: info.outputPath('B7-charts-zh.png') });
