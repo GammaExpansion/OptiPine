@@ -100,7 +100,7 @@ it('keeps old bands while pending and handles waiting, empty rows, missing picks
     common: [],
     fixed: null,
     meanLoss: null,
-    bands: fixture.windows.map(() => ({ near: [], chosen: null })),
+    bands: fixture.windows.map(({ plan }) => ({ window: plan.index, near: [], chosen: null })),
   };
   act(() => hook.publish({ ...fixture, stability: { ...fixture.stability!, rows: [row] } }));
   expect(container.querySelectorAll('circle')).toHaveLength(0);
@@ -110,23 +110,40 @@ it('keeps old bands while pending and handles waiting, empty rows, missing picks
   expect(screen.getByRole('status')).toHaveTextContent('when every window is done');
   fireEvent.click(screen.getByRole('radio', { name: 'Window map' }));
   expect(screen.getByRole('status')).toHaveTextContent('when every window is done');
-  act(() => hook.publish({ ...fixture, mapError: message('optimize.wfStability.mapWaiting') }));
+  act(() => hook.publish({ ...fixture, error: message('optimize.wfStability.mapWaiting') }));
   expect(screen.getByRole('status')).toHaveTextContent('No window map is available yet.');
 });
 
-it('disables unavailable session actions and restores a fixture without leaking its actions', () => {
+it('restores real session actions without leaking fixture actions', () => {
   const original = state();
   const hook = installStabilityFixture();
   hook.restore();
   expect(state().actions).toBe(original.actions);
   getOptimizationStore().setState({ walkForward: stabilityFixture() });
   renderInEnglish(<WfStability />);
-  expect(screen.getByRole('combobox', { name: 'Tolerance' })).toBeDisabled();
+  expect(screen.getByRole('combobox', { name: 'Tolerance' })).toBeEnabled();
   fireEvent.click(screen.getByRole('radio', { name: 'Window map' }));
-  expect(screen.getByRole('combobox', { name: 'Window' })).toBeDisabled();
+  expect(screen.getByRole('combobox', { name: 'Window' })).toBeEnabled();
   expect(
     within(screen.getByRole('radiogroup', { name: 'Map scope' }))
       .getAllByRole('radio')
-      .every((button) => button.hasAttribute('disabled')),
+      .every((button) => !button.hasAttribute('disabled')),
   ).toBe(true);
+});
+
+it('keeps bands on their own windows when an intervening window stays flat', () => {
+  const fixture = stabilityFixture();
+  const row = fixture.stability!.rows[0];
+  installStabilityFixture({
+    ...fixture,
+    stability: {
+      ...fixture.stability!,
+      rows: [{ ...row, bands: row.bands.filter((band) => band.window !== 1) }],
+    },
+  });
+  const { container } = renderInEnglish(<WfStability />);
+  const lanes = container.querySelectorAll('svg g');
+  expect(lanes[1].querySelector('circle')).toBeNull();
+  expect(lanes[2].querySelector('title')).toHaveTextContent('W3');
+  expect(lanes[5].querySelector('circle')).not.toBeNull();
 });

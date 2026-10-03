@@ -1,6 +1,5 @@
 import { getOptimizationStore } from '../../../../state/optimization.ts';
-import type { WalkForwardView } from '../../../../workflows/walk-forward.ts';
-import type { StabilityActions } from './actions.ts';
+import { windowSelection, type WalkForwardView } from '../../../../workflows/walk-forward.ts';
 import { fixtureMap, stabilityFixture } from './fixture.ts';
 
 /** Test-only hook: imported by Vitest or dynamically by Playwright, absent from app imports. */
@@ -10,7 +9,7 @@ export function installStabilityFixture(initial = stabilityFixture()) {
   const calls: { action: string; value: unknown }[] = [];
   const current = () => store.getState().walkForward!;
   const publish = (walkForward: WalkForwardView) => store.setState({ walkForward });
-  const actions: typeof original.actions & StabilityActions = {
+  const actions: typeof original.actions = {
     ...original.actions,
     setStabilityTolerance(tolerance) {
       calls.push({ action: 'tolerance', value: tolerance });
@@ -18,10 +17,13 @@ export function installStabilityFixture(initial = stabilityFixture()) {
     },
     selectWindow(index) {
       calls.push({ action: 'window', value: index });
+      const selection = windowSelection(current().windows, index, 1);
       publish({
         ...current(),
-        selection: { window: current().windows[index], explicit: true, origin: null },
-        map: fixtureMap(current(), { window: index }),
+        selection,
+        map: selection
+          ? fixtureMap(current(), { window: selection.window.plan.index })
+          : current().map,
       });
     },
     setWindowMapSurface(surface) {

@@ -1127,6 +1127,7 @@ export const en = {
   'csv.previewHint': 'Choose a CSV to preview its bars',
   'csv.localNote': 'The file is read locally and is never uploaded',
 
+  'optimize.wfResults.isAnchored': 'IS (anchored)',
   'optimize.wfResults.summary': 'Stitched OOS equity',
   'optimize.wfResults.perWindow': 'Per window',
   'optimize.wfResults.stitched': 'Stitched',
@@ -1175,7 +1176,6 @@ export const en = {
   'optimize.wfResults.isRange': 'IS {range}',
   'optimize.wfResults.viewBacktest': 'View backtest',
   'optimize.wfResults.noSet': 'This window has no completed set to preview',
-  'optimize.wfResults.actionUnavailable': 'This action is not available yet',
 } as const;
 
 export type MessageId = keyof typeof en;

@@ -8,7 +8,6 @@ import { useOptimizationStore } from '../../../state/optimization.ts';
 import { objectiveGroups, type ObjectiveId } from '../../../workflows/optimize-ranking.ts';
 import { AddConditionTrigger } from '../filters/AddConditionTrigger.tsx';
 import { filterLabel } from '../filters/filter-label.ts';
-import { resultsActions } from './results/actions.ts';
 import { dateRange, figure, parameterSet, windowLabel } from './results/copy.ts';
 import styles from './results/Results.module.css';
 
@@ -20,7 +19,7 @@ export function WfTable() {
   const actions = useOptimizationStore((state) => state.actions);
   const objective = useRef<HTMLButtonElement>(null);
   if (!view) return null;
-  const { selectWindow } = resultsActions(actions);
+  const { selectWindow } = actions;
   const complete = !view.inProgress && view.totals.completed === view.totals.windows;
   const first = view.windows[0];
   const last = view.windows.at(-1);
@@ -120,20 +119,19 @@ export function WfTable() {
                   data-window={plan.index}
                   data-selected={view.selection?.window.plan.index === plan.index || undefined}
                   data-status={window.status}
-                  onClick={() => selectWindow?.(plan.index)}
+                  onClick={() => selectWindow(plan.index)}
                 >
                   <th scope="row">
                     <button
                       type="button"
                       className={styles.rowButton}
-                      disabled={!selectWindow}
                       aria-label={t('optimize.wfResults.selectWindow', {
                         window: windowLabel(plan.index),
                       })}
                       aria-pressed={view.selection?.window.plan.index === plan.index}
                       onClick={(event) => {
                         event.stopPropagation();
-                        selectWindow?.(plan.index);
+                        selectWindow(plan.index);
                       }}
                     >
                       {text(windowLabel(plan.index))}
@@ -165,7 +163,7 @@ export function WfTable() {
                             variant="link"
                             onClick={(event) => {
                               event.stopPropagation();
-                              selectWindow?.(plan.index);
+                              selectWindow(plan.index);
                               objective.current?.focus();
                             }}
                           >

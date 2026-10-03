@@ -1,9 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { OptimizationStoreState } from '../src/state/optimization.ts';
+import { origins } from './ports.ts';
 
 // The setup sidebar is an independent slot. Initialize its stores through Vite; every trial and
 // analysis still runs through the production Worker factories and real optimization pool.
-test.use({ baseURL: 'http://127.0.0.1:5176' });
+test.use({ baseURL: origins.dev });
 type Hooks = Window & { mapState: () => OptimizationStoreState };
 const source = (dense: boolean) => `//@version=6
 strategy("Map test", initial_capital=1000000)
@@ -39,6 +40,8 @@ async function open(page: Page, dense = false, language: 'en' | 'zh' = 'en') {
   await page.evaluate(
     async ({ source, dense }) => {
       const load = (path: string) => import(/* @vite-ignore */ path);
+      const { getServices } = await load('/src/state/services.ts');
+      await getServices().loadOptimization();
       const { openScript } = await load('/src/state/backtest.ts');
       const { getMarketDataStore } = await load('/src/state/marketData.ts');
       const { getOptimizationStore } = await load('/src/state/optimization.ts');

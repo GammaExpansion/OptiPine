@@ -95,6 +95,34 @@ it('draws dashed IS and solid OOS equity, selected lanes, and waiting states fro
   drawSummary(context as unknown as CanvasRenderingContext2D, view, 'stitched', 1104, 330, copy);
   expect(context.arc).toHaveBeenCalledTimes(1);
   expect(context.fill).toHaveBeenCalled();
+
+  context.fillText.mockClear();
+  context.measureText = () => ({ width: 140 });
+  const tinyFinal = {
+    ...view,
+    windows: view.windows.map((window, index) =>
+      index === view.windows.length - 1
+        ? {
+            ...window,
+            plan: { ...window.plan, outOfSampleEnd: window.plan.outOfSampleStart + 3600 },
+          }
+        : window,
+    ),
+  };
+  drawSummary(
+    context as unknown as CanvasRenderingContext2D,
+    tinyFinal,
+    'stitched',
+    1104,
+    330,
+    copy,
+  );
+  const labels = context.fillText.mock.calls
+    .filter(([text]) => String(text).endsWith('compact'))
+    .map(([, x]) => Number(x))
+    .sort((a, b) => a - b);
+  expect(labels).toHaveLength(6);
+  expect(labels.every((x, index) => index === 0 || x - labels[index - 1] >= 148)).toBe(true);
 });
 
 it('builds consistent complete, live and flat fixtures without importing a production hook', () => {

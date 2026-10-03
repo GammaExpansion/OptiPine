@@ -105,9 +105,6 @@
   outline: 1px solid var(--primary);
   outline-offset: 1px;
 }
-.lane:disabled {
-  cursor: default;
-}
 .tablePanel {
   display: flex;
   flex-direction: column;

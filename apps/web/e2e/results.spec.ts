@@ -152,7 +152,7 @@ test('S1 keeps results, dialogs, the script menu, Optimize and Chinese out of th
     /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|ScriptMenuContent|OptimizePage|optimization-services|optimize-|\/zh-)/;
   expect(scripts.map(({ file }) => file).filter((file) => lazy.test(file))).toEqual([]);
   // Measured with the optimization side loading when Optimize first opens: 781,854 bytes of code,
-  // 478,160 of them in the entry, and the English catalog's 44,203. The code budgets leave about
+  // 478,160 of them in the entry. The code budgets leave about
   // 6 KB, less than the script menu (14 KB) or the market data dialog (19 KB) would add if either
   // loaded with the page again.
   const catalog = /\/en-[^/]*\.js$/;
@@ -160,12 +160,11 @@ test('S1 keeps results, dialogs, the script menu, Optimize and Chinese out of th
   const code = sum(scripts.filter(({ file }) => !catalog.test(file)));
   expect(code).toBeGreaterThan(0);
   expect(code).toBeLessThan(788000);
-  // The catalog grows with the copy of every feature. It is checked on its own, about 6 KB over
-  // its size, so new copy never pushes the code over its budget; a catalog that outgrows this
-  // budget is a reason to look at what it carries, then to raise the budget.
+  // The shared English catalog is 51,889 bytes with walk-forward results copy. Its budget leaves
+  // about 6 KB for copy growth; the code and entry budgets remain independent and unchanged.
   const catalogBytes = sum(scripts.filter(({ file }) => catalog.test(file)));
   expect(catalogBytes).toBeGreaterThan(0);
-  expect(catalogBytes).toBeLessThan(50500);
+  expect(catalogBytes).toBeLessThan(58000);
   const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
   const entryFiles = new Set(
     [...html.matchAll(/(?:src|href)="([^"\s]+\.js)"/g)].map((match) => match[1]),

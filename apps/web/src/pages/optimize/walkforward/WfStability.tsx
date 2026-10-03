@@ -4,7 +4,6 @@ import { Select } from '../../../components/Select.tsx';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { formatNumber } from '../../../i18n/translate.ts';
 import { useOptimizationStore } from '../../../state/optimization.ts';
-import { stabilityActions } from './stability/actions.ts';
 import { StabilityRows } from './stability/StabilityRows.tsx';
 import { WindowMap } from './stability/WindowMap.tsx';
 import styles from './stability/stability.module.css';
@@ -13,7 +12,7 @@ import styles from './stability/stability.module.css';
 export function WfStability() {
   const { t } = useI18n();
   const view = useOptimizationStore((state) => state.walkForward);
-  const actions = stabilityActions(useOptimizationStore((state) => state.actions));
+  const actions = useOptimizationStore((state) => state.actions);
   const [tab, setTab] = useState('stability');
   const stability = view?.stability;
   const tolerance = stability?.tolerance ?? 0.1;
@@ -38,12 +37,12 @@ export function WfStability() {
               className={styles.select}
               label={t('optimize.wfStability.tolerance')}
               value={String(tolerance)}
-              disabled={!stability || !actions.setStabilityTolerance}
+              disabled={!stability}
               options={tolerances.map((value) => ({
                 value: String(value),
                 label: formatNumber(value, { style: 'percent', maximumFractionDigits: 1 }),
               }))}
-              onChange={(value) => actions.setStabilityTolerance?.(Number(value))}
+              onChange={(value) => actions.setStabilityTolerance(Number(value))}
             />
           </label>
         )}

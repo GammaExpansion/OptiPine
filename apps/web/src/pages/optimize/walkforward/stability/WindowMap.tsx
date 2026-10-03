@@ -8,15 +8,13 @@ import { useI18n } from '../../../../i18n/I18nProvider.tsx';
 import { formatNumber } from '../../../../i18n/translate.ts';
 import { useOptimizationStore } from '../../../../state/optimization.ts';
 import { rangeLabel, valueLabel } from '../../map/map-labels.ts';
-import { stabilityActions } from './actions.ts';
 import styles from './stability.module.css';
 
 /** The workflow supplies the selected window's IS map or the mean, already binned and ranked. */
 export function WindowMap() {
   const { t, text } = useI18n();
   const view = useOptimizationStore((state) => state.walkForward);
-  const storeActions = useOptimizationStore((state) => state.actions);
-  const actions = stabilityActions(storeActions);
+  const actions = useOptimizationStore((state) => state.actions);
   const [hover, setHover] = useState<{ map: Heatmap; hit: CellHover } | null>(null);
   const map = view?.map;
   const selected = view?.selection?.window.plan.index ?? map?.window;
@@ -35,10 +33,10 @@ export function WindowMap() {
     value == null
       ? text(valueLabel(null))
       : formatNumber(value, { notation: 'compact', maximumFractionDigits: 1 });
-  if (view?.mapError)
+  if (view?.error)
     return (
       <p className={styles.note} role="status">
-        {text(view.mapError)}
+        {text(view.error)}
       </p>
     );
   if (!map)
@@ -48,18 +46,17 @@ export function WindowMap() {
       </p>
     );
   return (
-    <div className={styles.map} aria-busy={view?.pending}>
+    <div className={styles.map} aria-busy={view?.pending || view?.mapPending}>
       <div className={styles.mapScope}>
         <Select
           className={styles.select}
           label={t('optimize.wfStability.chooseWindow')}
           value={String(map.window)}
-          disabled={!actions.selectWindow}
           options={(view?.windows ?? []).map((window) => ({
             value: String(window.plan.index),
             label: t('optimize.wfStability.window', { window: window.plan.index + 1 }),
           }))}
-          onChange={(value) => actions.selectWindow?.(Number(value))}
+          onChange={(value) => actions.selectWindow(Number(value))}
         />
         <SegmentedControl
           small
@@ -69,15 +66,13 @@ export function WindowMap() {
             {
               value: 'window',
               label: t('optimize.wfStability.windowIs', { window: map.window + 1 }),
-              disabled: !actions.setWindowMapSurface,
             },
             {
               value: 'mean',
               label: t('optimize.wfStability.mean', { count: view?.windows.length ?? 0 }),
-              disabled: !actions.setWindowMapSurface,
             },
           ]}
-          onChange={(value) => actions.setWindowMapSurface?.(value as 'window' | 'mean')}
+          onChange={(value) => actions.setWindowMapSurface(value as 'window' | 'mean')}
         />
       </div>
       <div className={styles.axes}>
@@ -94,7 +89,7 @@ export function WindowMap() {
                   ...(axis === 'z' ? [{ value: '__none', label: t('optimize.map.none') }] : []),
                   ...axes.map((title) => ({ value: title, label: title })),
                 ]}
-                onChange={(value) => storeActions.setAxis(axis, value === '__none' ? null : value)}
+                onChange={(value) => actions.setAxis(axis, value === '__none' ? null : value)}
               />
             </label>
           ))}
@@ -116,7 +111,7 @@ export function WindowMap() {
                 { value: 'mean', label: t('optimize.map.mean') },
               ]}
               onChange={(value) =>
-                storeActions.setSlice(
+                actions.setSlice(
                   slice.title,
                   value === 'max' || value === 'mean'
                     ? { mode: value }
@@ -138,7 +133,7 @@ export function WindowMap() {
           const chosen = map.chosen.find((item) =>
             containsSelection(map.panel, cell, item.parameters),
           );
-          if (chosen) actions.selectWindow?.(chosen.window);
+          if (chosen) actions.selectWindow(chosen.window);
         }}
       />
       <div className={styles.legend} aria-label={t('optimize.map.legend')}>

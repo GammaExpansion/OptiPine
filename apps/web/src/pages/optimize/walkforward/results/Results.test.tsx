@@ -64,7 +64,9 @@ it('selects through rows and lanes, and delegates preview/apply without mutating
   const user = userEvent.setup();
   await user.click(screen.getByRole('button', { name: 'View backtest' }));
   await user.click(screen.getByRole('button', { name: 'Apply to inputs' }));
-  expect(hook.calls.slice(0, 2)).toEqual([
+  expect(uiStore.getState().page).toBe('backtest');
+  expect(hook.calls.slice(0, 3)).toEqual([
+    { action: 'selectWindow', value: 3 },
     { action: 'selectWindow', value: 3 },
     { action: 'previewWindow', value: 3 },
   ]);
@@ -112,6 +114,14 @@ it('keeps live finished windows visible, withholds final totals and fixed set, t
   expect(screen.getAllByText('Waiting')).toHaveLength(3);
   expect(screen.getByText('Optimizing…')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Apply to inputs' })).not.toBeInTheDocument();
+  act(() => state().actions.selectWindow(5));
+  expect(screen.getByRole('button', { name: 'View backtest' })).toBeDisabled();
+  act(() => state().actions.selectWindow(null));
+  expect(state().walkForward?.selection).toMatchObject({
+    explicit: false,
+    window: { plan: { index: 1 } },
+  });
+  expect(screen.getByRole('button', { name: 'View backtest' })).toBeEnabled();
   act(() => hook.publish(resultsFixture()));
   expect(screen.getAllByText('+7,600')).toHaveLength(2);
   expect(screen.getByRole('button', { name: 'Apply to inputs' })).toBeEnabled();
@@ -142,7 +152,7 @@ it('shows flat and partial windows, Adjust focuses ranking, and failed windows c
   expect(screen.getByRole('button', { name: 'View backtest' })).toBeDisabled();
 });
 
-it('retains pending data but disables preview/apply; absent actions stay inert and restore cleanly', () => {
+it('retains pending data but disables preview/apply, then restores the real session actions', () => {
   const original = state();
   const fixture = resultsFixture();
   const hook = installResultsFixture({ ...fixture, pending: true });
@@ -155,16 +165,31 @@ it('retains pending data but disables preview/apply; absent actions stay inert a
   expect(state().actions).toBe(original.actions);
   getOptimizationStore().setState({ walkForward: fixture });
   panels();
-  expect(screen.getByRole('button', { name: 'View backtest' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Apply to inputs' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'View backtest' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Apply to inputs' })).toBeEnabled();
   expect(
     screen
       .getAllByRole('button', { name: 'Select W1' })
-      .every((button) => button.hasAttribute('disabled')),
+      .every((button) => !button.hasAttribute('disabled')),
   ).toBe(true);
 });
 
 it('renders no result slots for the absent workflow view', () => {
   const { container } = panels();
   expect(container).toBeEmptyDOMElement();
+});
+
+it('labels anchored IS and exposes analysis failures without hiding the retained results', () => {
+  const fixture = resultsFixture();
+  installResultsFixture({ ...fixture, error: message('optimize.wfResults.status.failed') });
+  getOptimizationStore().setState({
+    validation: {
+      ...state().validation,
+      walkForward: { ...state().validation.walkForward, anchored: true },
+    },
+  });
+  panels();
+  expect(screen.getByText('IS (anchored)')).toBeInTheDocument();
+  expect(screen.getByRole('alert')).toHaveTextContent('Window failed');
+  expect(screen.getAllByText('+7,600')).toHaveLength(2);
 });

@@ -5,7 +5,9 @@ import type { OptimizationStoreState } from '../src/state/optimization.ts';
 import type { installResultsFixture } from '../src/pages/optimize/walkforward/results/fixture-store.ts';
 import type { ResultsScenario } from '../src/pages/optimize/walkforward/results/fixture.ts';
 
-test.use({ baseURL: 'http://127.0.0.1:5176' });
+import { origins } from './ports.ts';
+
+test.use({ baseURL: origins.dev });
 type Hooks = Window & {
   backtestHooks: BacktestHooks;
   wfState: () => OptimizationStoreState;
@@ -49,6 +51,8 @@ async function open(page: Page, language: 'en' | 'zh') {
   );
   await page.evaluate(async () => {
     const load = (path: string) => import(/* @vite-ignore */ path);
+    const { getServices } = await load('/src/state/services.ts');
+    await getServices().loadOptimization();
     const { getOptimizationStore } = await load('/src/state/optimization.ts');
     const { uiStore } = await load('/src/state/ui.ts');
     const { installResultsFixture } = await load(
@@ -60,7 +64,7 @@ async function open(page: Page, language: 'en' | 'zh') {
     hooks.wfState = () => getOptimizationStore().getState();
     hooks.wfScenario = (scenario) => hooks.wfResults.publish(resultsFixture(scenario));
     const store = getOptimizationStore();
-    // The pending workflow has no completed run to mount; only this test hook publishes W1.
+    // Mount the fixture in the real results slots without starting the Worker pool.
     store.setState({
       validation: { ...store.getState().validation, mode: 'walk-forward' },
       run: {
@@ -146,11 +150,14 @@ for (const language of ['en', 'zh'] as const) {
     await expect(table.locator('tr[data-selected]')).toContainText('W5');
     await expect(selection).toContainText('+1,640');
     await selection.getByRole('button', { name: english ? 'View backtest' : '查看回测' }).click();
+    await page.getByRole('button', { name: english ? 'Optimize' : '优化', exact: true }).click();
     await page
       .getByRole('button', { name: english ? 'Apply to inputs' : '应用到输入', exact: true })
       .click();
+    await page.getByRole('button', { name: english ? 'Optimize' : '优化', exact: true }).click();
     const calls = await page.evaluate(() => (window as unknown as Hooks).wfResults.calls);
-    expect(calls.slice(0, 2)).toEqual([
+    expect(calls.slice(0, 3)).toEqual([
+      { action: 'selectWindow', value: 4 },
       { action: 'selectWindow', value: 4 },
       { action: 'previewWindow', value: 4 },
     ]);

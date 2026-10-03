@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { SegmentedControl } from '../../../components/SegmentedControl.tsx';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { useOptimizationStore } from '../../../state/optimization.ts';
-import { resultsActions } from './results/actions.ts';
 import { figure } from './results/copy.ts';
 import { SummaryChart } from './results/SummaryChart.tsx';
 import type { SummaryMode } from './results/geometry.ts';
@@ -12,6 +11,12 @@ import styles from './results/Results.module.css';
 export function WfSummary() {
   const { t, text } = useI18n();
   const view = useOptimizationStore((state) => state.walkForward);
+  const anchored = useOptimizationStore((state) =>
+    state.run.status === 'running'
+      ? state.validation.walkForward.anchored
+      : (state.results?.computedWith.validation.walkForward.anchored ??
+        state.validation.walkForward.anchored),
+  );
   const actions = useOptimizationStore((state) => state.actions);
   const [mode, setMode] = useState<SummaryMode>('stitched');
   if (!view) return null;
@@ -53,7 +58,7 @@ export function WfSummary() {
         <div className={styles.legend}>
           <span>
             <i />
-            {t('optimize.wfResults.is')}
+            {t(anchored ? 'optimize.wfResults.isAnchored' : 'optimize.wfResults.is')}
           </span>
           <span>
             <i />
@@ -71,12 +76,17 @@ export function WfSummary() {
           ]}
         />
       </header>
+      {view.error && (
+        <p className={styles.pending} role="alert">
+          {text(view.error)}
+        </p>
+      )}
       {view.pending && (
         <p className={styles.pending} role="status">
           {t('optimize.wfResults.updating')}
         </p>
       )}
-      <SummaryChart view={view} mode={mode} selectWindow={resultsActions(actions).selectWindow} />
+      <SummaryChart view={view} mode={mode} selectWindow={actions.selectWindow} />
     </section>
   );
 }

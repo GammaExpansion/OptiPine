@@ -61,6 +61,7 @@ export function stabilityFixture(tolerance = 0.1): WalkForwardView {
         [23, 28],
         [26, 32],
       ].map(([from, to], index) => ({
+        window: index,
         near: lengthValues.filter(
           (value) =>
             value >= from && value <= to && (tolerance >= 0.1 || value === picks[index][0]),
@@ -76,6 +77,7 @@ export function stabilityFixture(tolerance = 0.1): WalkForwardView {
       title: 'Multiplier',
       values: multipliers,
       bands: picks.map((pick, index) => ({
+        window: index,
         near: multipliers.filter((value) => value >= (index < 2 ? 1.75 : 2) && value <= 2.25),
         chosen: pick[1],
       })),
@@ -87,7 +89,11 @@ export function stabilityFixture(tolerance = 0.1): WalkForwardView {
     {
       title: 'Source',
       values: ['close', 'hl2', 'ohlc4'],
-      bands: picks.map((pick) => ({ near: ['close', 'hl2', 'ohlc4'], chosen: pick[2] })),
+      bands: picks.map((pick, window) => ({
+        window,
+        near: ['close', 'hl2', 'ohlc4'],
+        chosen: pick[2],
+      })),
       common: [{ from: 'close', to: 'ohlc4' }],
       fixed: 'close',
       meanLoss: 0.009,
@@ -96,7 +102,7 @@ export function stabilityFixture(tolerance = 0.1): WalkForwardView {
     {
       title: 'Use trailing stop',
       values: [false, true],
-      bands: picks.map((pick) => ({ near: [false, true], chosen: pick[3] })),
+      bands: picks.map((pick, window) => ({ window, near: [false, true], chosen: pick[3] })),
       common: [{ from: false, to: true }],
       fixed: false,
       meanLoss: 0,
@@ -124,7 +130,8 @@ export function stabilityFixture(tolerance = 0.1): WalkForwardView {
     fixed: null,
     stability: { tolerance, pending: false, rows },
     map: null,
-    mapError: null,
+    mapPending: false,
+    error: null,
     selection: { window: windows[2], explicit: true, origin: null },
   };
   return { ...view, map: fixtureMap(view) };

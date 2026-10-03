@@ -1,7 +1,7 @@
 import { Button } from '../../../components/Button.tsx';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { useOptimizationStore } from '../../../state/optimization.ts';
-import { resultsActions } from './results/actions.ts';
+import { useUiStore } from '../../../state/ui.ts';
 import { dateRange, figure, parameterSet, windowLabel } from './results/copy.ts';
 import styles from './results/Results.module.css';
 
@@ -10,10 +10,11 @@ export function WfSelectionBar() {
   const { t, text } = useI18n();
   const view = useOptimizationStore((state) => state.walkForward);
   const actions = useOptimizationStore((state) => state.actions);
+  const setPage = useUiStore((state) => state.setPage);
   if (!view?.selection) return null;
   const { window, origin } = view.selection;
   const { plan } = window;
-  const { previewWindow } = resultsActions(actions);
+  const { previewWindow } = actions;
   const available = window.status === 'done' && window.parameters !== null && origin !== null;
   return (
     <section className={styles.selection} aria-label={t('optimize.wfResults.selection')}>
@@ -50,16 +51,12 @@ export function WfSelectionBar() {
       </div>
       <Button
         variant="secondary"
-        disabled={!available || !previewWindow || view.pending}
-        disabledReason={t(
-          !available
-            ? 'optimize.wfResults.noSet'
-            : view.pending
-              ? 'optimize.wfResults.updating'
-              : 'optimize.wfResults.actionUnavailable',
-        )}
+        disabled={!available || view.pending}
+        disabledReason={t(!available ? 'optimize.wfResults.noSet' : 'optimize.wfResults.updating')}
         onClick={() => {
-          void previewWindow?.(plan.index);
+          actions.selectWindow(plan.index);
+          void previewWindow();
+          setPage('backtest');
         }}
       >
         {t('optimize.wfResults.viewBacktest')}

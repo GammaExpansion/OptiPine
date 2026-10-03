@@ -14,7 +14,7 @@ export function SummaryChart({
 }: {
   view: WalkForwardView;
   mode: SummaryMode;
-  selectWindow?: (index: number) => void;
+  selectWindow: (index: number) => void;
 }) {
   const { t, text } = useI18n();
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -102,8 +102,7 @@ export function SummaryChart({
             })}
             aria-pressed={view.selection?.window.plan.index === window.plan.index}
             title={text(dateRange(window.plan.inSampleStart, window.plan.outOfSampleEnd))}
-            disabled={!selectWindow}
-            onClick={() => selectWindow?.(window.plan.index)}
+            onClick={() => selectWindow(window.plan.index)}
           />
         ))}
       </div>

@@ -98,7 +98,9 @@ export function drawSummary(
       );
       if (endingY === null || Math.abs(y - endingY) > 16) label(copy.value(value), right + 8, y);
     }
-    geometry.lanes.forEach((lane, index) => {
+    let nextLabelLeft = right + 8;
+    geometry.lanes.toReversed().forEach((lane, reverseIndex) => {
+      const index = geometry.lanes.length - reverseIndex - 1;
       line(
         context,
         [
@@ -115,11 +117,13 @@ export function drawSummary(
       const half = context.measureText(text).width / 2;
       const center = Math.min(
         right - half,
+        nextLabelLeft - half - 8,
         Math.max(left + half, (lane.oosStart + lane.oosEnd) / 2),
       );
-      // Tiny partial windows retain their result in the table instead of colliding with neighbours.
-      if (lane.oosEnd - lane.oosStart >= half * 2 + 4 || index === geometry.lanes.length - 1) {
+      // Work back from a tiny final window so its label cannot overlap the preceding result.
+      if (center - half >= left) {
         label(text, center, 34, net != null && net < 0 ? '#f06a5d' : '#aab1b9', 'center');
+        nextLabelLeft = center - half;
       }
     });
     const segments = equitySegments(view.equity.times, view.equity.values, x, scale.y);

@@ -59,7 +59,7 @@ function Row({ row, view }: { row: StabilityRow; view: WalkForwardView }) {
             );
           })}
           {view.windows.map((window, index) => {
-            const band = row.bands[index];
+            const band = row.bands.find((band) => band.window === window.plan.index);
             const chosen = valuePosition(row.values, band?.chosen ?? null);
             return (
               <g

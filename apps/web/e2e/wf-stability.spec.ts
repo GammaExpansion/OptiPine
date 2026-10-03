@@ -2,7 +2,9 @@ import { expect, test, type Page } from '@playwright/test';
 import type { OptimizationStoreState } from '../src/state/optimization.ts';
 import type { installStabilityFixture } from '../src/pages/optimize/walkforward/stability/fixture-store.ts';
 
-test.use({ baseURL: 'http://127.0.0.1:5176' });
+import { origins } from './ports.ts';
+
+test.use({ baseURL: origins.dev });
 type Hooks = Window & {
   wfState: () => OptimizationStoreState;
   wfFixture: ReturnType<typeof installStabilityFixture>;
@@ -30,6 +32,8 @@ async function open(page: Page, language: 'en' | 'zh') {
   await page.goto('/');
   await page.evaluate(async () => {
     const load = (path: string) => import(/* @vite-ignore */ path);
+    const { getServices } = await load('/src/state/services.ts');
+    await getServices().loadOptimization();
     const { getOptimizationStore } = await load('/src/state/optimization.ts');
     const { uiStore } = await load('/src/state/ui.ts');
     const { installStabilityFixture } = await load(
@@ -38,7 +42,7 @@ async function open(page: Page, language: 'en' | 'zh') {
     const hooks = window as unknown as Hooks;
     hooks.wfFixture = installStabilityFixture();
     hooks.wfState = () => getOptimizationStore().getState();
-    // The unfinished workflow publishes null; mark a live results area so the real W1 slots mount.
+    // Mount the fixture in the real results slots without starting the Worker pool.
     getOptimizationStore().setState({
       run: {
         status: 'running',

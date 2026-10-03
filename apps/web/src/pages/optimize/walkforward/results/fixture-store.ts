@@ -3,33 +3,35 @@ import {
   type OptimizationStoreState,
 } from '../../../../state/optimization.ts';
 import { naturalDirection } from '../../../../workflows/optimize-ranking.ts';
+import { windowSelection } from '../../../../workflows/walk-forward.ts';
 import { fixtureMap } from '../stability/fixture.ts';
 import { installStabilityFixture } from '../stability/fixture-store.ts';
-import type { ResultsActions } from './actions.ts';
-import { fixtureOrigin, resultsFixture } from './fixture.ts';
+import { resultsFixture } from './fixture.ts';
 
 /** Test-only adapter, dynamically imported by the browser tests and absent from app imports. */
 export function installResultsFixture(initial = resultsFixture()) {
   const hook = installStabilityFixture(initial);
   const store = getOptimizationStore();
   const current = () => store.getState().walkForward!;
-  const actions: OptimizationStoreState['actions'] & ResultsActions = {
+  const actions: OptimizationStoreState['actions'] = {
     ...store.getState().actions,
     selectWindow(index) {
-      const window = current().windows.find((window) => window.plan.index === index);
-      if (!window) return;
+      const selection = windowSelection(current().windows, index, 1);
       hook.calls.push({ action: 'selectWindow', value: index });
       hook.publish({
         ...current(),
-        selection: { window, explicit: true, origin: fixtureOrigin(window) },
-        map: current().map ? fixtureMap(current(), { window: index }) : null,
+        selection,
+        map:
+          current().map && selection
+            ? fixtureMap(current(), { window: selection.window.plan.index })
+            : current().map,
       });
     },
-    applyFixedParameters() {
+    async applyFixedParameters() {
       hook.calls.push({ action: 'applyFixedParameters', value: current().fixed });
     },
-    async previewWindow(index) {
-      hook.calls.push({ action: 'previewWindow', value: index });
+    async previewWindow() {
+      hook.calls.push({ action: 'previewWindow', value: current().selection?.window.plan.index });
     },
     setObjective(objective) {
       hook.calls.push({ action: 'setObjective', value: objective });

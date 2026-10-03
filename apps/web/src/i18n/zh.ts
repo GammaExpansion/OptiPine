@@ -1101,6 +1101,7 @@ export const zh = {
   'csv.previewHint': '选择 CSV 后预览 K 线',
   'csv.localNote': '文件仅在浏览器本地读取，不会上传',
 
+  'optimize.wfResults.isAnchored': '样本内（固定起点）',
   'optimize.wfResults.summary': '拼接样本外权益',
   'optimize.wfResults.perWindow': '分窗口',
   'optimize.wfResults.stitched': '拼接',
@@ -1149,5 +1150,4 @@ export const zh = {
   'optimize.wfResults.isRange': '样本内 {range}',
   'optimize.wfResults.viewBacktest': '查看回测',
   'optimize.wfResults.noSet': '此窗口没有可预览的已完成参数组',
-  'optimize.wfResults.actionUnavailable': '此操作暂不可用',
 } satisfies Record<MessageId, string>;

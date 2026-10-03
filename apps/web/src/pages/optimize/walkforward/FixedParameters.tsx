@@ -1,7 +1,7 @@
 import { Button } from '../../../components/Button.tsx';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { useOptimizationStore } from '../../../state/optimization.ts';
-import { resultsActions } from './results/actions.ts';
+import { useUiStore } from '../../../state/ui.ts';
 import { parameterValue } from './results/copy.ts';
 import styles from './results/Results.module.css';
 
@@ -10,8 +10,9 @@ export function FixedParameters() {
   const { t, text } = useI18n();
   const view = useOptimizationStore((state) => state.walkForward);
   const actions = useOptimizationStore((state) => state.actions);
+  const setPage = useUiStore((state) => state.setPage);
   if (!view?.fixed || view.inProgress) return null;
-  const { applyFixedParameters } = resultsActions(actions);
+  const { applyFixedParameters } = actions;
   return (
     <section className={styles.fixed} aria-label={t('optimize.wfResults.fixed')}>
       <div className={styles.fixedContent}>
@@ -27,11 +28,12 @@ export function FixedParameters() {
       </div>
       <Button
         variant="primary"
-        disabled={!applyFixedParameters || view.pending}
-        disabledReason={t(
-          view.pending ? 'optimize.wfResults.updating' : 'optimize.wfResults.actionUnavailable',
-        )}
-        onClick={() => applyFixedParameters?.()}
+        disabled={view.pending}
+        disabledReason={t('optimize.wfResults.updating')}
+        onClick={() => {
+          void applyFixedParameters();
+          setPage('backtest');
+        }}
       >
         {t('optimize.wfResults.apply')}
       </Button>
