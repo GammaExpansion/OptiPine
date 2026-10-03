@@ -417,6 +417,7 @@ export const en = {
   profileTimeframe: 'Use a valid Pine timeframe such as 60, D or 1W.',
   profileTimezoneInvalid: 'The timezone is not recognized.',
   profileTimezoneName: 'The timezone must be a name such as Etc/UTC.',
+  analysisRunUnknown: 'The analysis worker no longer holds optimization run {run}.',
   analysisWorkerClosed: 'The analysis worker has closed.',
   analysisWorkerCrashed: 'The analysis worker stopped unexpectedly.',
   analysisWorkerResponseMismatch: 'The analysis worker returned an unexpected response.',

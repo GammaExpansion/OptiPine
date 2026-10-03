@@ -9,3 +9,4 @@ export * from './heatmap-display.ts';
 export * from './heatmap-detail.ts';
 export * from './walk-forward.ts';
 export * from './optimizer-analysis.ts';
+export * from './optimizer-summary.ts';
