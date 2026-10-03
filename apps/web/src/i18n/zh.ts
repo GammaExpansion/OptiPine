@@ -476,6 +476,7 @@ export const zh = {
   profileTimeframe: '请使用有效的 Pine 周期，如 60、D 或 1W。',
   profileTimezoneInvalid: '无法识别该时区。',
   profileTimezoneName: '时区必须为名称，如 Etc/UTC。',
+  analysisRunUnknown: '分析线程中已没有优化运行 {run} 的数据。',
   analysisWorkerClosed: '分析线程已关闭。',
   analysisWorkerCrashed: '分析线程意外停止。',
   analysisWorkerResponseMismatch: '分析线程返回了意外响应。',

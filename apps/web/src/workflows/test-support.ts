@@ -2,6 +2,7 @@ import type { MarketBar, ParameterSet, RunInput } from '@pine/engine';
 import { restoreError } from '@pine/messages';
 import type { TrialResult } from '@pine/optimizer';
 import {
+  AnalysisRuns,
   AnalysisWorkerClient,
   EngineWorkerClient,
   handleAnalysisRequest,
@@ -150,6 +151,7 @@ export class LocalEngineWorker implements EngineWorkerTransport {
 
 /** An analysis Worker stand-in that answers with the real dispatcher after a macrotask. */
 export class LocalAnalysisWorker implements AnalysisWorkerTransport {
+  readonly runs = new AnalysisRuns();
   onmessage: AnalysisWorkerTransport['onmessage'] = null;
   onerror: AnalysisWorkerTransport['onerror'] = null;
   onmessageerror: AnalysisWorkerTransport['onmessageerror'] = null;
@@ -159,7 +161,7 @@ export class LocalAnalysisWorker implements AnalysisWorkerTransport {
     const copy = structuredClone(request);
     setTimeout(() => {
       if (this.terminated) return;
-      const response = structuredClone(handleAnalysisRequest(copy));
+      const response = structuredClone(handleAnalysisRequest(copy, this.runs));
       this.onmessage?.(new MessageEvent('message', { data: response }));
     }, 0);
   }
@@ -322,6 +324,8 @@ interface HeldRequest {
 /** An analysis client whose requests wait until a test answers them. */
 export class FakeAnalysis implements AnalysisClient {
   readonly requests: HeldRequest[] = [];
+  /** The runs a real analysis Worker would hold. */
+  readonly runs = new AnalysisRuns();
 
   request<K extends keyof AnalysisJobs>(
     kind: K,
@@ -344,11 +348,14 @@ export class FakeAnalysis implements AnalysisClient {
   /** Answer the oldest waiting request with the real dispatcher. */
   answer(): void {
     const held = this.requests.shift()!;
-    const response: AnalysisResponse = handleAnalysisRequest({
-      requestId: 0,
-      kind: held.kind,
-      input: held.input,
-    } as AnalysisRequest);
+    const response: AnalysisResponse = handleAnalysisRequest(
+      {
+        requestId: 0,
+        kind: held.kind,
+        input: held.input,
+      } as AnalysisRequest,
+      this.runs,
+    );
     if (response.kind === 'failed') held.reject(restoreError(response.error));
     else held.resolve(structuredClone(response.output));
   }
