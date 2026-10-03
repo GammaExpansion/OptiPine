@@ -2,7 +2,15 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { I18nProvider } from './i18n/I18nProvider.tsx';
 import { Shell } from './shell/Shell.tsx';
+import { disposeServices, installServiceLifecycle } from './state/services.ts';
 import './styles/base.css';
+
+const removeLifecycle = installServiceLifecycle();
+if (import.meta.hot)
+  import.meta.hot.dispose(() => {
+    removeLifecycle();
+    disposeServices();
+  });
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

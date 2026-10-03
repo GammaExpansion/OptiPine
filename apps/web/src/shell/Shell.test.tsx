@@ -1,11 +1,16 @@
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, expect, test } from 'vitest';
+import { afterEach, beforeEach, expect, test } from 'vitest';
+import { cleanup } from '@testing-library/react';
+import { replaceServices } from '../state/services.ts';
+import { fakeServices } from '../state/test-support.ts';
 import { I18nProvider } from '../i18n/I18nProvider.tsx';
 import { defaultPaneSizes, uiStorageKey, uiStore } from '../state/ui.ts';
 import { Shell } from './Shell.tsx';
 
+let restoreServices: () => void;
 beforeEach(() => {
+  restoreServices = replaceServices(() => fakeServices());
   localStorage.clear();
   uiStore.setState({
     page: 'backtest',
@@ -14,6 +19,11 @@ beforeEach(() => {
     openDialogs: [],
     paneSizes: { backtest: { ...defaultPaneSizes }, optimize: { ...defaultPaneSizes } },
   });
+});
+
+afterEach(() => {
+  cleanup();
+  restoreServices();
 });
 
 test('the empty workbench blocks Optimize and explains both disabled run actions', async () => {
