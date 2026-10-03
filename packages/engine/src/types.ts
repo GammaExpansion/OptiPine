@@ -149,12 +149,64 @@ export interface Trade {
   maxDrawdown: number;
 }
 
+export type PlotLineStyle =
+  | 'line'
+  | 'linebr'
+  | 'stepline'
+  | 'steplinebr'
+  | 'area'
+  | 'areabr'
+  | 'histogram'
+  | 'columns'
+  | 'circles'
+  | 'cross';
+export type PlotShape =
+  | 'triangleup'
+  | 'triangledown'
+  | 'arrowup'
+  | 'arrowdown'
+  | 'circle'
+  | 'square'
+  | 'diamond'
+  | 'cross'
+  | 'xcross'
+  | 'flag'
+  | 'labelup'
+  | 'labeldown';
+export type PlotLocation = 'abovebar' | 'belowbar' | 'top' | 'bottom' | 'absolute';
+export type PlotSize = 'auto' | 'tiny' | 'small' | 'normal' | 'large' | 'huge';
+
+/** Only resolved, run-invariant arguments are retained; omitted arguments are not inferred. */
+export interface PlotStyle {
+  /** The declaration, independent of whether its values happen to be numeric or boolean. */
+  kind: 'plot' | 'shape' | 'char';
+  /** plot.style_* suffix for plot(), or shape.* suffix for plotshape(). */
+  style?: PlotLineStyle | PlotShape;
+  /** Declared positive line width in pixels, for plot(). */
+  linewidth?: number;
+  /** Constant colour as lowercase #rrggbb / #rrggbbaa; null is Pine na (invisible). */
+  color?: string | null;
+  /** location.* suffix; absolute uses the numeric series value as its y coordinate. */
+  location?: PlotLocation;
+  /** size.* suffix for shapes and characters. */
+  size?: PlotSize;
+  /** Literal/resolved constant plotshape text, preserved verbatim as script data. */
+  text?: string;
+  /** Literal/resolved constant plotchar character, including an empty string. */
+  char?: string;
+}
+
 export interface PlotOutput {
   title: string;
   values: (number | string | boolean | null)[];
   /** Drawn over the price chart: the script declares `overlay = true`, or the plot call sets
    * `force_overlay = true`. Engine results always set it; otherwise the plot has its own pane. */
   overlay?: boolean;
+  /** Resolved declaration metadata. Absent on older results; unknown fields are omitted. */
+  style?: PlotStyle;
+  /** Only for a series-qualified colour argument: one normalized colour (or null for na)
+   * per input bar. Constants use style.color and allocate no array. */
+  colors?: (string | null)[];
 }
 
 export interface RunResult {
