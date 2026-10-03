@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import { existsSync, readFileSync } from 'node:fs';
+import { origins } from './ports.ts';
 
-test.use({ baseURL: 'http://127.0.0.1:5175' });
+test.use({ baseURL: origins.preview });
 
 test('charts render, synchronize, focus trades, switch panes and handle 100,000 bars', async ({
   page,
@@ -278,7 +279,7 @@ test('capture the four English reference boards at the review viewport', async (
       /<link[^>]+fonts\.googleapis\.com[^>]*>/g,
       '',
     );
-    await page.goto('http://127.0.0.1:5176/');
+    await page.goto(`${origins.dev}/`);
     await page.setContent(source);
     await page.addStyleTag({ url: '/src/styles/fonts.css?direct' });
     await page.evaluate(() => document.fonts.ready);

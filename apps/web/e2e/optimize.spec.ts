@@ -2,8 +2,9 @@ import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import type { BacktestHooks } from './backtest-hooks.ts';
 import type { OptimizeHooks } from './optimize-hooks.ts';
+import { origins } from './ports.ts';
 
-test.use({ baseURL: 'http://127.0.0.1:5175' });
+test.use({ baseURL: origins.preview });
 
 const trend = readFileSync(new URL('../examples/trend-breakout.pine', import.meta.url), 'utf8');
 
