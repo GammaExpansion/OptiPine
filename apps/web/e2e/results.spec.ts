@@ -664,6 +664,10 @@ test('10,000 engine trades scroll with bounded DOM and short tasks', async ({ pa
 test('capture B1 B2 B5 B6 references in both languages with local fonts', async ({
   page,
 }, info) => {
+  // Sixteen artboards with both languages' fonts took just over 30 s on a 2-vCPU CI runner
+  // beside a real optimization; the page holding the app's fonts opens once for all of them.
+  test.setTimeout(90000);
+  await page.goto(app);
   for (const language of ['en', 'zh'] as const) {
     for (const board of ['Main', 'B2', 'B5', 'B6', 'B7', 'B8', 'B9', 'G5']) {
       const source = (
@@ -677,7 +681,6 @@ test('capture B1 B2 B5 B6 references in both languages with local fonts', async 
       )
         .replace(/<link[^>]+fonts\.googleapis\.com[^>]*>/g, '')
         .replace(/<script[^>]+support\.js[^>]*><\/script>/g, '');
-      await page.goto(app);
       await page.setContent(source);
       await page.addStyleTag({ url: '/src/styles/fonts.css?direct' });
       await page.evaluate(() => document.fonts.ready);
