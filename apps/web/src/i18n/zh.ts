@@ -489,6 +489,12 @@ export const zh = {
     '在右栏设置搜索范围与验证方式，右栏从顶栏打开。运行后，此处显示汇总图、排行、参数图与影响度。',
   'optimize.emptyHintSettings':
     '在「设置」中设置搜索范围与验证方式。运行后，汇总图显示在标签页上方，排行、参数图与影响度显示在各自的标签页。',
+  'optimize.emptyHintWalkForward':
+    '在右侧设置搜索范围与滚动窗口。运行后，此处显示拼接样本外权益、各窗口结果及其稳定性。',
+  'optimize.emptyHintPanelWalkForward':
+    '在右栏设置搜索范围与滚动窗口，右栏从顶栏打开。运行后，此处显示拼接样本外权益、各窗口结果及其稳定性。',
+  'optimize.emptyHintSettingsWalkForward':
+    '在「设置」中设置搜索范围与滚动窗口。运行后，拼接样本外权益显示在标签页上方，各窗口结果及其稳定性显示在各自的标签页。',
   'optimize.singleSetHint': '单组参数的 K 线、权益曲线、报告与成交在「回测」页查看。',
   'optimize.dataRange': '数据区间',
   'optimize.searchRanges': '搜索范围',

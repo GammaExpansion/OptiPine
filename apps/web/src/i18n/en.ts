@@ -505,6 +505,12 @@ export const en = {
     'Set the search ranges and validation in the right panel, from the top bar. After a run, the summary chart, leaderboard, parameter map and sensitivity appear here.',
   'optimize.emptyHintSettings':
     'Set the search ranges and validation under Settings. After a run, the summary appears above the tabs, and the leaderboard, parameter map and sensitivity in their tabs.',
+  'optimize.emptyHintWalkForward':
+    'Set the search ranges and the walk-forward windows on the right. After a run, the stitched OOS equity, the results of each window and their stability appear here.',
+  'optimize.emptyHintPanelWalkForward':
+    'Set the search ranges and the walk-forward windows in the right panel, from the top bar. After a run, the stitched OOS equity, the results of each window and their stability appear here.',
+  'optimize.emptyHintSettingsWalkForward':
+    'Set the search ranges and the walk-forward windows under Settings. After a run, the stitched OOS equity appears above the tabs, and the windows and their stability in their tabs.',
   'optimize.singleSetHint':
     'Chart, equity, report and trades of one parameter set are on the Backtest page.',
   'optimize.dataRange': 'Data range',
