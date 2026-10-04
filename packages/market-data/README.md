@@ -6,6 +6,13 @@ profile and session-calendar files that go with them. Every result is a validate
 fragment; nothing is estimated silently, and `profileEstimated` marks metadata a provider does not
 publish.
 
+Yahoo's supported intraday intervals have rolling lookbacks of 60 days (5m, 15m, 30m) and 730
+days (1h); daily prices have no history cutoff. `yahooHistoryDays` shares these limits with the
+app. Daily loads request exact session metadata only inside the hourly window. Older daily
+sessions reuse the provider's current local closing time, keeping the observed bar opening and
+trading date; `calendarEstimated` marks this explicitly. Historical early closes and changes to
+regular hours cannot be recovered from Yahoo's daily response. No missing bars are synthesized.
+
 ## Entry points
 
 **`@pine/market-data`** works in a browser and in Node.

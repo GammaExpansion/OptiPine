@@ -22,6 +22,8 @@ export interface FeedDataset {
   >;
   fetchedAt: number;
   profileEstimated: boolean;
+  /** Older Yahoo daily sessions use current regular-session hours, not historical close times. */
+  calendarEstimated?: boolean;
 }
 export const feedTimeframes: Record<Feed, Record<string, string>> = {
   binance: {
@@ -47,6 +49,14 @@ export const feedTimeframes: Record<Feed, Record<string, string>> = {
   yahoo: { '5': '5m', '15': '15m', '30': '30m', '60': '60m', '1D': '1d' },
 };
 export const MAX_FEED_BARS = 100_000;
+/** Yahoo's rolling lookback for supported intervals; daily prices have no history cutoff. */
+export const yahooHistoryDays: Readonly<Record<string, number | null>> = {
+  '5': 60,
+  '15': 60,
+  '30': 60,
+  '60': 730,
+  '1D': null,
+};
 export function feedSeconds(timeframe: string): number {
   return timeframe === '1D' ? 86400 : timeframe === '1W' ? 604800 : Number(timeframe) * 60;
 }
@@ -69,8 +79,9 @@ export function validateFeedRequest(value: FeedRequest, now = Date.now()): FeedR
   )
     throw marketDataError('feedTooManyBars', { count: MAX_FEED_BARS });
   if (value.feed === 'yahoo') {
-    const days = value.timeframe === '60' || value.timeframe === '1D' ? 729 : 59;
-    if (value.from < now / 1000 - days * 86400) throw marketDataError('feedYahooRange', { days });
+    const days = yahooHistoryDays[value.timeframe];
+    if (days != null && value.from < now / 1000 - days * 86400)
+      throw marketDataError('feedYahooRange', { days });
   }
   return { ...value, symbol: value.symbol.toUpperCase() };
 }

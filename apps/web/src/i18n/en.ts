@@ -905,7 +905,9 @@ export const en = {
   'data.to': 'to',
   'data.limits': 'Up to 100,000 bars per fetch; only closed bars are loaded.',
   'data.yahooLimits':
-    'Yahoo history: 729 days for 1h and 1D; 59 days for shorter intraday timeframes.',
+    'Yahoo history: 730 days for 1h; 60 days for shorter intraday timeframes; full daily history.',
+  'data.calendarEstimated':
+    'Older daily session closes are estimated from Yahoo’s current regular hours. Historical early closes and changes to trading hours may differ.',
   'data.limited': 'This preset is shortened to the provider’s history limit.',
   'data.fetch': 'Fetch data',
   'data.use': 'Use this data',

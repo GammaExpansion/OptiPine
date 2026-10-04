@@ -1,0 +1,249 @@
+{
+  "symbols": [
+    {
+      "symbol": "BTCUSDT",
+      "baseAsset": "BTC",
+      "quoteAsset": "USDT",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "ETHUSDT",
+      "baseAsset": "ETH",
+      "quoteAsset": "USDT",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "DOGEUSDT",
+      "baseAsset": "DOGE",
+      "quoteAsset": "USDT",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "BTCSTUSDT",
+      "baseAsset": "BTCST",
+      "quoteAsset": "USDT",
+      "status": "PENDING_TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "BTCDOMUSDT",
+      "baseAsset": "BTCDOM",
+      "quoteAsset": "USDT",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "ETHBTC",
+      "baseAsset": "ETH",
+      "quoteAsset": "BTC",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "ETHWUSDT",
+      "baseAsset": "ETHW",
+      "quoteAsset": "USDT",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "BTCUSDC",
+      "baseAsset": "BTC",
+      "quoteAsset": "USDC",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "ETHUSDC",
+      "baseAsset": "ETH",
+      "quoteAsset": "USDC",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "DOGEUSDC",
+      "baseAsset": "DOGE",
+      "quoteAsset": "USDC",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "ETHFIUSDT",
+      "baseAsset": "ETHFI",
+      "quoteAsset": "USDT",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "ETHFIUSDC",
+      "baseAsset": "ETHFI",
+      "quoteAsset": "USDC",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "NEIROETHUSDT",
+      "baseAsset": "NEIROETH",
+      "quoteAsset": "USDT",
+      "status": "SETTLING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "1MBABYDOGEUSDT",
+      "baseAsset": "1MBABYDOGE",
+      "quoteAsset": "USDT",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "ETHUSDT_250627",
+      "baseAsset": "ETH",
+      "quoteAsset": "USDT",
+      "status": "DELIVERING",
+      "contractType": "CURRENT_QUARTER DELIVERING"
+    },
+    {
+      "symbol": "BTCUSDT_250627",
+      "baseAsset": "BTC",
+      "quoteAsset": "USDT",
+      "status": "DELIVERING",
+      "contractType": "CURRENT_QUARTER DELIVERING"
+    },
+    {
+      "symbol": "BTCUSDT_250926",
+      "baseAsset": "BTC",
+      "quoteAsset": "USDT",
+      "status": "DELIVERING",
+      "contractType": "CURRENT_QUARTER DELIVERING"
+    },
+    {
+      "symbol": "ETHUSDT_250926",
+      "baseAsset": "ETH",
+      "quoteAsset": "USDT",
+      "status": "DELIVERING",
+      "contractType": "CURRENT_QUARTER DELIVERING"
+    },
+    {
+      "symbol": "PUMPBTCUSDT",
+      "baseAsset": "PUMPBTC",
+      "quoteAsset": "USDT",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "ETHUSDT_251226",
+      "baseAsset": "ETH",
+      "quoteAsset": "USDT",
+      "status": "DELIVERING",
+      "contractType": "CURRENT_QUARTER DELIVERING"
+    },
+    {
+      "symbol": "BTCUSDT_251226",
+      "baseAsset": "BTC",
+      "quoteAsset": "USDT",
+      "status": "DELIVERING",
+      "contractType": "CURRENT_QUARTER DELIVERING"
+    },
+    {
+      "symbol": "BTCUSDT_260327",
+      "baseAsset": "BTC",
+      "quoteAsset": "USDT",
+      "status": "DELIVERING",
+      "contractType": "CURRENT_QUARTER DELIVERING"
+    },
+    {
+      "symbol": "ETHUSDT_260327",
+      "baseAsset": "ETH",
+      "quoteAsset": "USDT",
+      "status": "DELIVERING",
+      "contractType": "CURRENT_QUARTER DELIVERING"
+    },
+    {
+      "symbol": "ETHUSDT_260626",
+      "baseAsset": "ETH",
+      "quoteAsset": "USDT",
+      "status": "DELIVERING",
+      "contractType": "CURRENT_QUARTER DELIVERING"
+    },
+    {
+      "symbol": "BTCUSDT_260626",
+      "baseAsset": "BTC",
+      "quoteAsset": "USDT",
+      "status": "DELIVERING",
+      "contractType": "CURRENT_QUARTER DELIVERING"
+    },
+    {
+      "symbol": "ETHUSDT_260925",
+      "baseAsset": "ETH",
+      "quoteAsset": "USDT",
+      "status": "DELIVERING",
+      "contractType": "CURRENT_QUARTER DELIVERING"
+    },
+    {
+      "symbol": "BTCUSDT_260925",
+      "baseAsset": "BTC",
+      "quoteAsset": "USDT",
+      "status": "DELIVERING",
+      "contractType": "CURRENT_QUARTER DELIVERING"
+    },
+    {
+      "symbol": "BTCUSD1",
+      "baseAsset": "BTC",
+      "quoteAsset": "USD1",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "BTCUSDT_261225",
+      "baseAsset": "BTC",
+      "quoteAsset": "USDT",
+      "status": "TRADING",
+      "contractType": "CURRENT_QUARTER"
+    },
+    {
+      "symbol": "ETHUSDT_261225",
+      "baseAsset": "ETH",
+      "quoteAsset": "USDT",
+      "status": "TRADING",
+      "contractType": "CURRENT_QUARTER"
+    },
+    {
+      "symbol": "BTCU",
+      "baseAsset": "BTC",
+      "quoteAsset": "U",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "ETHU",
+      "baseAsset": "ETH",
+      "quoteAsset": "U",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "ETHUSD1",
+      "baseAsset": "ETH",
+      "quoteAsset": "USD1",
+      "status": "TRADING",
+      "contractType": "PERPETUAL"
+    },
+    {
+      "symbol": "BTCUSDT_270326",
+      "baseAsset": "BTC",
+      "quoteAsset": "USDT",
+      "status": "PENDING_TRADING",
+      "contractType": "NEXT_QUARTER"
+    },
+    {
+      "symbol": "ETHUSDT_270326",
+      "baseAsset": "ETH",
+      "quoteAsset": "USDT",
+      "status": "PENDING_TRADING",
+      "contractType": "NEXT_QUARTER"
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "chart": {
+    "result": [
+      {
+        "meta": {
+          "currency": "USD",
+          "symbol": "EURUSD=X",
+          "exchangeName": "CCY",
+          "fullExchangeName": "CCY",
+          "instrumentType": "CURRENCY",
+          "firstTradeDate": 1070236800,
+          "regularMarketTime": 1790976587,
+          "hasPrePostMarketData": false,
+          "gmtoffset": 3600,
+          "timezone": "BST",
+          "exchangeTimezoneName": "Europe/London",
+          "regularMarketPrice": 1.1257,
+          "regularMarketChangePercent": 0.1126,
+          "fulldayPrice": 1.1257,
+          "fulldayChange": 0.0013,
+          "fulldayChangePercent": 0.1126,
+          "fiftyTwoWeekHigh": 1.2024,
+          "fiftyTwoWeekLow": 1.1219,
+          "regularMarketDayHigh": 1.1288,
+          "regularMarketDayLow": 1.1225,
+          "regularMarketVolume": 0,
+          "longName": "EUR/USD",
+          "shortName": "EUR/USD",
+          "chartPreviousClose": 1.1373,
+          "priceHint": 4,
+          "currentTradingPeriod": {
+            "pre": {
+              "timezone": "BST",
+              "start": 1790895600,
+              "end": 1790895600,
+              "gmtoffset": 3600
+            },
+            "regular": {
+              "timezone": "BST",
+              "start": 1790895600,
+              "end": 1790981940,
+              "gmtoffset": 3600
+            },
+            "post": {
+              "timezone": "BST",
+              "start": 1790981940,
+              "end": 1790981940,
+              "gmtoffset": 3600
+            }
+          },
+          "dataGranularity": "1d",
+          "range": "",
+          "validRanges": ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
+        },
+        "timestamp": [1790809200, 1790895600, 1790976587],
+        "indicators": {
+          "quote": [
+            {
+              "high": [1.1339154243469238, 1.1285279989242554, 1.1287955045700073],
+              "low": [1.1219441890716553, 1.1223344802856445, 1.1224603652954102],
+              "open": [1.1326824426651, 1.1248847246170044, 1.1243535280227661],
+              "close": [1.1327208280563354, 1.124985933303833, 1.1257457733154297],
+              "volume": [0, 0, 0]
+            }
+          ],
+          "adjclose": [
+            {
+              "adjclose": [1.1327208280563354, 1.124985933303833, 1.1257457733154297]
+            }
+          ]
+        }
+      }
+    ],
+    "error": null
+  }
+}

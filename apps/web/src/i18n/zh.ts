@@ -883,7 +883,9 @@ export const zh = {
   'data.from': '从',
   'data.to': '至',
   'data.limits': '单次最多 100,000 根，仅加载已收盘的 K 线。',
-  'data.yahooLimits': 'Yahoo 历史范围：1小时与日线为 729 天；较短日内周期为 59 天。',
+  'data.yahooLimits': 'Yahoo 历史范围：1小时为 730 天；较短日内周期为 60 天；日线可获取全部历史。',
+  'data.calendarEstimated':
+    '较早的日线收盘时间按 Yahoo 当前常规交易时段估算，可能与历史提前收盘或交易时段变更不符。',
   'data.limited': '此预设已缩短至数据源支持的历史范围。',
   'data.fetch': '获取数据',
   'data.use': '使用此数据',

@@ -69,7 +69,14 @@ ETFs, indices and forex (Yahoo Finance), and **Upload CSV**.
 
 - **Provider tabs (S3–S6).** Market (spot or USDⓈ-M perpetual), symbol search, timeframe and range
   (1M, 1Y, 2Y, All, Custom). The tab states the provider's limits: up to 100,000 bars per fetch, only
-  closed bars, and Yahoo's shorter history for intraday timeframes. A fetch shows a progress bar
+  closed bars, and Yahoo's shorter history for intraday timeframes: the last 60 days for 5m, 15m
+  and 30m, and 730 days for 1h. Daily prices allow full available history. Intraday presets leave
+  one day of margin so a selection remains valid while the dialog is open; Custom validates
+  against the full provider window. Yahoo also allows full history at 1wk and 1mo, which are not
+  currently exposed by the app. Daily sessions within the hourly window use exact provider
+  metadata; older observed trading days use the current regular closing time in the exchange's
+  timezone, with an explicit estimate note in the preview (historical early closes and changes
+  to trading hours are not known). A fetch shows a progress bar
   with **Cancel fetch** (S4). For now the bar is simulated, because the data arrives in one
   response: it advances on a timer, slows before the end, and fills when the data arrives. Its label
   gives only the expected count ("Fetching about 20,500 bars"); S4's received count waits for real

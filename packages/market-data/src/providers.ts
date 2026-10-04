@@ -1,10 +1,12 @@
 import type { MarketBar, SessionCalendar } from '@pine/engine';
+import { dateParts, zonedTimestamp } from '@pine/engine/calendar';
 import { parseRunMetadata, parseSessionCalendar } from './csv.ts';
 import {
   feedSeconds,
   feedTimeframes,
   MAX_FEED_BARS,
   validateFeedRequest,
+  yahooHistoryDays,
   type Feed,
   type FeedDataset,
   type FeedRequest,
@@ -65,6 +67,19 @@ async function exchange(feed: Feed, get: FetchJson, signal: AbortSignal): Promis
         : s.isSpotTradingAllowed !== false),
   );
 }
+const majorQuotes = ['USDT', 'USDC', 'FDUSD', 'BTC', 'ETH', 'BNB'];
+function quoteRank(symbol: Json): number {
+  const rank = majorQuotes.indexOf(symbol.quoteAsset);
+  return rank < 0 ? majorQuotes.length : rank;
+}
+/** A base-asset search must rank its own pairs ahead of assets traded against it. */
+function matchRank(symbol: Json, query: string): number {
+  if (symbol.symbol === query) return 0;
+  if (symbol.baseAsset === query) return 1;
+  if (String(symbol.baseAsset).startsWith(query)) return 2;
+  if (String(symbol.symbol).startsWith(query)) return 3;
+  return 4;
+}
 export async function searchFeed(
   feed: Feed,
   query: string,
@@ -74,12 +89,13 @@ export async function searchFeed(
   if (!Object.hasOwn(feedTimeframes, feed) || !query.trim() || query.length > 80)
     throw marketDataError('feedInvalidRequest');
   if (feed !== 'yahoo') {
-    const q = query.toUpperCase();
+    const q = query.trim().toUpperCase();
     return (await exchange(feed, get, signal))
       .filter((s) => String(s.symbol).includes(q) || String(s.baseAsset).includes(q))
       .sort(
         (a, b) =>
-          Number(b.symbol === q) - Number(a.symbol === q) ||
+          matchRank(a, q) - matchRank(b, q) ||
+          quoteRank(a) - quoteRank(b) ||
           String(a.symbol).localeCompare(String(b.symbol)),
       )
       .slice(0, 12)
@@ -244,6 +260,41 @@ async function yahooChart(
     });
   return record(data.chart?.result?.[0]);
 }
+/** Yahoo omits historical daily closes: reuse its current local closing time, explicitly marked. */
+function estimatedDailySession(time: number, meta: Json): SessionCalendar['sessions'][number] {
+  const regular = meta.currentTradingPeriod?.regular;
+  if (
+    !Number.isSafeInteger(regular?.start) ||
+    !Number.isSafeInteger(regular?.end) ||
+    regular.end <= regular.start ||
+    regular.end - regular.start > 86400
+  )
+    throw marketDataError('feedCalendarMissing');
+  const timezone = meta.exchangeTimezoneName;
+  const start = dateParts(regular.start * 1000, timezone);
+  const end = dateParts(regular.end * 1000, timezone);
+  const date = dateParts(time * 1000, timezone);
+  const overnight =
+    (Date.UTC(end.year, end.month - 1, end.day) -
+      Date.UTC(start.year, start.month - 1, start.day)) /
+    86400000;
+  const close =
+    zonedTimestamp(
+      timezone,
+      date.year,
+      date.month,
+      date.day + overnight,
+      end.hour,
+      end.minute,
+      end.second,
+    ) / 1000;
+  if (close <= time || close - time > 86400) throw marketDataError('feedCalendarMissing');
+  return {
+    open: time,
+    close,
+    tradingDay: day(meta.instrumentType === 'CURRENCY' ? close - 1 : time, timezone),
+  };
+}
 export async function loadYahoo(
   request: FeedRequest,
   get: FetchJson,
@@ -254,18 +305,28 @@ export async function loadYahoo(
   const meta = record(data.meta);
   if (!['EQUITY', 'ETF', 'INDEX', 'CURRENCY'].includes(meta.instrumentType))
     throw marketDataError('feedYahooInstrument');
-  const calendarMeta =
-    request.timeframe === '1D'
-      ? record((await yahooChart(request, '60m', get, signal)).meta)
-      : meta;
+  const daily = request.timeframe === '1D';
+  // Daily prices outlive the intraday calendar. Keep exact recent sessions and estimate only
+  // older observed trading days; never send an out-of-window hourly request for daily history.
+  const calendarFrom = daily
+    ? Math.max(request.from, Math.ceil(now / 1000 - (yahooHistoryDays['60']! - 1) * 86400))
+    : request.from;
+  const calendarMeta = daily
+    ? calendarFrom < request.to
+      ? record((await yahooChart({ ...request, from: calendarFrom }, '60m', get, signal)).meta)
+      : null
+    : meta;
   const timezone = meta.exchangeTimezoneName;
   if (typeof timezone !== 'string' || String(meta.symbol).toUpperCase() !== request.symbol)
     invalid();
-  const periods = Array.isArray(calendarMeta.tradingPeriods)
-    ? calendarMeta.tradingPeriods
-    : calendarMeta.tradingPeriods?.regular;
+  const periods =
+    calendarMeta === null
+      ? []
+      : Array.isArray(calendarMeta.tradingPeriods)
+        ? calendarMeta.tradingPeriods
+        : calendarMeta.tradingPeriods?.regular;
   if (!Array.isArray(periods)) throw marketDataError('feedCalendarMissing');
-  const sessions: SessionCalendar['sessions'] = periods
+  const sessions: Array<SessionCalendar['sessions'][number]> = periods
     .flat(Infinity)
     .map((p: Json) => ({
       open: p.start,
@@ -274,7 +335,9 @@ export async function loadYahoo(
     }))
     .filter((s) => s.open < request.to && s.close > request.from)
     .sort((a, b) => a.open - b.open);
-  const calendar = parseSessionCalendar({ from: request.from, to: request.to, sessions });
+  parseSessionCalendar({ from: request.from, to: request.to, sessions });
+  const dailySessions = new Map(sessions.map((session) => [session.open, session]));
+  let calendarEstimated = false;
   if (!Array.isArray(data.timestamp)) invalid();
   const quote = record(data.indicators?.quote?.[0]);
   if (
@@ -292,17 +355,30 @@ export async function loadYahoo(
     if (time < request.from || time >= request.to) continue;
     const values = ['open', 'high', 'low', 'close', 'volume'].map((k) => quote[k][i]);
     // Yahoo explicitly marks absent observations with null; do not synthesize zero prices.
-    if (values.every((v) => v == null)) continue;
+    if (values.slice(0, 4).every((v) => v === null)) continue;
     if (values.some((v) => typeof v !== 'number' || !Number.isFinite(v))) invalid();
-    const session = sessions.find((s) => time >= s.open && time < s.close);
+    // The latest quote is sometimes appended to the daily series too (notably forex).
+    if (
+      daily &&
+      time === meta.regularMarketTime &&
+      time !== meta.currentTradingPeriod?.regular?.start
+    )
+      continue;
+    let session = daily
+      ? dailySessions.get(time)
+      : sessions.find((s) => time >= s.open && time < s.close);
+    if (daily && !session && time < calendarFrom) {
+      session = estimatedDailySession(time, meta);
+      sessions.push(session);
+      calendarEstimated = true;
+    }
     // Yahoo appends a quote at the exact close, outside the regular half-open session.
     // It is not an extra zero-duration candle (including on early-close days).
-    if (!session && request.timeframe !== '1D' && sessions.some((s) => time === s.close)) continue;
+    if (!session && !daily && sessions.some((s) => time === s.close)) continue;
     if (!session) throw marketDataError('feedCalendarMissing');
-    const close =
-      request.timeframe === '1D'
-        ? session.close
-        : Math.min(time + feedSeconds(request.timeframe), session.close);
+    const close = daily
+      ? session.close
+      : Math.min(time + feedSeconds(request.timeframe), session.close);
     if (close * 1000 > now) continue;
     bars.push(
       validBar({
@@ -346,12 +422,17 @@ export async function loadYahoo(
     input: {
       ...profile,
       bars,
-      sessionCalendar: calendar,
+      sessionCalendar: parseSessionCalendar({
+        from: request.from,
+        to: request.to,
+        sessions: sessions.sort((a, b) => a.open - b.open),
+      }),
       realtimeTail: false,
       strategyClosePending: false,
     },
     fetchedAt: now,
     profileEstimated: true,
+    ...(calendarEstimated ? { calendarEstimated: true } : {}),
   };
 }
 export async function loadFeed(

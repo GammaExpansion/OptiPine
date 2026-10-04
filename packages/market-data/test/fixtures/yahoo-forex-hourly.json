@@ -1,0 +1,107 @@
+{
+  "chart": {
+    "result": [
+      {
+        "meta": {
+          "currency": "USD",
+          "symbol": "EURUSD=X",
+          "exchangeName": "CCY",
+          "fullExchangeName": "CCY",
+          "instrumentType": "CURRENCY",
+          "firstTradeDate": 1070236800,
+          "regularMarketTime": 1790976587,
+          "hasPrePostMarketData": false,
+          "gmtoffset": 3600,
+          "timezone": "BST",
+          "exchangeTimezoneName": "Europe/London",
+          "regularMarketPrice": 1.1257,
+          "regularMarketChangePercent": 0.1126,
+          "fulldayPrice": 1.1257,
+          "fulldayChange": 0.0013,
+          "fulldayChangePercent": 0.1126,
+          "fiftyTwoWeekHigh": 1.2024,
+          "fiftyTwoWeekLow": 1.1219,
+          "regularMarketDayHigh": 1.1288,
+          "regularMarketDayLow": 1.1225,
+          "regularMarketVolume": 0,
+          "longName": "EUR/USD",
+          "shortName": "EUR/USD",
+          "chartPreviousClose": 1.1373,
+          "previousClose": 1.1245,
+          "scale": 4,
+          "priceHint": 4,
+          "currentTradingPeriod": {
+            "pre": {
+              "timezone": "BST",
+              "end": 1790895600,
+              "start": 1790895600,
+              "gmtoffset": 3600
+            },
+            "regular": {
+              "timezone": "BST",
+              "end": 1790981940,
+              "start": 1790895600,
+              "gmtoffset": 3600
+            },
+            "post": {
+              "timezone": "BST",
+              "end": 1790981940,
+              "start": 1790981940,
+              "gmtoffset": 3600
+            }
+          },
+          "tradingPeriods": [
+            [
+              {
+                "timezone": "BST",
+                "end": 1790722740,
+                "start": 1790636400,
+                "gmtoffset": 3600
+              }
+            ],
+            [
+              {
+                "timezone": "BST",
+                "end": 1790809140,
+                "start": 1790722800,
+                "gmtoffset": 3600
+              }
+            ],
+            [
+              {
+                "timezone": "BST",
+                "end": 1790895540,
+                "start": 1790809200,
+                "gmtoffset": 3600
+              }
+            ],
+            [
+              {
+                "timezone": "BST",
+                "end": 1790981940,
+                "start": 1790895600,
+                "gmtoffset": 3600
+              }
+            ]
+          ],
+          "dataGranularity": "1h",
+          "range": "",
+          "validRanges": ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
+        },
+        "timestamp": [1790967600, 1790971200, 1790974800, 1790978400],
+        "indicators": {
+          "quote": [
+            {
+              "close": [1.1261261701583862, 1.1256190538406372, 1.1257457733154297, null],
+              "low": [1.1253657341003418, 1.1253657341003418, 1.1256190538406372, null],
+              "open": [1.1256190538406372, 1.1262530088424683, 1.1256190538406372, null],
+              "high": [1.1263798475265503, 1.1262530088424683, 1.1257457733154297, null],
+              "volume": [0, 0, 0, 0]
+            }
+          ]
+        }
+      }
+    ],
+    "error": null
+  }
+}

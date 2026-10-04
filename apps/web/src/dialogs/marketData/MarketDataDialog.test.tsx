@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { StrictMode } from 'react';
 import { I18nProvider } from '../../i18n/I18nProvider.tsx';
@@ -14,6 +14,10 @@ import { HeaderData } from '../../shell/HeaderData.tsx';
 import { exampleRequest } from '../../workflows/market-data.ts';
 
 let restore: () => void;
+// Compile lazy chunks before timing dialog behavior, including on a busy multi-worktree host.
+beforeAll(async () => {
+  await Promise.all([import('./MarketDataDialog.tsx'), import('../dateRange/DateRangeDialog.tsx')]);
+});
 beforeEach(() => {
   localStorage.clear();
   restore = replaceServices(() => fakeServices());
@@ -281,4 +285,40 @@ test('Chinese unavailable state keeps CSV accessible after switching providers',
   expect(
     within(screen.getByRole('dialog')).getByRole('button', { name: '选择文件' }),
   ).toBeVisible();
+});
+
+test('Yahoo daily All and old Custom ranges stay fetchable; intraday Custom explains its limit', async () => {
+  await mount();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('tab', { name: /Yahoo Finance/ }));
+  expect(screen.getByText(/730 days for 1h; 60 days/)).toBeVisible();
+  await user.click(screen.getByRole('button', { name: '2Y' }));
+  expect(screen.getByLabelText('From')).toHaveValue('2024-10-03');
+  expect(screen.queryByText(/This preset is shortened/)).toBeNull();
+  await user.click(screen.getByRole('button', { name: 'All' }));
+  expect(screen.getByLabelText('From')).toHaveValue('1970-01-01');
+  expect(screen.getByRole('button', { name: 'Fetch data' })).toBeEnabled();
+  await user.click(screen.getByRole('button', { name: 'Custom' }));
+  await user.clear(screen.getByLabelText('From'));
+  await user.type(screen.getByLabelText('From'), '1993-01-29');
+  expect(screen.getByRole('button', { name: 'Fetch data' })).toBeEnabled();
+  const timeframe = screen.getByRole('radiogroup', { name: 'Timeframe' });
+  await user.click(within(timeframe).getByRole('radio', { name: '15m' }));
+  expect(screen.getByRole('alert')).toHaveTextContent('last 60 days');
+  expect(screen.getByRole('button', { name: 'Fetch data' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'All' }));
+  expect(screen.queryByRole('alert')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Fetch data' })).toBeEnabled();
+});
+
+test('a Yahoo preview discloses estimated older session closes', async () => {
+  restore();
+  restore = replaceServices(() =>
+    fakeServices({
+      fetcher: async () => Response.json({ ...testDataset, calendarEstimated: true }),
+    }),
+  );
+  await mount();
+  await userEvent.click(screen.getByRole('button', { name: 'Fetch data' }));
+  expect(await screen.findByText(/Older daily session closes are estimated/)).toBeVisible();
 });

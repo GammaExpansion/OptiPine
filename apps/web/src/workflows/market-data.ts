@@ -5,6 +5,7 @@ import {
   feedSeconds,
   parseRunMetadata,
   validateFeedRequest,
+  yahooHistoryDays,
   type Feed,
   type FeedClient,
   type FeedDataset,
@@ -37,10 +38,6 @@ const historyStart: Record<Feed, number> = {
   yahoo: 0,
 };
 
-/** Yahoo's history in days per timeframe, as @pine/market-data's `validateFeedRequest` enforces. */
-const yahooHistoryDays = (timeframe: string): number =>
-  timeframe === '60' || timeframe === '1D' ? 729 : 59;
-
 /**
  * The end of a range requested at `now` (milliseconds): the current time rounded down to the
  * timeframe, at most to the hour, so requests repeated within the hour share a feed cache key.
@@ -54,8 +51,10 @@ export function rangeEnd(timeframe: string, now: number): number {
 /** The earliest start a provider accepts for a range ending at `to`. */
 function earliestStart(feed: Feed, timeframe: string, to: number, now: number): number {
   if (feed === 'yahoo') {
+    const days = yahooHistoryDays[timeframe];
+    if (days == null) return historyStart.yahoo;
     // One day inside Yahoo's limit, so the request still validates a moment later.
-    const start = now / 1000 - (yahooHistoryDays(timeframe) - 1) * DAY;
+    const start = now / 1000 - (days - 1) * DAY;
     return Math.ceil(start / 3600) * 3600;
   }
   return Math.max(historyStart[feed], to - MAX_FEED_BARS * feedSeconds(timeframe));
