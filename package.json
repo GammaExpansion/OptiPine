@@ -2,7 +2,16 @@
   "name": "optipine",
   "version": "0.1.0",
   "private": true,
+  "description": "Backtest and optimize TradingView Pine Script strategies offline, verified against TradingView's own exports.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GammaExpansion/OptiPine.git"
+  },
+  "homepage": "https://github.com/GammaExpansion/OptiPine#readme",
+  "bugs": {
+    "url": "https://github.com/GammaExpansion/OptiPine/issues"
+  },
   "type": "module",
   "engines": {
     "node": ">=24.5"
