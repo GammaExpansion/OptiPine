@@ -27,7 +27,8 @@ publish.
   allows four concurrent requests and 90 a minute.
 - `createUpstreamFetch(fetch?)` reaches only `data-api.binance.vision`, `fapi.binance.com` and
   `query1.finance.yahoo.com`. It spaces calls 250 ms apart, backs off after HTTP 429 or 418, limits
-  responses to 24 MB, and keeps a small LRU cache.
+  responses to 24 MB, and caches responses briefly: a minute, an hour for exchange info, at most 128
+  responses or about 48 MB, the oldest dropped first.
 
 Mount the middleware in a development server plugin and in the server that serves your built
 app, so the browser reaches it on the same origin.

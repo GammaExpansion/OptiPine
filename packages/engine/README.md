@@ -106,8 +106,9 @@ or `duplicate-title`. Nothing is evaluated; a computed default keeps its runtime
 
 - 2,000,000 evaluation and statement steps per bar.
 - 100,000 elements per array, map or matrix, and 4,096 characters for a `str.repeat` result.
-- `request.*`, Bar Magnifier and library imports are outside the current scope and end a run
-  with an `unsupported` diagnostic.
+- Pine versions other than v5 and v6, and published library imports, fail to compile with an
+  `unsupported` diagnostic. `request.*` and Bar Magnifier are outside the current scope: a script
+  that uses them compiles, and its run ends with an `unsupported` diagnostic.
 
 ## Subpath exports
 
