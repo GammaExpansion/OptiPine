@@ -1,12 +1,14 @@
 import type {} from '@testing-library/jest-dom/vitest';
 import * as matchers from '@testing-library/jest-dom/matchers';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach, expect, vi } from 'vitest';
 // Components render in either language at once; the app loads one catalog at a time.
 import '../i18n/catalogs.ts';
 
 expect.extend(matchers);
 afterEach(cleanup);
+// findBy* and waitFor also wait for lazily loaded chunks (see vitest.config.ts).
+configure({ asyncUtilTimeout: 5_000 });
 // Layout is checked in Chromium; jsdom only needs the observation lifecycle for shell behavior.
 vi.stubGlobal(
   'ResizeObserver',

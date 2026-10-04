@@ -6,7 +6,7 @@ import { valueText } from '../../../../dialogs/properties/property-display.ts';
 import { useI18n } from '../../../../i18n/I18nProvider.tsx';
 import { useBacktestStore } from '../../../../state/backtest.ts';
 import { inputValueText } from '../../sidebar/input-display.ts';
-import { shownResult } from '../../states/chart-view.ts';
+import { scriptIsIndicator, shownResult } from '../../states/chart-view.ts';
 import { EmptyResults } from './EmptyResults.tsx';
 import styles from './Results.module.css';
 
@@ -32,7 +32,8 @@ export function ResultFrame({
   const running = useBacktestStore(
     (state) => (state.preview?.run ?? state.run).status === 'running',
   );
-  if (account && result?.initialCapital === null)
+  const indicator = useBacktestStore(scriptIsIndicator);
+  if (account && (indicator || result?.initialCapital === null))
     return <EmptyResults message="backtest.indicatorResults" />;
   if (!result || empty) return <EmptyResults />;
   // What the result used, as the right panel and the properties dialog show it (B9): an input

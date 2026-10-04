@@ -4,6 +4,7 @@ import { getBacktestStore } from '../../state/backtest.ts';
 import { uiStore } from '../../state/ui.ts';
 import { Dock } from './Dock.tsx';
 import { DockActions, DockActionsHost } from './dock/DockActions.tsx';
+import { PropertiesSummary } from './sidebar/PropertiesSummary.tsx';
 import {
   loadScript,
   renderInEnglish,
@@ -12,6 +13,11 @@ import {
 } from './states/test-support.tsx';
 
 useBacktestTestServices();
+const indicatorSource = `//@version=6
+indicator("Momentum")
+length = input.int(10, "Length")
+plot(ta.mom(close, length), "Momentum")
+`;
 const bar = () => screen.getByRole('tablist').parentElement!;
 
 test('Trades counts the shown result’s closed trades (B1), and nothing without a result', async () => {
@@ -57,4 +63,27 @@ test('DockActions renders into the dock bar’s host, and nowhere without one', 
     </DockActionsHost.Provider>,
   );
   expect(host.querySelector('button')).toBeNull();
+});
+
+test('an indicator has no account before its run: Report, Equity and Properties say so', async () => {
+  await loadScript(indicatorSource);
+  expect(getBacktestStore().getState().description?.kind).toBe('indicator');
+  act(() => uiStore.getState().setDockTab('report'));
+  renderInEnglish(
+    <>
+      <Dock>{null}</Dock>
+      <PropertiesSummary />
+    </>,
+  );
+  const note =
+    'An indicator has no account, so no strategy report or equity. The chart shows its plots.';
+  expect(screen.getByRole('tabpanel')).toHaveTextContent(note);
+  act(() => uiStore.getState().setDockTab('equity'));
+  expect(screen.getByRole('tabpanel')).toHaveTextContent(note);
+  expect(screen.getByText('An indicator has no account, so no strategy properties.')).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'All settings' })).toBeNull();
+  // A strategy's tabs keep the usual hint until it runs.
+  await loadScript();
+  expect(screen.getByRole('tabpanel')).toHaveTextContent('Run a backtest to see results here.');
+  expect(screen.getByRole('button', { name: 'All settings' })).toBeVisible();
 });

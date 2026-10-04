@@ -7,12 +7,14 @@ import { fakeServices } from '../state/test-support.ts';
 import { I18nProvider } from '../i18n/I18nProvider.tsx';
 import { defaultPaneSizes, uiStorageKey, uiStore } from '../state/ui.ts';
 import { Shell } from './Shell.tsx';
+import { preloadChunks } from '../test/lazy-chunks.ts';
 import {
   loadOptimization,
   optimization,
   runOptimization,
 } from '../pages/optimize/test-support.tsx';
 
+preloadChunks('dialogs', 'optimize');
 let restoreServices: () => void;
 beforeEach(() => {
   restoreServices = replaceServices(() => fakeServices());

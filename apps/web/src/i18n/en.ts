@@ -155,6 +155,7 @@ export const en = {
   'backtest.indicatorResults':
     'An indicator has no account, so no strategy report or equity. The chart shows its plots.',
   'backtest.resultsHint': 'Run a backtest to see results here.',
+  'backtest.resultsLoading': 'Loading results…',
   'backtest.issuesHint': 'No issues',
   'dock.tabs': 'Backtest results',
   'dock.report': 'Report',
