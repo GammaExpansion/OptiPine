@@ -1,6 +1,7 @@
 import type { MessageId } from './en.ts';
 
 export const zh = {
+  'shell.licenses': '许可证',
   'backtest.noScript': '请先打开脚本',
   'backtest.noData': '请先选择行情',
   'backtest.compiling': '正在编译脚本',

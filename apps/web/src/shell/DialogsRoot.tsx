@@ -20,6 +20,11 @@ const DateRangeDialog = lazy(() =>
     default: module.DateRangeDialog,
   })),
 );
+const LicensesDialog = lazy(() =>
+  import('../dialogs/licenses/LicensesDialog.tsx').then((module) => ({
+    default: module.LicensesDialog,
+  })),
+);
 
 /** Every open dialog mounts here; `slots` adds the ones a page owns. Open state has one owner. */
 export function DialogsRoot({ slots = {} }: { slots?: Partial<Record<Dialog, ComponentType>> }) {
@@ -29,6 +34,7 @@ export function DialogsRoot({ slots = {} }: { slots?: Partial<Record<Dialog, Com
     replaceScript: ReplaceScriptDialog,
     marketData: MarketDataDialog,
     dateRange: DateRangeDialog,
+    licenses: LicensesDialog,
     ...slots,
   };
   return openDialogs.map((dialog) => {

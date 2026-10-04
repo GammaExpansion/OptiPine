@@ -25,6 +25,7 @@ export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
   const page = useUiStore((state) => state.page);
   const setPage = useUiStore((state) => state.setPage);
   const setLanguage = useUiStore((state) => state.setLanguage);
+  const setDialogOpen = useUiStore((state) => state.setDialogOpen);
   const drawerOpen = useUiStore((state) => state.drawerOpen);
   const setDrawerOpen = useUiStore((state) => state.setDrawerOpen);
   const pages = (
@@ -45,16 +46,26 @@ export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
     />
   );
   const languages = (
-    <SegmentedControl
-      small={layout === 'phone'}
-      label={t('shell.language')}
-      value={language}
-      onChange={(value) => setLanguage(value === 'zh' ? 'zh' : 'en')}
-      options={[
-        { value: 'zh', label: t('shell.chinese') },
-        { value: 'en', label: t('shell.english') },
-      ]}
-    />
+    <div className={styles.preferences}>
+      <SegmentedControl
+        small={layout === 'phone'}
+        label={t('shell.language')}
+        value={language}
+        onChange={(value) => setLanguage(value === 'zh' ? 'zh' : 'en')}
+        options={[
+          { value: 'zh', label: t('shell.chinese') },
+          { value: 'en', label: t('shell.english') },
+        ]}
+      />
+      <button
+        type="button"
+        className={styles.licenses}
+        aria-haspopup="dialog"
+        onClick={() => setDialogOpen('licenses', true)}
+      >
+        {t('shell.licenses')}
+      </button>
+    </div>
   );
   if (layout === 'phone')
     return (
