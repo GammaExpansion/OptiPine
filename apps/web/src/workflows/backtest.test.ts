@@ -266,19 +266,31 @@ test('a run produces the complete result with what it was computed with', async 
   );
   assert.equal(result.computedWith.source, strategySource);
   assert.equal(result.computedWith.dataset, state.dataset);
-  assert.deepEqual(state.outdated, { reasons: [], inputs: [] });
+  assert.deepEqual(state.outdated, { reasons: [], inputs: [], properties: [] });
 });
 
-test('changes mark the result outdated, and the inputs it used can be restored (B9)', async () => {
+test('changes mark the result outdated, and the settings it used can be restored (B9)', async () => {
   const { session, answerAll } = await completedRun();
   session.setInput('Length', 8);
   assert.deepEqual(session.getState().outdated, {
     reasons: ['inputs'],
     inputs: [{ title: 'Length', computed: 5, current: 8 }],
+    properties: [],
   });
-  session.restoreResultInputs();
+  session.restoreResultSettings();
   assert.deepEqual(session.getState().outdated?.reasons, []);
 
+  // A property states what the result used: the script's own value until it was overridden.
+  session.setProperty('initialCapital', 20000);
+  session.setInput('Length', 8);
+  assert.deepEqual(session.getState().outdated, {
+    reasons: ['inputs', 'properties'],
+    inputs: [{ title: 'Length', computed: 5, current: 8 }],
+    properties: [{ id: 'initialCapital', computed: 10000, current: 20000 }],
+  });
+  session.restoreResultSettings();
+  assert.deepEqual(session.getState().outdated?.reasons, []);
+  assert.deepEqual(session.getState().propertyOverrides, {});
   session.setProperty('initialCapital', 20000);
   assert.deepEqual(session.getState().outdated?.reasons, ['properties']);
   session.resetProperties();

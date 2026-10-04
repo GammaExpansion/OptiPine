@@ -428,6 +428,7 @@ export const zh = {
   'report.separator': '，',
   'report.rerun': '重新运行后更新。',
   'report.restoreInputs': '恢复结果所用参数',
+  'report.restoreSettings': '恢复结果所用设置',
   'report.restoreInputValue': '恢复为 {value}',
   'report.export': '导出报告 CSV',
   'report.filename': 'report.csv',

@@ -146,6 +146,32 @@ test('the outdated banner reads the result values as the inputs show them (B9)',
   );
 });
 
+test('a property change states the value the result used and restores it (B9)', async () => {
+  await run();
+  render(
+    <I18nProvider>
+      <ReportTab />
+    </I18nProvider>,
+  );
+  const { actions } = getBacktestStore().getState();
+  act(() => actions.setProperty('initialCapital', 20000));
+  expect(screen.getByRole('status')).toHaveTextContent(
+    'Current results use Initial capital 10,000.',
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Reset to 10,000' }));
+  expect(screen.queryByRole('status')).toBeNull();
+  expect(getBacktestStore().getState().propertyOverrides).toEqual({});
+  act(() => {
+    actions.setProperty('initialCapital', 20000);
+    actions.setInput('Length', 7);
+  });
+  expect(screen.getByRole('status')).toHaveTextContent(
+    'Current results use Length 5, Initial capital 10,000.',
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Restore result settings' }));
+  expect(screen.queryByRole('status')).toBeNull();
+});
+
 test.each(['en', 'zh'] as const)(
   'restore uses the run value for one change and generic copy for several (%s)',
   async (language) => {
