@@ -36,10 +36,16 @@
   display: flex;
   flex-direction: column;
 }
+/* A phone's Windows tab scrolls as one: the whole table, then the fixed parameters (G4). */
+@media (max-width: 767px) {
+  .windows {
+    height: auto;
+  }
+}
 .map {
   border-bottom: 1px solid var(--divider);
 }
-/* G4: one tab row; each tab holds one region, given the whole height to lay out as it needs. */
+/* G4: the persistent summary above one tab row and the selected set below the results. */
 .phone {
   flex: 1;
   min-height: 0;
@@ -53,6 +59,12 @@
 .region[data-outdated] {
   opacity: 0.45;
 }
+.phoneSummary {
+  flex: none;
+}
+.phoneSummary[data-outdated] {
+  opacity: 0.45;
+}
 .settings {
   height: 100%;
   display: flex;
@@ -61,4 +73,14 @@
 .settings > :last-child {
   flex: 1;
   min-height: 0;
+}
+/* The page's h1 where no visible heading names it, for assistive technology only. */
+.pageTitle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

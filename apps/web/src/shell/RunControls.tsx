@@ -111,7 +111,7 @@ function BacktestRunControls() {
   const reason = disabledReason((state.preview ?? state).readiness);
   return (
     <>
-      <div className={header.facts} aria-label={t('shell.facts')}>
+      <div className={header.facts} role="group" aria-label={t('shell.facts')}>
         <StatusText status={status} />
       </div>
       {status.kind === 'running' ? (
@@ -233,7 +233,7 @@ function OptimizeRunControls() {
   const status = optimizeStatus(state);
   return (
     <>
-      <div className={header.facts} aria-label={t('shell.facts')}>
+      <div className={header.facts} role="group" aria-label={t('shell.facts')}>
         <OptimizeStatusText status={status} />
       </div>
       {status.kind === 'running' && (

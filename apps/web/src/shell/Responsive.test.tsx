@@ -102,11 +102,17 @@ test('a phone shows the Optimize page as tabs, the setup under Settings (G4)', a
     within(tabs)
       .getAllByRole('tab')
       .map((tab) => tab.textContent),
-  ).toEqual(['Summary', 'Leaderboard', 'Parameter map', 'Sensitivity', 'Settings']);
-  expect(screen.getByRole('heading', { name: 'No optimization has run yet' })).toBeVisible();
+  ).toEqual(['Leaderboard', 'Parameter map', 'Sensitivity', 'Settings']);
+  // O1's empty state is the page's one h1; Settings, which replaces it, names the page instead.
+  expect(
+    screen.getAllByRole('heading', { level: 1 }).map((heading) => heading.textContent),
+  ).toEqual(['No optimization has run yet']);
   expect(screen.getByText(/under Settings/)).toBeVisible();
   await user.click(within(tabs).getByRole('tab', { name: 'Settings' }));
   expect(uiStore.getState().optimizeTab).toBe('settings');
   expect(screen.getByRole('region', { name: 'Optimization run' })).toBeVisible();
   expect(screen.getByText('Search ranges')).toBeVisible();
+  expect(
+    screen.getAllByRole('heading', { level: 1 }).map((heading) => heading.textContent),
+  ).toEqual(['Optimize']);
 });
