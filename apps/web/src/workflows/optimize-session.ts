@@ -506,6 +506,8 @@ export class OptimizationSession implements Observable<OptimizationState> {
   readonly #timers: Timers;
   readonly #store: Store<OptimizationState>;
   readonly #unsubscribe: () => void;
+  /** The Backtest page's script the run and results belong to (`BacktestState.scriptId`). */
+  #scriptId: number;
 
   /**
    * Search-range drafts by input title, with the declaration they were made for: those the user
@@ -585,8 +587,10 @@ export class OptimizationSession implements Observable<OptimizationState> {
     this.#threads = Math.max(1, Math.floor(options.threads));
     this.#now = options.now ?? Date.now;
     this.#timers = options.timers ?? defaultTimers;
+    this.#scriptId = backtest.getState().scriptId;
     this.#store = createStore(this.#derive());
-    this.#unsubscribe = backtest.subscribe(() => {
+    this.#unsubscribe = backtest.subscribe((state) => {
+      if (state.scriptId !== this.#scriptId) this.#forgetScript(state.scriptId);
       if (this.#validation.mode === 'walk-forward') this.#requestPlan();
       this.#publish();
     });
@@ -1030,8 +1034,35 @@ export class OptimizationSession implements Observable<OptimizationState> {
     this.#afterLive();
   }
 
+  /**
+   * Another script was opened on the Backtest page. The run and the results belong to the previous
+   * script, whose inputs the new one does not have: previewing or applying one of their sets would
+   * run the new script at its own values under the old set's name. So they go, where an edit of
+   * the same script keeps them outdated (R5).
+   */
+  #forgetScript(scriptId: number): void {
+    this.#scriptId = scriptId;
+    this.cancel();
+    this.#topRequest?.abort();
+    this.#topRequest = null;
+    this.#topKey = null;
+    this.#reselection?.abort.abort();
+    this.#reselection = null;
+    this.#setResults(null);
+    this.#analysisError = null;
+    this.#run = { status: 'idle' };
+    this.#viewSettings = {
+      ...this.#viewSettings,
+      axes: null,
+      slices: {},
+      selectedTrialId: null,
+      page: 0,
+      window: null,
+    };
+  }
+
   /** New complete results replace the previous ones, whichever validation they used. */
-  #setResults(results: OptimizationResults): void {
+  #setResults(results: OptimizationResults | null): void {
     this.#results = results;
     this.#resultsRun?.close();
     this.#resultsRun = null;
