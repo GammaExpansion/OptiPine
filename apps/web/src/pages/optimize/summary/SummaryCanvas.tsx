@@ -5,7 +5,16 @@ import { getOptimizationStore } from '../../../state/optimization.ts';
 import type { TopEquity } from '../../../workflows/optimize-session.ts';
 import { leaderboardPageSize, type ScatterView } from '../../../workflows/optimize-views.ts';
 import { useResultFormat } from '../leaderboard/useResultFormat.ts';
-import { envelope, extent, nearestPoint, roundAxis, scale, timeTicks } from './plot-geometry.ts';
+import {
+  envelope,
+  extent,
+  nearestPoint,
+  roundAxis,
+  scale,
+  timeTicks,
+  underValueLabel,
+  valueLabelY,
+} from './plot-geometry.ts';
 import { axisLabel } from './axis-label.ts';
 import { usePlotSize } from './usePlotSize.ts';
 import styles from './Summary.module.css';
@@ -83,10 +92,17 @@ export function SummaryCanvas({ chart }: { chart: Chart }) {
       context.stroke();
       context.setLineDash([]);
     };
+    // The #1 curve's last value is tagged on the price scale, over any tick label it meets.
+    const best =
+      chart.kind === 'equity'
+        ? chart.equity.curves.find((item) => item.rank === 1)?.equity
+        : undefined;
+    const labelY = best?.length ? valueLabelY(y(best.at(-1)!), height) : null;
     context.textAlign = chart.kind === 'equity' ? 'left' : 'right';
     for (const value of yTicks ??
       Array.from({ length: 4 }, (_, tick) => yBounds[0] + ((yBounds[1] - yBounds[0]) * tick) / 3)) {
       line(chart.kind === 'equity' ? 8 : 66, y(value), width - 64, y(value), color('--divider'));
+      if (labelY !== null && underValueLabel(labelY, y(value))) continue;
       context.fillStyle = color('--caption');
       context.fillText(
         chart.kind === 'scatter'
@@ -152,11 +168,9 @@ export function SummaryCanvas({ chart }: { chart: Chart }) {
         }
       context.globalAlpha = 1;
       if (equity.median) curve(equity.median, color('--text'), 1.4, [5, 4]);
-      const best = equity.curves.find((item) => item.rank === 1)?.equity;
-      if (best?.length) {
+      if (best?.length && labelY !== null) {
         curve(best, color('--primary'), 2);
         const last = best.at(-1)!;
-        const labelY = Math.max(10, Math.min(height - 38, y(last)));
         context.fillStyle = color('--primary');
         context.fillRect(width - 62, labelY - 9, 60, 18);
         context.textAlign = 'center';

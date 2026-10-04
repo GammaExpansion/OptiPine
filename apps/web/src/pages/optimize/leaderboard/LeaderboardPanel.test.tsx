@@ -129,3 +129,21 @@ test('collapsed input values remain inspectable, and Chinese labels are rendered
   await user.click(screen.getAllByRole('button', { name: '+3' })[0]);
   expect(screen.getByRole('dialog', { name: '参数' })).toHaveTextContent('Multiplier');
 });
+
+test('selecting a set keeps the keyboard focus on its row (#9)', async () => {
+  await results();
+  const user = userEvent.setup();
+  renderInEnglish(<LeaderboardPanel />);
+  screen.getByRole('button', { name: 'Select set #2' }).focus();
+  await user.keyboard('{Enter}');
+  await waitFor(() =>
+    expect(optimization().viewSettings.selectedTrialId).toBe(
+      optimization().views!.leaderboard.rows[1].trialId,
+    ),
+  );
+  await waitFor(() => expect(optimization().views?.pending).toBe(false));
+  expect(screen.getByRole('button', { name: 'Select set #2' })).toHaveFocus();
+  await user.click(screen.getByRole('button', { name: 'Select set #4' }));
+  await waitFor(() => expect(optimization().views?.pending).toBe(false));
+  expect(screen.getByRole('button', { name: 'Select set #4' })).toHaveFocus();
+});

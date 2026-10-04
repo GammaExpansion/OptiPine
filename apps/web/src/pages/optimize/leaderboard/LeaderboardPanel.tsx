@@ -45,8 +45,14 @@ export function LeaderboardPanel() {
   useEffect(() => {
     if (body.current) body.current.scrollTop = 0;
   }, [board?.page]);
+  // Every view, a selection's included, brings an equal but new `board.columns`. Column definitions
+  // rebuilt from it would be new cell components to the table, which would remount every cell and
+  // take the focus from the selected row's button; so they follow the titles' content instead.
+  const titles = board?.columns ?? [];
+  const titlesKey = JSON.stringify(titles);
+  const searchRows = views?.searchRows;
   const columns = useMemo<ColumnDef<LeaderboardRow>[]>(() => {
-    const layout = inputColumns(board?.columns ?? [], width, !views?.unvalidated);
+    const layout = inputColumns(titles, width, !views?.unvalidated);
     const value = (amount: number | null, signed: boolean, digits: number) => (
       <span data-profit={signed && amount != null ? amount >= 0 : undefined}>
         {format.number(amount, signed, digits)}
@@ -129,7 +135,8 @@ export function LeaderboardPanel() {
         cell: ({ row }) => value(row.original.inSample.trades, false, 0),
       },
     ];
-  }, [board?.columns, width, views?.unvalidated, t, actions]);
+    // `titles` and `format` change with `titlesKey` and `searchRows`.
+  }, [titlesKey, searchRows, width, views?.unvalidated, t, actions]);
   const table = useReactTable({
     data: (board?.rows ?? noRows) as LeaderboardRow[],
     columns,

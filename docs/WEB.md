@@ -149,6 +149,9 @@ Each tab's code loads on first use; until then the tab says it is loading result
 has no account: Report and Equity say so instead of an empty report, and the right panel lists no
 strategy properties.
 
+Opening a script shows its Pine code. When the first run of a newly opened script succeeds, a dock
+still on Pine code moves to Report; after that the dock stays on the tab the user picks.
+
 **Right panel.** **Inputs** in declaration order with **Reset**: a number field with stepper and
 range, a select (declared options, a source, or for `input.timeframe` the chart's timeframe and the
 usual ones from 1m to 1M), a toggle, a UTC date and time, or a text field (sessions and strings),
@@ -317,7 +320,9 @@ and reruns only the sets that changed.
   mean loss, for example "Common 26–28 · Fixed at 27, mean loss 1.6%". An input whose values are
   all near-optimal says so. The window map shows the selected window's IS surface or the mean over
   all windows, with each window's chosen set circled (W3).
-- **Selecting a window** shows its ranges, set and results with **View backtest**.
+- **Selecting a window** shows its ranges, set and results with **View backtest**. Its preview (B16)
+  runs the set over the whole data range and says so; the chart shades the window's IS and OOS
+  ranges as the summary marks its split, and opens on the OOS range.
 - **In progress** (W4): finished windows fill the table, the rest wait, and the totals, stability,
   fixed parameters and window map appear when every window is done; the run block shows the
   window, combinations within it, elapsed and remaining time, threads and **Cancel**.
@@ -350,8 +355,10 @@ component sheet is G5.
 - Editing the source recompiles it in the background; inputs and properties are rebuilt from the
   new compile, keeping values for inputs whose title and type did not change. Opening another
   script starts it from its own defaults instead (2.1).
-- Nothing is saved (4.8), so reloading, going back or closing the tab while a backtest, a preview or
-  an optimization runs asks first.
+- Nothing is saved (4.8), so reloading, going back or closing the tab asks first while a backtest, a
+  preview or an optimization runs, while the script has edits since it was opened (or was typed
+  into the empty editor), and while there are optimization results. Ctrl + O opens the app's file
+  picker everywhere, in the code editor and fields too, never the browser's own Open File.
 
 ### 3.2 Live optimization
 

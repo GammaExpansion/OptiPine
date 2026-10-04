@@ -1,5 +1,14 @@
 import { expect, test } from 'vitest';
-import { envelope, extent, nearestPoint, roundAxis, scale, timeTicks } from './plot-geometry.ts';
+import {
+  envelope,
+  extent,
+  nearestPoint,
+  roundAxis,
+  scale,
+  timeTicks,
+  underValueLabel,
+  valueLabelY,
+} from './plot-geometry.ts';
 
 test('time ticks keep both endpoints and space phone dates without changing desktop density', () => {
   expect(timeTicks([0, 360], 318)).toEqual([0, 180, 360]);
@@ -68,4 +77,15 @@ test('scatter hit testing chooses the nearest dot and ignores empty space', () =
   ];
   expect(nearestPoint(points, 13, 15)).toBe(1);
   expect(nearestPoint(points, 100, 100)).toBeNull();
+});
+
+test('the #1 value label stays in the plot and hides only the tick labels it covers (#17)', () => {
+  expect(valueLabelY(4, 200)).toBe(10);
+  expect(valueLabelY(190, 200)).toBe(162);
+  expect(valueLabelY(80, 200)).toBe(80);
+  // The phone's "150,090" tag at y 45 sat on the "140,981" tick at y 57.
+  expect(underValueLabel(45, 57)).toBe(true);
+  expect(underValueLabel(45, 31)).toBe(false);
+  expect(underValueLabel(45, 33)).toBe(true);
+  expect(underValueLabel(45, 61)).toBe(false);
 });
