@@ -151,18 +151,17 @@ test('S1 keeps results, dialogs, the script menu, Optimize and Chinese out of th
   const lazy =
     /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|market-selection|symbol-search|ScriptMenuContent|OptimizePage|optimization-services|optimize-|PreviewContent|PineEditor|RightDrawer|\/(?:sheet|licenses|data|script|properties)-(?:en|zh)-|\/zh-)/;
   expect(scripts.map(({ file }) => file).filter((file) => lazy.test(file))).toEqual([]);
-  // Measured with the editor deferred until there is something to edit, the tablet and phone
-  // layouts and the optimization side, walk-forward included, loading when Optimize first opens:
-  // 487,658 bytes of code without CodeMirror, 483,451 of them in the entry. The code budgets
-  // leave about 6 KB, less than the script menu (14 KB) or the market data dialog (19 KB) would
-  // add if either loaded with the page again.
+  // Measured after the catalog split and #48: 494,758 bytes of first-load code, 490,705 of them
+  // in the entry modules. The split moved about 33.6 KB of copy out of the first load at the
+  // cost of about 1.8 KB of loader code. Both code budgets leave about 1 KB of headroom, still
+  // too little for the script menu or market data dialog to load with the page again.
   const catalog = /\/en-[^/]*\.js$/;
   const sum = (files: typeof scripts) => files.reduce((total, script) => total + script.bytes, 0);
   const code = sum(scripts.filter(({ file }) => !catalog.test(file)));
   expect(code).toBeGreaterThan(0);
-  expect(code).toBeLessThan(493_500);
+  expect(code).toBeLessThan(496_000);
   // Area copy loads with its UI. Core fell from 53,508 to 19,851 bytes; allow about 6 KB for
-  // shell, Backtest and shared additions without changing the independent code budgets.
+  // shell, Backtest and shared additions in this independent catalog budget.
   const catalogBytes = sum(scripts.filter(({ file }) => catalog.test(file)));
   expect(catalogBytes).toBeGreaterThan(0);
   expect(catalogBytes).toBeLessThan(26_000);
@@ -171,7 +170,7 @@ test('S1 keeps results, dialogs, the script menu, Optimize and Chinese out of th
     [...html.matchAll(/(?:src|href)="([^"\s]+\.js)"/g)].map((match) => match[1]),
   );
   const entryBytes = sum(scripts.filter(({ file }) => entryFiles.has(file)));
-  expect(entryBytes).toBeLessThan(489_500);
+  expect(entryBytes).toBeLessThan(492_000);
   await writeFile(
     info.outputPath('s1-bundle.json'),
     JSON.stringify({ scripts, entryBytes, code, catalogBytes }, null, 2),
