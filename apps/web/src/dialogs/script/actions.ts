@@ -4,6 +4,7 @@ import { uiStore } from '../../state/ui.ts';
 
 export const pasteStore = createStore(() => ({ source: '', clipboardFailed: false }));
 let picker: (() => void) | undefined;
+let reader: ((file: File) => void) | undefined;
 
 /** The header keeps the native picker mounted, including after first launch. */
 export function setScriptPicker(next: () => void): () => void {
@@ -14,6 +15,18 @@ export function setScriptPicker(next: () => void): () => void {
 }
 export function pickScriptFile(): void {
   picker?.();
+}
+
+/** The header's picker also reads dropped files, so a drop fails the way a chosen file does. */
+export function setScriptReader(next: (file: File) => void): () => void {
+  reader = next;
+  return () => {
+    if (reader === next) reader = undefined;
+  };
+}
+/** Open `file` as the script, or explain that only a readable .pine file opens. */
+export function openScriptFile(file: File): void {
+  reader?.(file);
 }
 
 export async function showPaste(readClipboard = false): Promise<void> {
