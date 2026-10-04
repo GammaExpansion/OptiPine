@@ -6,6 +6,11 @@ fresh one; late replies from an old Worker or an old source revision are discard
 
 ## Clients
 
+`EngineRunClient` contains only the run/describe transport and its cancellation/revision handling.
+The Backtest page uses it so reproduction and input packing stay behind the app's lazy optimization
+boundary. `EngineWorkerClient` extends it with the existing `reproduce` API; its input snapshots,
+transfer ownership and replay behavior are unchanged. Worker restarts clear its prepared input.
+
 | Export                   | Purpose                                                                                                                                                                                                                                                                           |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `EngineWorkerClient`     | `describe` and `run` (`runWithEquity`) in one Worker, correlated by request id. `setSourceRevision` rejects pending work with `WorkerStaleError`; `cancel` rejects it with `WorkerCancelledError`.                                                                                |
@@ -16,6 +21,21 @@ fresh one; late replies from an old Worker or an old source revision are discard
 The pool calibrates on one trial, then grows to `availableWorkerCount()` Workers, one per thread
 less one (`workerCount` overrides) and never more than the trials left, with chunks of about one
 second each, at most `chunkSize` (256). `onProgress` reports progress with the time left.
+
+The pool snapshots numeric OHLCV bars into six Float64 columns and deep-copies the remaining
+input metadata at invocation. Each sweep Worker receives one private transferred buffer, expands
+it once into engine bars, and shares that common input across chunks. Later chunks carry only
+parameters and dispatch metadata. A lost Worker snapshot is replayed once before any trial in
+that chunk has been delivered. Source/revision checks and cancellation still scope each snapshot.
+The caller's bars are never detached; the retained packed snapshot supplies a buffer copy per
+Worker (also for replay), not a structured clone of every bar object per chunk.
+
+By default, parameter sets retain invocation-time deep-snapshot semantics. A caller that owns
+a private immutable list may set `immutableParameters: true` to lend that list until the returned
+promise settles. Neither the list, its entries nor their nested values may change during that
+time. The app uses this for its analysis-generated scalar parameters, avoiding a second full
+parameter-list clone for IS, OOS and each walk-forward window. Bounded chunks still cross the
+Worker boundary once; the engine's small input/settings override merges remain per trial.
 
 Each client takes a factory that creates the Worker. The Worker entry module is one call:
 
@@ -57,10 +77,10 @@ crash so a flush also stops while yielding with no request pending. Custom clien
 expose that optional epoch if they support cancellation between requests.
 
 `OptimizationWorkerPool.reproduce` treats each `common` object as one immutable run snapshot:
-it clones that object once, reuses idle reproduction Workers, and sends the full snapshot to
+it packs that input once, reuses idle reproduction Workers, and transfers the full snapshot to
 each Worker only on its first use (or when the snapshot/source/revision changes). Subsequent
 requests send only parameter overrides. Initial transfers are staggered across host tasks,
-so launching Top 20 does not clone every input in one task. Use a new `common` object for a new
+so launching Top 20 does not transfer every input in one task. Use a new `common` object for a new
 snapshot; later mutations of an already captured object do not change its saved input.
 
 Each active reproduction owns its Worker, so an AbortSignal terminates only that request.

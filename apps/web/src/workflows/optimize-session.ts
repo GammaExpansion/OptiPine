@@ -913,6 +913,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
         const result = await this.#pool.optimize(snapshot.source, input, sets, {
           sourceRevision: snapshot.sourceRevision,
           workerCount: this.#threads,
+          immutableParameters: true,
           onTrial: (trial) => this.#receive(live, range.phase, trial),
           onProgress: (progress) => {
             if (this.#live !== live) return;
@@ -987,8 +988,8 @@ export class OptimizationSession implements Observable<OptimizationState> {
     return { ...snapshot.dataset.input, settings: propertySettings(snapshot.properties) };
   }
 
-  /** The parameter sets the run takes, listed by the analysis Worker. */
-  async #parameterSets(snapshot: OptimizationSnapshot): Promise<ParameterSet[]> {
+  /** Private scalar sets from the analysis Worker; never mutate them while ranges/windows borrow them. */
+  async #parameterSets(snapshot: OptimizationSnapshot): Promise<readonly ParameterSet[]> {
     const { space, sampling } = snapshot.search;
     const parameters = await this.#analysis.request('parameters', {
       space: space!,
@@ -1173,6 +1174,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
           {
             sourceRevision: snapshot.sourceRevision,
             workerCount: this.#threads,
+            immutableParameters: true,
             onTrial: (trial) => this.#receiveWindowTrial(live, window, trial),
             onProgress: (progress) => {
               if (this.#wfLive !== live) return;

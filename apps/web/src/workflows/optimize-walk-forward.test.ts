@@ -167,6 +167,8 @@ test('each window optimizes its IS range, chooses a set and runs it on the OOS r
     ],
   );
   assert.ok(h.pool.runs.every((run) => run.common.realtimeTail === false));
+  assert.ok(h.pool.runs.every((run) => run.options.immutableParameters));
+  assert.ok(h.pool.runs.every((run) => run.parameters === h.pool.runs[0].parameters));
   let profitable = 0;
   for (const [at, row] of view.windows.entries()) {
     const best = bestOf(trialsOf(h.pool.runs[at]));
