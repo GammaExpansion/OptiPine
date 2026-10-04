@@ -258,10 +258,10 @@ export function SummaryCanvas({ chart }: { chart: Chart }) {
               : t('optimize.summary.filtered')}
           </strong>
           <span>
-            {t('optimize.leaderboard.in')} {number(scatter.inSample[point], true)}
+            {t('optimize.leaderboard.in')} {number(scatter.inSample[point], true, 0)}
           </span>
           <span>
-            {t('optimize.leaderboard.out')} {number(scatter.outOfSample[point], true)}
+            {t('optimize.leaderboard.out')} {number(scatter.outOfSample[point], true, 0)}
           </span>
         </div>
       )}

@@ -32,20 +32,20 @@ export function SelectionBar() {
           <span>
             {t(row.outOfSample ? 'optimize.leaderboard.in' : 'optimize.leaderboard.net')}
             <b data-profit={(row.inSample.netProfit ?? 0) >= 0}>
-              {number(row.inSample.netProfit, true)}
+              {number(row.inSample.netProfit, true, 0)}
             </b>
           </span>
           {row.outOfSample && (
             <span>
               {t('optimize.leaderboard.out')}
               <b data-profit={(row.outOfSample.netProfit ?? 0) >= 0}>
-                {number(row.outOfSample.netProfit, true)}
+                {number(row.outOfSample.netProfit, true, 0)}
               </b>
             </span>
           )}
           <span>
             {t('optimize.selection.neighbourhood')}
-            <b>{number(row.neighbourhoodMean, true)}</b>
+            <b>{number(row.neighbourhoodMean, true, 0)}</b>
           </span>
         </div>
       </div>

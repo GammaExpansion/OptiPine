@@ -40,9 +40,9 @@ export function LeaderboardPanel() {
   const board = views?.leaderboard;
   const columns = useMemo<ColumnDef<LeaderboardRow>[]>(() => {
     const layout = inputColumns(board?.columns ?? [], width, !views?.unvalidated);
-    const value = (amount: number | null, signed = false) => (
+    const value = (amount: number | null, signed: boolean, digits: number) => (
       <span data-profit={signed && amount != null ? amount >= 0 : undefined}>
-        {format.number(amount, signed)}
+        {format.number(amount, signed, digits)}
       </span>
     );
     return [
@@ -94,7 +94,7 @@ export function LeaderboardPanel() {
       {
         id: 'in',
         header: t(views?.unvalidated ? 'optimize.leaderboard.net' : 'optimize.leaderboard.in'),
-        cell: ({ row }) => value(row.original.inSample.netProfit, true),
+        cell: ({ row }) => value(row.original.inSample.netProfit, true, 0),
       },
       ...(!views?.unvalidated
         ? [
@@ -102,25 +102,24 @@ export function LeaderboardPanel() {
               id: 'out',
               header: t('optimize.leaderboard.out'),
               cell: ({ row }: { row: { original: LeaderboardRow } }) =>
-                value(row.original.outOfSample?.netProfit ?? null, true),
+                value(row.original.outOfSample?.netProfit ?? null, true, 0),
             },
           ]
         : []),
       {
         id: 'pf',
         header: t('optimize.leaderboard.pf'),
-        cell: ({ row }) => value(row.original.inSample.profitFactor),
+        cell: ({ row }) => value(row.original.inSample.profitFactor, false, 2),
       },
       {
         id: 'dd',
         header: t('optimize.leaderboard.dd'),
-        cell: ({ row }) =>
-          format.metricValue('maxDrawdown', row.original.inSample.maxDrawdownPercent),
+        cell: ({ row }) => format.drawdown(row.original.inSample.maxDrawdownPercent),
       },
       {
         id: 'trades',
         header: t('optimize.leaderboard.trades'),
-        cell: ({ row }) => value(row.original.inSample.trades),
+        cell: ({ row }) => value(row.original.inSample.trades, false, 0),
       },
     ];
   }, [board?.columns, width, views?.unvalidated, t, actions]);
