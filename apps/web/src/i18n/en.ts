@@ -1,4 +1,5 @@
 export const en = {
+  'shell.licenses': 'Licenses',
   'backtest.noScript': 'Open a script first',
   'backtest.noData': 'Select market data first',
   'backtest.compiling': 'Compiling the script',

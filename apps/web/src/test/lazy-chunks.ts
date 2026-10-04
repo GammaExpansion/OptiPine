@@ -14,6 +14,7 @@ const chunks = {
     import('../dialogs/marketData/MarketDataDialog.tsx'),
     import('../dialogs/dateRange/DateRangeDialog.tsx'),
     import('../dialogs/properties/PropertiesDialog.tsx'),
+    import('../dialogs/licenses/LicensesDialog.tsx'),
   ],
   optimize: () => [
     import('../pages/optimize/OptimizePage.tsx'),

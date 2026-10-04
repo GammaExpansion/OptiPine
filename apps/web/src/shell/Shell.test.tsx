@@ -33,6 +33,36 @@ afterEach(() => {
   restoreServices();
 });
 
+test.each([
+  ['en', 'Licenses', 'About & licenses'],
+  ['zh', '许可证', '关于与许可证'],
+] as const)(
+  'the header opens licenses and restores focus on close (%s)',
+  async (language, label, title) => {
+    uiStore.setState({ language });
+    const user = userEvent.setup();
+    await user.pointer({ coords: { clientX: 500, clientY: 500 } });
+    render(
+      <I18nProvider>
+        <Shell />
+      </I18nProvider>,
+    );
+    const trigger = screen.getByRole('button', { name: label });
+    await user.click(trigger);
+    const dialog = await screen.findByRole('dialog', { name: title });
+    expect(within(dialog).getByRole('link', { name: 'TradingView' })).toHaveAttribute(
+      'href',
+      'https://www.tradingview.com/',
+    );
+    expect(dialog).toHaveTextContent('Copyright (с) 2025 TradingView, Inc.');
+    expect(dialog).toHaveTextContent('CodeMirror 6');
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+    expect(uiStore.getState().openDialogs).toEqual([]);
+  },
+);
+
 test('the empty workbench blocks Optimize and explains both disabled run actions', async () => {
   render(
     <I18nProvider>

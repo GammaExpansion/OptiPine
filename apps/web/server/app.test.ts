@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { request } from 'node:http';
@@ -13,6 +13,11 @@ beforeAll(async () => {
   directory = await mkdtemp(join(tmpdir(), 'optipine-web-'));
   await writeFile(join(directory, 'index.html'), '<!doctype html><title>OptiPine</title>');
   await writeFile(join(directory, 'worker.js'), 'self.postMessage(1)');
+  await mkdir(join(directory, 'licenses'));
+  await writeFile(
+    join(directory, 'licenses/THIRD_PARTY_NOTICES.txt'),
+    'TradingView Lightweight Charts™',
+  );
   server = createAppServer(directory);
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   const address = server.address();
@@ -111,4 +116,17 @@ test('production mounts the package proxy on the full /api/market path without u
   expect(invalid.status).toBe(400);
   expect(await invalid.json()).toMatchObject({ error: { uiText: { id: 'feedInvalidRequest' } } });
   expect((await fetch(`${origin}/api/market/bars`, { method: 'POST' })).status).toBe(405);
+});
+
+test('serves UTF-8 license texts for GET and HEAD, with missing license files remaining 404', async () => {
+  const path = `${origin}/licenses/THIRD_PARTY_NOTICES.txt`;
+  const response = await fetch(path);
+  expect(response.status).toBe(200);
+  expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
+  expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+  expect(await response.text()).toBe('TradingView Lightweight Charts™');
+  const head = await fetch(path, { method: 'HEAD' });
+  expect(head.status).toBe(200);
+  expect(await head.text()).toBe('');
+  expect((await fetch(`${origin}/licenses/missing.txt`)).status).toBe(404);
 });
