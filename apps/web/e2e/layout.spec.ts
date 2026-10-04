@@ -106,6 +106,28 @@ function legendUnderTools() {
     .map((entry) => entry.textContent!.trim());
 }
 
+/** What the right panel's collapse chevron covers in the panel (bug bash #32). */
+function collapseCovers() {
+  const toggle = document.querySelector('aside > button[aria-expanded]');
+  if (!toggle) return [];
+  const box = toggle.getBoundingClientRect();
+  const targets = toggle.parentElement!.querySelectorAll(
+    'button, a, input, select, [role="radio"], [role="combobox"], h2, h3, label',
+  );
+  return [...targets]
+    .filter((target) => {
+      if (target === toggle || !target.textContent?.trim()) return false;
+      const rect = target.getBoundingClientRect();
+      return (
+        rect.left < box.right &&
+        rect.right > box.left &&
+        rect.top < box.bottom &&
+        rect.bottom > box.top
+      );
+    })
+    .map((target) => target.textContent!.trim().slice(0, 40));
+}
+
 function layoutProblems() {
   const problems: string[] = [];
   const page = document.scrollingElement!;
@@ -172,6 +194,8 @@ for (const language of ['en', 'zh'] as const)
         expect(await page.evaluate(layoutProblems), state).toEqual([]);
         // On a phone the legend wraps before the chart's tools rather than under them (#30).
         if (state === 'B1') expect(await page.evaluate(legendUnderTools)).toEqual([]);
+        // The right panel's collapse chevron covers none of its rows (#32).
+        expect(await page.evaluate(collapseCovers), state).toEqual([]);
         // A phone shows W1's regions one per tab (G4); each is checked on its own.
         if (state === 'W1' && size.name === 'phone')
           for (const tab of ['windows', 'stability'] as const) {
