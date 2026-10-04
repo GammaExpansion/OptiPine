@@ -7,12 +7,17 @@ dist/
 coverage/
 test-results/
 playwright-report/
+blob-report/
 .e2e-dist/
 .golden/
 
-# Local tool state, npm cache and diagnostic logs
+# Local tool state, editor settings, npm cache, packed tarballs and diagnostic logs
 .claude/
+.idea/
+.vscode/
 .npm/
+*.tgz
+*.log
 npm-debug.log*
 
 # Operating system metadata
