@@ -98,3 +98,16 @@ export function nearestPoint(
   });
   return nearest;
 }
+
+/** The #1 curve's last-value label: an 18 px tag centred on the value, kept inside the plot. */
+export function valueLabelY(valueY: number, height: number): number {
+  return Math.max(10, Math.min(height - 38, valueY));
+}
+
+/**
+ * Whether a price-scale tick's label, 11 px text on a baseline 4 px below the tick, would sit
+ * under the value label centred at `labelY`; the tick keeps its gridline but not its label.
+ */
+export function underValueLabel(labelY: number, tickY: number): boolean {
+  return tickY + 4 > labelY - 9 && tickY - 7 < labelY + 9;
+}
