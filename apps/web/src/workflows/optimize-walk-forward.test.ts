@@ -167,6 +167,7 @@ test('each window optimizes its IS range, chooses a set and runs it on the OOS r
     ],
   );
   assert.ok(h.pool.runs.every((run) => run.common.realtimeTail === false));
+  let profitable = 0;
   for (const [at, row] of view.windows.entries()) {
     const best = bestOf(trialsOf(h.pool.runs[at]));
     assert.equal(row.trialId, best.trialId);
@@ -177,8 +178,10 @@ test('each window optimizes its IS range, chooses a set and runs it on the OOS r
       ...outOfSample.common,
       inputs: { ...outOfSample.parameters.inputs },
     });
-    assert.equal(row.inSample?.netProfit, scoreMetric(best.metrics, 'Net profit'));
-    assert.equal(row.outOfSample?.netProfit, scoreMetric(oos.metrics, 'Net profit'));
+    const inside = reproduce(inSample);
+    assert.equal(row.inSample?.netProfit, inside.equity.at(-1)! - 10_000);
+    assert.equal(row.outOfSample?.netProfit, oos.equity.at(-1)! - 10_000);
+    profitable += Number(scoreMetric(oos.metrics, 'Net profit')! > 0);
     assert.equal(row.outOfSample?.trades, scoreMetric(oos.metrics, 'Total trades'));
     assert.equal(row.outOfSampleEquity.length, row.plan.outOfSampleBars);
     assert.equal(row.inSampleEquity.length, row.plan.inSampleBars);
@@ -208,7 +211,7 @@ test('each window optimizes its IS range, chooses a set and runs it on the OOS r
   assert.equal(view.totals.windows, 4);
   assert.equal(view.totals.completed, 4);
   assert.equal(view.totals.traded, 4);
-  assert.equal(view.totals.profitable, nets.filter((net) => net > 0).length);
+  assert.equal(view.totals.profitable, profitable);
   assert.ok(Math.abs(view.totals.outOfSampleNet! - nets.reduce((a, b) => a + b, 0)) < 1e-6);
   assert.notEqual(view.totals.wfe, null);
 

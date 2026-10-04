@@ -260,7 +260,17 @@ export function WfTable() {
               <tr>
                 {(['window', 'oosRange', 'parameters', 'is', 'oos', 'wfe', 'trades'] as const).map(
                   (column) => (
-                    <th key={column} scope="col">
+                    <th
+                      key={column}
+                      scope="col"
+                      title={
+                        column === 'is' || column === 'oos'
+                          ? t('optimize.wfResults.markedToMarket')
+                          : column === 'wfe'
+                            ? t('optimize.wfResults.wfeHint')
+                            : undefined
+                      }
+                    >
                       {t(`optimize.wfResults.${column}`)}
                     </th>
                   ),

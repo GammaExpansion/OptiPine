@@ -65,7 +65,7 @@ export interface WalkForwardExecution extends WalkForwardPlan {
   error?: Text;
 }
 export interface WalkForwardWindow extends WalkForwardExecution {
-  /** Net-profit aliases retained for table and timeline consumers. */
+  /** Equity changes at each range's last bar, including open P&L without an unexecuted exit fee. */
   inSampleValue: number | null;
   outOfSampleValue: number | null;
   inSampleNet: number | null;
@@ -268,6 +268,24 @@ function extractEquity(result: TrialResult | undefined, expected: number): numbe
     : [];
 }
 
+function equityChange(result: TrialResult | undefined, values: readonly number[]): number | null {
+  const initial = readMetric(result, 'Initial capital');
+  const change = values.length && initial !== null ? values.at(-1)! - initial : null;
+  return finite(change) ? change : null;
+}
+
+/** All walk-forward CAGRs use account equity over observed first-to-last-bar time. */
+function annualized(
+  initial: number | null,
+  capital: number | null,
+  seconds: number,
+): number | null {
+  if (initial === null || initial <= 0 || capital === null || capital <= 0 || seconds <= 0)
+    return null;
+  const value = ((capital / initial) ** ((365 * 86400) / seconds) - 1) * 100;
+  return finite(value) ? value : null;
+}
+
 /** Losses on IS have no meaningful efficiency; a ratio must also remain finite. */
 function efficiency(inside: number | null, outside: number | null): number | null {
   if (inside === null || inside <= 0 || outside === null) return null;
@@ -301,9 +319,7 @@ function stitchedAnnualized(
   if (side === 'outOfSample')
     seconds =
       executions.at(-1)!.outOfSampleBars.at(-1)!.time - executions[0].outOfSampleBars[0].time;
-  if (initial === null || capital <= 0 || seconds <= 0) return null;
-  const annualized = ((capital / initial) ** ((365 * 86400) / seconds) - 1) * 100;
-  return finite(annualized) ? annualized : null;
+  return annualized(initial, capital, seconds);
 }
 
 function additiveMetrics(windows: readonly WalkForwardWindow[]): TrialResult['metrics'] {
@@ -313,7 +329,15 @@ function additiveMetrics(windows: readonly WalkForwardWindow[]): TrialResult['me
   );
   for (const key of keys) {
     const name = key.slice(key.indexOf('/') + 1, key.lastIndexOf('/'));
-    const additive = !key.endsWith(' %') && ['Net profit', 'Total trades'].includes(name);
+    // Only account-wide equity is available; side-specific net totals cannot be marked to market.
+    if (name === 'Net profit') {
+      metrics[key] =
+        key.slice(key.lastIndexOf('/') + 1).startsWith('All') && !key.endsWith(' %')
+          ? sum(windows.map((window) => window.outOfSampleNet))
+          : null;
+      continue;
+    }
+    const additive = !key.endsWith(' %') && name === 'Total trades';
     metrics[key] = additive
       ? sum(
           windows.map((window) => {
@@ -346,10 +370,20 @@ export function finalizeWalkForward(
       outResult = cleanResult(execution.outOfSampleResult);
     const rawIn = extractEquity(inResult, execution.inSampleBars.length),
       rawOut = extractEquity(outResult, execution.outOfSampleBars.length);
-    const inNet = readMetric(inResult, 'Net profit'),
-      outNet = readMetric(outResult, 'Net profit');
-    const inAnnualized = readMetric(inResult, 'Annualized return (CAGR)', true),
-      outAnnualized = readMetric(outResult, 'Annualized return (CAGR)', true);
+    const inNet = equityChange(inResult, rawIn),
+      outNet = equityChange(outResult, rawOut);
+    const inAnnualized = annualized(
+        readMetric(inResult, 'Initial capital'),
+        rawIn.at(-1) ?? null,
+        rawIn.length ? execution.inSampleBars.at(-1)!.time - execution.inSampleBars[0].time : 0,
+      ),
+      outAnnualized = annualized(
+        readMetric(outResult, 'Initial capital'),
+        rawOut.at(-1) ?? null,
+        rawOut.length
+          ? execution.outOfSampleBars.at(-1)!.time - execution.outOfSampleBars[0].time
+          : 0,
+      );
     const initialCapital = readMetric(outResult, 'Initial capital');
     const startCapital = incompleteEquity ? null : (runningCapital ?? initialCapital);
     const shiftedOut =
@@ -431,8 +465,9 @@ export function finalizeWalkForward(
       outOfSampleNet: outNet,
       inSampleTrades: sum(windows.map((window) => window.inSampleTrades)),
       outOfSampleTrades: sum(windows.map((window) => window.outOfSampleTrades)),
+      // Profitability counts retain the reported net-profit definition used by ranking.
       winningWindows: windows.filter(
-        (window) => window.outOfSampleNet !== null && window.outOfSampleNet > 0,
+        (window) => (readMetric(cleanResult(window.outOfSampleResult), 'Net profit') ?? 0) > 0,
       ).length,
       wfe: efficiency(inAnnualized, outAnnualized),
       metrics: additiveMetrics(windows),

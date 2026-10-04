@@ -11,9 +11,9 @@
 
 </div>
 
-> **当前状态。** 本仓库以 TypeScript 包的形式提供 Pine 引擎、优化器、行情数据、Web Worker
-> 执行以及 TradingView 核对套件。承载这些功能的浏览器应用正在重新开发，暂未包含在内；其设计稿见
-> [docs/web-mock-terminal](docs/web-mock-terminal/README.md)。
+[![Trend Breakout 在 BTCUSDT 上的图表、成交标记与回测报告](docs/screenshots/backtest-zh.png)](docs/screenshots/backtest-zh.png)
+
+> **当前状态。** 引擎、优化器和浏览器应用均可在本地运行，应用已支持 walk-forward（滚动优化）。
 
 ## 为什么做这个
 
@@ -26,31 +26,52 @@ OptiPine 直接运行你的 Pine 源码。提供一个 v5 或 v6 策略和行情
 
 ## 你能得到什么
 
+- **浏览器工作台。** 图表叠加策略绘图与成交标记，配有报告、权益和可编辑的输入参数，支持中英文，
+  回测与优化两页均适配桌面、平板和手机。脚本和计算都留在浏览器中，源码不会离开你的机器。优化时，汇总图、排行、
+  参数图和敏感度随试验完成实时更新，选中一组参数即可预览回测或应用到输入。
 - **Pine 原样运行。** v5 与 v6 的指标和策略：`ta.*`、`math.*`、`str.*`、数组、矩阵、map、枚举、
   下单与退出、风险限制、手续费、滑点和交易时段。
 - **真正的优化器。** 网格或随机搜索覆盖所有输入类型，布尔和选项列表也算轴。最少成交数、最大
   回撤等约束直接过滤排行。
 - **内置过拟合检查。** 样本内 / 样本外切分，滚动或锚定窗口的 walk-forward，参数热力图、敏感度
-  分析，以及奖励稳定区域而不是幸运格子的邻域平均。
+  分析，以及奖励稳定区域而不是幸运格子的邻域平均。可在应用中运行 walk-forward，查看拼接的样本外权益、
+  各窗口结果与参数稳定性，也可在自己的代码中调用这些包。
 - **可信的数字。** 240 个从 TradingView 采集的 fixture，超过 4500 万个绘图值、成交字段和报告
   指标，每次提交都逐格比对。
 - **随处运行。** 引擎不依赖文件系统和网络，可在 Node 或浏览器中运行；`@pine/workers` 将一次
-  搜索分配到多个 Web Worker，每个 CPU 核心一个。
+  搜索分配到自适应的 Web Worker 线程池。
 - **自带行情数据。** 经由一个小型 Node 代理获取 Binance 现货与永续、Yahoo Finance 行情，并支持
   CSV 文件。
 
+## 看看界面
+
+[![优化汇总、排行、参数图与敏感度](docs/screenshots/optimize.png)](docs/screenshots/optimize.png)
+
+40 组参数的网格搜索展示领先的权益曲线、样本内 / 样本外结果和完整参数图，选中的参数可直接预览或应用。
+
+[![滚动优化的拼接权益、窗口结果与参数稳定性](docs/screenshots/walk-forward.png)](docs/screenshots/walk-forward.png)
+
+三个滚动窗口展示拼接的样本外权益、各窗口选定的参数，以及参数在窗口之间的稳定性。
+
+[![权益、回撤、每日盈亏与月度收益](docs/screenshots/equity.png)](docs/screenshots/equity.png)
+
+权益页签把账户曲线、回撤、每日盈亏和月度收益放在同一条时间轴上。
+
+<table>
+  <tr>
+    <td width="260">
+      <a href="docs/screenshots/phone.png">
+        <img src="docs/screenshots/phone.png" width="234" alt="手机上的回测图表与报告" />
+      </a>
+    </td>
+    <td>手机上，回测页将图表放在报告与输入等页签上方；优化页则将汇总图放在结果与设置页签上方。</td>
+  </tr>
+</table>
+
+截图来自录制的 BTCUSDT 行情，回测使用示例的默认参数；
+[重新生成截图](docs/screenshots/README.md)无需获取实时行情。
+
 ## 运行应用
-
-浏览器应用的第一阶段骨架位于 `apps/web`：双语外壳与可调整大小的面板。脚本加载、行情选择及
-运行按钮将在后续阶段接入。
-
-执行 `npm ci && npm run build` 后，用 `npm run dev -w @pine/web` 启动开发服务，或用
-`npm run start -w @pine/web` 在 `http://127.0.0.1:5174` 运行构建产物（可通过 `HOST` 和
-`PORT` 覆盖生产地址）。开发、预览及生产服务均包含 `/api/market`。
-`npm run test -w @pine/web` 无需浏览器；执行 `npx playwright install chromium` 安装 Chromium
-后，可用 `npm run e2e -w @pine/web` 运行浏览器冒烟测试。
-
-## 快速开始
 
 需要 [Node.js](https://nodejs.org) 24.5 或更新版本。
 
@@ -58,11 +79,18 @@ OptiPine 直接运行你的 Pine 源码。提供一个 v5 或 v6 策略和行情
 git clone https://github.com/GammaExpansion/OptiPine.git
 cd OptiPine
 npm ci && npm run build
-npm run check
+npm run dev -w @pine/web
 ```
 
-`npm run check` 会用引擎重放全部 TradingView fixture，并与已接受的基线比对，耗时数分钟。
-如需运行你自己的策略，请按下文在代码中使用这些包。
+打开 Vite 输出的地址（通常是 `http://127.0.0.1:5173`），点击**载入示例：Trend Breakout，
+BTCUSDT 1 小时**，再点击**运行回测**。切换到**优化**，设置搜索范围后点击**开始优化**。
+使用自己的策略时，打开 `.pine` 文件或粘贴源码，再选择行情或上传 CSV。载入示例和获取行情需要联网，
+计算在本地完成。
+
+运行 `npm run start -w @pine/web` 可在 `http://127.0.0.1:5174` 提供构建产物（用 `HOST` 和
+`PORT` 覆盖地址）；开发、预览及生产服务都包含行情代理。
+`npm run test -w @pine/web` 运行单元与组件测试；执行 `npx playwright install chromium` 后，
+用 `npm run e2e -w @pine/web` 运行浏览器测试。
 
 ## 目前不支持的
 
@@ -123,12 +151,15 @@ Node 代理载入 Binance 与 Yahoo 行情，并解析 CSV 文件。
 | `packages/messages`    | `@pine/messages`    | 各包共用的纯数据文本与带错误码的错误                      |
 | `packages/golden`      | `@pine/golden`      | TradingView fixture、比对框架与回归基线                   |
 | `apps/cli`             | `@pine/cli`         | `npm run golden` 与 `npm run check` 背后的 fixture 运行器 |
+| `apps/web`             | `@pine/web`         | 中英文浏览器应用、图表、回测与实时优化视图                |
 
 ```sh
-npm run test --workspaces   # 所有包与 CLI 的测试
+npm run test --workspaces   # 所有包、CLI 与浏览器应用的测试
 npm run golden              # 跑完整的 TradingView fixture 套件
 npm run check               # CI 执行的同一道回归门禁
 ```
+
+`npm run check` 重放 TradingView fixture，并与已接受的基线比对，耗时数分钟。
 
 - [引擎设计](docs/DESIGN.md)、[兼容性说明](docs/COMPATIBILITY_NOTES.md) 与 [Web 界面设计](docs/WEB.md)
 - [fixture 采集流程](packages/golden/fixtures/docs/collecting-golden-sop.md) 与
