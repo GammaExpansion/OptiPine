@@ -363,11 +363,13 @@ export const en = {
   'optimize.map.layer': '{title} {value}',
   'optimize.map.cellTitle': '{x} {xValue}, {y} {yValue}',
   'optimize.map.cell': '{x}, {y}: {value}',
+  'optimize.map.descriptionSeparator': '. ',
   'optimize.map.keyboard':
     'Arrow keys inspect cells; Enter selects a set or opens bin detail. Escape clears the hover.',
   'optimize.map.canvas': 'Parameter heatmap',
   'optimize.map.legend': 'Rank colours from the worst value to the best',
   'optimize.map.coveredValues': 'Values covered by the cell',
+  'optimize.map.scrollValues': '{count} values; scroll for the rest',
   'optimize.map.notSampled': 'Not sampled',
   'optimize.map.incomplete': 'Incomplete',
   'optimize.map.waiting': 'Waiting for the first snapshot…',

@@ -54,7 +54,8 @@ export const defaultPaneSizes: PaneSizes = {
   chart: 430,
   summary: 232,
   leaderboard: 624,
-  map: 314,
+  // Room for a 14-value Y axis unaveraged at 1440 × 900; sensitivity scrolls below it.
+  map: 380,
   wfSummary: 362,
   wfTable: 640,
 };

@@ -11,6 +11,8 @@ import {
   legendScale,
   mapGeometry,
   maxCellPitch,
+  minCellPitch,
+  yAxisLeft,
   verticalTitle,
 } from './geometry.ts';
 import { curveGeometry } from './curve-geometry.ts';
@@ -30,7 +32,7 @@ const map: Heatmap = prepareHeatmap(
 );
 
 describe('map geometry', () => {
-  it('fits both dimensions with axis captions, even below the 24-value limit', () => {
+  it('fits both dimensions with axis captions, shrinking cells before averaging values', () => {
     const original: Heatmap = {
       xKey: 'Length',
       yKey: 'Multiplier',
@@ -47,15 +49,18 @@ describe('map geometry', () => {
       [1024, 600],
     ]) {
       const fitted = fitMap(original, width, height);
-      const geometry = mapGeometry(fitted);
+      const geometry = mapGeometry(fitted, { width, height });
       expect(geometry.width).toBeLessThanOrEqual(width);
       expect(geometry.height).toBeLessThanOrEqual(height);
       expect(geometry.layers[0].xs.length).toBeLessThanOrEqual(24);
       expect(geometry.layers[0].ys.length).toBeLessThanOrEqual(24);
       expect(fitted.cells.reduce((sum, cell) => sum + cell.count, 0)).toBe(403);
-      expect(cellRect(geometry.layers[0], 0, width).width).toBe(16);
+      expect(cellRect(geometry.layers[0], 0, width).width).toBeGreaterThanOrEqual(minCellPitch - 2);
     }
-    expect(fitMap(original, 480, 174).display?.yBinSize).toBe(3);
+    // 31 columns exceed 24, so they pair up; 174 px pairs the 13 rows too, where 18 px cells
+    // needed three per row.
+    expect(fitMap(original, 480, 174).display?.xBinSize).toBe(2);
+    expect(fitMap(original, 480, 174).display?.yBinSize).toBe(2);
     expect(fitMap(original, 0, 0).display?.xBinSize).toBe(2);
   });
   it('fits every Z layer vertically and preserves separate layers for scrolling', () => {
@@ -197,7 +202,7 @@ describe('sparse maps', () => {
   );
 
   it('grow their cells to fill the panel, up to a limit, centred (polish backlog)', () => {
-    // 4 × 3 in a 440 × 230 panel: the rows decide, (230 - 8 - 66 + 2) / 3 = 52 → capped at 40.
+    // 4 × 3 in a 440 × 230 panel: the rows decide, (230 - 8 - 44 + 2) / 3 = 60 → capped at 40.
     const geometry = mapGeometry(small, { width: 440, height: 230 });
     const layer = geometry.layers[0];
     expect(layer.pitch).toBe(maxCellPitch);
@@ -210,8 +215,8 @@ describe('sparse maps', () => {
     });
     expect(cellAt(geometry, first.x + 37, first.y + 37, 440)?.value).toBe(small.cells[8].value);
     expect(cellAt(geometry, first.x + 39, first.y + 10, 440)).toBeNull();
-    // A shorter panel: the pitch follows the rows, (130 - 8 - 66 + 2) / 3 = 19.
-    expect(mapGeometry(small, { width: 440, height: 130 }).layers[0].pitch).toBe(19);
+    // A shorter panel: the pitch follows the rows, (130 - 8 - 44 + 2) / 3 = 26.
+    expect(mapGeometry(small, { width: 440, height: 130 }).layers[0].pitch).toBe(26);
     // Without a panel, as for the bin detail, the dense pitch.
     expect(mapGeometry(small).layers[0].pitch).toBe(cellPitch);
   });
@@ -270,5 +275,39 @@ it('the legend marks the break-even only where losing and winning cells meet (R4
     best: 3,
     steps: [0, 1, 2, 3, 4, 5, 6, 7, 8],
     breakEven: null,
+  });
+});
+
+describe('the map at the reference size', () => {
+  it('keeps a 23 × 14 grid whole in the panel the R1 split leaves it', () => {
+    const grid: Heatmap = {
+      xKey: 'Length',
+      yKey: 'Multiplier',
+      cells: Array.from({ length: 23 * 14 }, (_, i) => ({
+        x: i % 23,
+        y: Math.floor(i / 23),
+        value: i,
+        count: 1,
+      })),
+    };
+    // The canvas the map panel keeps at 1440 × 900 after its header, axes and legend.
+    const fitted = fitMap(grid, 465, 226);
+    expect([fitted.display?.xBinSize, fitted.display?.yBinSize]).toEqual([1, 1]);
+    const layer = mapGeometry(fitted, { width: 465, height: 226 }).layers[0];
+    expect([layer.xs.length, layer.ys.length, layer.pitch]).toEqual([23, 14, minCellPitch]);
+  });
+
+  it('starts the grid beyond its Y labels and title, however wide the labels', () => {
+    expect(yAxisLeft(0)).toBe(64);
+    // "3.75–4.50" at 11 px: the labels, the gaps and the title's line need more than 64 px.
+    expect(yAxisLeft(48)).toBe(80);
+    // A long option name is squeezed rather than pushing the grid out of the panel.
+    expect(yAxisLeft(400)).toBe(yAxisLeft(120));
+    const map: Heatmap = {
+      xKey: 'Length',
+      yKey: 'Multiplier',
+      cells: [{ x: 1, y: 1, value: 1, count: 1 }],
+    };
+    expect(cellRect(mapGeometry(map, undefined, 80).layers[0], 0, 0).x).toBe(80);
   });
 });
