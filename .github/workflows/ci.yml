@@ -67,6 +67,8 @@ jobs:
         if: always()
         with:
           name: web-smoke-${{ matrix.shard }}
-          path: apps/web/test-results/
+          path: |
+            apps/web/test-results/
+            apps/web/playwright-report/
           if-no-files-found: ignore
           retention-days: 14
