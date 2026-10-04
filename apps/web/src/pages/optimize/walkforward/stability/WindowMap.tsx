@@ -30,7 +30,7 @@ export function WindowMap() {
       })) ?? [],
     [map, selected, t],
   );
-  const hit = hover?.map === map?.panel ? hover?.hit : undefined;
+  const hit = hover?.hit;
   const axes = view?.stability?.rows.map((row) => row.title) ?? [];
   const compact = (value: number | null | undefined) =>
     value == null
@@ -133,6 +133,7 @@ export function WindowMap() {
         label={t('optimize.wfStability.canvas')}
         keyboardDescription={t('optimize.wfStability.keyboard')}
         onHover={(hit) => setHover(hit ? { map: map.panel, hit } : null)}
+        fitToPanel={false}
         onActivate={(cell) => {
           const chosen = map.chosen.find((item) =>
             containsSelection(map.panel, cell, item.parameters),
@@ -140,6 +141,16 @@ export function WindowMap() {
           if (chosen) actions.selectWindow(chosen.window);
         }}
       />
+      {!hit && (
+        <p className={styles.inspection} role="status">
+          {t(
+            map.surface === 'mean'
+              ? 'optimize.wfStability.meanIs'
+              : 'optimize.wfStability.windowIs',
+            { count: view?.windows.length ?? 0, window: map.window + 1 },
+          )}
+        </p>
+      )}
       <div className={styles.legend} aria-label={t('optimize.map.legend')}>
         <span>
           {t(

@@ -536,9 +536,13 @@ export function cellValues(summary: OptimizerSummary, cell: HeatmapCell): CellVa
 }
 
 /** R7: a binned cell at full resolution, from @pine/optimizer's `buildBinDetail`. */
-export function binDetail(view: MapView, cell: HeatmapCell): BinDetail | undefined {
+export function binDetail(
+  view: MapView,
+  cell: HeatmapCell,
+  panel = view.panel,
+): BinDetail | undefined {
   if (!view.map) return undefined;
-  return buildBinDetail(view.map, view.panel, {
+  return buildBinDetail(view.map, panel, {
     x: cell.x,
     ...(cell.y === undefined ? {} : { y: cell.y }),
     ...(cell.z === undefined ? {} : { z: cell.z }),
@@ -578,13 +582,22 @@ export function curveView(results: RankedResults): CurveView | null {
   );
   const points = inSample.cells.map((cell) => {
     const trialId = cell.trialId ?? null;
-    const position = trialId === null ? undefined : positions.get(trialId);
+    const position =
+      trialId === null
+        ? results.trials.findIndex(
+            (_, index) =>
+              summary.columns.valid[index] &&
+              same(parametersAt(results, index)[inSample.xKey], cell.x),
+          )
+        : positions.get(trialId);
     return {
       x: cell.x,
       inSample: cell.value,
       outOfSample: outOfSample?.cells.find((item) => same(item.x, cell.x))?.value ?? null,
       neighbourhoodMean:
-        position === undefined ? null : orNull(summary.columns.neighborhood[position]),
+        position === undefined || position < 0
+          ? null
+          : orNull(summary.columns.neighborhood[position]),
       trialId,
     };
   });

@@ -1,9 +1,25 @@
-import type { AnalysisValue, Heatmap, HeatmapCell } from '@pine/optimizer';
+import {
+  prepareHeatmap,
+  type AnalysisValue,
+  type Heatmap,
+  type HeatmapCell,
+} from '@pine/optimizer';
 
 export const cellSize = 16;
 export const cellPitch = 18;
 const left = 64;
 const right = 16;
+const bottom = 66;
+
+/** Reserve both axes and captions before fitting 16px squares with 2px gaps. Z layers scroll. */
+export function fitMap(map: Heatmap, width: number, height: number): Heatmap {
+  if (!map.yKey) return map;
+  if (width <= 0 || height <= 0) return prepareHeatmap(map, true);
+  return prepareHeatmap(map, {
+    x: Math.floor((width - left - right + 2) / cellPitch),
+    y: Math.floor((height - (map.zKey ? 30 : 8) - bottom) / cellPitch),
+  });
+}
 
 export interface MapLayerGeometry {
   readonly z?: AnalysisValue;
@@ -21,7 +37,7 @@ export interface MapGeometry {
   readonly layers: readonly MapLayerGeometry[];
 }
 
-/** Geometry only: aggregation and the nine rank bins belong to the analysis Worker. */
+/** Layout for an already fitted map, or for the full-resolution bin inspection. */
 export function mapGeometry(map: Heatmap): MapGeometry {
   const groups = map.layers?.length ? map.layers : [{ cells: map.cells, z: undefined }];
   let height = 0;
@@ -42,7 +58,7 @@ export function mapGeometry(map: Heatmap): MapGeometry {
       cells.set(yIndex.get(cell.y)! * xs.length + xIndex.get(cell.x)!, cell);
     const top = height + (map.zKey ? 30 : 8);
     width = Math.max(width, left + xs.length * cellPitch - 2 + right);
-    height = top + ys.length * cellPitch + 50;
+    height = top + ys.length * cellPitch + bottom;
     return {
       z: group.z,
       top,
@@ -56,12 +72,9 @@ export function mapGeometry(map: Heatmap): MapGeometry {
   return { width, height, layers };
 }
 
-export function cellRect(layer: MapLayerGeometry, index: number, width: number) {
+export function cellRect(layer: MapLayerGeometry, index: number, _width: number) {
   return {
-    x:
-      left +
-      Math.max(0, (width - left - right - layer.xs.length * cellPitch) / 2) +
-      (index % layer.xs.length) * cellPitch,
+    x: left + (index % layer.xs.length) * cellPitch,
     y: layer.top + Math.floor(index / layer.xs.length) * cellPitch,
     width: cellSize,
     height: cellSize,
