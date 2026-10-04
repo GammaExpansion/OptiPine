@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import type { DistributionView } from '../../../workflows/optimize-views.ts';
 import { useResultFormat } from '../leaderboard/useResultFormat.ts';
@@ -6,7 +7,11 @@ import { roundAxis, scale } from './plot-geometry.ts';
 import { usePlotSize } from './usePlotSize.ts';
 import styles from './Summary.module.css';
 
-export function DistributionChart({ view }: { view: DistributionView }) {
+export const DistributionChart = memo(function DistributionChart({
+  view,
+}: {
+  view: DistributionView;
+}) {
   const { t } = useI18n();
   const { number } = useResultFormat();
   const { ref, width: measuredWidth, height: measuredHeight } = usePlotSize();
@@ -93,4 +98,4 @@ export function DistributionChart({ view }: { view: DistributionView }) {
       </svg>
     </div>
   );
-}
+});

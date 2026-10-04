@@ -29,6 +29,7 @@ import {
 } from '@pine/workers';
 import type { BacktestSession, BacktestState, Dataset, Readiness } from './backtest.ts';
 import { inputValues } from './inputs.ts';
+import { windowSelectionRecords } from './optimize-records.ts';
 import { workflowMessage } from './messages.ts';
 import {
   filterValueError,
@@ -103,7 +104,6 @@ import {
   selectionConfig,
   selectionKey,
   selectionMetrics,
-  selectionRecords,
   stabilityRows,
   stitchedEquity,
   walkForwardTotals,
@@ -558,6 +558,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
   /** The results and sets of the Top 20 request running or done. */
   #topKey: string | null = null;
   #lastAnalysisRequestAt: number | null = null;
+  #liveViewTimer: unknown = null;
   #lastReproductionRequestAt: number | null = null;
   readonly #curves = new Map<string, { equity: readonly number[] | null; error: Text | null }>();
 
@@ -898,6 +899,8 @@ export class OptimizationSession implements Observable<OptimizationState> {
       live.combinations = sets.length;
       const common = this.#common(snapshot);
       for (const range of live.ranges) {
+        // A timer from IS must not publish again immediately after the OOS boundary.
+        this.#clearSnapshot();
         live.phase = range.phase;
         live.progress = null;
         this.#run = { status: 'running', startedAt, progress: this.#progress(live) };
@@ -1064,6 +1067,10 @@ export class OptimizationSession implements Observable<OptimizationState> {
 
   /** New complete results replace the previous ones, whichever validation they used. */
   #setResults(results: OptimizationResults | null): void {
+    // The inactive layout will not derive again to evict its memo; drop its old run here.
+    this.#viewsMemo = null;
+    this.#rankedMemo = null;
+    this.#wfMemo = null;
     this.#results = results;
     this.#resultsRun?.close();
     this.#resultsRun = null;
@@ -1281,8 +1288,15 @@ export class OptimizationSession implements Observable<OptimizationState> {
     const settings = this.#viewSettings;
     const key = selectionKey(settings);
     const metrics = selectionMetrics(settings);
+    const groups = [];
+    for (const window of windows) {
+      if (signal?.aborted) throw new WorkerCancelledError();
+      groups.push(await windowSelectionRecords(window.trials, metrics, window.columns));
+    }
+    if (signal?.aborted || (this.#wfLive?.data !== data && this.#wfResults !== data))
+      throw new WorkerCancelledError();
     const chosen = await this.#analysis.request('choose', {
-      groups: windows.map((window) => selectionRecords(window.trials, metrics, window.columns)),
+      groups,
       config: selectionConfig(
         data.snapshot.validation.walkForward,
         settings,
@@ -1610,6 +1624,10 @@ export class OptimizationSession implements Observable<OptimizationState> {
   }
 
   #clearSnapshot(): void {
+    if (this.#liveViewTimer !== null) {
+      this.#timers.clearTimeout(this.#liveViewTimer);
+      this.#liveViewTimer = null;
+    }
     if (this.#snapshotTimer === null) return;
     this.#timers.clearTimeout(this.#snapshotTimer);
     this.#snapshotTimer = null;
@@ -1717,6 +1735,9 @@ export class OptimizationSession implements Observable<OptimizationState> {
         const current = this.#liveAnalysis;
         if (!completed || (current?.key === key && current.completed === completed))
           return this.#upToDate();
+        // A slow response can leave a newer request waiting. Do not deliver that second
+        // snapshot immediately after the first; explicit view-setting changes still apply now.
+        if (current?.key === key && this.#liveViewTimer !== null) return;
         this.#lastAnalysisRequestAt = this.#now();
         const summary = await live.analysis.view(
           this.#viewInput(live.space, live.mode),
@@ -1732,6 +1753,12 @@ export class OptimizationSession implements Observable<OptimizationState> {
           completed,
           runId: live.id,
         };
+        if (this.#liveViewTimer !== null) this.#timers.clearTimeout(this.#liveViewTimer);
+        this.#liveViewTimer = this.#timers.setTimeout(() => {
+          this.#liveViewTimer = null;
+          if (this.#live === live && live.analysis.count(0) + live.analysis.count(1) > completed)
+            this.#requestView();
+        }, snapshotIntervalMs);
       } else if (results && results.mode !== 'walk-forward' && this.#resultsRun) {
         const run = this.#resultsRun;
         const current = this.#resultsAnalysis;
@@ -1960,9 +1987,17 @@ export class OptimizationSession implements Observable<OptimizationState> {
     if (!live && slot.runId !== results?.id) return null;
     const settings = this.#viewSettings;
     const completed = live ? live.analysis.count(0) + live.analysis.count(1) : null;
-    const key = [slot, settings, completed];
+    const key = [slot, settings, live];
+    const failed = live ? live.failures.size : results!.failures.length;
+    const pending =
+      slot.key !== this.#viewKey() || (completed !== null && slot.completed !== completed);
     const memo = this.#viewsMemo;
-    if (memo && memo.key.every((part, index) => part === key[index])) return memo.value;
+    if (memo?.value && memo.key.every((part, index) => part === key[index])) {
+      // More buffered trials change progress, not the last analysis' charts or ranking.
+      if (memo.value.pending !== pending || memo.value.failed !== failed)
+        memo.value = { ...memo.value, pending, failed };
+      return memo.value;
+    }
     const ranked = this.#ranked(slot, mode, space);
     const value: ResultsViews = {
       searchRows: (live ? live.snapshot : results!.computedWith).search.rows,
@@ -1971,8 +2006,8 @@ export class OptimizationSession implements Observable<OptimizationState> {
       mode,
       completed: slot.summary.total,
       combinations: live ? live.combinations : results!.combinations,
-      failed: live ? live.failures.size : results!.failures.length,
-      pending: slot.key !== this.#viewKey() || (completed !== null && slot.completed !== completed),
+      failed,
+      pending,
       mapError: slot.summary.error ?? null,
       leaderboard: leaderboardView(ranked, settings.page),
       selection: selectionOf(ranked, settings.selectedTrialId, live ? live.id : results!.id),

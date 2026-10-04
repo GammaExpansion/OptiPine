@@ -20,6 +20,7 @@ export class AnalysisWorkerClient implements AnalysisClient {
   #generation = 0;
   #nextId = 1;
   #disposed = false;
+  #epoch = 0;
   #pending = new Map<
     number,
     { kind: keyof AnalysisJobs; resolve: (output: unknown) => void; reject: (error: Error) => void }
@@ -27,6 +28,10 @@ export class AnalysisWorkerClient implements AnalysisClient {
   /** `factory` creates the module Worker whose entry calls `serveAnalysisWorker`. */
   constructor(factory: AnalysisWorkerFactory) {
     this.#factory = factory;
+  }
+
+  get epoch(): number {
+    return this.#epoch;
   }
 
   request<K extends keyof AnalysisJobs>(
@@ -62,6 +67,7 @@ export class AnalysisWorkerClient implements AnalysisClient {
     this.cancel();
   }
   #stop(error: Error): void {
+    ++this.#epoch;
     const worker = this.#worker;
     this.#worker = undefined;
     if (worker) {
@@ -125,6 +131,7 @@ export class AnalysisRun {
   #sent: [number, number] = [0, 0];
   #opened = false;
   #closed = false;
+  #viewTail: Promise<unknown> | null = null;
 
   constructor(client: AnalysisClient) {
     this.#client = client;
@@ -146,30 +153,81 @@ export class AnalysisRun {
   }
 
   /** Send the trials appended since the last view, then analyse everything the run holds. */
-  async view(
+  view(view: AnalysisRunView, summary: OptimizerSummaryRequest = {}): Promise<OptimizerSummary> {
+    const counts = [this.count(0), this.count(1)] as const;
+    const epoch = this.#client.epoch;
+    const perform = () => this.#view(view, summary, counts, epoch);
+    // Serial views cannot resend an unacknowledged prefix. Capture the boundary at call time.
+    const answer = this.#viewTail ? this.#viewTail.then(perform, perform) : perform();
+    this.#viewTail = answer;
+    const clear = () => {
+      if (this.#viewTail === answer) this.#viewTail = null;
+    };
+    void answer.then(clear, clear);
+    return answer;
+  }
+
+  async #view(
     view: AnalysisRunView,
-    summary: OptimizerSummaryRequest = {},
+    summary: OptimizerSummaryRequest,
+    counts: readonly [number, number],
+    epoch: number | undefined,
   ): Promise<OptimizerSummary> {
+    const current = () => {
+      if (this.#closed || this.#client.epoch !== epoch) throw new WorkerCancelledError();
+    };
     for (let attempt = 0; ; attempt++) {
-      if (this.#closed) throw new WorkerCancelledError();
+      current();
       const requests: Promise<unknown>[] = [];
-      if (!this.#opened) {
-        this.#opened = true;
-        this.#sent = [0, 0];
-        requests.push(this.#client.request('runOpen', { run: this.id }));
+      const flush = async () => {
+        const settled = await Promise.allSettled(requests.splice(0));
+        const failure = settled.find((item) => item.status === 'rejected');
+        if (failure) throw failure.reason;
+        current();
+        return settled;
+      };
+      try {
+        if (!this.#opened) {
+          this.#opened = true;
+          this.#sent = [0, 0];
+          requests.push(
+            this.#client.request('runOpen', { run: this.id }).catch((error) => {
+              this.#opened = false;
+              throw error;
+            }),
+          );
+        }
+        let taskTrials = 0;
+        for (const range of [0, 1] as const) {
+          let start = this.#sent[range];
+          while (start < counts[range]) {
+            if (taskTrials === 100) {
+              await flush();
+              // A microtask does not let input/rendering run. Bound each host task's cloning.
+              await new Promise<void>((resolve) => setTimeout(resolve, 0));
+              current();
+              taskTrials = 0;
+            }
+            const end = Math.min(start + 100 - taskTrials, counts[range]);
+            const trials = this.#trials[range].slice(start, end);
+            requests.push(
+              this.#client.request('runAppend', { run: this.id, range, trials }).then(() => {
+                this.#sent[range] = end;
+              }),
+            );
+            taskTrials += end - start;
+            start = end;
+          }
+        }
+        requests.push(this.#client.request('runView', { run: this.id, view, summary }));
+        const settled = await flush();
+        return (settled.at(-1) as PromiseFulfilledResult<OptimizerSummary>).value;
+      } catch (error) {
+        if (this.#closed) throw new WorkerCancelledError();
+        if (attempt || !runUnknown(error)) throw error;
+        current();
+        this.#opened = false;
       }
-      for (const range of [0, 1] as const) {
-        const fresh = this.#trials[range].slice(this.#sent[range]);
-        if (!fresh.length) continue;
-        this.#sent[range] = this.#trials[range].length;
-        requests.push(this.#client.request('runAppend', { run: this.id, range, trials: fresh }));
-      }
-      const answer = this.#client.request('runView', { run: this.id, view, summary });
-      const settled = await Promise.allSettled([...requests, answer]);
-      const failure = settled.find((item) => item.status === 'rejected');
-      if (!failure) return (settled.at(-1) as PromiseFulfilledResult<OptimizerSummary>).value;
-      if (attempt || !runUnknown(failure.reason)) throw failure.reason;
-      this.#opened = false;
     }
   }
 

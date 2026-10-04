@@ -222,3 +222,101 @@ test('the plan job answers window bounds and indices without bars', () => {
     windows.map(({ inSampleBars: _in, outOfSampleBars: _out, ...bounds }) => bounds),
   );
 });
+
+const many = Array.from({ length: 245 }, (_, index) => ({
+  ...inside[index % inside.length],
+  trialId: String(index),
+}));
+
+test('large flushes yield in bounded batches, preserve both ranges and capture each view boundary', async () => {
+  const { client, workers } = local();
+  const run = new AnalysisRun(client);
+  run.append(0, many);
+  run.append(1, many.slice(0, 143));
+  const first = run.view(view);
+  let hostRan = false;
+  setTimeout(() => {
+    hostRan = true;
+  }, 0);
+  run.append(0, [{ ...inside[0], trialId: 'later' }]);
+  const second = run.view(view);
+  assert.equal((await first).total, 245);
+  assert.equal(hostRan, true);
+  assert.equal((await second).total, 246);
+  const appends = workers[0].requests.filter((item) => item.kind === 'runAppend');
+  assert.deepEqual(
+    appends.map((item) => [item.input.range, item.input.trials.length]),
+    [
+      [0, 100],
+      [0, 100],
+      [0, 45],
+      [1, 55],
+      [1, 88],
+      [0, 1],
+    ],
+  );
+  assert.deepEqual(
+    appends.filter((item) => item.input.range === 0).flatMap((item) => item.input.trials),
+    run.trials,
+  );
+  client.dispose();
+});
+
+test('a failed partial flush retries only unacknowledged trials', async () => {
+  let append = 0;
+  class FailingWorker extends LocalAnalysisWorker {
+    override postMessage(message: AnalysisRequest): void {
+      if (message.kind === 'runAppend' && ++append === 2) throw new Error('clone failed');
+      super.postMessage(message);
+    }
+  }
+  const worker = new FailingWorker();
+  const client = new AnalysisWorkerClient(() => worker);
+  const run = new AnalysisRun(client);
+  run.append(0, many);
+  await assert.rejects(run.view(view), /clone failed/);
+  assert.equal((await run.view(view)).total, many.length);
+  assert.deepEqual(
+    worker.requests.flatMap((item) => (item.kind === 'runAppend' ? item.input.trials : [])),
+    many,
+  );
+  client.dispose();
+});
+
+test('cancel between batches stops posting; the next view replays every trial to the new Worker', async () => {
+  const { client, workers } = local();
+  const run = new AnalysisRun(client);
+  run.append(0, many);
+  const cancelled = assert.rejects(run.view(view), WorkerCancelledError);
+  setTimeout(() => client.cancel(), 0);
+  await cancelled;
+  assert.equal(workers[0].requests.filter((item) => item.kind === 'runAppend').length, 1);
+  assert.equal((await run.view(view)).total, many.length);
+  const replay = workers[1].requests.filter((item) => item.kind === 'runAppend');
+  // The first suffix request discovers the missing run; after runOpen every trial is replayed.
+  const reopened = workers[1].requests.findIndex((item) => item.kind === 'runOpen');
+  assert.ok(replay.length > 3);
+  assert.deepEqual(
+    workers[1].requests
+      .slice(reopened)
+      .flatMap((item) => (item.kind === 'runAppend' ? item.input.trials : [])),
+    many,
+  );
+  client.dispose();
+});
+
+test('close between batches prevents remaining appends, queued views and reopening', async () => {
+  const { client, workers } = local();
+  const run = new AnalysisRun(client);
+  run.append(0, many);
+  const first = assert.rejects(run.view(view), WorkerCancelledError);
+  const queued = assert.rejects(run.view(view), WorkerCancelledError);
+  setTimeout(() => run.close(), 0);
+  await Promise.all([first, queued]);
+  assert.deepEqual(
+    workers[0].requests.map((item) => item.kind),
+    ['runOpen', 'runAppend', 'runClose'],
+  );
+  assert.equal(run.count(0), 0);
+  client.dispose();
+});

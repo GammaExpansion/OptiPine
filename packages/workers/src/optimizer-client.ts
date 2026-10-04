@@ -72,6 +72,9 @@ export class OptimizationWorkerPool {
   #lastResult: OptimizationResult | null = null;
   #disposed = false;
   readonly #reproductions = new Set<EngineWorkerClient>();
+  #idleReproductions: EngineWorkerClient[] = [];
+  #reproductionInputs = new WeakMap<RunInput, RunInput>();
+  #reproductionTurn: Promise<void> = Promise.resolve();
 
   /** `factory` creates the module Worker whose entry calls `serveEngineWorker`. */
   constructor(factory: EngineWorkerFactory) {
@@ -91,22 +94,41 @@ export class OptimizationWorkerPool {
   ): Promise<TrialResult> {
     if (this.#disposed) throw new WorkerCancelledError(workerMessage('optimizerWorkersClosed'));
     if (signal?.aborted) throw new WorkerCancelledError();
-    const client = new EngineWorkerClient(this.#factory);
+    const generation = this.#generation;
+    let input = this.#reproductionInputs.get(common);
+    if (!input) {
+      input = structuredClone(common);
+      this.#reproductionInputs.set(common, input);
+    }
+    const overrides = structuredClone(parameters);
+    // Top 20 callers launch several runs together. Post at most one full snapshot per host task.
+    const turn = this.#reproductionTurn.then(
+      () => new Promise<void>((resolve) => setTimeout(resolve, 0)),
+    );
+    this.#reproductionTurn = turn;
+    await turn;
+    if (this.#disposed || signal?.aborted || generation !== this.#generation)
+      throw new WorkerCancelledError();
+    let client = this.#idleReproductions.pop();
+    // Reproducing an older saved run must still work after a newer source used this idle slot.
+    if (client && client.sourceRevision > sourceRevision) {
+      client.dispose();
+      client = undefined;
+    }
+    client ??= new EngineWorkerClient(this.#factory);
     const abort = () => client.dispose();
     this.#reproductions.add(client);
     signal?.addEventListener('abort', abort, { once: true });
     try {
       if (signal?.aborted) throw new WorkerCancelledError();
-      const input = structuredClone({
-        ...common,
-        inputs: { ...common.inputs, ...parameters.inputs },
-        settings: { ...common.settings, ...parameters.settings },
-      });
-      return await client.run(source, input, sourceRevision);
+      const result = await client.reproduce(source, input, overrides, sourceRevision);
+      if (signal?.aborted || generation !== this.#generation) throw new WorkerCancelledError();
+      this.#idleReproductions.push(client);
+      return result;
     } finally {
       signal?.removeEventListener('abort', abort);
       this.#reproductions.delete(client);
-      client.dispose();
+      if (!this.#idleReproductions.includes(client)) client.dispose();
     }
   }
 
@@ -319,12 +341,16 @@ export class OptimizationWorkerPool {
   }
 
   cancel(): void {
+    ++this.#generation;
     for (const client of this.#reproductions) client.dispose();
     this.#reproductions.clear();
+    for (const client of this.#idleReproductions) client.dispose();
+    this.#idleReproductions = [];
+    this.#reproductionInputs = new WeakMap();
+    this.#reproductionTurn = Promise.resolve();
     const run = this.#active;
     if (!run) return;
     this.#active = null;
-    ++this.#generation;
     this.#stopRun(run);
     run.reject(new WorkerCancelledError());
   }
