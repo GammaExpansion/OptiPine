@@ -13,23 +13,6 @@ const sizes = [
 /** Report-only findings in forbidden paths; no serious or critical rule is exempted. */
 const allowList = [
   {
-    rule: 'region',
-    impact: 'moderate',
-    viewport: 'desktop',
-    screens: [
-      'S1',
-      'B1-report',
-      'B1-trades',
-      'B1-code',
-      'B1-equity',
-      'B13',
-      'O1',
-      'optimize-setup',
-    ],
-    selector: '[role="separator"][aria-controls$="-main"]',
-    file: 'src/shell/Workbench.tsx',
-  },
-  {
     rule: 'page-has-heading-one',
     impact: 'moderate',
     viewport: 'phone',
@@ -39,7 +22,7 @@ const allowList = [
   },
 ] as const;
 
-/** Keep every severity in the evidence; only serious and critical violations gate the audit. */
+/** Keep every severity in the evidence and prevent the resolved shell findings from returning. */
 async function scan(page: Page, info: TestInfo, screen: string, viewport: string) {
   await page.evaluate(() => document.fonts.ready);
   const results = await new AxeBuilder({ page }).analyze();
@@ -91,6 +74,15 @@ async function scan(page: Page, info: TestInfo, screen: string, viewport: string
   await info.attach(screen, { path, contentType: 'application/json' });
   await page.screenshot({ path: info.outputPath(`${screen}.png`) });
   expect.soft(unexpected, screen).toEqual([]);
+  expect
+    .soft(
+      [...results.violations, ...results.incomplete].filter(
+        ({ id }) =>
+          id === 'region' || id === 'aria-prohibited-attr' || id === 'landmark-main-is-top-level',
+      ),
+      `${screen}: shell landmarks and accessible names`,
+    )
+    .toEqual([]);
 }
 
 for (const language of ['en', 'zh'] as const)
@@ -107,6 +99,18 @@ for (const language of ['en', 'zh'] as const)
       await page.goto('/');
       const example = page.getByRole('button', { name: copy['backtest.loadExample'] });
       await expect(example).toBeVisible();
+      const facts = page.getByRole('banner').getByRole('group', { name: copy['shell.facts'] });
+      if (size.name === 'desktop') {
+        await expect(facts).toMatchAriaSnapshot(`
+          - group "${copy['shell.facts']}":
+            - text: "${copy['shell.runMissing']}"
+        `);
+        await expect(
+          page
+            .getByRole('main', { name: copy['shell.backtest'], exact: true })
+            .getByRole('separator', { name: copy['layout.resizeRight'] }),
+        ).toHaveCount(1);
+      }
       await audit('S1');
 
       await example.click();
@@ -170,6 +174,16 @@ for (const language of ['en', 'zh'] as const)
 
       await page.getByRole('button', { name: copy['shell.optimize'], exact: true }).click();
       await expect(page.getByRole('heading', { name: copy['optimize.empty'] })).toBeVisible();
+      await expect(facts).toMatchAriaSnapshot(`
+        - group "${copy['shell.facts']}":
+          - text: "${copy['optimize.empty']}"
+      `);
+      if (size.name === 'desktop')
+        await expect(
+          page
+            .getByRole('main', { name: copy['shell.optimize'], exact: true })
+            .getByRole('separator', { name: copy['layout.resizeRight'] }),
+        ).toHaveCount(1);
       await audit('O1');
       if (size.name === 'phone')
         await page.getByRole('tab', { name: copy['layout.settings'], exact: true }).click();
