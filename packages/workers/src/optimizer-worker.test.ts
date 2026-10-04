@@ -7,7 +7,11 @@ import {
   OptimizationCompileError,
   type OptimizationProgress,
 } from './optimizer-client.ts';
-import { handleEngineWorkerRequest, handleOptimizationWorkerRequest } from './dispatcher.ts';
+import {
+  handleEngineWorkerRequest,
+  handleOptimizationWorkerRequest,
+  type EngineWorkerState,
+} from './dispatcher.ts';
 import { trialIdForParameters } from '@pine/optimizer';
 import { parseBars } from '../test/fixtures.ts';
 import { metricValue } from '@pine/optimizer';
@@ -18,18 +22,22 @@ import type {
 } from './protocol.ts';
 
 class FakeWorker implements EngineWorkerTransport {
+  readonly state: EngineWorkerState = {};
+  readonly requests: EngineWorkerRequest[] = [];
   onmessage: EngineWorkerTransport['onmessage'] = null;
   onerror: EngineWorkerTransport['onerror'] = null;
   onmessageerror: EngineWorkerTransport['onmessageerror'] = null;
   terminated = false;
   postMessage(request: EngineWorkerRequest): void {
     if (this.terminated) throw new Error('terminated');
+    request = structuredClone(request);
+    this.requests.push(request);
     queueMicrotask(() => {
       if (this.terminated) return;
       const deliver = (response: EngineWorkerResponse) =>
         this.onmessage?.(new MessageEvent('message', { data: response }));
       if (request.kind === 'optimize') handleOptimizationWorkerRequest(request, undefined, deliver);
-      else deliver(handleEngineWorkerRequest(request));
+      else deliver(handleEngineWorkerRequest(request, undefined, this.state));
     });
   }
   terminate(): void {
@@ -185,6 +193,13 @@ function controlledPool(): { pool: OptimizationWorkerPool; workers: ControlledWo
   return { pool, workers };
 }
 
+async function waitForWorkers(workers: readonly ControlledWorker[], count: number) {
+  const deadline = Date.now() + 2_000;
+  while (workers.length < count && Date.now() < deadline)
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  assert.equal(workers.length, count);
+}
+
 test('calibration is a real first trial, then chunk sizes and ETA use measured cost', async () => {
   const { pool, workers } = controlledPool();
   const progress: OptimizationProgress[] = [];
@@ -305,12 +320,14 @@ test('pool cancellation also terminates pending reproduction and permits another
   const rejected = assert.rejects(pool.reproduce(source, common, { inputs: { Length: 2 } }), {
     name: 'WorkerCancelledError',
   });
+  await waitForWorkers(workers, 1);
   const late = workers[0].onmessage!;
   const oldRequest = workers[0].requests[0];
   pool.cancel();
   await rejected;
   assert.equal(workers[0].terminated, true);
   const next = pool.reproduce(source, common, { inputs: { Length: 3 } });
+  await waitForWorkers(workers, 2);
   late(new MessageEvent('message', { data: handleEngineWorkerRequest(oldRequest) }));
   assert.equal(workers[1].terminated, false);
   workers[1].onmessage!(
@@ -336,6 +353,7 @@ test('a reproduction abort terminates only that worker and leaves a sweep and an
     },
   );
   const next = pool.reproduce(source, common, { inputs: { Length: 3 } });
+  await waitForWorkers(workers, 3);
   const late = workers[1].onmessage!;
   const oldRequest = workers[1].requests[0];
   abort.abort();
@@ -376,6 +394,79 @@ test('compile failures are rejected with line diagnostics instead of successful 
       error.diagnostics[0].line === 1,
   );
   assert.equal(pool.lastResult, previous);
+  pool.dispose();
+});
+
+test('reproductions reuse one snapshot per Worker without leaking overrides or retaining it after cancel', async () => {
+  const workers: FakeWorker[] = [];
+  const pool = new OptimizationWorkerPool(() => {
+    const worker = new FakeWorker();
+    workers.push(worker);
+    return worker;
+  });
+  const input = structuredClone(common);
+  const first = pool.reproduce(source, input, { inputs: { Length: 1 } });
+  input.bars[0].close = 100;
+  assert.deepEqual(
+    (await first).metrics,
+    runStrategy(source, { ...common, inputs: { Length: 1 } }).metrics,
+  );
+  for (const length of [2, 3, 4])
+    assert.deepEqual(
+      (await pool.reproduce(source, input, { inputs: { Length: length } })).metrics,
+      runStrategy(source, { ...common, inputs: { Length: length } }).metrics,
+    );
+  assert.equal(workers.length, 1);
+  const requests = workers[0].requests.filter((request) => request.kind === 'reproduce');
+  assert.equal(requests.filter((request) => request.common).length, 1);
+  assert.deepEqual(
+    requests.map((request) => request.parameters.inputs?.Length),
+    [1, 2, 3, 4],
+  );
+  const changed = { ...common, settings: { initial_capital: 23456 } };
+  assert.deepEqual(
+    (await pool.reproduce(source, changed, {})).metrics,
+    runStrategy(source, changed).metrics,
+  );
+  assert.ok(
+    workers[0].requests.at(-1)?.kind === 'reproduce' && 'common' in workers[0].requests.at(-1)!,
+  );
+  await pool.reproduce(source, common, {}, 5);
+  await pool.reproduce(source, common, {}, 1);
+  assert.equal(workers.length, 2, 'an older saved source gets a fresh revision scope');
+  pool.cancel();
+  assert.ok(workers.every((worker) => worker.terminated));
+  await pool.reproduce(source, common, {});
+  assert.equal(workers.length, 3);
+  pool.dispose();
+});
+
+test('cancellation before a queued reproduction starts creates no Worker', async () => {
+  const { pool, workers } = controlledPool();
+  const first = assert.rejects(pool.reproduce(source, common, {}), {
+    name: 'WorkerCancelledError',
+  });
+  const second = assert.rejects(pool.reproduce(source, common, {}), {
+    name: 'WorkerCancelledError',
+  });
+  pool.cancel();
+  await Promise.all([first, second]);
+  assert.equal(workers.length, 0);
+  pool.dispose();
+});
+
+test('a reproduction replays its snapshot once if a custom dispatcher loses its state', async () => {
+  const worker = new FakeWorker();
+  const pool = new OptimizationWorkerPool(() => worker);
+  await pool.reproduce(source, common, { inputs: { Length: 1 } });
+  delete worker.state.reproduction;
+  const next = await pool.reproduce(source, common, { inputs: { Length: 2 } });
+  assert.deepEqual(next.metrics, runStrategy(source, { ...common, inputs: { Length: 2 } }).metrics);
+  const requests = worker.requests.filter((request) => request.kind === 'reproduce');
+  assert.deepEqual(
+    requests.map((request) => !!request.common),
+    [true, false, true],
+  );
   pool.dispose();
 });
 

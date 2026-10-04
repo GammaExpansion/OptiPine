@@ -1,6 +1,8 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
+import { WorkerCancelledError } from '@pine/workers';
+import { getServices } from '../../../state/services.ts';
 import { uiStore } from '../../../state/ui.ts';
 import {
   loadOptimization,
@@ -184,17 +186,44 @@ test('properties sum up commission, slippage and order size, and Edit opens B13'
   expect(uiStore.getState().openDialogs).toEqual(['properties']);
 });
 
-test('the settings rest while a run goes (O8)', async () => {
+test('run setup rests while objective, direction and filters stay usable (O8, WEB.md 3.1)', async () => {
+  const user = userEvent.setup();
   await loadOptimization();
+  const pool = getServices().optimization!.pool;
+  let reject!: (error: Error) => void;
+  const held = new Promise<Awaited<ReturnType<typeof pool.optimize>>>((_resolve, fail) => {
+    reject = fail;
+  });
+  const optimize = vi.spyOn(pool, 'optimize').mockReturnValue(held);
   const { container } = renderInEnglish(<OptimizeSidebar />);
   let run!: Promise<void>;
   act(() => {
     run = optimization().actions.start();
   });
-  expect(container.querySelector('[inert]')).toContainElement(
+  for (const element of [
     screen.getByRole('checkbox', { name: 'Search Length' }),
-  );
+    screen.getByRole('radio', { name: 'IS / OOS' }),
+    screen.getByRole('button', { name: 'Edit' }),
+  ]) {
+    expect(element.closest('[inert]')).not.toBeNull();
+    expect(element.closest('[inert]')).toHaveAttribute('data-running', 'true');
+  }
+  const objective = screen.getByRole('button', { name: /^By IS net profit ?, max/ });
+  expect(objective.closest('[inert]')).toBeNull();
+  await user.click(objective);
+  const menu = screen.getByRole('dialog', { name: 'Ranking objective' });
+  await user.click(within(menu).getByRole('radio', { name: 'Min' }));
+  expect(optimization().viewSettings.direction).toBe('minimize');
+  await user.click(within(menu).getByRole('radio', { name: 'Profit factor' }));
+  expect(optimization().viewSettings.objective).toBe('profitFactor');
+  const filters = screen.getByRole('group', { name: 'Filters' });
+  const count = optimization().viewSettings.filters.length;
+  await user.click(within(filters).getAllByRole('button', { name: /^Remove / })[0]);
+  expect(optimization().viewSettings.filters).toHaveLength(count - 1);
+  expect(optimization().run.status).toBe('running');
   act(() => optimization().actions.cancel());
+  reject(new WorkerCancelledError());
   await act(() => run);
+  optimize.mockRestore();
   expect(container.querySelector('[inert]')).toBeNull();
 });
