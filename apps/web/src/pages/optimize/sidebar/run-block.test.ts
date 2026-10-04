@@ -80,18 +80,26 @@ test('after a run: the last run, then outdated results; a failed run says why', 
 });
 
 test('walk-forward counts backtests over the planned windows, and Start says why it waits (O3)', () => {
-  const wait = message('optimize.walkForwardUnavailable');
-  const view = runBlockView(
-    state({
-      validation: { ...defaultValidation, mode: 'walk-forward' },
-      runBlock: { ...runBlock, windows: 6, backtests: 13_284, estimatedMs: 1_740_000 },
-      readiness: { ok: false, reasons: [wait] },
-    }),
-  );
-  expect(view).toMatchObject({
+  const wait = message('optimize.wf.planning');
+  const walkForward = {
+    validation: { ...defaultValidation, mode: 'walk-forward' },
+    runBlock: { ...runBlock, windows: 6, backtests: 13_284, estimatedMs: 1_740_000 },
+  };
+  expect(
+    runBlockView(state({ ...walkForward, readiness: { ok: false, reasons: [wait] } })),
+  ).toMatchObject({
     count: 13_284,
     unit: 'backtests',
     caption: { kind: 'windows', windows: 6, combinations: 2_214, estimatedMs: 1_740_000 },
     disabled: wait,
   });
+  // W1: after a run, the last run's time over the backtests it took.
+  expect(runBlockView(state({ ...walkForward, results, outdated: { reasons: [] } }))).toMatchObject(
+    {
+      count: 13_284,
+      unit: 'backtests',
+      caption: { kind: 'lastRun', durationMs: 609_000, threads: 7 },
+      disabled: null,
+    },
+  );
 });

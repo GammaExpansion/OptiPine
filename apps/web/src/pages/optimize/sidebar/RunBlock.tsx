@@ -70,7 +70,10 @@ function Caption({ caption }: { caption: RunCaption }) {
   }
 }
 
-/** Progress, phase, elapsed and remaining time, threads and Cancel during a run (O8). */
+/**
+ * Progress, phase, elapsed and remaining time, threads and Cancel during a run (O8); for
+ * walk-forward, the window and the combinations within it (W4).
+ */
 function Running({ startedAt, progress }: { startedAt: number; progress: RunProgress }) {
   const { t } = useI18n();
   const threads = useThreads();
@@ -82,7 +85,11 @@ function Running({ startedAt, progress }: { startedAt: number; progress: RunProg
     <section className={styles.running} aria-label={t('optimize.run.label')}>
       <div className={styles.progressHead}>
         <Icon name="spinner" size={14} />
-        <strong>{t(`optimize.run.phase.${view.phase}`)}</strong>
+        <strong>
+          {view.window
+            ? t('optimize.run.window', { index: view.window.index + 1, count: view.window.count })
+            : t(`optimize.run.phase.${view.phase}`)}
+        </strong>
         <span className={styles.secondary}>
           {t('optimize.run.progressCount', { done: view.done, total: view.combinations })}
         </span>

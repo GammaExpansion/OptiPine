@@ -11,12 +11,14 @@ import { fakeServices, testInput, testNow } from './test-support.ts';
 
 afterEach(disposeServices);
 
-test('reading an empty session does not start a Worker; the first source edit creates one client', () => {
+test('reading an empty session does not start a Worker; the first source edit creates one client', async () => {
   const worker = new ManualWorker();
   const engineWorker = vi.fn(() => worker);
   const services = fakeServices({ engineWorker });
   expect(services.backtest.getState().source).toBe('');
-  expect(services.optimization.getState().run.status).toBe('idle');
+  expect(services.optimization).toBeNull();
+  const { session } = await services.loadOptimization();
+  expect(session.getState().run.status).toBe('idle');
   expect(engineWorker).not.toHaveBeenCalled();
   services.backtest.setSource('strategy("First")');
   services.backtest.setSource('strategy("First")');
@@ -45,10 +47,11 @@ test('services are lazy singletons and test replacement disposes the previous ow
 
 test.each([1, 2, 8, 0, NaN])(
   'thread count leaves one CPU free with a minimum of one: %s',
-  (count) => {
+  async (count) => {
     const services = fakeServices({ hardwareConcurrency: count });
     expect(services.threads).toBe(Number.isFinite(count) ? Math.max(1, count - 1) : 1);
-    expect(services.optimization.getState().runBlock.threads).toBe(services.threads);
+    const { session } = await services.loadOptimization();
+    expect(session.getState().runBlock.threads).toBe(services.threads);
     services.dispose();
   },
 );
@@ -75,7 +78,8 @@ test('unload terminates pending Workers, aborts fetch and releases subscriptions
   const cleanup = vi.fn();
   services.onDispose(cleanup);
   const pending = services.engine.describe('strategy("Pending")');
-  const reproduction = services.pool.reproduce('strategy("Pending")', testInput, {});
+  const { pool } = await services.loadOptimization();
+  const reproduction = pool.reproduce('strategy("Pending")', testInput, {});
   const rejected = Promise.allSettled([pending, reproduction]);
   const fetching = services.marketData.fetch(exampleRequest(testNow));
   await vi.waitFor(() => expect(signal).toBeDefined());
@@ -91,6 +95,18 @@ test('unload terminates pending Workers, aborts fetch and releases subscriptions
   expect(services.marketData.getState().fetch.status).toBe('idle');
   remove();
   restore();
+});
+
+test('services disposed while the optimization side loads hand out a disposed side', async () => {
+  const services = fakeServices();
+  const loading = services.loadOptimization();
+  services.dispose();
+  const { session } = await loading;
+  expect(services.optimization).toBeNull();
+  const listener = vi.fn();
+  session.subscribe(listener);
+  services.backtest.setInput('Length', 7);
+  expect(listener).not.toHaveBeenCalled();
 });
 
 test('installing and removing the unload listener does not create services', () => {
