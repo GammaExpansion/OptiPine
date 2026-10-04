@@ -267,6 +267,45 @@ function extractEquity(result: TrialResult | undefined, expected: number): numbe
     ? [...result.equity]
     : [];
 }
+
+/** Losses on IS have no meaningful efficiency; a ratio must also remain finite. */
+function efficiency(inside: number | null, outside: number | null): number | null {
+  if (inside === null || inside <= 0 || outside === null) return null;
+  const ratio = outside / inside;
+  return finite(ratio) ? ratio : null;
+}
+
+/**
+ * Stitch account changes by cash offset, as the OOS curve does, then annualize once. IS runs
+ * concatenate their observed durations (including repeated training periods); OOS uses the
+ * elapsed span of its chronological curve, including idle gaps. Open profit is part of equity.
+ */
+function stitchedAnnualized(
+  executions: readonly WalkForwardExecution[],
+  side: 'inSample' | 'outOfSample',
+): number | null {
+  if (!executions.length) return null;
+  let initial: number | null = null;
+  let capital = 0;
+  let seconds = 0;
+  for (const execution of executions) {
+    const result = cleanResult(execution[`${side}Result`]);
+    const bars = execution[`${side}Bars`];
+    const values = extractEquity(result, bars.length);
+    const base = readMetric(result, 'Initial capital');
+    if (!values.length || base === null || base <= 0) return null;
+    if (initial === null) initial = capital = base;
+    capital = values.at(-1)! - base + capital;
+    seconds += bars.at(-1)!.time - bars[0].time;
+  }
+  if (side === 'outOfSample')
+    seconds =
+      executions.at(-1)!.outOfSampleBars.at(-1)!.time - executions[0].outOfSampleBars[0].time;
+  if (initial === null || capital <= 0 || seconds <= 0) return null;
+  const annualized = ((capital / initial) ** ((365 * 86400) / seconds) - 1) * 100;
+  return finite(annualized) ? annualized : null;
+}
+
 function additiveMetrics(windows: readonly WalkForwardWindow[]): TrialResult['metrics'] {
   const metrics: TrialResult['metrics'] = {};
   const keys = new Set(
@@ -358,10 +397,7 @@ export function finalizeWalkForward(
       outOfSampleAnnualized: outAnnualized,
       inSampleTrades: readMetric(inResult, 'Total trades'),
       outOfSampleTrades: readMetric(outResult, 'Total trades'),
-      wfe:
-        inAnnualized !== null && inAnnualized !== 0 && outAnnualized !== null
-          ? outAnnualized / inAnnualized
-          : null,
+      wfe: efficiency(inAnnualized, outAnnualized),
       equity: shiftedOut,
       outOfSampleEquity: shiftedOut,
       inSampleEquity: shiftedIn,
@@ -372,8 +408,8 @@ export function finalizeWalkForward(
   });
   const inNet = sum(windows.map((window) => window.inSampleNet)),
     outNet = sum(windows.map((window) => window.outOfSampleNet));
-  const inAnnualized = sum(windows.map((window) => window.inSampleAnnualized)),
-    outAnnualized = sum(windows.map((window) => window.outOfSampleAnnualized));
+  const inAnnualized = stitchedAnnualized(executions, 'inSample'),
+    outAnnualized = stitchedAnnualized(executions, 'outOfSample');
   const parameters = config.axes?.map((axis) => axis.title) ?? [
     ...new Set(
       windows.flatMap((window) => window.trials.flatMap((trial) => Object.keys(trial.parameters))),
@@ -398,10 +434,7 @@ export function finalizeWalkForward(
       winningWindows: windows.filter(
         (window) => window.outOfSampleNet !== null && window.outOfSampleNet > 0,
       ).length,
-      wfe:
-        inAnnualized !== null && inAnnualized !== 0 && outAnnualized !== null
-          ? outAnnualized / inAnnualized
-          : null,
+      wfe: efficiency(inAnnualized, outAnnualized),
       metrics: additiveMetrics(windows),
       equity,
       equityTimes,

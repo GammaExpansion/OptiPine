@@ -15,7 +15,8 @@ it('formats finite amounts, ratios, compact losses and unavailable values withou
   expect(translate(figure(-0.33, 2), 'en')).toBe('-0.33');
   expect(translate(figure(0, 0, true), 'en')).toBe('0');
   for (const value of [null, undefined, NaN, Infinity])
-    expect(translate(figure(value), 'en')).toBe('—');
+    for (const language of ['en', 'zh'] as const)
+      expect(translate(figure(value, 2), language)).toBe('—');
   expect(translate(compactNet(-860), 'en')).toBe('-860');
   expect(translate(compactNet(2310), 'en')).toBe('+2.3k');
   expect(translate(compactNet(null), 'zh')).toBe('—');

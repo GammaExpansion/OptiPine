@@ -293,8 +293,16 @@ following OOS range. Changing the ranking or filters after a run picks again fro
 and reruns only the sets that changed.
 
 - **Summary**: stitched OOS equity, WFE (OOS annualized return over IS annualized return) and
-  profitable windows, once every window is done. **Stitched** shows one equity curve; **Per
-  window** shows each window as a lane with dashed IS equity, solid OOS equity, and the OOS net and
+  profitable windows, once every window is done. WFE is undefined, shown as “—”, when the IS
+  annualized return is ≤ 0 or either return is unavailable. Each window uses its reported CAGR.
+  Total WFE annualizes the stitched IS and OOS accounts separately, never sums window CAGRs:
+  each starts at its first run's initial capital and adds each run's ending equity minus its
+  initial capital, including open profit, as the stitched curve does. IS concatenates each run's
+  first-to-last-bar duration (overlapping training periods count for each run); OOS spans its
+  first to last bar, including idle gaps. Annualization uses 365-day years; missing equity,
+  nonpositive initial or ending capital, zero duration and nonfinite results are unavailable.
+  **Stitched** shows one equity curve; **Per window** shows each window as a lane with dashed IS
+  equity, solid OOS equity, and the OOS net and
   running equity at the right (W2).
 - **Per-window table**: window, OOS range, selected parameters, IS and OOS net, WFE and trades,
   ending in a total row, under a header that repeats the objective, direction and filters. A
