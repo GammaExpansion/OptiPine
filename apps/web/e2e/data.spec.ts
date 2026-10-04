@@ -103,6 +103,36 @@ test('search, fetch, edit preview and accept; repeat uses the cache', async ({
   expect(requests.filter((request) => request.pathname.endsWith('/bars'))).toHaveLength(1);
 });
 
+test('Escape closes symbol suggestions before closing the market dialog', async ({ page }) => {
+  await installMarketFixtures(page);
+  await page.goto('/');
+  const dialog = await openMarket(page);
+  const search = dialog.getByRole('combobox', { name: 'Symbol', exact: true });
+  await search.fill('BTC');
+  await expect(dialog.getByRole('option', { name: /^BTCUSDT / })).toBeVisible();
+  await search.press('Escape');
+  await expect(dialog).toBeVisible();
+  await expect(search).toBeFocused();
+  await expect(search).toHaveValue('BTC');
+  await expect(dialog.getByRole('listbox')).toHaveCount(0);
+  await search.press('Escape');
+  await expect(dialog).toHaveCount(0);
+});
+
+test('mouse and keyboard focus replace the prefilled symbol when typing', async ({ page }) => {
+  await installMarketFixtures(page);
+  await page.goto('/');
+  const dialog = await openMarket(page);
+  const search = dialog.getByRole('combobox', { name: 'Symbol', exact: true });
+  await search.click();
+  await page.keyboard.type('doge');
+  await expect(search).toHaveValue('DOGE');
+  await search.press('Tab');
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.type('eth');
+  await expect(search).toHaveValue('ETH');
+});
+
 test('CSV success, all parsing failures and calendar validation stay local', async ({
   page,
 }, testInfo) => {
@@ -120,7 +150,13 @@ test('CSV success, all parsing failures and calendar validation stay local', asy
   await dialog
     .getByLabel('CSV file', { exact: true })
     .setInputFiles({ name: 'BTCUSDT.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
+  await expect(dialog.getByText('Preview · 1h', { exact: true })).toBeVisible();
   await dialog.getByLabel('Symbol', { exact: true }).fill('BTCUSDT');
+  await dialog.getByRole('textbox', { name: 'Timeframe', exact: true }).fill('15');
+  await expect(dialog.getByText(/most often 60 minutes apart/)).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Use this data' })).toBeEnabled();
+  await dialog.getByRole('textbox', { name: 'Timeframe', exact: true }).fill('60');
+  await expect(dialog.getByText(/most often 60 minutes apart/)).toHaveCount(0);
   await expect(dialog.getByRole('button', { name: 'Use this data' })).toBeEnabled();
   await dialog
     .getByLabel('Trading calendar JSON (optional)', { exact: true })

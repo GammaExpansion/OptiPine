@@ -727,6 +727,8 @@ export const en = {
   feedTooManyBars: 'A fetch is limited to {count} bars. Choose a shorter range.',
   feedUpstreamDetail: 'The provider refused the request: {detail}',
   feedYahooInstrument: 'This Yahoo Finance instrument is not supported.',
+  feedYahooOhlc:
+    'Yahoo returned inconsistent OHLC for {symbol}, beyond the {percent}% correction limit. Affected days: {count}; latest: {date}. Choose a range that starts after {date}, or use another data source.',
   feedYahooRange: 'Yahoo Finance limits this timeframe to the last {days} days.',
   importCalendar: 'Trading calendar',
   importNotReady: 'Preview the data before using it.',
@@ -917,6 +919,7 @@ export const en = {
   'data.fetching': 'Fetching {symbol} {timeframe}',
   'data.fetchingAbout': 'Fetching about {count} bars',
   'data.previewFor': 'Preview · {symbol}, {timeframe}',
+  'data.previewTimeframe': 'Preview · {timeframe}',
   'data.previewHint':
     'A preview appears here once a symbol and dates are selected and the data is fetched',
   'data.pricePreview': 'Closing prices in the selected range',
@@ -938,6 +941,8 @@ export const en = {
   'data.serverNote':
     'Market data is fetched by the server; scripts and backtests run only in your browser',
   'data.unadjusted': 'Prices use the provider’s OHLC; no additional adjustment is applied.',
+  'data.ohlcNormalized':
+    'Yahoo forex high/low expanded on {count} bars to include open/close (at most 0.05%). Open, close and volume are unchanged.',
   'data.estimated':
     'Yahoo does not publish trading rules: tick size is estimated from quote precision; point value and minimum order size default to 1. Verify before use.',
   'data.refusedBy': '{provider} refused the request',
@@ -985,6 +990,8 @@ export const en = {
   'csv.hint':
     'Drop a TradingView “Export chart data” CSV: time, open, high, low, close and Volume. Time must be Unix seconds; other columns are ignored.',
   'csv.timeframeHint': 'Pine units, e.g. 60 or 1D',
+  'csv.timeframeMismatch':
+    'Bars are most often {minutes} minutes apart; the selected timeframe is {timeframe}. Check the timeframe; session breaks or missing bars can change spacing.',
   'csv.type': 'Symbol type',
   'csv.type.crypto': 'Crypto',
   'csv.type.stock': 'Stock',

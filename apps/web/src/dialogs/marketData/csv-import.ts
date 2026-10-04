@@ -8,6 +8,7 @@
 } from '@pine/market-data';
 import { errorText, message, type Text, type Message } from '@pine/messages';
 import type { SessionCalendar } from '@pine/engine';
+import { dateParts } from '@pine/engine/calendar';
 import type { DatasetInput } from '../../workflows/backtest.ts';
 import type { SymbolInfoKey } from '../../workflows/market-data.ts';
 import type { ProfileDraft } from './ProfileFields.tsx';
@@ -97,6 +98,55 @@ export function calendarFromJson(raw: string): {
       error: error instanceof SyntaxError ? message('csv.calendarJsonInvalid') : errorText(error),
     };
   }
+}
+
+function mostCommon(values: number[]): number {
+  const counts = new Map<number, number>();
+  for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
+  return [...counts].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
+}
+
+/** Spacing is evidence, not a guarantee: gaps and shortened sessions can be intentional.
+ * Calendar bars compare local day/week/month slots so DST and month lengths do not mislead. */
+export function csvTimeframeWarning(
+  dataset: CsvDataset | null,
+  timeframe: string,
+  timezone: string,
+): Message | null {
+  if (!dataset || dataset.bars.length < 2) return null;
+  const match = /^(?:([1-9]\d*)([SDWM]?)|([DWM]))$/.exec(timeframe);
+  if (!match) return null;
+  const count = Number(match[1] ?? 1);
+  const unit = match[2] ?? match[3];
+  const times = dataset.bars.map((bar) => bar.time);
+  const gaps = times.slice(1).map((time, index) => time - times[index]);
+  let spacing: number;
+  if (unit === 'D' || unit === 'W' || unit === 'M') {
+    let slots: number[];
+    try {
+      slots = times.map((time) => {
+        const date = dateParts(time * 1000, timezone);
+        const day = Date.UTC(date.year, date.month - 1, date.day) / 86400000;
+        return unit === 'M'
+          ? date.year * 12 + date.month - 1
+          : unit === 'W'
+            ? Math.floor((day + 3) / 7)
+            : day;
+      });
+    } catch {
+      // Profile validation reports invalid timezones; a spacing hint must not break the form.
+      return null;
+    }
+    spacing = mostCommon(slots.slice(1).map((slot, index) => slot - slots[index]));
+  } else {
+    spacing = mostCommon(gaps) / (unit === 'S' ? 1 : 60);
+  }
+  return spacing === count
+    ? null
+    : message('csv.timeframeMismatch', {
+        minutes: mostCommon(gaps) / 60,
+        timeframe,
+      });
 }
 
 export function csvInput(

@@ -24,6 +24,8 @@ export interface FeedDataset {
   profileEstimated: boolean;
   /** Older Yahoo daily sessions use current regular-session hours, not historical close times. */
   calendarEstimated?: boolean;
+  /** Number of Yahoo forex bars whose high/low expanded by at most 0.05% to contain open/close. */
+  ohlcNormalized?: number;
 }
 export const feedTimeframes: Record<Feed, Record<string, string>> = {
   binance: {

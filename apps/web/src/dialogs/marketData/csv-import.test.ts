@@ -1,5 +1,5 @@
 ﻿import { expect, test } from 'vitest';
-import { inspectCsv, csvInput, calendarFromJson } from './csv-import.ts';
+import { inspectCsv, csvInput, csvTimeframeWarning, calendarFromJson } from './csv-import.ts';
 import { defaultProfile } from './ProfileFields.tsx';
 
 const header = 'time,open,high,low,close,Volume,plot';
@@ -86,4 +86,63 @@ test('CSV never accepts invalid metadata, missing symbols, or an invalid calenda
   expect(
     csvInput(dataset, 'BTC', '60', 'stock', defaultProfile, parsed.calendar).input!.sessionCalendar,
   ).toEqual(calendar);
+});
+
+test('CSV spacing warns about a mislabeled timeframe without resampling or blocking sparse data', () => {
+  const dataset = inspectCsv(valid).dataset!;
+  for (const timeframe of ['15', '240', '1D']) {
+    expect(csvTimeframeWarning(dataset, timeframe, 'Etc/UTC')).toMatchObject({
+      id: 'csv.timeframeMismatch',
+      values: { minutes: 60, timeframe },
+    });
+  }
+  expect(csvTimeframeWarning(dataset, '60', 'Etc/UTC')).toBeNull();
+  expect(csvTimeframeWarning(dataset, '3600S', 'Etc/UTC')).toBeNull();
+  expect(csvInput(dataset, 'TEST', '15', 'crypto', defaultProfile).input!.bars).toBe(dataset.bars);
+  expect(csvTimeframeWarning(null, '15', 'Etc/UTC')).toBeNull();
+  expect(
+    csvTimeframeWarning({ ...dataset, bars: dataset.bars.slice(0, 1) }, '15', 'Etc/UTC'),
+  ).toBeNull();
+  expect(csvTimeframeWarning(dataset, 'bad', 'Etc/UTC')).toBeNull();
+  expect(csvTimeframeWarning(dataset, '1D', 'bad/zone')).toBeNull();
+});
+
+test('CSV spacing handles session gaps, DST, calendar weeks and variable-length months', () => {
+  const dataset = inspectCsv(valid).dataset!;
+  const withTimes = (times: number[]) => ({
+    ...dataset,
+    bars: times.map((time) => ({ ...dataset.bars[0], time })),
+  });
+  const day = 86400;
+  const intraday = withTimes([0, 3600, 7200, 3 * day, 3 * day + 3600]);
+  expect(csvTimeframeWarning(intraday, '60', 'Etc/UTC')).toBeNull();
+  expect(csvTimeframeWarning(intraday, '15', 'Etc/UTC')).toMatchObject({ values: { minutes: 60 } });
+  const daily = withTimes(
+    ['2026-03-06T14:30:00Z', '2026-03-09T13:30:00Z', '2026-03-10T13:30:00Z'].map(
+      (value) => Date.parse(value) / 1000,
+    ),
+  );
+  for (const timeframe of ['D', '1D'])
+    expect(csvTimeframeWarning(daily, timeframe, 'America/New_York')).toBeNull();
+  // Two daily bars either side of DST still count as one local calendar day.
+  const dst = withTimes(
+    ['2026-03-08T00:00:00Z', '2026-03-08T23:00:00Z'].map((value) => Date.parse(value) / 1000),
+  );
+  expect(csvTimeframeWarning(dst, '1D', 'America/New_York')).toBeNull();
+  const weekly = withTimes(
+    ['2026-01-05', '2026-01-12', '2026-01-20', '2026-01-26'].map(
+      (value) => Date.parse(value) / 1000,
+    ),
+  );
+  expect(csvTimeframeWarning(weekly, '1W', 'Etc/UTC')).toBeNull();
+  const monthly = withTimes(
+    ['2026-01-02', '2026-02-02', '2026-03-02', '2026-04-01'].map(
+      (value) => Date.parse(value) / 1000,
+    ),
+  );
+  for (const timeframe of ['M', '1M'])
+    expect(csvTimeframeWarning(monthly, timeframe, 'Etc/UTC')).toBeNull();
+  expect(csvTimeframeWarning(monthly, '1D', 'Etc/UTC')).toMatchObject({
+    id: 'csv.timeframeMismatch',
+  });
 });

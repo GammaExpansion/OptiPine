@@ -49,3 +49,39 @@ All Yahoo requests used `https://query1.finance.yahoo.com`, `includeTradingPerio
 `includePrePost=false`. Tests run offline. Older session close estimates use Yahoo's current
 regular local closing time with historical timezone offsets; they do not establish historical
 early-close times. The API's `calendarEstimated` flag and the web preview disclose this limit.
+
+## Forex OHLC follow-up (2026-10-04 11:16:43 UTC)
+
+`yahoo-forex-ohlc.json` contains selected real chart rows for EURUSD=X, GBPUSD=X and USDJPY=X at
+1d, 15m and 60m. Each sample records its original URL and the inspected row/error counts. Daily
+requests used period1=0; 15m used the last 59 days, 60m the last 729 days. Kept every daily row
+over the 0.05% correction limit, up to seven recent inconsistent rows, the final three priced rows
+and the final row, deduplicated and in provider order. Every indicator array uses the same indices. Metadata keeps
+only loader fields; trading periods keep sessions intersecting selected rows. Daily samples also
+carry the matching recorded hourly session metadata for those dates. Prices are unchanged.
+
+Full daily captures had 128 / 103 / 277 inconsistent rows (EUR / GBP / JPY). The largest
+high/low expansions required were approximately 2.17% / 1.29% / 0.93%, so these are not all harmless
+precision errors. Within the latest two years the maxima were 0.0235% / 0.0228% / 0.0441%.
+The available 15m and 60m captures had no OHLC envelope errors across all three symbols.
+The implemented correction ceiling is 0.05% of the smallest OHLC price, for Yahoo forex only.
+The daily samples retain all 11 / 7 / 25 over-limit dates, most recently 2022-12-26 / 2020-06-07 /
+2022-08-28, respectively. Tests verify the complete count and latest date before refusal, recovery
+when starting the next day, mutations just below/above the ceiling and malformed fields. Intraday
+mutations also verify that multiple bad bars on the same UTC date count as one affected day.
+No failed rows are silently omitted from an accepted dataset.
+
+Live loads through `createUpstreamFetch` on the same date returned 515 daily bars for 2Y and 258
+for 1Y for each pair. Normalized counts were EUR 19/10, GBP 12/4 and JPY 35/15.
+
+The follow-up live check on 2026-10-04 used `/api/market/bars` with the real upstream transport
+and the web workflow's All and Custom ranges. EUR/USD 1D All reported 11 affected UTC dates,
+latest 2022-12-26. Custom starting **2022-12-27** loaded **979 bars**, through 2026-10-01, with
+28 bounded corrections and the older-session estimate note. The 2Y and 1Y loads still succeeded.
+An unlimited history request is valid, but a dataset with these bad prices is not accepted;
+the refusal now gives one cutoff that excludes every over-limit row observed in the request.
+
+The same follow-up confirmed GBP/USD Custom from 2020-06-08 (1,644 bars) and USD/JPY Custom from
+2022-08-29 (1,064 bars). Some USDJPY=X preset requests returned `meta.symbol: "JPY=X"` instead;
+the existing strict symbol check rejects that separate provider inconsistency with
+`feedInvalidResponse`. A 2Y retry returned the requested symbol and loaded 515 bars.

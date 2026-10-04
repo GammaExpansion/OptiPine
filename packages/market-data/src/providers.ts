@@ -56,6 +56,22 @@ function validBar(bar: MarketBar): MarketBar {
     invalid();
   return bar;
 }
+/** Yahoo forex sometimes reports open/close just outside its extrema. Correct at most 5 bps;
+ * larger discrepancies are bad data, not rounding, and must not be hidden or dropped. */
+function yahooForexBar(bar: MarketBar): MarketBar | null {
+  if (
+    ![bar.open, bar.high, bar.low, bar.close].every(
+      (price) => Number.isFinite(price) && price > 0,
+    ) ||
+    bar.high < bar.low
+  )
+    invalid();
+  const high = Math.max(bar.high, bar.open, bar.close);
+  const low = Math.min(bar.low, bar.open, bar.close);
+  const normalized = validBar({ ...bar, high, low });
+  const tolerance = Math.min(bar.open, bar.high, bar.low, bar.close) * 0.0005;
+  return Math.max(high - bar.high, bar.low - low) > tolerance ? null : normalized;
+}
 async function exchange(feed: Feed, get: FetchJson, signal: AbortSignal): Promise<Json[]> {
   const data = await get(url(binanceBase(feed) + 'exchangeInfo'), signal);
   if (!Array.isArray((data as Json).symbols)) invalid();
@@ -338,6 +354,8 @@ export async function loadYahoo(
   parseSessionCalendar({ from: request.from, to: request.to, sessions });
   const dailySessions = new Map(sessions.map((session) => [session.open, session]));
   let calendarEstimated = false;
+  let ohlcNormalized = 0;
+  const inconsistentDays = new Set<string>();
   if (!Array.isArray(data.timestamp)) invalid();
   const quote = record(data.indicators?.quote?.[0]);
   if (
@@ -380,17 +398,31 @@ export async function loadYahoo(
       ? session.close
       : Math.min(time + feedSeconds(request.timeframe), session.close);
     if (close * 1000 > now) continue;
-    bars.push(
-      validBar({
-        time,
-        open: values[0],
-        high: values[1],
-        low: values[2],
-        close: values[3],
-        volume: values[4],
-      }),
-    );
+    const raw = {
+      time,
+      open: values[0],
+      high: values[1],
+      low: values[2],
+      close: values[3],
+      volume: values[4],
+    };
+    const bar = meta.instrumentType === 'CURRENCY' ? yahooForexBar(raw) : validBar(raw);
+    if (!bar) {
+      inconsistentDays.add(new Date(time * 1000).toISOString().slice(0, 10));
+      continue;
+    }
+    if (bar.high !== raw.high || bar.low !== raw.low) ohlcNormalized++;
+    bars.push(bar);
   }
+  // Scan the whole range before refusing: starting after the latest bad UTC date must exclude
+  // every oversized discrepancy. Ordered timestamps also put these distinct dates in order.
+  if (inconsistentDays.size)
+    throw marketDataError('feedYahooOhlc', {
+      symbol: request.symbol,
+      count: inconsistentDays.size,
+      date: [...inconsistentDays].at(-1)!,
+      percent: 0.05,
+    });
   if (bars.length > MAX_FEED_BARS)
     throw marketDataError('feedTooManyBars', { count: MAX_FEED_BARS });
   const hint = meta.priceHint;
@@ -433,6 +465,7 @@ export async function loadYahoo(
     fetchedAt: now,
     profileEstimated: true,
     ...(calendarEstimated ? { calendarEstimated: true } : {}),
+    ...(ohlcNormalized ? { ohlcNormalized } : {}),
   };
 }
 export async function loadFeed(

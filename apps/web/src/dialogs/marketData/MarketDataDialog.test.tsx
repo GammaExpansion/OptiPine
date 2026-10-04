@@ -213,6 +213,78 @@ test('search is abortable, chooses results with the keyboard and reports search 
   await screen.findByText('The data service is unavailable. Upload a CSV instead.');
 });
 
+test('Escape dismisses symbol suggestions before the dialog and preserves the selection', async () => {
+  restore();
+  restore = replaceServices(() =>
+    fakeServices({
+      fetcher: async () =>
+        Response.json({
+          symbols: [{ symbol: 'BTCUSDT', name: 'BTC / USDT', exchange: 'Binance', type: 'crypto' }],
+        }),
+    }),
+  );
+  await mount();
+  const user = userEvent.setup();
+  const search = screen.getByRole('combobox', { name: 'Symbol' });
+  await user.click(search);
+  await screen.findByRole('option', { name: /BTCUSDT/ });
+  await user.keyboard('{Escape}');
+  expect(screen.getByRole('dialog')).toBeVisible();
+  expect(search).toHaveFocus();
+  expect(search).toHaveValue('BTCUSDT');
+  expect(screen.queryByRole('listbox')).toBeNull();
+  await user.keyboard('{Escape}');
+  expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+test('focusing the symbol selects its existing value so typing starts a new search', async () => {
+  restore();
+  restore = replaceServices(() =>
+    fakeServices({
+      fetcher: async () => Response.json({ symbols: [] }),
+    }),
+  );
+  await mount();
+  const user = userEvent.setup();
+  const search = screen.getByRole('combobox', { name: 'Symbol' });
+  await user.click(search);
+  await user.keyboard('doge');
+  expect(search).toHaveValue('DOGE');
+  await user.tab();
+  await user.tab({ shift: true });
+  await user.keyboard('eth');
+  expect(search).toHaveValue('ETH');
+});
+
+test('CSV previews omit empty symbols until one is entered', async () => {
+  await mount();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('tab', { name: 'Upload CSV' }));
+  await user.upload(screen.getByLabelText('CSV file'), file('hourly.csv', csv));
+  expect(await screen.findByText('Preview · 1h')).toBeVisible();
+  await user.type(screen.getByRole('textbox', { name: 'Symbol' }), 'CSVTEST');
+  expect(screen.getByText('Preview · CSVTEST, 1h')).toBeVisible();
+  await user.clear(screen.getByRole('textbox', { name: 'Symbol' }));
+  await user.type(screen.getByRole('textbox', { name: 'Symbol' }), '   ');
+  expect(screen.getByText('Preview · 1h')).toBeVisible();
+});
+
+test('CSV warns about an hourly file labelled as 15m without blocking intentional gaps', async () => {
+  await mount();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('tab', { name: 'Upload CSV' }));
+  await user.upload(screen.getByLabelText('CSV file'), file('hourly.csv', csv));
+  await user.type(screen.getByRole('textbox', { name: 'Symbol' }), 'CSVTEST');
+  await user.clear(screen.getByRole('textbox', { name: 'Timeframe' }));
+  await user.type(screen.getByRole('textbox', { name: 'Timeframe' }), '15');
+  expect(await screen.findByText(/most often 60 minutes apart/)).toBeVisible();
+  // Sparse data can be intentional; the warning does not relabel or resample the file.
+  expect(screen.getByRole('button', { name: 'Use this data' })).toBeEnabled();
+  await user.clear(screen.getByRole('textbox', { name: 'Timeframe' }));
+  await user.type(screen.getByRole('textbox', { name: 'Timeframe' }), '60');
+  expect(screen.queryByText(/most often 60 minutes apart/)).toBeNull();
+});
+
 test('CSV uses edited metadata and calendar only after all validation passes', async () => {
   await mount();
   const user = userEvent.setup();
@@ -321,4 +393,17 @@ test('a Yahoo preview discloses estimated older session closes', async () => {
   await mount();
   await userEvent.click(screen.getByRole('button', { name: 'Fetch data' }));
   expect(await screen.findByText(/Older daily session closes are estimated/)).toBeVisible();
+});
+
+test('a Yahoo preview discloses bounded OHLC corrections instead of claiming unchanged OHLC', async () => {
+  restore();
+  restore = replaceServices(() =>
+    fakeServices({
+      fetcher: async () => Response.json({ ...testDataset, ohlcNormalized: 7 }),
+    }),
+  );
+  await mount();
+  await userEvent.click(screen.getByRole('button', { name: 'Fetch data' }));
+  expect(await screen.findByText(/high\/low expanded on 7 bars/)).toBeVisible();
+  expect(screen.queryByText(/no additional adjustment/)).toBeNull();
 });
