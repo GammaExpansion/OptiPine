@@ -319,7 +319,7 @@ export interface WindowResult {
   /** Null unless the window is done. */
   readonly inSample: WindowFigures | null;
   readonly outOfSample: WindowFigures | null;
-  /** OOS annualized return over IS annualized return. */
+  /** OOS annualized return over positive IS annualized return; otherwise null. */
   readonly wfe: number | null;
   /** Why the window is flat or failed. */
   readonly error: Text | null;
@@ -344,7 +344,7 @@ export interface WalkForwardTotals {
   readonly inSampleNet: number | null;
   readonly outOfSampleNet: number | null;
   readonly outOfSampleTrades: number | null;
-  /** Summed OOS annualized return over summed IS annualized return; null until every window is done. */
+  /** Stitched OOS CAGR over positive stitched IS CAGR; null until every window is done. */
   readonly wfe: number | null;
 }
 

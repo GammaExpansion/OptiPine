@@ -17,7 +17,8 @@ it('formats finite amounts, ratios, compact losses and unavailable values withou
   expect(translate(figure(-15615, 0, true), 'en')).toBe('−15,615');
   expect(translate(figure(0, 0, true), 'en')).toBe('0');
   for (const value of [null, undefined, NaN, Infinity])
-    expect(translate(figure(value), 'en')).toBe('—');
+    for (const language of ['en', 'zh'] as const)
+      expect(translate(figure(value, 2), language)).toBe('—');
   expect(translate(compactNet(-860), 'en')).toBe('−860');
   expect(translate(compactNet(-11100), 'en')).toBe('−11.1k');
   expect(translate(compactNet(2310), 'en')).toBe('+2.3k');

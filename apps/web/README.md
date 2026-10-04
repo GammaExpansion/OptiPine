@@ -29,8 +29,9 @@ Desktop minimum sizes are 600 px for the main column, 280 px for the right panel
 chart and 160 px for the dock. The right panel folds to a 32 px edge; the dock folds to its 36 px
 tab bar. These minimums and the edge width are choices where the design gives no numbers.
 
-The Node test launcher expands workflows, i18n and example test globs with `node:fs`, tolerating
-missing directories. Vitest covers the rest of `src/` (components, pages, dialogs, charts, stores
+The test command runs Node and Vitest sequentially even when Node fails, and fails if either suite
+fails. The Node test launcher expands script, workflow, i18n and example test globs with `node:fs`,
+tolerating missing directories. Vitest covers the rest of `src/` (components, pages, dialogs, charts, stores
 and the component sheet) and the Node server. Playwright builds the production app plus a separate
 `.e2e-dist` build with `e2e/harness.html`, `sheet.html` and `charts.html`, the chart workbench in
 `src/charts-dev/`. The harness imports the real Worker factories and clients, checks describe/run,

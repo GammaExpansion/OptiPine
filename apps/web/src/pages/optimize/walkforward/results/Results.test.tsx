@@ -55,6 +55,33 @@ it('renders W1 totals and fixed parameters in both languages, switching W2 witho
   expect(screen.getByRole('region', { name: '选定窗口' })).toHaveTextContent('26，2.25，close，关');
 });
 
+it('renders unavailable WFE as a neutral dash in the summary, table and selection in both languages', () => {
+  const fixture = resultsFixture();
+  const windows = fixture.windows.map((window) => ({ ...window, wfe: null }));
+  installResultsFixture({
+    ...fixture,
+    windows,
+    totals: { ...fixture.totals, wfe: null },
+    selection: { ...fixture.selection!, window: windows[fixture.selection!.window.plan.index] },
+  });
+  panels();
+  for (const language of ['en', 'zh'] as const) {
+    act(() => uiStore.getState().setLanguage(language));
+    const summary = screen.getByRole('region', {
+      name: language === 'en' ? 'Stitched OOS equity' : '拼接样本外权益',
+    });
+    expect(summary).toHaveTextContent('WFE —');
+    const table = screen.getByRole('table');
+    const missing = within(table).getAllByText('—');
+    expect(missing).toHaveLength(windows.length + 1);
+    for (const cell of missing) expect(cell).not.toHaveAttribute('data-tone');
+    const selection = screen.getByRole('region', {
+      name: language === 'en' ? 'Selected window' : '选定窗口',
+    });
+    expect(selection).toHaveTextContent('WFE —');
+  }
+});
+
 it('selects through rows and lanes, and delegates preview/apply without mutating Backtest', async () => {
   const hook = installResultsFixture();
   const backtest = getBacktestStore().getState();

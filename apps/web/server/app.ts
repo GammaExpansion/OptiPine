@@ -36,7 +36,7 @@ export function createAppServer(
           response.writeHead(400).end();
           return;
         }
-        if (pathname.startsWith('/api/')) {
+        if (pathname === '/api' || pathname.startsWith('/api/')) {
           response.writeHead(404).end();
           return;
         }
@@ -53,7 +53,7 @@ export function createAppServer(
         let info = await stat(file).catch(() => undefined);
         if (!info?.isFile()) {
           // Missing assets must be 404, never an HTML response that hides a broken build.
-          if (extname(pathname) || !request.headers.accept?.includes('text/html')) {
+          if (extname(pathname) || pathname === '/assets' || pathname.startsWith('/assets/')) {
             response.writeHead(404).end();
             return;
           }
