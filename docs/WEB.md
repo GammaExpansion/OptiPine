@@ -1,9 +1,8 @@
 # Web interface design
 
 OptiPine's browser app: a user brings their own Pine Script v5 / v6 strategy, loads market data,
-backtests it, and optimizes its inputs, with every calculation on their own machine. The app is
-built on the packages in this repository and has not been implemented yet; this document is the
-plan it follows.
+backtests it, and optimizes its inputs, with every calculation on their own machine. The app,
+`apps/web`, is built on the packages in this repository; this document describes its design.
 
 The visual reference is the English page of the [market-terminal mock](web-mock-terminal/README.md):
 59 boards, cited below by their codes (S1–S10, B1–B17, O1–O8, R1–R12, W1–W6, G1–G5). English is the
@@ -49,18 +48,31 @@ theme.
 The header holds, from left to right: the OptiPine name; the **Backtest** / **Optimize** switch;
 the script file name, which opens the script menu; the symbol and provider; a timeframe switch
 (15m, 1h, 4h, 1D); the date range; the last run's facts (bar count and duration, or combinations,
-duration and failures on the Optimize page); the page's main action; and the language switch. The
-Backtest page's main action is **Run backtest** (Ctrl + Enter). The timeframe switch and the date
-range refetch from the same provider; for CSV data they are disabled.
+duration and failures on the Optimize page); the main action; and the language switch. The
+Backtest page's main action is **Run backtest** (Ctrl + Enter); the Optimize page's is **Cancel**
+while it runs, as its **Start** sits in the run block (2.4). The timeframe switch and the date
+range refetch from the same provider, as a preview to accept (2.2); for CSV data they are
+disabled.
 
 **First launch (S1)** shows three steps on the empty workbench: open a script (**Paste code**,
 **Open file**), **Select market data**, and run, with **Load example: Trend Breakout, BTCUSDT 1
-hour**. Until both a script and data exist, the run action explains what is missing.
+hour**. Until both a script and data exist, the run action explains what is missing. While an
+example's data loads, the data step and the header's data button say "Fetching BTCUSDT 1h", the
+step with a progress bar and **Cancel fetch**. When the steps give way to the chart, the focus they
+held moves to the page's heading.
 
 **Script menu (S2)** shows the Pine version, input and plot counts and compile time, then **Open
 .pine file** (Ctrl + O), **Paste from clipboard and replace**, **Download .pine**, and the example
 strategies: Trend Breakout, RSI Reversal and MA Cross. An example loads its source and fetches the
-last two years of BTCUSDT 1h through the proxy (4.7).
+last two years of BTCUSDT 1h through the proxy (4.7). A `.pine` file dropped anywhere on the page
+opens like one chosen with **Open .pine file**; any other file is explained, never opened by the
+browser in the app's place.
+
+Replacing a script edited since it was opened, by an example, a file, a drop or pasted code, first
+asks **Replace the current script?**: the edits will be lost, with **Download .pine**, **Cancel**
+and **Replace script**. An unedited or empty script is replaced at once. An opened script starts
+from its own input defaults, `strategy()` properties and search ranges; nothing carries over from
+the previous one.
 
 ### 2.2 Market data (S3–S10)
 
@@ -84,11 +96,13 @@ ETFs, indices and forex (Yahoo Finance), and **Upload CSV**.
   (not needed for 24 × 7 symbols). A file that fails to parse lists each error with its row and the
   rule it broke, next to the raw lines (S8).
 - **Refusals (S9).** A provider error says which provider refused and why, for example HTTP 451
-  from Binance in some regions, and offers **Use Yahoo Finance instead**, **Upload CSV** and
+  from Binance in some regions, and offers **Use Yahoo Finance instead** (after a Binance refusal
+  that the request itself did not cause), **Upload CSV** and, where trying again can help,
   **Retry**. Data from different providers is never stitched together.
 
 The dataset replaces the current one only on **Use this data**. **Change date range** (S10) offers
-the same presets with an estimated bar count and **Fetch again**.
+the same presets with an estimated bar count and **Fetch again**, which opens the new range in the
+market data dialog as a preview to accept.
 
 ### 2.3 Backtest page (B1–B17)
 
@@ -100,25 +114,34 @@ under it (B7); each plot's placement comes from the engine (`PlotOutput.overlay`
 
 - **Report** (B1): a row of key figures (net profit, max drawdown, profit factor, win rate, trades,
   Sharpe ratio, each with a secondary figure such as the long / short split) over the report in
-  three groups, Returns, Trades and Risk, with All, Long and Short columns.
+  three groups, Returns, Trades and Risk, with All, Long and Short columns, and CSV export. Its max
+  drawdown is TradingView's intrabar figure, labelled "Max drawdown (intrabar)": the deepest fall
+  of intrabar equity below a preceding peak of realized balance.
 - **Equity** (B5): key figures (ending equity, annualized return, max drawdown and when it started,
   drawdown duration, return over max drawdown, winning / losing days, best / worst day) over one
   time axis with equity and its max-drawdown period, drawdown, a daily P&L calendar (amount or
-  percent) and monthly returns.
+  percent) and monthly and yearly returns. These figures are measured on bar-close equity, open
+  profit included, from its own running peak, so the max drawdown here is labelled "Max drawdown
+  (bar close)" and can differ from the report's.
 - **Trades** (B2): closed and open trades, newest first, with #, side, entry and exit time and
-  price, quantity, P&L, P&L %, cumulative P&L and bars held, a P&L filter and export. Hovering a
-  trade marks it on the chart with its details; clicking moves the chart to it (B6).
+  price, quantity, P&L, P&L %, cumulative P&L and bars held, side and P&L filters, and CSV export.
+  Hovering a trade marks it on the chart with its details; clicking moves the chart to it (B6).
 - **Pine code** (B3): the source with highlighting, each input's current value beside its line,
   and diagnostics by line. The tab can be maximized over the chart (B4). Editing recompiles.
-- **Issues**: compile errors, unsupported features, runtime errors and ignored effects, each with
-  its line; the tab shows the count.
+- **Issues**: compile errors, unsupported features, runtime errors, and the ignored effects of the
+  latest run of the current source, each with its line; the tab shows the count.
+
+Each tab's code loads on first use; until then the tab says it is loading results. An indicator
+has no account: Report and Equity say so instead of an empty report, and the right panel lists no
+strategy properties.
 
 **Right panel.** **Inputs** in declaration order with **Reset**: a number field with stepper and
-range, a select, a toggle, or a source picker, each showing its default when changed (B14). An
-invalid value is explained under the field. An input the script computes is read-only with the
-reason. **Properties** summarizes initial capital, order size, pyramiding, commission, slippage,
-script execution and limit order behavior; **All settings** opens the full strategy properties
-(B13).
+range, a select (declared options, a source, or for `input.timeframe` the chart's timeframe and the
+usual ones from 1m to 1M), a toggle, a UTC date and time, or a text field (sessions and strings),
+each showing its default when changed (B14). An invalid value is explained under the field. An
+input the script computes is read-only with the reason. **Properties** summarizes initial capital,
+order size, pyramiding, commission, slippage, script execution and limit order behavior; **All
+settings** opens the full strategy properties (B13).
 
 **Strategy properties (B13)** follow the Properties tab of TradingView's strategy dialog in three
 groups: General (initial capital, currency, order size and its unit, pyramiding), Detalization and
@@ -132,12 +155,14 @@ edits the same properties.
 **States.**
 
 - _Running_ (B8): elapsed time and **Cancel** over the previous result.
-- _Inputs changed_ (B9): results stay visible, marked outdated, with what they were computed with
-  and a way back to those values.
+- _Inputs changed_ (B9): results stay visible, marked outdated. The banner names each changed
+  input and property with the value the result used ("Initial capital 10,000"); **Restore result
+  settings** puts them back, or **Reset to** that value when only one changed.
 - _Compile failed_ (B10): the errors with line and column in the code and in Issues; an unsupported
   feature is explained as missing engine support, not a script bug.
-- _Run failed_ (B11): no results at all, the line and bar that failed, **View issues** and **Go to
-  line**.
+- _Run failed_ (B11): "Run failed, no results" with the line and bar that failed (counted from
+  one), **View issues** and **Go to line**. The previous result of the same script stays beneath,
+  marked by the header; another script's result is not shown.
 - _No trades_ (B12): the chart stays, with a note that the entry conditions never triggered.
 - _Panel collapsed_ (B15): the right panel folds to an edge.
 - _Previewing a parameter set_ (B16) and _After applying parameters_ (B17): see 3.3.
@@ -270,11 +295,15 @@ selected window's bar below (G4). The component sheet is G5.
   marked as such; it never shows partial numbers as a result.
 - Changing the source, an input, a property or the data marks the backtest outdated (B9).
   Changing search ranges, validation, properties or the data marks optimization results outdated
-  (R5). Outdated results stay visible and say what they were computed with.
+  (R5). Outdated results stay visible and say what they were computed with; a backtest's can put
+  those inputs and properties back (B9).
 - The objective, direction and filters only change how results are viewed, so they apply at once
   and never require a re-run. The same holds for map axes, slices, Smooth and the IS / OOS switch.
 - Editing the source recompiles it in the background; inputs and properties are rebuilt from the
-  new compile, keeping values for inputs whose title and type did not change.
+  new compile, keeping values for inputs whose title and type did not change. Opening another
+  script starts it from its own defaults instead (2.1).
+- Nothing is saved (4.8), so reloading, going back or closing the tab while a backtest, a preview or
+  an optimization runs asks first.
 
 ### 3.2 Live optimization
 
