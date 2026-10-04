@@ -95,6 +95,8 @@ with later requests carrying parameters only. Replaced-run page heaps settled ar
 reusable reproduction Workers settled around 16.1–16.6 MB. The extra Worker heap is the deliberate
 reuse tradeoff and was stable across both replacement runs.
 
+After merge `29de77f`, restoring shared `formatNumber` caching without changing fixed decimals or minus signs gave one IS/OOS desktop 4× run (`formatter-cache`) with 99 long tasks / 319 ms max and leaderboard paging 54–111 ms / scrolling 52–64 ms through two rAF callbacks, within the earlier follow-up ranges of 31–134 ms / 39–141 ms; these include scheduling and paint opportunity, not isolated React commit time.
+
 ## Where the remaining stalls come from
 
 CDP captures `devtools.timeline`, V8 and user timing with a 512 MB buffer and streams JSON to disk.

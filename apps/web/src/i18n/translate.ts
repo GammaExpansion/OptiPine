@@ -83,9 +83,29 @@ export function translateError(error: unknown, language: Language): string {
   return translate(errorText(error), language);
 }
 
+const numberFormatterCache = new Map<string, Intl.NumberFormat>();
+const numberFormatterCacheLimit = 32;
+
+/** Share value-independent formatters across renders; bound the cache for varying option sets. */
+function numberFormatter(options: Intl.NumberFormatOptions): Intl.NumberFormat {
+  const normalized = { maximumFractionDigits: 8, ...options };
+  const key = JSON.stringify(
+    Object.entries(normalized)
+      .filter(([, value]) => value !== undefined)
+      .sort(([left], [right]) => left.localeCompare(right)),
+  );
+  const cached = numberFormatterCache.get(key);
+  if (cached) return cached;
+  const formatter = new Intl.NumberFormat('en-US', normalized);
+  if (numberFormatterCache.size >= numberFormatterCacheLimit)
+    numberFormatterCache.delete(numberFormatterCache.keys().next().value!);
+  numberFormatterCache.set(key, formatter);
+  return formatter;
+}
+
 /** Financial values and UTC dates use one representation regardless of the interface language. */
 export function formatNumber(value: number, options: Intl.NumberFormatOptions = {}): string {
-  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 8, ...options }).format(value);
+  return numberFormatter(options).format(value);
 }
 
 export function formatDate(value: Date | number, includeTime = false): string {
