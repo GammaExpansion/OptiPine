@@ -32,8 +32,8 @@ describe('B1 financial presentation', () => {
       translate(metricMessage('Performance/Buy and hold PnL', 471.2, 'percent', false), 'en'),
     ).toBe('+471.20%');
     expect(
-      translate(metricMessage('Performance/Max contracts held', 1.6, 'value', false), 'en'),
-    ).toBe('1.6');
+      translate(metricMessage('Performance/Max contracts held', 1, 'value', false), 'en'),
+    ).toBe('1');
     expect([10, -10, 0, null, NaN].map(profitTone)).toEqual([
       'profit',
       'loss',

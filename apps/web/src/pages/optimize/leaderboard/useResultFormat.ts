@@ -5,16 +5,30 @@ import type { FilterCondition, FilterMetricId } from '../../../workflows/optimiz
 import { parameterText } from '../../../workflows/optimize-parameters.ts';
 import type { SearchRow } from '../../../workflows/optimize-setup.ts';
 
+const minus = (value: string) => value.replace('-', '−');
+
 /** Presentation only: workflow values keep their original units and missing-value semantics. */
 export function useResultFormat(rows: readonly SearchRow[] = []) {
   const { t, text } = useI18n();
-  const number = (value: number | null | undefined, signed = false) =>
+  /**
+   * A figure with exactly `digits` decimals, as R1 writes them (whole amounts, profit factor to
+   * two); without `digits`, up to two, for a value a user typed. Negatives take a minus sign.
+   */
+  const number = (value: number | null | undefined, signed = false, digits?: number) =>
     value == null || Number.isNaN(value)
       ? t('common.unavailable')
-      : formatNumber(value, {
-          maximumFractionDigits: 2,
-          signDisplay: signed ? 'exceptZero' : 'auto',
-        });
+      : minus(
+          formatNumber(value, {
+            minimumFractionDigits: digits ?? 0,
+            maximumFractionDigits: digits ?? 2,
+            signDisplay: signed ? 'exceptZero' : 'auto',
+          }),
+        );
+  /** A drawdown as the leaderboard shows it, a loss: "−7.5%". */
+  const drawdown = (value: number | null) =>
+    value == null || Number.isNaN(value)
+      ? t('common.unavailable')
+      : t('optimize.leaderboard.percent', { value: number(value && -Math.abs(value), false, 1) });
   const parameter = (value: LiteralValue | undefined, title?: string) =>
     text(
       parameterText(
@@ -34,5 +48,5 @@ export function useResultFormat(rows: readonly SearchRow[] = []) {
       ),
       value: metricValue(filter.metric, filter.value),
     });
-  return { number, parameter, metricValue, condition };
+  return { number, drawdown, parameter, metricValue, condition };
 }

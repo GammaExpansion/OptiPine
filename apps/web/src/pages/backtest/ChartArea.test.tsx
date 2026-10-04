@@ -164,7 +164,7 @@ test('only outdated or running results dim trade overlays, including running pre
   act(() => store.getState().actions.setInput('Length', 7));
   expect(chart.props!.dimMarkers).toBe(true);
   expect(chart.props!.trades).toBe(trades);
-  act(() => store.getState().actions.restoreResultInputs());
+  act(() => store.getState().actions.restoreResultSettings());
   expect(chart.props!.dimMarkers).toBe(false);
   act(() => store.setState({ run: { status: 'running', startedAt: 0 } }));
   expect(chart.props!.dimMarkers).toBe(true);

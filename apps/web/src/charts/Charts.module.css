@@ -21,9 +21,16 @@
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 }
+/*
+ * One 32 px row over the chart, wrapping onto the chart where the window is narrow. A page that
+ * places controls at the end of the row keeps the legend clear of them (--legend-end).
+ */
 .legend {
-  height: 32px;
+  position: relative;
+  z-index: 3;
+  min-height: 32px;
   align-content: center;
+  padding-right: var(--legend-end, 12px);
 }
 .legend > span:first-child {
   display: flex;

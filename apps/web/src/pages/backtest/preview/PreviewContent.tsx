@@ -5,6 +5,7 @@ import { Button } from '../../../components/Button.tsx';
 import { IconButton } from '../../../components/IconButton.tsx';
 import { Toast } from '../../../components/Toast.tsx';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
+import type { MessageId } from '../../../i18n/translate.ts';
 import { useOptimizationStore } from '../../../state/optimization.ts';
 import { searchedParameters } from '../../../workflows/optimize-parameters.ts';
 import { useBacktestStore } from '../../../state/backtest.ts';
@@ -13,6 +14,29 @@ import { useResultFormat } from '../../optimize/leaderboard/useResultFormat.ts';
 import { windowLabel } from '../../optimize/walkforward/results/copy.ts';
 import { useParameterActions } from './useParameterActions.ts';
 import styles from './PreviewBanner.module.css';
+
+type Sentence = 'title' | 'applied' | 'applying' | 'appliedFailed' | 'appliedCancelled';
+
+/**
+ * A failed set and the fixed parameters have no rank or window to name, so their B16 and B17
+ * sentences are their own: "Previewing the parameters of a failed set".
+ */
+const unnamed: Record<'failed' | 'fixed', Record<Sentence, MessageId>> = {
+  failed: {
+    title: 'preview.failedTitle',
+    applied: 'preview.failedApplied',
+    applying: 'preview.failedApplying',
+    appliedFailed: 'preview.failedAppliedFailed',
+    appliedCancelled: 'preview.failedAppliedCancelled',
+  },
+  fixed: {
+    title: 'preview.fixedTitle',
+    applied: 'preview.fixedApplied',
+    applying: 'preview.fixedApplying',
+    appliedFailed: 'preview.fixedAppliedFailed',
+    appliedCancelled: 'preview.fixedAppliedCancelled',
+  },
+};
 
 export function PreviewContent() {
   const { t, text } = useI18n();
@@ -34,18 +58,14 @@ export function PreviewContent() {
     document.addEventListener('keydown', escape);
     return () => document.removeEventListener('keydown', escape);
   }, [showToast, applied]);
-  /** The set as B16 names it: a rank, a failed set, a walk-forward window or the fixed set. */
-  const setName = (origin: AppliedSet['origin']) => {
-    switch (origin.kind) {
-      case 'rank':
-        return t('optimize.leaderboard.set', { rank: origin.rank });
-      case 'failed':
-        return t('preview.failed');
-      case 'window':
-        return text(windowLabel(origin.window));
-      case 'fixed':
-        return t('preview.fixed');
-    }
+  /** A B16 or B17 sentence for the set: by its rank or walk-forward window where it has one. */
+  const sentence = (origin: AppliedSet['origin'], which: Sentence) => {
+    if (origin.kind === 'failed' || origin.kind === 'fixed') return t(unnamed[origin.kind][which]);
+    const set =
+      origin.kind === 'rank'
+        ? t('optimize.leaderboard.set', { rank: origin.rank })
+        : text(windowLabel(origin.window));
+    return t(which === 'title' ? 'preview.title' : `preview.${which}`, { set });
   };
   return (
     <>
@@ -54,7 +74,7 @@ export function PreviewContent() {
           data-preview-banner
           role="status"
           className={styles.banner}
-          title={t('preview.title', { set: setName(preview.origin) })}
+          title={sentence(preview.origin, 'title')}
           actions={
             <>
               <Button onClick={navigation.back}>{t('preview.back')}</Button>
@@ -98,17 +118,15 @@ export function PreviewContent() {
               </>
             }
           >
-            {t(
+            {sentence(
+              applied.origin,
               run === 'done'
-                ? 'preview.applied'
+                ? 'applied'
                 : run === 'failed'
-                  ? 'preview.appliedFailed'
+                  ? 'appliedFailed'
                   : run === 'cancelled'
-                    ? 'preview.appliedCancelled'
-                    : 'preview.applying',
-              {
-                set: setName(applied.origin),
-              },
+                    ? 'appliedCancelled'
+                    : 'applying',
             )}
           </Toast>
         </div>

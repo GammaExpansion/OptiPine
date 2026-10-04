@@ -44,7 +44,7 @@ test('a numeric row edits from, to and step, and a reversed range blocks the run
     'aria-invalid',
   );
   expect(combos()).toHaveTextContent('—');
-  expect(block().getAllByText('Fix the 1 errors above first')).toHaveLength(2);
+  expect(block().getAllByText('Fix the error above first')).toHaveLength(2);
   expect(start()).toBeDisabled();
   fireEvent.change(from, { target: { value: '3' } });
   fireEvent.change(screen.getByRole('spinbutton', { name: 'Length step' }), {
