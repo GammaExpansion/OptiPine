@@ -131,6 +131,21 @@ test('report renders all groups, keeps English metric names in Chinese, and rest
   ).toBeVisible();
 });
 
+test('the outdated banner reads the result values as the inputs show them (B9)', async () => {
+  await run(`${strategySource}stop = input.bool(false, "Stop")\n`);
+  render(
+    <I18nProvider>
+      <ReportTab />
+    </I18nProvider>,
+  );
+  act(() => getBacktestStore().getState().actions.setInput('Multiplier', 1.5));
+  expect(screen.getByRole('button', { name: 'Reset to 1.00' })).toBeVisible();
+  act(() => getBacktestStore().getState().actions.setInput('Stop', true));
+  expect(screen.getByRole('status')).toHaveTextContent(
+    'Current results use Multiplier 1.00, Stop off.',
+  );
+});
+
 test.each(['en', 'zh'] as const)(
   'restore uses the run value for one change and generic copy for several (%s)',
   async (language) => {

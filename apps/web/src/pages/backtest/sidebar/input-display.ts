@@ -63,11 +63,18 @@ export function inputEditText(descriptor: InputDescriptor, value: LiteralValue |
   return descriptor.type === 'time' ? formatTime(value) : formatNumberValue(descriptor, value);
 }
 
-/** A value for display beside a field or a line of code: booleans read on and off. */
-export function inputValueText(descriptor: InputDescriptor, value: LiteralValue | undefined): Text {
+/**
+ * A value for display beside a field, a line of code or the outdated banner: booleans read on and
+ * off, numbers with the step's decimals. Without a descriptor, as for an input the script no
+ * longer declares, a number reads as it is.
+ */
+export function inputValueText(
+  descriptor: InputDescriptor | undefined,
+  value: LiteralValue | undefined,
+): Text {
   if (value === undefined || value === null) return text('common.unavailable');
   if (typeof value === 'boolean') return text(value ? 'inputs.on' : 'inputs.off');
-  return inputEditText(descriptor, value);
+  return descriptor ? inputEditText(descriptor, value) : String(value);
 }
 
 const timePattern = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?$/;
