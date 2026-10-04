@@ -2,12 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { prepareHeatmap, type Heatmap } from '@pine/optimizer';
 import {
   cellAt,
+  cellPitch,
   cellRect,
   colorStep,
   containsSelection,
   heatTokens,
   fitMap,
   mapGeometry,
+  maxCellPitch,
+  verticalTitle,
 } from './geometry.ts';
 import { curveGeometry } from './curve-geometry.ts';
 
@@ -157,4 +160,79 @@ it('curve scales include IS, OOS and the neighbourhood, handling flat and missin
   expect(geometry.indexAt(-100)).toBe(0);
   expect(geometry.indexAt(800)).toBe(1);
   expect(Number.isFinite(curveGeometry({ ...curve, points: [] }, 300, 210).y(0))).toBe(true);
+});
+
+describe('vertical axis title', () => {
+  it('centres on the rows, and runs past short rows within its band (bug bash #33)', () => {
+    const rows = { top: 8, height: 180 };
+    const band = { top: 2, bottom: 250 };
+    expect(verticalTitle(60, rows, band)).toEqual({ centre: 98, span: 60 });
+    // "Use trailing stop" over two 18 px rows: whole, from the top of the canvas down.
+    expect(verticalTitle(95, { top: 8, height: 36 }, { top: 2, bottom: 108 })).toEqual({
+      centre: 49.5,
+      span: 95,
+    });
+    // Longer than the whole band: drawn at the band's length, filling it.
+    expect(verticalTitle(140, { top: 8, height: 36 }, { top: 2, bottom: 108 })).toEqual({
+      centre: 55,
+      span: 106,
+    });
+  });
+});
+
+describe('sparse maps', () => {
+  const small: Heatmap = prepareHeatmap(
+    {
+      xKey: 'Multiplier',
+      yKey: 'Length',
+      cells: Array.from({ length: 12 }, (_, index) => ({
+        x: index % 4,
+        y: Math.floor(index / 4),
+        value: index,
+        count: 1,
+      })),
+    },
+    true,
+  );
+
+  it('grow their cells to fill the panel, up to a limit, centred (polish backlog)', () => {
+    // 4 × 3 in a 440 × 230 panel: the rows decide, (230 - 8 - 66 + 2) / 3 = 52 → capped at 40.
+    const geometry = mapGeometry(small, { width: 440, height: 230 });
+    const layer = geometry.layers[0];
+    expect(layer.pitch).toBe(maxCellPitch);
+    const first = cellRect(layer, 0, 440);
+    expect(first).toEqual({
+      x: 64 + Math.floor((440 - 64 - 16 - (4 * 40 - 2)) / 2),
+      y: 8,
+      width: 38,
+      height: 38,
+    });
+    expect(cellAt(geometry, first.x + 37, first.y + 37, 440)?.value).toBe(small.cells[8].value);
+    expect(cellAt(geometry, first.x + 39, first.y + 10, 440)).toBeNull();
+    // A shorter panel: the pitch follows the rows, (130 - 8 - 66 + 2) / 3 = 19.
+    expect(mapGeometry(small, { width: 440, height: 130 }).layers[0].pitch).toBe(19);
+    // Without a panel, as for the bin detail, the dense pitch.
+    expect(mapGeometry(small).layers[0].pitch).toBe(cellPitch);
+  });
+
+  it('keep the dense pitch when layered, since layers scroll', () => {
+    const cells = [false, true].flatMap((z) =>
+      Array.from({ length: 4 }, (_, index) => ({
+        x: index % 2,
+        y: Math.floor(index / 2),
+        z,
+        value: index,
+        count: 1,
+      })),
+    );
+    const layered: Heatmap = {
+      xKey: 'Length',
+      yKey: 'Multiplier',
+      zKey: 'Stop',
+      cells,
+      layers: [false, true].map((z) => ({ z, cells: cells.filter((cell) => cell.z === z) })),
+    };
+    const geometry = mapGeometry(layered, { width: 600, height: 400 });
+    expect(geometry.layers.map((layer) => layer.pitch)).toEqual([cellPitch, cellPitch]);
+  });
 });

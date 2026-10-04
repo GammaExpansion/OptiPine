@@ -38,9 +38,9 @@ async function selectedFrame(page: Page) {
     const { mapGeometry, cellRect, containsSelection } = await import(/* @vite-ignore */ path);
     const views = (window as unknown as Hooks).optimization().views!;
     const map = views.map!.panel;
-    const geometry = mapGeometry(map);
     const canvas = element as HTMLCanvasElement;
     const host = canvas.parentElement!.parentElement!;
+    const geometry = mapGeometry(map, { width: host.clientWidth, height: host.clientHeight });
     for (const layer of geometry.layers) {
       for (const [index, cell] of layer.cells) {
         if (!containsSelection(map, cell, views.selection!.row.parameters)) continue;
@@ -234,14 +234,22 @@ for (const language of ['en', 'zh'] as const) {
       const path = '/src/charts/optimize/geometry.ts';
       const { mapGeometry, cellRect } = await import(/* @vite-ignore */ path);
       const state = (window as unknown as Hooks).optimization();
-      const geometry = mapGeometry(state.views!.map!.panel);
+      const host = element.parentElement!.parentElement!;
+      const geometry = mapGeometry(state.views!.map!.panel, {
+        width: host.clientWidth,
+        height: host.clientHeight,
+      });
       const visible = new Set(state.views!.leaderboard.rows.map((row) => row.trialId));
       for (const layer of geometry.layers)
         for (const [index, cell] of layer.cells) {
           if (!cell.trialId || cell.value === null) continue;
           const rect = cellRect(layer, index, Math.max(element.clientWidth, geometry.width));
-          if (!visible.has(cell.trialId) && rect.y + 16 < element.clientHeight)
-            return { x: rect.x + 8, y: rect.y + 8, trialId: cell.trialId };
+          if (!visible.has(cell.trialId) && rect.y + rect.height < element.clientHeight)
+            return {
+              x: rect.x + rect.width / 2,
+              y: rect.y + rect.height / 2,
+              trialId: cell.trialId,
+            };
         }
       throw new Error('No visible off-page cell');
     });
