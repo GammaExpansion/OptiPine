@@ -60,7 +60,11 @@ test('summaries follow searched declarations while leaving the full set intact',
     Multiplier: 2,
     Length: 20,
   });
-  assert.deepEqual(searchedParameters(parameters, rows), [
+  // Every input starts searched over a range around its value; Trail % is left fixed here.
+  const fixedTrail = rows.map((row): SearchRow =>
+    row.descriptor.title === 'Trail %' ? { ...row, status: 'fixed' } : row,
+  );
+  assert.deepEqual(searchedParameters(parameters, fixedTrail), [
     { title: 'Length', value: 20 },
     { title: 'Multiplier', value: 2 },
     { title: 'Source', value: 'close' },

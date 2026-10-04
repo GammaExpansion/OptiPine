@@ -4,8 +4,11 @@ import { expect, test } from 'vitest';
 import { getBacktestStore } from '../../../state/backtest.ts';
 import { uiStore, useUiStore } from '../../../state/ui.ts';
 import { SelectionBar } from '../../optimize/selection/SelectionBar.tsx';
+import { FixedParameters } from '../../optimize/walkforward/FixedParameters.tsx';
+import { WfSelectionBar } from '../../optimize/walkforward/WfSelectionBar.tsx';
 import {
   loadOptimization,
+  loadWalkForward,
   optimization,
   renderInEnglish,
   runOptimization,
@@ -110,4 +113,48 @@ test('an applied set that fails still offers Undo to restore the prior inputs', 
   await userEvent.setup().click(screen.getByRole('button', { name: 'Undo' }));
   expect(backtest().inputs).toBe(inputs);
   expect(backtest().run.status).toBe('idle');
+});
+
+function WalkForwardPages() {
+  const page = useUiStore((state) => state.page);
+  return page === 'optimize' ? (
+    <>
+      <FixedParameters />
+      <WfSelectionBar />
+    </>
+  ) : (
+    <PreviewBanner />
+  );
+}
+
+test('a walk-forward window previews as Wn and the fixed set applies by name (B16, B17)', async () => {
+  await loadWalkForward();
+  await runOptimization();
+  const user = userEvent.setup();
+  renderInEnglish(<WalkForwardPages />);
+  const window = optimization().walkForward!.selection!.window;
+  const name = `W${window.plan.index + 1}`;
+  await user.click(screen.getByRole('button', { name: 'View backtest' }));
+  expect(uiStore.getState().dockTab).toBe('report');
+  expect(
+    await screen.findByText(`Previewing the parameters of optimization result ${name}`),
+  ).toBeVisible();
+  // The searched inputs only, in declaration order: Length, then Source.
+  expect(
+    screen.getByText(`Length ${window.parameters!.Length}, ${window.parameters!.Source}`),
+  ).toBeVisible();
+  expect(backtest().preview?.origin).toMatchObject({ kind: 'window', window: window.plan.index });
+  act(() => uiStore.getState().setLanguage('zh'));
+  expect(screen.getByText(`正在预览优化结果 ${name} 的参数`)).toBeVisible();
+  act(() => uiStore.getState().setLanguage('en'));
+  await user.click(screen.getByRole('button', { name: 'Back to optimization' }));
+  await user.click(await screen.findByRole('button', { name: 'Apply to inputs' }));
+  await waitFor(() =>
+    expect(
+      screen.getByText('Applied the parameters of fixed set and re-ran the backtest'),
+    ).toBeVisible(),
+  );
+  expect(backtest().inputs.find((field) => field.descriptor.title === 'Length')?.origin?.kind).toBe(
+    'fixed',
+  );
 });

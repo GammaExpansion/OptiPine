@@ -46,13 +46,13 @@ const range = (from: number, to: number, step: number): SearchDraft => ({
   values: { kind: 'range', from, to, step },
 });
 
-test('rows start from the input declarations and the package defaults (O1, O4)', () => {
+test('rows start around the current values and from the package defaults (O1, O4)', () => {
   const { rows, space, sampling } = setup();
   assert.deepEqual(
     rows.map((row) => [row.descriptor.title, row.status, row.values.length]),
     [
-      ['Length', 'searched', 41],
-      ['Multiplier', 'fixed', 1],
+      ['Length', 'searched', 31],
+      ['Multiplier', 'searched', 13],
       ['Source', 'searched', 3],
       ['Use trailing stop', 'searched', 2],
       ['Direction', 'searched', 3],
@@ -60,11 +60,8 @@ test('rows start from the input declarations and the package defaults (O1, O4)',
       ['Computed', 'excluded', 0],
     ],
   );
-  assert.deepEqual(rows[0].draft, range(10, 50, 1));
-  assert.deepEqual(rows[1].draft, {
-    searched: false,
-    values: { kind: 'range', from: 2, to: 2, step: 0.25 },
-  });
+  assert.deepEqual(rows[0].draft, range(10, 40, 1));
+  assert.deepEqual(rows[1].draft, range(1, 4, 0.25));
   assert.deepEqual(
     rows[2].choices.map((choice) => [choice.value, choice.kept]),
     [
@@ -91,14 +88,101 @@ test('rows start from the input declarations and the package defaults (O1, O4)',
   );
   assert.deepEqual(rows[5].values, ['0930-1600']);
   assert.deepEqual(rows[6].excluded, fixedInputReason(byTitle('Computed')));
-  assert.equal(space?.combinationCount, 41 * 3 * 2 * 3);
+  assert.equal(space?.combinationCount, 31 * 13 * 3 * 2 * 3);
   assert.deepEqual(
     space?.activeAxes.map((axis) => axis.title),
-    ['Length', 'Source', 'Use trailing stop', 'Direction'],
+    ['Length', 'Multiplier', 'Source', 'Use trailing stop', 'Direction'],
   );
-  assert.deepEqual(space?.fixedParameters, { Multiplier: 2, 'Trade window': '0930-1600' });
+  assert.deepEqual(space?.fixedParameters, { 'Trade window': '0930-1600' });
   assert.equal(sampling?.method, 'grid');
-  assert.equal(sampling?.combinations, 738);
+  assert.equal(sampling?.combinations, 7_254);
+});
+
+/** Trend Breakout's inputs (O1). */
+const trend = describe(`//@version=6
+strategy("Trend Breakout")
+length = input.int(20, "Length", minval = 5, maxval = 200)
+mult = input.float(2.0, "Multiplier", minval = 0.25, maxval = 5.0, step = 0.25)
+src = input.source(close, "Source")
+trailing = input.bool(false, "Use trailing stop")
+trail = input.float(3.0, "Trail %", minval = 0.25, maxval = 20.0, step = 0.25)
+`).inputs;
+const trendValues = { Length: 20, Multiplier: 2, Source: 'close', 'Use trailing stop': false };
+
+test('a new row spans half to twice the current value on its step; the grid stays whole (O1)', () => {
+  const { rows, sampling } = searchSetup(trend, new Map(), { ...trendValues, 'Trail %': 3 }, grid);
+  assert.deepEqual(
+    rows.map((row) => [row.descriptor.title, row.status, row.draft?.values]),
+    [
+      ['Length', 'searched', { kind: 'range', from: 10, to: 40, step: 1 }],
+      ['Multiplier', 'searched', { kind: 'range', from: 1, to: 4, step: 0.25 }],
+      ['Source', 'searched', { kind: 'list', values: ['close', 'hl2', 'ohlc4'] }],
+      ['Use trailing stop', 'searched', { kind: 'list', values: [false, true] }],
+      // 19 more values would take the grid past 20,000: Trail % starts fixed, its range ready.
+      ['Trail %', 'fixed', { kind: 'range', from: 1.5, to: 6, step: 0.25 }],
+    ],
+  );
+  assert.deepEqual(rows[4].values, [3]);
+  assert.deepEqual([sampling?.method, sampling?.combinations], ['grid', 31 * 13 * 3 * 2]);
+  // An edited row counts as it is and is never fixed for the grid's sake.
+  const kept = searchSetup(
+    trend,
+    new Map([['Length', range(5, 200, 1)]]),
+    { ...trendValues, 'Trail %': 3 },
+    grid,
+  );
+  assert.deepEqual(
+    kept.rows.map((row) => row.status),
+    ['searched', 'searched', 'searched', 'searched', 'fixed'],
+  );
+});
+
+test('the default range follows the value, its bounds and its step', () => {
+  const draft = (source: string, value: LiteralValue) =>
+    defaultSearchDraft(describe(`//@version=6\nstrategy("S")\n${source}\n`).inputs[0], value);
+  // The current value, not the declared one, and within the bounds; 91 values take a step of 2.
+  assert.deepEqual(draft('a = input.int(20, "A", minval = 5, maxval = 200)', 60).values, {
+    kind: 'range',
+    from: 30,
+    to: 120,
+    step: 2,
+  });
+  assert.deepEqual(draft('a = input.int(7, "A", minval = 5)', 7).values, {
+    kind: 'range',
+    from: 5,
+    to: 14,
+    step: 1,
+  });
+  // On the step grid through the value, which stays among the values searched.
+  assert.deepEqual(draft('a = input.float(0.3, "A", step = 0.05)', 0.3).values, {
+    kind: 'range',
+    from: 0.15,
+    to: 0.6,
+    step: 0.05,
+  });
+  // A step too fine for 50 values is coarsened to a round multiple of itself.
+  assert.deepEqual(draft('a = input.float(100, "A", step = 0.01)', 100).values, {
+    kind: 'range',
+    from: 50,
+    to: 200,
+    step: 5,
+  });
+  assert.deepEqual(draft('a = input.float(-10, "A")', -10).values, {
+    kind: 'range',
+    from: -20,
+    to: -5,
+    step: 1,
+  });
+  // Zero and times have no scale to search around: they start fixed at their value.
+  const zero = draft('a = input.int(0, "A", minval = -5, maxval = 5)', 0);
+  assert.deepEqual(
+    [zero.searched, zero.values],
+    [false, { kind: 'range', from: 0, to: 0, step: 1 }],
+  );
+  assert.equal(
+    draft('a = input.time(timestamp("2024-01-01"), "A")', 1_704_067_200_000).searched,
+    false,
+  );
 });
 
 test('row errors come from the package and block the space (O6)', () => {
@@ -126,6 +210,7 @@ test('row errors come from the package and block the space (O6)', () => {
 test('a row left with one value, or unchecked, fixes the input', () => {
   const { rows, space } = setup({
     Length: range(30, 30, 1),
+    Multiplier: { ...range(1, 4, 0.25), searched: false },
     Source: { searched: true, values: { kind: 'list', values: ['hl2'] } },
     Direction: {
       searched: false,
@@ -156,7 +241,12 @@ test('a row left with one value, or unchecked, fixes the input', () => {
 });
 
 test('a grid above the limit samples at random and says so (O5)', () => {
-  const big = setup({ Multiplier: range(0.25, 10, 0.25) });
+  // Edited rows can take the grid past the limit; rows left to their default then start fixed.
+  const big = setup({ Multiplier: range(0.25, 200, 0.25) });
+  assert.deepEqual(
+    big.rows.slice(2, 5).map((row) => row.status),
+    ['fixed', 'fixed', 'fixed'],
+  );
   assert.equal(big.space!.combinationCount > gridLimit, true);
   assert.deepEqual(big.sampling, {
     method: 'random',
@@ -172,7 +262,7 @@ test('a grid above the limit samples at random and says so (O5)', () => {
     error: null,
   });
   const random = setup({}, { method: 'random', count: 5000, seed: 7 });
-  assert.equal(random.sampling?.combinations, 738);
+  assert.equal(random.sampling?.combinations, 5000);
   assert.equal(random.sampling?.switched, false);
   assert.deepEqual(
     setup({}, { method: 'random', count: 1.5, seed: 7 }).sampling?.error,
@@ -192,7 +282,7 @@ test('the search key follows what the run would search, not how it is written', 
     }).key,
     base,
   );
-  assert.notEqual(setup({ Length: range(10, 40, 1) }).key, base);
+  assert.notEqual(setup({ Length: range(10, 30, 1) }).key, base);
   assert.notEqual(setup({}, { ...grid, method: 'random' }).key, base);
   assert.notEqual(
     searchSetup(descriptors, new Map(), { ...current, 'Trade window': '0800-1200' }, grid).key,
@@ -204,9 +294,9 @@ test('drafts survive a recompile while the input keeps its type and choices', ()
   const draft = range(12, 20, 2);
   const length = byTitle('Length');
   assert.equal(keepSearchDraft(length, { descriptor: length, draft }), draft);
-  assert.deepEqual(
+  assert.equal(
     keepSearchDraft({ ...length, type: 'float' }, { descriptor: length, draft }),
-    defaultSearchDraft({ ...length, type: 'float' }),
+    undefined,
   );
   const direction = byTitle('Direction');
   const kept: SearchDraft = { searched: true, values: { kind: 'list', values: ['Long'] } };
@@ -217,7 +307,7 @@ test('drafts survive a recompile while the input keeps its type and choices', ()
     ),
     kept,
   );
-  assert.equal(keepSearchDraft(length, undefined).searched, true);
+  assert.equal(keepSearchDraft(length, undefined), undefined);
 });
 
 test('the data range splits as splitBars does, or explains why it cannot', () => {

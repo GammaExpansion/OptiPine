@@ -2,13 +2,7 @@ import { expect, test } from 'vitest';
 import { translate } from '../../../i18n/translate.ts';
 import type { WindowPlan } from '../../../workflows/optimize-session.ts';
 import { defaultValidation } from '../../../workflows/optimize-setup.ts';
-import {
-  inSampleShare,
-  planGeometry,
-  spanText,
-  walkForwardFacts,
-  windowCount,
-} from './range-display.ts';
+import { inSampleShare, planGeometry, spanText, walkForwardFacts } from './range-display.ts';
 
 const day = (year: number, month: number, date = 1) => Date.UTC(year, month - 1, date) / 1000;
 
@@ -31,8 +25,6 @@ test('walk-forward facts read as the range bar states them (O3)', () => {
   });
   expect(translate(anchored.step, 'en')).toBe('Step 1 month, IS anchored at the start');
   expect(translate(anchored.inSample, 'zh')).toBe('样本内 1 个月');
-  expect(translate(windowCount(6), 'en')).toBe('6 windows');
-  expect(translate(windowCount(1), 'en')).toBe('1 window');
 });
 
 /** Six rolling windows of 12 IS and 3 OOS months from 2023-01, as O3 plans them. */
@@ -42,6 +34,8 @@ const windows: WindowPlan[] = Array.from({ length: 6 }, (_, index) => ({
   inSampleEnd: day(2024, 1 + 3 * index),
   outOfSampleStart: day(2024, 1 + 3 * index),
   outOfSampleEnd: day(2024, 4 + 3 * index),
+  inSampleStartIndex: 0,
+  outOfSampleStartIndex: 0,
   inSampleBars: 0,
   outOfSampleBars: 0,
   partial: false,

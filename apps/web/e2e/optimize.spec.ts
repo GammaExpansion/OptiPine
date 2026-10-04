@@ -104,7 +104,33 @@ test('a small grid runs through the Worker pool, goes outdated, and a cancelled 
   expect(errors).toEqual([]);
 });
 
-test('the setup reads in Chinese, with walk-forward planned but not yet run (O3)', async ({
+test('walk-forward runs window by window and lays out W1 (W4, W1)', async ({ page }, info) => {
+  // Twenty months of bars: three windows of 12 IS and 3 OOS months, the last one partial.
+  const errors = await open(page, 'en', 14_600);
+  await page.getByRole('button', { name: 'Optimize', exact: true }).click();
+  await page.getByRole('radio', { name: 'Walk-forward' }).click();
+  await expect(page.getByRole('heading', { name: 'Window plan' })).toBeVisible();
+  await searchLength(page, 18, 22);
+  await expect(block(page)).toContainText('15backtests');
+  await block(page).getByRole('button', { name: 'Start' }).click();
+  await expect(facts(page)).toHaveText(/^Window [1-3] \/ 3$/);
+  await expect(block(page)).toContainText(/Window [1-3] \/ 3/);
+  await page.screenshot({ path: info.outputPath('W4-en.png') });
+  await expect(facts(page)).toHaveText(/^3 windows in \d+:\d\d$/, { timeout: 120_000 });
+  const done = await state(page);
+  expect(done).toMatchObject({ run: 'done', combinations: 5, outdated: [] });
+  expect(done.windows).toHaveLength(3);
+  expect(done.windows!.every((status) => ['done', 'flat'].includes(status))).toBe(true);
+  await expect(page.locator('#optimize-wfSummary')).toBeVisible();
+  await expect(
+    page.getByRole('separator', { name: 'Resize stitched equity and windows' }),
+  ).toHaveCount(1);
+  await expect(block(page)).toContainText(/Last run \d+:\d\d, \d+ threads?/);
+  await page.screenshot({ path: info.outputPath('W1-en.png') });
+  expect(errors).toEqual([]);
+});
+
+test('the setup reads in Chinese, with walk-forward planned and ready to run (O3)', async ({
   page,
 }, info) => {
   // Twenty months of bars, enough for windows of 12 IS and 3 OOS months.
@@ -113,9 +139,7 @@ test('the setup reads in Chinese, with walk-forward planned but not yet run (O3)
   await page.getByRole('radio', { name: '滚动窗口' }).click();
   await expect(page.getByRole('heading', { name: '窗口计划' })).toBeVisible();
   await expect(page.getByRole('img', { name: '各窗口的样本内与样本外区间' })).toBeVisible();
-  const start = block(page).getByRole('button', { name: '开始优化' });
-  await expect(start).toBeDisabled();
-  await expect(start).toHaveAccessibleDescription('暂不支持运行滚动优化');
+  await expect(block(page).getByRole('button', { name: '开始优化' })).toBeEnabled();
   expect(await page.locator('body').evaluate((body) => body.scrollWidth)).toBe(1440);
   await page.screenshot({ path: info.outputPath('O3-zh.png') });
   expect(errors).toEqual([]);

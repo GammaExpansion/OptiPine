@@ -14,6 +14,7 @@ import {
   mapGeometry,
 } from './geometry.ts';
 import styles from './canvas.module.css';
+import { markersByCell, type MapMarker } from './map-markers.ts';
 
 export interface CellHover {
   readonly cell: HeatmapCell;
@@ -22,24 +23,29 @@ export interface CellHover {
 }
 
 const noFrames: readonly HeatmapCell[] = [];
+const noMarkers: readonly MapMarker[] = [];
 
 /** One viewport-sized canvas, including for many Z layers. Scrolling never allocates cell nodes. */
 export function HeatmapCanvas({
   map,
   selection,
+  markers = noMarkers,
   searchRows,
   framed = noFrames,
   showValues = false,
   label,
+  keyboardDescription,
   onHover,
   onActivate,
 }: {
   map: Heatmap;
   searchRows?: readonly SearchRow[];
   selection?: Readonly<Record<string, unknown>>;
+  markers?: readonly MapMarker[];
   framed?: readonly HeatmapCell[];
   showValues?: boolean;
   label: string;
+  keyboardDescription?: string;
   onHover: (hover: CellHover | null) => void;
   onActivate: (cell: HeatmapCell) => void;
 }) {
@@ -56,6 +62,7 @@ export function HeatmapCanvas({
   const redraw = useRef(() => {});
   const [description, setDescription] = useState('');
   const frames = useMemo(() => new Set(framed), [framed]);
+  const marked = useMemo(() => markersByCell(map, markers), [map, markers]);
 
   useEffect(() => {
     const element = canvas.current!;
@@ -132,6 +139,43 @@ export function HeatmapCanvas({
             ctx.strokeRect(rect.x - 0.5, rect.y - 0.5, 17, 17);
           }
         }
+        // Draw annotations after the cells so a later cell cannot paint over a label.
+        const labels: { x: number; y: number; width: number }[] = [];
+        for (const [index, cell] of layer.cells) {
+          const picks = marked.get(cell);
+          if (!picks?.length) continue;
+          const rect = cellRect(layer, index, layoutWidth);
+          const cx = rect.x + 8;
+          const cy = rect.y + 8;
+          const label = picks.map((pick) => pick.label).join(', ');
+          const labelWidth = ctx.measureText(label).width + 6;
+          const x = Math.max(2, Math.min(cx + 12, layoutWidth - labelWidth - 2));
+          let y = Math.max(layer.top + 7, cy - 11);
+          while (
+            labels.some(
+              (other) =>
+                Math.abs(other.y - y) < 15 && x < other.x + other.width && x + labelWidth > other.x,
+            )
+          )
+            y += 15;
+          labels.push({ x, y, width: labelWidth });
+          const ink = color(picks.some((pick) => pick.selected) ? '--primary' : '--text');
+          ctx.strokeStyle = ink;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(cx, cy, 7.5, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.lineWidth = 0.75;
+          ctx.beginPath();
+          ctx.moveTo(cx + 7, cy);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+          ctx.fillStyle = color('--panel');
+          ctx.fillRect(x, y - 7, labelWidth, 14);
+          ctx.fillStyle = ink;
+          ctx.textAlign = 'left';
+          ctx.fillText(label, x + 3, y);
+        }
         ctx.fillStyle = color('--caption');
         ctx.textAlign = 'center';
         const xStride = Math.max(
@@ -191,7 +235,7 @@ export function HeatmapCanvas({
       cancelAnimationFrame(frame);
       redraw.current = () => {};
     };
-  }, [geometry, map, selection, frames, showValues, t, text, xRow, yRow, zRow]);
+  }, [geometry, map, selection, frames, marked, showValues, t, text, xRow, yRow, zRow]);
 
   const hover = (cell: HeatmapCell | null, left = 0, top = 0) => {
     if (active.current === cell) return;
@@ -229,7 +273,7 @@ export function HeatmapCanvas({
           tabIndex={0}
           role="img"
           aria-label={label}
-          aria-description={t('optimize.map.keyboard')}
+          aria-description={keyboardDescription ?? t('optimize.map.keyboard')}
           data-testid="parameter-map"
           onPointerMove={(event) => {
             const rect = event.currentTarget.getBoundingClientRect();

@@ -55,6 +55,10 @@ async function open(
   await page.evaluate(
     async ({ script, none }) => {
       const path = '/src/state/optimization.ts';
+      const servicesPath = '/src/state/services.ts';
+      const services = (await import(servicesPath)) as typeof import('../src/state/services.ts');
+      // The optimization side loads on first need; the hooks below read it at once.
+      await services.getServices().loadOptimization();
       const module = (await import(path)) as typeof import('../src/state/optimization.ts');
       const target = window as unknown as SummaryWindow;
       target.summaryOptimization = () => module.getOptimizationStore().getState();
@@ -81,6 +85,13 @@ async function open(
       { timeout: workerWaitTimeout },
     )
     .toBe(true);
+  // Every input starts searched around its value; these grids are Length by Quantity alone.
+  await page.evaluate(() => {
+    const { search, actions } = (window as unknown as SummaryWindow).summaryOptimization();
+    for (const row of search.rows)
+      if (row.draft?.searched && !['Length', 'Quantity'].includes(row.descriptor.title))
+        actions.setSearched(row.descriptor.title, false);
+  });
   await page
     .getByRole('button', { name: language === 'en' ? 'Optimize' : '优化', exact: true })
     .click();

@@ -10,6 +10,14 @@ export function showsResults(state: ResultsState): boolean {
   return state.results !== null || state.run.status === 'running';
 }
 
+/**
+ * The results area lays out W1's regions instead of R1's while the walk-forward run or results
+ * are on display, whatever the validation is set to now: changed settings only dim them (R5).
+ */
+export function showsWalkForward(state: Pick<OptimizationState, 'walkForward'>): boolean {
+  return state.walkForward !== null;
+}
+
 /** Settings changed since the shown results were computed (R5); a live run shows its own views. */
 export function resultsOutdated(state: ResultsState): boolean {
   return state.run.status !== 'running' && !!state.outdated?.reasons.length;
