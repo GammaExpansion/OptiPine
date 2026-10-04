@@ -10,11 +10,12 @@ import { searchedParameters } from '../../../workflows/optimize-parameters.ts';
 import { useBacktestStore } from '../../../state/backtest.ts';
 import type { AppliedSet } from '../../../workflows/backtest.ts';
 import { useResultFormat } from '../../optimize/leaderboard/useResultFormat.ts';
+import { windowLabel } from '../../optimize/walkforward/results/copy.ts';
 import { useParameterActions } from './useParameterActions.ts';
 import styles from './PreviewBanner.module.css';
 
 export function PreviewContent() {
-  const { t } = useI18n();
+  const { t, text } = useI18n();
   const resultRows = useOptimizationStore((state) => state.results?.computedWith.search.rows);
   const preview = useBacktestStore((state) => state.preview);
   const rows = preview?.origin.searchRows ?? resultRows;
@@ -33,10 +34,19 @@ export function PreviewContent() {
     document.addEventListener('keydown', escape);
     return () => document.removeEventListener('keydown', escape);
   }, [showToast, applied]);
-  const setName = (origin: AppliedSet['origin']) =>
-    origin.kind === 'rank'
-      ? t('optimize.leaderboard.set', { rank: origin.rank })
-      : t('preview.failed');
+  /** The set as B16 names it: a rank, a failed set, a walk-forward window or the fixed set. */
+  const setName = (origin: AppliedSet['origin']) => {
+    switch (origin.kind) {
+      case 'rank':
+        return t('optimize.leaderboard.set', { rank: origin.rank });
+      case 'failed':
+        return t('preview.failed');
+      case 'window':
+        return text(windowLabel(origin.window));
+      case 'fixed':
+        return t('preview.fixed');
+    }
+  };
   return (
     <>
       {preview && (

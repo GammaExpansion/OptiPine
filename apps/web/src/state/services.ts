@@ -1,16 +1,14 @@
 import { FeedClient, type FeedCache } from '@pine/market-data';
 import {
-  AnalysisWorkerClient,
   EngineWorkerClient,
-  OptimizationWorkerPool,
   availableWorkerCount,
   type AnalysisWorkerFactory,
   type EngineWorkerFactory,
 } from '@pine/workers';
-import { createAnalysisWorker, createEngineWorker } from '../workers/factories.ts';
+import { createEngineWorker } from '../workers/factories.ts';
 import { BacktestSession, type EngineClient } from '../workflows/backtest.ts';
 import { MarketDataController } from '../workflows/market-data.ts';
-import { OptimizationSession } from '../workflows/optimize-session.ts';
+import type { OptimizationServices } from './optimization-services.ts';
 
 export interface ServiceOptions {
   engineWorker?: EngineWorkerFactory;
@@ -21,7 +19,11 @@ export interface ServiceOptions {
   now?: () => number;
 }
 
-/** One owner for Workers, requests and subscriptions; tests inject transports at this boundary. */
+/**
+ * One owner for Workers, requests and subscriptions; tests inject transports at this boundary.
+ * The optimization side (its session, pool and analysis client, and the workflow modules behind
+ * them) is created on first need by `loadOptimization`, so the first screen does not load it.
+ */
 export function createServices(options: ServiceOptions = {}) {
   const now = options.now ?? Date.now;
   const threads = availableWorkerCount(
@@ -40,26 +42,53 @@ export function createServices(options: ServiceOptions = {}) {
     run: (source, input, revision) => getEngine().run(source, input, revision),
     cancel: () => engine?.cancel(),
   };
-  const pool = new OptimizationWorkerPool(options.engineWorker ?? createEngineWorker);
-  const analysis = new AnalysisWorkerClient(options.analysisWorker ?? createAnalysisWorker);
   const feed = new FeedClient(options.fetcher, options.cache);
   const backtest = new BacktestSession(lazyEngine, { now });
   const marketData = new MarketDataController(feed, { now });
-  const optimization = new OptimizationSession(backtest, pool, analysis, { threads, now });
+  let optimization: OptimizationServices | null = null;
+  let loading: Promise<OptimizationServices> | null = null;
+  const loadListeners = new Set<(optimization: OptimizationServices) => void>();
   const cleanups = new Set<() => void>();
   let disposed = false;
   return {
     get engine() {
       return getEngine();
     },
-    pool,
-    analysis,
     feed,
     threads,
     now,
     backtest,
     marketData,
-    optimization,
+    /** The optimization side once `loadOptimization` has created it; null before. */
+    get optimization(): OptimizationServices | null {
+      return optimization;
+    },
+    /** Load the optimization side's modules and create it, once; later calls share it. */
+    loadOptimization(): Promise<OptimizationServices> {
+      loading ??= import('./optimization-services.ts').then(({ createOptimizationServices }) => {
+        const created = createOptimizationServices(backtest, {
+          engineWorker: options.engineWorker,
+          analysisWorker: options.analysisWorker,
+          threads,
+          now,
+        });
+        // Services disposed while the modules loaded hand out a side that is disposed too.
+        if (disposed) created.dispose();
+        else {
+          optimization = created;
+          for (const listener of loadListeners) listener(created);
+          loadListeners.clear();
+        }
+        return created;
+      });
+      return loading;
+    },
+    /** Call `listener` once the optimization side exists, at once if it does already. */
+    onOptimization(listener: (optimization: OptimizationServices) => void): () => void {
+      if (optimization) listener(optimization);
+      else loadListeners.add(listener);
+      return () => loadListeners.delete(listener);
+    },
     onDispose(cleanup: () => void) {
       cleanups.add(cleanup);
     },
@@ -68,12 +97,11 @@ export function createServices(options: ServiceOptions = {}) {
       disposed = true;
       for (const cleanup of cleanups) cleanup();
       cleanups.clear();
-      optimization.dispose();
+      loadListeners.clear();
+      optimization?.dispose();
       backtest.cancel();
       marketData.cancel();
       engine?.dispose();
-      pool.dispose();
-      analysis.dispose();
     },
   };
 }

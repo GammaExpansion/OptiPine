@@ -409,10 +409,12 @@
   margin-left: auto;
   width: auto;
 }
+/* Long texts such as "Estimating time left" with many threads take Cancel to a line of its own. */
 .progressFoot {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
   font-size: 12px;
   white-space: nowrap;
 }

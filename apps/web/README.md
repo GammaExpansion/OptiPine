@@ -61,7 +61,8 @@ The layout follows the window (WEB.md 2.7; `src/shell/layout.ts` and `useLayout`
 panes from 1280 px (G1); from 768 to 1279 px the right panel as a drawer the header's toggle
 opens, with a condensed header (G2); below 768 px one column with tabs, where Inputs on the
 Backtest page and Settings on the Optimize page hold the right panel (G3, G4). `e2e/layout.spec.ts`
-checks S1, B1, O1 and R1 at 1440 × 900, 1024 × 768 and 390 × 844 in both languages for cut labels
-and page scroll, and drives the drawer and the phone tabs.
+checks S1, B1, O1, R1 and W1 (each of its phone tabs too) at 1440 × 900, 1024 × 768 and
+390 × 844 in both languages for cut labels and page scroll, and drives the drawer and the phone
+tabs.
 
 No files under `src/workflows/`, `examples/` or `src/pages/backtest/code/` belong to this scaffold.

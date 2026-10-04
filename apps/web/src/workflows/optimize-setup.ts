@@ -109,23 +109,66 @@ function choicesOf(descriptor: InputDescriptor): readonly LiteralValue[] {
 
 const key = (value: unknown): string => JSON.stringify(value) ?? 'undefined';
 
+/** A new numeric row lists at most this many values; a finer step is coarsened (O1). */
+export const defaultRangeValues = 50;
+
+/** Digits after the decimal point, as written: 0.25 has 2, 1e-7 has 7. */
+function decimals(value: number): number {
+  const [mantissa, power = '0'] = String(value).toLowerCase().split('e');
+  return Math.max(0, (mantissa.split('.')[1]?.length ?? 0) - Number(power));
+}
+
+/** Whole steps from `from` to `to`, rounded first so binary fractions do not lose one. */
+const steps = (from: number, to: number, step: number): number =>
+  Math.floor(Number(((to - from) / step).toFixed(9)));
+
+/** The smallest of 1, 2, 5, 10, 20, 50… that is at least `at`. */
+function roundMultiple(at: number): number {
+  for (let scale = 1; ; scale *= 10)
+    for (const multiple of [1, 2, 5]) if (multiple * scale >= at) return multiple * scale;
+}
+
 /**
- * A new row's draft. A numeric range spans the input's minimum to maximum by its step, the same
- * bounds @pine/optimizer assumes, falling back to the default value and a step of 1 (0.01 for a
- * price); a list keeps the values @pine/optimizer searches by default. The row starts searched
- * when that gives more than one value.
+ * A new numeric row's range (O1): from half to twice the current value, within the input's
+ * declared bounds, on the input's step grid through the current value, so the value itself is
+ * always searched. Lengths and multipliers act on that relative scale, while full bounds such as
+ * 5–200 would make the first grid too large to run whole. A step that would list more than 50
+ * values there becomes the smallest 2, 5, 10… times itself that does not. Zero has no scale, and a
+ * time no meaningful one: such an input starts at its value alone.
  */
-export function defaultSearchDraft(descriptor: InputDescriptor): SearchDraft {
+function defaultRange(descriptor: InputDescriptor, current: LiteralValue | undefined) {
+  const step = descriptor.step ?? (descriptor.type === 'price' ? 0.01 : 1);
+  const fallback = typeof descriptor.defaultValue === 'number' ? descriptor.defaultValue : 0;
+  const value = typeof current === 'number' && Number.isFinite(current) ? current : fallback;
+  const single = { kind: 'range', from: value, to: value, step } as const;
+  if (descriptor.type === 'time' || !(step > 0)) return single;
+  const low = Math.max(Math.min(value / 2, value * 2), descriptor.min ?? -Infinity);
+  const high = Math.min(Math.max(value / 2, value * 2), descriptor.max ?? Infinity);
+  if (low > value || high < value) return single;
+  const places = Math.min(20, Math.max(decimals(value), decimals(step)));
+  const multiple = roundMultiple(steps(low, high, step) / (defaultRangeValues - 1));
+  const stride = Number((step * multiple).toFixed(places));
+  const at = (count: number) => Number((value + count * stride).toFixed(places));
+  return {
+    kind: 'range',
+    from: at(-steps(low, value, stride)),
+    to: at(steps(value, high, stride)),
+    step: stride,
+  } as const;
+}
+
+/**
+ * A new row's draft: a numeric range around `current`, the input's value on the Backtest page
+ * (see `defaultRange`), or the values @pine/optimizer searches by default for a list. The row
+ * starts searched when that gives more than one value.
+ */
+export function defaultSearchDraft(
+  descriptor: InputDescriptor,
+  current?: LiteralValue,
+): SearchDraft {
   let values: SearchValues;
   if (numericTypes.has(descriptor.type) && !descriptor.options?.length) {
-    const fallback = typeof descriptor.defaultValue === 'number' ? descriptor.defaultValue : 0;
-    const from = descriptor.min ?? fallback;
-    values = {
-      kind: 'range',
-      from,
-      to: descriptor.max ?? Math.max(from, fallback),
-      step: descriptor.step ?? (descriptor.type === 'price' ? 0.01 : 1),
-    };
+    values = defaultRange(descriptor, current);
   } else {
     let kept: readonly LiteralValue[];
     try {
@@ -139,16 +182,19 @@ export function defaultSearchDraft(descriptor: InputDescriptor): SearchDraft {
   return { ...draft, searched: valuesOf(descriptor, draft).values.length > 1 };
 }
 
-/** A draft survives a recompile when the input keeps its type and, for a list, its choices. */
+/**
+ * A draft survives a recompile when the input keeps its type and, for a list, its choices;
+ * otherwise the row starts over from its default.
+ */
 export function keepSearchDraft(
   descriptor: InputDescriptor,
   previous: { readonly descriptor: InputDescriptor; readonly draft: SearchDraft } | undefined,
-): SearchDraft {
+): SearchDraft | undefined {
   return previous &&
     previous.descriptor.type === descriptor.type &&
     key(previous.descriptor.options) === key(descriptor.options)
     ? previous.draft
-    : defaultSearchDraft(descriptor);
+    : undefined;
 }
 
 function rangeOf(values: SearchValues): SearchRange {
@@ -207,7 +253,7 @@ function searchRow(
           }),
     };
   }
-  const settled = draft ?? defaultSearchDraft(descriptor);
+  const settled = draft ?? defaultSearchDraft(descriptor, current);
   const list = settled.values.kind === 'list' ? settled.values.values : null;
   const choices = list
     ? choicesOf(descriptor).map((value) => ({
@@ -270,7 +316,10 @@ function samplingOf(gridCombinations: number, settings: SamplingSettings): Sampl
 /**
  * The Search ranges section: one row per input, the space @pine/optimizer builds from them, and
  * how the run samples it. `drafts` and `current` are keyed by input title; `current` holds the
- * Backtest page's values, which inputs that are fixed without a value of their own take.
+ * Backtest page's values, which new rows centre on and inputs fixed without a value of their own
+ * take. Rows without a draft start from their default and are searched in declaration order while
+ * the grid stays within its limit, so a new script's first run is a whole grid (O5); a row that
+ * would take it over starts fixed with its range ready to check.
  */
 export function searchSetup(
   descriptors: readonly InputDescriptor[],
@@ -278,13 +327,17 @@ export function searchSetup(
   current: Readonly<Record<string, LiteralValue>>,
   settings: SamplingSettings,
 ): SearchSetup {
-  const rows = descriptors.map((descriptor) =>
-    searchRow(
-      descriptor,
-      drafts.get(descriptor.title),
-      Object.hasOwn(current, descriptor.title) ? current[descriptor.title] : undefined,
-    ),
-  );
+  let grid = 1;
+  const rows = descriptors.map((descriptor) => {
+    const value = Object.hasOwn(current, descriptor.title) ? current[descriptor.title] : undefined;
+    const draft = drafts.get(descriptor.title);
+    let row = searchRow(descriptor, draft, value);
+    if (row.status !== 'searched') return row;
+    if (!draft && grid * row.values.length > gridLimit)
+      row = searchRow(descriptor, { ...row.draft!, searched: false }, value);
+    else grid *= row.values.length;
+    return row;
+  });
   const rowErrors = rows.filter((row) => row.error).length;
   const searchKey = key(
     rows.map((row) => [

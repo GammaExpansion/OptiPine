@@ -22,6 +22,7 @@ test('failed combinations carry inputs and diagnostics, export CSV, and preview 
   );
   act(() => {
     optimization().actions.setRange('Length', { from: 2, to: 4, step: 1 });
+    optimization().actions.setSearched('Multiplier', false);
     optimization().actions.removeFilter(1);
     optimization().actions.removeFilter(0);
     uiStore.getState().setDialogOpen('failedCombinations', true);

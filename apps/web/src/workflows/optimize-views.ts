@@ -436,6 +436,31 @@ function surfaceMap(
   return summary.maps.find((item) => item.surface === surface);
 }
 
+/**
+ * The searched inputs that are neither X, Y nor Z, as slice chips. A fixed slice without a value
+ * of its own takes the selected set's, else the input's first value.
+ */
+export function sliceChips(
+  axes: readonly AnalysisAxis[],
+  shown: { readonly x?: string; readonly y?: string; readonly z?: string },
+  slices: Readonly<Record<string, Slice>>,
+  selected: Readonly<Record<string, LiteralValue>>,
+): SliceChip[] {
+  return axes
+    .filter((axis) => ![shown.x, shown.y, shown.z].includes(axis.title))
+    .map((axis) => {
+      const slice = slices[axis.title];
+      const chosen = slice && Object.hasOwn(slice, 'value') ? slice.value : undefined;
+      const value = chosen ?? selected[axis.title] ?? axis.values[0] ?? null;
+      return {
+        title: axis.title,
+        mode: slice?.mode ?? 'fixed',
+        value: value as AnalysisValue | null,
+        values: axis.values as AnalysisValue[],
+      };
+    });
+}
+
 /** The map for two or more searched inputs; the IS / OOS switch needs no new analysis. */
 export function mapView(
   results: RankedResults,
@@ -458,19 +483,7 @@ export function mapView(
     map: maps.map ?? null,
     panel: maps.panelMap,
     binned: !!display && (display.xBinSize > 1 || display.yBinSize > 1),
-    slices: results.axes
-      .filter((axis) => ![x, y, z].includes(axis.title))
-      .map((axis) => {
-        const slice = slices[axis.title];
-        const chosen = slice && Object.hasOwn(slice, 'value') ? slice.value : undefined;
-        const value = chosen ?? selected[axis.title] ?? axis.values[0] ?? null;
-        return {
-          title: axis.title,
-          mode: slice?.mode ?? 'fixed',
-          value: value as AnalysisValue | null,
-          values: axis.values as AnalysisValue[],
-        };
-      }),
+    slices: sliceChips(results.axes, summary.axes, slices, selected),
   };
 }
 

@@ -42,6 +42,8 @@ async function open(page: Page, dense = false, language: 'en' | 'zh' = 'en') {
   await page.evaluate(
     async ({ source, dense }) => {
       const load = (path: string) => import(/* @vite-ignore */ path);
+      const { getServices } = await load('/src/state/services.ts');
+      await getServices().loadOptimization();
       const { openScript } = await load('/src/state/backtest.ts');
       const { getMarketDataStore } = await load('/src/state/marketData.ts');
       const { getOptimizationStore } = await load('/src/state/optimization.ts');

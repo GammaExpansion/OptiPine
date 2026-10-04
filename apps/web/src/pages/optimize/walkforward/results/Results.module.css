@@ -1,0 +1,377 @@
+.summary {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.summaryHeader,
+.tableHeader {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 12px;
+  flex: none;
+}
+.summaryHeader {
+  min-height: 32px;
+  gap: 16px;
+}
+.summaryHeader h2,
+.tableHeader h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.summaryHeader > :last-child {
+  margin-left: auto;
+}
+.facts,
+.legend,
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.facts {
+  font-size: 12px;
+  color: var(--caption);
+  flex-wrap: wrap;
+}
+.facts b {
+  font-weight: 500;
+  color: var(--text);
+}
+.facts strong,
+.facts b,
+.table,
+.fixed dl,
+.selection {
+  font-variant-numeric: tabular-nums;
+}
+.legend {
+  color: var(--secondary);
+  font-size: 12px;
+}
+.legend span {
+  gap: 6px;
+}
+.legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: #3b6f8c;
+}
+.legend span:last-child i {
+  background: var(--oos);
+}
+.muted {
+  color: var(--caption);
+  font-size: 12px;
+}
+.pending {
+  margin: 0 12px;
+  color: var(--link);
+  font-size: 12px;
+}
+.chartScroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.chart {
+  height: 100%;
+  position: relative;
+  min-width: 540px;
+}
+/* A phone's Summary tab (G4) gives the chart the whole width: it fits it, without the window
+   labels that no longer fit, rather than scrolling. */
+@media (max-width: 767px) {
+  .chart {
+    min-width: 0;
+  }
+}
+.chart canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+.lane {
+  position: absolute;
+  left: 0;
+  width: calc(100% - 72px);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.lane:focus-visible {
+  outline: 1px solid var(--primary);
+  outline-offset: 1px;
+}
+.tablePanel {
+  display: flex;
+  flex-direction: column;
+  min-height: 100px;
+  flex: 1;
+}
+.tableHeader {
+  min-height: 44px;
+  gap: 6px;
+}
+.objective {
+  min-height: 25px;
+  height: 25px;
+  font-size: 12px;
+  padding: 0 7px;
+  width: auto;
+  max-width: 210px;
+  border: 0;
+  background: transparent;
+  padding-left: 0;
+}
+.objectiveControl {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 9px;
+  border: 1px solid var(--control-border);
+  border-radius: 13px;
+}
+.objectiveControl > span {
+  color: var(--caption);
+  font-size: 12px;
+}
+.direction {
+  width: 18px;
+  min-height: 24px;
+  padding: 0;
+  margin-left: -4px;
+}
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.tableScroll {
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+}
+.table {
+  min-width: 610px;
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 13px;
+}
+.windowColumn {
+  width: 52px;
+}
+.rangeColumn {
+  width: 160px;
+}
+.numberColumn {
+  width: 68px;
+}
+.wfeColumn {
+  width: 49px;
+}
+.tradesColumn {
+  width: 56px;
+}
+.table th,
+.table td {
+  height: 30px;
+  padding: 4px 6px;
+  text-align: right;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--row-border);
+  font-weight: 400;
+}
+.table thead th {
+  color: var(--caption);
+  font-size: 12px;
+  font-family: var(--font-body);
+  height: 30px;
+  padding-block: 3px;
+  background: var(--panel);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.table th:nth-child(-n + 3),
+.table td:nth-child(-n + 3) {
+  text-align: left;
+}
+.table tbody tr {
+  cursor: pointer;
+}
+.table tbody tr:hover {
+  background: var(--hover);
+}
+.table tr[data-selected] {
+  background: var(--current-row);
+}
+.table tr[data-selected] th:first-child {
+  box-shadow: inset 2px 0 var(--primary);
+  color: var(--link);
+}
+.table tr[data-status='waiting'],
+.table tr[data-status='waiting'] [data-tone],
+.table tr[data-status='running'] [data-tone] {
+  color: var(--caption);
+}
+.table tr[data-status='running'] .parameters {
+  color: var(--link);
+}
+.rowButton {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  padding: 2px 4px;
+  cursor: pointer;
+}
+.rowButton:focus-visible {
+  outline: 1px solid var(--primary);
+}
+.range {
+  color: var(--secondary);
+  white-space: normal;
+}
+.parameters {
+  overflow-wrap: anywhere;
+}
+.exception {
+  color: var(--danger-text);
+  font-family: var(--font-body);
+  text-align: left !important;
+}
+.exception span {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--caption);
+}
+.exception + td button {
+  padding: 0;
+  font-size: 12px;
+}
+.partial {
+  display: inline-block;
+  color: var(--secondary);
+  background: var(--selected);
+  padding: 0 3px;
+  margin-left: 4px;
+  border-radius: 2px;
+  font-family: var(--font-body);
+  font-size: 10px;
+}
+.table tfoot th,
+.table tfoot td {
+  border-top: 1px solid var(--control-border);
+  border-bottom: 0;
+}
+.waitingTotal {
+  text-align: left !important;
+  color: var(--caption);
+  font-family: var(--font-body);
+}
+.fixed {
+  margin: 12px 12px 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--control-border);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  flex-wrap: wrap;
+}
+.fixedContent {
+  flex: 1;
+  min-width: 0;
+}
+.fixed h2 {
+  font-size: 12px;
+  color: var(--secondary);
+  font-weight: 400;
+  margin: 0 0 5px;
+}
+.fixed dl {
+  display: flex;
+  gap: 5px 14px;
+  flex-wrap: wrap;
+  margin: 0;
+  font-size: 12px;
+}
+.fixed dl div {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.fixed dt {
+  color: var(--caption);
+  overflow-wrap: anywhere;
+}
+.fixed dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.fixed button {
+  font-size: 12px;
+}
+.selection {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  min-height: 60px;
+  border-top: 1px solid var(--control-border);
+  background: var(--panel);
+  font-size: 12px;
+  flex: none;
+}
+.selection > strong {
+  color: var(--link);
+  font-size: 16px;
+}
+.selectionRange {
+  color: var(--secondary);
+}
+.selectionSet {
+  overflow-wrap: anywhere;
+}
+.selectionFigures {
+  display: flex;
+  gap: 14px;
+  color: var(--caption);
+  flex-wrap: wrap;
+}
+.selectionFigures b {
+  color: var(--text);
+  font-weight: 500;
+}
+.selection > :last-child {
+  margin-left: auto;
+}
+.selection button {
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+.summary [data-tone='profit'],
+.table [data-tone='profit'],
+.selection [data-tone='profit'] {
+  color: var(--profit) !important;
+}
+.summary [data-tone='loss'],
+.table [data-tone='loss'],
+.selection [data-tone='loss'] {
+  color: var(--loss) !important;
+}

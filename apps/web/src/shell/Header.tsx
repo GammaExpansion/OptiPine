@@ -3,7 +3,7 @@ import { IconButton } from '../components/IconButton.tsx';
 import { PageTabs } from '../components/PageTabs.tsx';
 import { SegmentedControl } from '../components/SegmentedControl.tsx';
 import { useI18n } from '../i18n/I18nProvider.tsx';
-import { useOptimizationStore } from '../state/optimization.ts';
+import { useOptimizationPresence } from '../state/optimization.ts';
 import { useUiStore } from '../state/ui.ts';
 import { HeaderData } from './HeaderData.tsx';
 import { RunControls } from './RunControls.tsx';
@@ -20,8 +20,8 @@ export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
   const { t, language } = useI18n();
   const layout = useLayout();
   // R1, R5 and B16 mark Optimize while it holds complete results, outdated or not; a first run
-  // in progress has none yet (O8).
-  const optimizeResults = useOptimizationStore((state) => state.results !== null);
+  // in progress has none yet (O8). Before the Optimize page first opens there are none either.
+  const optimizeResults = useOptimizationPresence((presence) => presence.hasResults);
   const page = useUiStore((state) => state.page);
   const setPage = useUiStore((state) => state.setPage);
   const setLanguage = useUiStore((state) => state.setLanguage);

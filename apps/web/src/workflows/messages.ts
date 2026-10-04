@@ -50,7 +50,10 @@ export const workflowMessageIds = [
   'optimize.filterValueInvalid',
   'optimize.fixErrors',
   'optimize.running',
-  'optimize.walkForwardUnavailable',
+  'optimize.wf.planning',
+  'optimize.wf.noWindows',
+  'optimize.wf.flat',
+  'optimize.wf.inSampleMismatch',
 ] as const;
 export type WorkflowMessageId = (typeof workflowMessageIds)[number];
 

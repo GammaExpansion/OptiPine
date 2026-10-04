@@ -34,6 +34,8 @@ for (const language of ['en', 'zh'] as const) {
       actions.setRange('Length', { from: 2, to: 3, step: 1 });
       actions.setSearched('Multiplier', true);
       actions.setRange('Multiplier', { from: 1.5, to: 1.75, step: 0.25 });
+      // Every input starts searched over a range around its value; Trail % stays fixed.
+      actions.setSearched('Trail %', false);
       actions.setFixedValue('Trail %', 7);
       actions.removeFilter(1);
       actions.removeFilter(0);
