@@ -62,7 +62,7 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
   },
   ref,
 ) {
-  const { t, text } = useI18n();
+  const { t, text, language } = useI18n();
   const host = useRef<HTMLDivElement>(null);
   const legend = useRef<HTMLDivElement>(null);
   const paneLegend = useRef<HTMLDivElement>(null);
@@ -108,7 +108,7 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
   useEffect(() => {
     const element = host.current!;
     const theme = chartTheme(element);
-    const options = chartOptions(element, timezone);
+    const options = chartOptions(element, timezone, language);
     const chart = createChart(element, options);
     const releaseTimeLabels = keepTimeLabelsInside(chart, options.timeScale!.tickMarkFormatter!);
     // Adjacent panes must not paint partial tick labels across their shared boundary.
@@ -139,7 +139,7 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
       releaseTimeLabels();
       chart.remove();
     };
-  }, [timezone, mintick, t]);
+  }, [timezone, mintick, t, language]);
 
   useEffect(() => {
     const current = runtime.current!;
