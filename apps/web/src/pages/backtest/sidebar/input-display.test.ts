@@ -114,7 +114,11 @@ test('an applied value names its set beside the default until edited or reset (B
       inputHint(byTitle(applyInputValues(fields, { Length: 28 }, origin), 'Length'))!,
       language,
     );
-  expect(hint({ kind: 'window', optimizationId: 1, trialId: 'b', window: 2 })).toBe(
+  const ranges = {
+    inSample: { start: 0, end: 86_400 },
+    outOfSample: { start: 86_400, end: 172_800 },
+  };
+  expect(hint({ kind: 'window', optimizationId: 1, trialId: 'b', window: 2, ranges })).toBe(
     'From W3, default 20',
   );
   expect(hint({ kind: 'failed', optimizationId: 1, trialId: 'c' })).toBe(

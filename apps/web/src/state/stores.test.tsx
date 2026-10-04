@@ -209,3 +209,43 @@ test('disposal detaches store bridges from their sessions', async () => {
   getServices().marketData.cancel();
   expect(listener).not.toHaveBeenCalled();
 });
+
+test('the first result of an opened script shows the Report, then the user picks the tab (#6)', async () => {
+  const run = async () => {
+    let running!: Promise<void>;
+    act(() => {
+      running = getBacktestStore().getState().actions.run();
+    });
+    await act(async () => running);
+  };
+  uiStore.getState().setDockTab('code');
+  await ready();
+  await run();
+  expect(uiStore.getState().dockTab).toBe('report');
+  // Later runs of the same script, an edit included, leave the user's tab.
+  act(() => uiStore.getState().setDockTab('code'));
+  await run();
+  act(() => getBacktestStore().getState().actions.setSource(`${strategySource}\n// edited`));
+  await waitFor(() => expect(getBacktestStore().getState().readiness.ok).toBe(true));
+  await run();
+  expect(uiStore.getState().dockTab).toBe('code');
+  // Another script's first result leaves a result tab the user chose.
+  act(() => {
+    uiStore.getState().setDockTab('trades');
+    openScript({ source: strategySource, fileName: 'other.pine', origin: { kind: 'file' } });
+  });
+  await waitFor(() => expect(getBacktestStore().getState().readiness.ok).toBe(true));
+  await run();
+  expect(uiStore.getState().dockTab).toBe('trades');
+  act(() => {
+    uiStore.getState().setDockTab('code');
+    openScript({
+      source: `${strategySource}\n// third`,
+      fileName: 'third.pine',
+      origin: { kind: 'file' },
+    });
+  });
+  await waitFor(() => expect(getBacktestStore().getState().readiness.ok).toBe(true));
+  await run();
+  expect(uiStore.getState().dockTab).toBe('report');
+});
