@@ -58,9 +58,13 @@ test('None marks results unvalidated and disables the comparison view in both la
   renderInEnglish(<SummaryPanel />);
   expect(screen.getByText('Unvalidated')).toBeVisible();
   expect(screen.getByRole('radio', { name: 'IS vs OOS' })).toBeDisabled();
-  expect(screen.getByText('Top 20 (full-range net profit)')).toBeVisible();
+  expect(screen.getByText('Top 20 (Net profit, full range)')).toBeVisible();
+  // The legend names the objective the sets are ranked by (R3).
+  act(() => optimization().actions.setObjective('sharpeRatio'));
+  expect(screen.getByText('Top 20 (Sharpe ratio, full range)')).toBeVisible();
   act(() => uiStore.getState().setLanguage('zh'));
   expect(screen.getByText('未验证')).toBeVisible();
+  expect(screen.getByText('排行前 20 组（全区间夏普比率）')).toBeVisible();
 });
 
 test('live snapshots are explicitly provisional; reproduction and errors remain visible', async () => {

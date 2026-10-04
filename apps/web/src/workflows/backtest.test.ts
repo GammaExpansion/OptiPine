@@ -627,6 +627,26 @@ test('applying a set from the selection bar re-runs the backtest; an edit ends u
   assert.equal(session.getState().inputs[0].value, 11);
 });
 
+test('opening a script, the same one or another, drops where applied values came from (B17)', async () => {
+  const ready = await completedRun();
+  const { session } = ready;
+  const origins = () => session.getState().inputs.map((item) => item.origin);
+  const apply = async () => {
+    const applying = session.applyParameters(set, origin);
+    await ready.answerAll();
+    await applying;
+    assert.deepEqual(origins(), [origin, origin, origin]);
+  };
+  await apply();
+  session.setSource(session.getState().source, true);
+  assert.deepEqual(origins(), [null, null, null]);
+  await apply();
+  session.setSource(strategySource.replace('"Test strategy"', '"Other strategy"'), true);
+  await ready.answerAll();
+  assert.equal(session.getState().compile.status, 'compiled');
+  assert.deepEqual(origins(), [null, null, null]);
+});
+
 test('a failed combination opened as a preview shows its diagnostics in Issues (R11)', async () => {
   const ready = await completedRun();
   const { session } = ready;

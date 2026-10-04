@@ -8,6 +8,7 @@ import {
   containsSelection,
   heatTokens,
   fitMap,
+  legendScale,
   mapGeometry,
   maxCellPitch,
   verticalTitle,
@@ -234,5 +235,40 @@ describe('sparse maps', () => {
     };
     const geometry = mapGeometry(layered, { width: 600, height: 400 });
     expect(geometry.layers.map((layer) => layer.pitch)).toEqual([cellPitch, cellPitch]);
+  });
+});
+
+/** A one-row map of `values` coloured by `scale`, as the analysis prepares it. */
+const scaled = (values: readonly number[], scale: Heatmap['scale']) =>
+  prepareHeatmap({
+    xKey: 'Length',
+    cells: values.map((value, x) => ({ x, value, count: 1 })),
+    scale,
+  });
+
+it('the legend marks the break-even only where losing and winning cells meet (R4)', () => {
+  const mixed = legendScale(scaled([-50, -5, 10, 400], { direction: 'maximize', breakEven: 0 }));
+  expect(mixed).toEqual({
+    worst: -50,
+    best: 400,
+    steps: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+    breakEven: 0,
+  });
+  // All profitable: the profit steps alone, with no zero between the ends.
+  expect(legendScale(scaled([10, 400], { direction: 'maximize', breakEven: 0 }))).toEqual({
+    worst: 10,
+    best: 400,
+    steps: [4, 5, 6, 7, 8],
+    breakEven: null,
+  });
+  expect(legendScale(scaled([0.4, 0.9], { direction: 'maximize', breakEven: 1 })).steps).toEqual([
+    0, 1, 2,
+  ]);
+  // A drawdown has no break-even: every step, worst (largest) first.
+  expect(legendScale(scaled([12, 3, 7], { direction: 'minimize' }))).toEqual({
+    worst: 12,
+    best: 3,
+    steps: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+    breakEven: null,
   });
 });

@@ -60,3 +60,41 @@ test('combining filter failures keeps the union while preserving the number of e
   );
   assert.deepEqual(combinedExclusions([{}]), {});
 });
+
+/** A one-row map of `values`, each its own cell, coloured by `scale`. */
+const row = (values: readonly number[], scale: Heatmap['scale']) =>
+  prepareHeatmap({
+    xKey: 'Length',
+    cells: values.map((value, x) => ({ x, value, count: 1 })),
+    scale,
+  });
+const steps = (map: Heatmap) => map.cells.map((cell) => cell.rankBin);
+
+test('colours rank cells from worst to best in the objective direction (R4)', () => {
+  const values = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const up = row(values, { direction: 'maximize' });
+  assert.deepEqual(steps(up), [0, 1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.deepEqual([up.display?.worst, up.display?.best, up.display?.breakEven], [1, 9, null]);
+  // Less is better for a drawdown: its smallest value takes the profit end of the ramp.
+  const down = row(values, { direction: 'minimize' });
+  assert.deepEqual(steps(down), [8, 7, 6, 5, 4, 3, 2, 1, 0]);
+  assert.deepEqual([down.display?.worst, down.display?.best], [9, 1]);
+  assert.deepEqual([down.display?.minimum, down.display?.maximum], [1, 9]);
+});
+
+test('a break-even splits losing and winning cells, each ranked on its own side (R4)', () => {
+  const mixed = row([-300, -20, -1, 0, 5, 40, 41, 900, 7000], {
+    direction: 'maximize',
+    breakEven: 0,
+  });
+  assert.deepEqual(steps(mixed), [0, 1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.equal(mixed.display?.breakEven, 0);
+  // One large loss does not push every profit into the loss colours, and vice versa.
+  assert.deepEqual(steps(row([-9000, 10, 20], { direction: 'maximize', breakEven: 0 })), [1, 4, 8]);
+  // All profitable: only the profit steps, so the legend shows no break-even.
+  assert.deepEqual(steps(row([3, 1, 2], { direction: 'maximize', breakEven: 0 })), [8, 4, 6]);
+  // A profit factor breaks even at one.
+  assert.deepEqual(steps(row([0.8, 1, 1.5], { direction: 'maximize', breakEven: 1 })), [1, 3, 6]);
+  // Minimizing, values below the break-even win.
+  assert.deepEqual(steps(row([-2, 4], { direction: 'minimize', breakEven: 0 })), [6, 1]);
+});

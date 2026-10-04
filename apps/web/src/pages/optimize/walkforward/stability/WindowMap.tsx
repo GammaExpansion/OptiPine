@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
 import type { Heatmap } from '@pine/optimizer';
 import { HeatmapCanvas, type CellHover } from '../../../../charts/optimize/HeatmapCanvas.tsx';
-import { containsSelection, heatTokens } from '../../../../charts/optimize/geometry.ts';
+import { containsSelection } from '../../../../charts/optimize/geometry.ts';
+import { LegendRamp } from '../../../../charts/optimize/LegendRamp.tsx';
 import { SegmentedControl } from '../../../../components/SegmentedControl.tsx';
 import { Select } from '../../../../components/Select.tsx';
 import { useI18n } from '../../../../i18n/I18nProvider.tsx';
-import { formatNumber } from '../../../../i18n/translate.ts';
 import { useOptimizationStore } from '../../../../state/optimization.ts';
-import { rangeLabel, valueLabel } from '../../map/map-labels.ts';
+import { bestSlice, rangeLabel, valueLabel } from '../../map/map-labels.ts';
 import styles from './stability.module.css';
 
 /** The workflow supplies the selected window's IS map or the mean, already binned and ranked. */
@@ -15,6 +15,7 @@ export function WindowMap() {
   const { t, text } = useI18n();
   const view = useOptimizationStore((state) => state.walkForward);
   const actions = useOptimizationStore((state) => state.actions);
+  const direction = useOptimizationStore((state) => state.viewSettings.direction);
   const [hover, setHover] = useState<{ map: Heatmap; hit: CellHover } | null>(null);
   const map = view?.map;
   // Parameter values read at the precision their input was searched with.
@@ -32,10 +33,6 @@ export function WindowMap() {
   );
   const hit = hover?.hit;
   const axes = view?.stability?.rows.map((row) => row.title) ?? [];
-  const compact = (value: number | null | undefined) =>
-    value == null
-      ? text(valueLabel(null))
-      : formatNumber(value, { notation: 'compact', maximumFractionDigits: 1 });
   if (view?.error)
     return (
       <p className={styles.note} role="status">
@@ -110,7 +107,7 @@ export function WindowMap() {
                   value: `value:${index}`,
                   label: text(valueLabel(value, input(slice.title))),
                 })),
-                { value: 'max', label: t('optimize.map.max') },
+                { value: 'max', label: t(bestSlice(direction)) },
                 { value: 'mean', label: t('optimize.map.mean') },
               ]}
               onChange={(value) =>
@@ -160,15 +157,7 @@ export function WindowMap() {
             { count: view?.windows.length ?? 0, window: map.window + 1 },
           )}
         </span>
-        <span>{compact(map.panel.display?.minimum)}</span>
-        <div className={styles.ramp}>
-          {heatTokens.map((token, index) => (
-            <i key={token} style={{ background: `var(${token})` }}>
-              {index === 3 && <span>{formatNumber(0)}</span>}
-            </i>
-          ))}
-        </div>
-        <span>{compact(map.panel.display?.maximum)}</span>
+        <LegendRamp map={map.panel} className={styles.ramp} missing={text(valueLabel(null))} />
       </div>
       <p className={styles.note}>
         {t(

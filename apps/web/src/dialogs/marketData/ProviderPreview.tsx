@@ -37,7 +37,14 @@ function Preview({ preview }: { preview: DataPreview }) {
       />
       <ProfileFields values={draft} errors={preview.symbolInfoErrors} onChange={onChange} />
       {preview.profileEstimated && <Note tone="amber">{t('data.estimated')}</Note>}
-      {preview.unadjusted && <span className={styles.muted}>{t('data.unadjusted')}</span>}
+      {preview.dataset.calendarEstimated && <Note tone="amber">{t('data.calendarEstimated')}</Note>}
+      {preview.dataset.ohlcNormalized ? (
+        <Note tone="amber">
+          {t('data.ohlcNormalized', { count: preview.dataset.ohlcNormalized })}
+        </Note>
+      ) : preview.unadjusted ? (
+        <span className={styles.muted}>{t('data.unadjusted')}</span>
+      ) : null}
     </>
   );
 }

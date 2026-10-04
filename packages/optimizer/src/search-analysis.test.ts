@@ -389,9 +389,15 @@ test('real numeric, boolean and option axes support fixed, maximum, mean and pin
         )!,
       ),
     );
-  for (const mode of ['max', 'mean'] as const) {
+  // The max slice takes the best value: the smallest when the objective is minimized (R4).
+  for (const [mode, direction] of [
+    ['max', 'maximize'],
+    ['max', 'minimize'],
+    ['mean', 'maximize'],
+  ] as const) {
     const surface = heatmap(trials, distance, 'Enabled', {
       axes,
+      direction,
       slices: { Side: { mode }, Size: { mode: 'fixed', value: 1 } },
     });
     for (const cell of surface.cells) {
@@ -403,7 +409,14 @@ test('real numeric, boolean and option axes support fixed, maximum, mean and pin
             trial.parameters.Size === 1,
         )
         .map(score);
-      near(cell.value, mode === 'max' ? Math.max(...expected) : average(expected));
+      near(
+        cell.value,
+        mode === 'mean'
+          ? average(expected)
+          : direction === 'minimize'
+            ? Math.min(...expected)
+            : Math.max(...expected),
+      );
     }
   }
   const pinned = heatmap(trials, distance, 'Enabled', {
