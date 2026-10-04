@@ -84,6 +84,16 @@ test('module-worker dispatcher preserves public engine descriptions and complete
   assert.equal(typeof globalThis.Worker, 'undefined');
 });
 
+test('a reproduction snapshot failure rejects without posting or leaking pending work', async () => {
+  const { client, workers } = createHarness();
+  await assert.rejects(client.reproduce(source, { ...input, inputs: { invalid: () => 1 } }, {}), {
+    name: 'DataCloneError',
+  });
+  assert.equal(client.pendingCount, 0);
+  assert.equal(workers[0].requests.length, 0);
+  client.dispose();
+});
+
 test('concurrent requests are correlated by request id even when replies arrive out of order', async () => {
   const { client, workers } = createHarness();
   const descriptionPromise = client.describe(source, 1);

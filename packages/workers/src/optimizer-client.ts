@@ -1,5 +1,5 @@
 import type { Diagnostic, ParameterSet, RunInput } from '@pine/engine';
-import { restoreError, TextError, type Text } from '@pine/messages';
+import { isMessage, restoreError, TextError, type Text } from '@pine/messages';
 import type { TrialResult } from '@pine/optimizer';
 import { workerError, workerMessage } from './messages.ts';
 import {
@@ -9,6 +9,7 @@ import {
   type OptimizationTrial,
 } from './protocol.ts';
 import { EngineWorkerClient, WorkerCancelledError, WorkerCrashedError } from './client.ts';
+import { snapshotInput, transferInput, type PackedRunInput } from './run-input.ts';
 
 export interface OptimizationProgress {
   completed: number;
@@ -36,6 +37,8 @@ export interface OptimizationOptions {
   workerCount?: number;
   /** Optional ceiling; actual chunks adapt to roughly one second of work. */
   chunkSize?: number;
+  /** Borrow a private immutable list until settlement; otherwise snapshot all parameters now. */
+  immutableParameters?: boolean;
   onTrial?: (trial: OptimizationTrial) => void;
   onProgress?: (progress: OptimizationProgress) => void;
 }
@@ -53,6 +56,7 @@ interface Slot {
   worker: ReturnType<EngineWorkerFactory>;
   generation: number;
   busy: boolean;
+  prepared: boolean;
 }
 interface ActiveRun {
   generation: number;
@@ -73,7 +77,7 @@ export class OptimizationWorkerPool {
   #disposed = false;
   readonly #reproductions = new Set<EngineWorkerClient>();
   #idleReproductions: EngineWorkerClient[] = [];
-  #reproductionInputs = new WeakMap<RunInput, RunInput>();
+  #reproductionInputs = new WeakMap<RunInput, PackedRunInput>();
   #reproductionTurn: Promise<void> = Promise.resolve();
 
   /** `factory` creates the module Worker whose entry calls `serveEngineWorker`. */
@@ -97,7 +101,7 @@ export class OptimizationWorkerPool {
     const generation = this.#generation;
     let input = this.#reproductionInputs.get(common);
     if (!input) {
-      input = structuredClone(common);
+      input = snapshotInput(common);
       this.#reproductionInputs.set(common, input);
     }
     const overrides = structuredClone(parameters);
@@ -147,11 +151,11 @@ export class OptimizationWorkerPool {
     const maxChunk = positiveInteger(options.chunkSize, 256);
     const sourceRevision = options.sourceRevision ?? 0;
     return new Promise((resolve, reject) => {
-      let input: RunInput;
-      let parameterSets: ParameterSet[];
+      let input: PackedRunInput;
+      let parameterSets: readonly ParameterSet[];
       try {
-        input = structuredClone(common);
-        parameterSets = structuredClone(parameters) as ParameterSet[];
+        input = snapshotInput(common);
+        parameterSets = options.immutableParameters ? parameters : structuredClone(parameters);
       } catch (error) {
         reject(error);
         return;
@@ -230,7 +234,6 @@ export class OptimizationWorkerPool {
         const request: Extract<EngineWorkerRequest, { kind: 'optimize' }> = {
           kind: 'optimize',
           source,
-          common: input,
           parameters: chunk,
           chunkIndex,
           totalChunks: nextChunk + Math.ceil((parameterSets.length - nextParameter) / size),
@@ -239,6 +242,17 @@ export class OptimizationWorkerPool {
         };
         const slotGeneration = ++slot.generation;
         const received = new Set<number>();
+        let replayed = false;
+        const post = () => {
+          try {
+            const common = slot.prepared ? undefined : transferInput(input);
+            request.common = common;
+            slot.worker.postMessage(request, common ? [common.bars.buffer] : []);
+            slot.prepared = true;
+          } catch (error) {
+            fail(error instanceof Error ? error : new Error(String(error)));
+          }
+        };
         slot.busy = true;
         slot.worker.onmessage = (event) => {
           if (!active() || slotGeneration !== slot.generation) return;
@@ -281,6 +295,23 @@ export class OptimizationWorkerPool {
               fillPool();
               for (const available of run.slots) dispatch(available);
             } else if (response.kind === 'failed') {
+              const text = response.error.uiText;
+              // Custom dispatchers can lose their input state. Replay once before any trial arrives.
+              if (
+                !request.common &&
+                !replayed &&
+                received.size === 0 &&
+                text &&
+                isMessage(text) &&
+                'id' in text &&
+                text.id === 'invalidOptimizationDispatch'
+              ) {
+                replayed = true;
+                slot.prepared = false;
+                request.requestId = this.#nextRequestId++;
+                post();
+                return;
+              }
               const error =
                 response.error.name === 'OptimizationCompileError'
                   ? new OptimizationCompileError(
@@ -297,14 +328,15 @@ export class OptimizationWorkerPool {
             fail(error instanceof Error ? error : new Error(String(error)));
           }
         };
-        try {
-          slot.worker.postMessage(request);
-        } catch (error) {
-          fail(error instanceof Error ? error : new Error(String(error)));
-        }
+        post();
       };
       const addWorker = () => {
-        const slot: Slot = { worker: this.#factory(), generation: 0, busy: false };
+        const slot: Slot = {
+          worker: this.#factory(),
+          generation: 0,
+          busy: false,
+          prepared: false,
+        };
         run.slots.push(slot);
         workersCreated++;
         slot.worker.onerror = (event) => {

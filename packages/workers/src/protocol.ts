@@ -1,6 +1,7 @@
 import type { SerializedError } from '@pine/messages';
 import type { ParameterSet, RunInput, RunResult, ScriptDescription } from '@pine/engine';
 import type { TradeStatistics, TrialResult } from '@pine/optimizer';
+import type { PackedRunInput } from './run-input.ts';
 
 /** Shared by single runs and the future pool's independently scheduled chunks. */
 export interface WorkerTaskMetadata {
@@ -12,11 +13,16 @@ export type EngineWorkerRequest = WorkerTaskMetadata &
   (
     | { kind: 'describe'; source: string }
     | { kind: 'run'; source: string; input: RunInput }
-    | { kind: 'reproduce'; source: string; common?: RunInput; parameters: ParameterSet }
+    | {
+        kind: 'reproduce';
+        source: string;
+        common?: RunInput | PackedRunInput;
+        parameters: ParameterSet;
+      }
     | {
         kind: 'optimize';
         source: string;
-        common: RunInput;
+        common?: RunInput | PackedRunInput;
         parameters: readonly ParameterSet[];
         chunkIndex: number;
         totalChunks: number;
@@ -59,7 +65,7 @@ export interface EngineWorkerTransport {
   onmessage: ((event: MessageEvent<EngineWorkerResponse>) => void) | null;
   onerror: ((event: ErrorEvent) => void) | null;
   onmessageerror: ((event: MessageEvent) => void) | null;
-  postMessage(message: EngineWorkerRequest): void;
+  postMessage(message: EngineWorkerRequest, transfer?: Transferable[]): void;
   terminate(): void;
 }
 

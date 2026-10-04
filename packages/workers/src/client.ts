@@ -2,6 +2,7 @@ import type { ParameterSet, RunInput, ScriptDescription } from '@pine/engine';
 import { errorText, isMessage, restoreError, TextError, type Text } from '@pine/messages';
 import type { TrialResult } from '@pine/optimizer';
 import { workerError, workerMessage } from './messages.ts';
+import { isPackedInput, snapshotInput, transferInput, type PackedRunInput } from './run-input.ts';
 import type {
   EngineWorkerFactory,
   EngineWorkerRequest,
@@ -46,7 +47,7 @@ export class EngineWorkerClient {
   #nextRequestId = 1;
   #sourceRevision = 0;
   #disposed = false;
-  #prepared: { source: string; common: RunInput; revision: number } | null = null;
+  #prepared: { source: string; common: RunInput | PackedRunInput; revision: number } | null = null;
 
   /** `factory` creates the module Worker whose entry calls `serveEngineWorker`. */
   constructor(factory: EngineWorkerFactory) {
@@ -90,7 +91,7 @@ export class EngineWorkerClient {
   /** Reuse an immutable common snapshot in this Worker; only parameter overrides travel again. */
   reproduce(
     source: string,
-    common: RunInput,
+    common: RunInput | PackedRunInput,
     parameters: ParameterSet,
     sourceRevision = this.#sourceRevision,
   ): Promise<TrialResult> {
@@ -101,10 +102,19 @@ export class EngineWorkerClient {
       previous.common === common &&
       previous.revision === sourceRevision;
     const prepared = { source, common, revision: sourceRevision };
+    let input: PackedRunInput | undefined;
+    try {
+      input = same
+        ? undefined
+        : transferInput(isPackedInput(common) ? common : snapshotInput(common));
+    } catch (error) {
+      return Promise.reject(error);
+    }
     this.#prepared = prepared;
     return this.#request<TrialResult>(
-      { kind: 'reproduce', source, common: same ? undefined : common, parameters },
+      { kind: 'reproduce', source, common: input, parameters },
       sourceRevision,
+      input ? [input.bars.buffer] : [],
     ).catch((error) => {
       if (this.#prepared === prepared) this.#prepared = null;
       const text = errorText(error);
@@ -133,8 +143,14 @@ export class EngineWorkerClient {
     payload:
       | { kind: 'describe'; source: string }
       | { kind: 'run'; source: string; input: RunInput }
-      | { kind: 'reproduce'; source: string; common?: RunInput; parameters: ParameterSet },
+      | {
+          kind: 'reproduce';
+          source: string;
+          common?: RunInput | PackedRunInput;
+          parameters: ParameterSet;
+        },
     sourceRevision: number,
+    transfer: Transferable[] = [],
   ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       if (this.#disposed) {
@@ -152,7 +168,7 @@ export class EngineWorkerClient {
           reject,
         });
         try {
-          this.#worker!.postMessage({ ...payload, requestId, sourceRevision });
+          this.#worker!.postMessage({ ...payload, requestId, sourceRevision }, transfer);
         } catch (error) {
           this.#pending.delete(requestId);
           reject(error);

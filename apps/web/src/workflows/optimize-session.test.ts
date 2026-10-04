@@ -222,6 +222,7 @@ test('trials stream into a buffer; subscribers see a snapshot at most every 250 
   assert.deepEqual(run.common.bars, split.inSample);
   assert.equal(run.common.realtimeTail, false);
   assert.equal(run.options.workerCount, 3);
+  assert.equal(run.options.immutableParameters, true);
   assert.equal(run.options.sourceRevision, h.backtest.getState().sourceRevision);
   assert.deepEqual(h.session.getState().run.status === 'running' && h.session.getState().run, {
     status: 'running',
@@ -305,8 +306,9 @@ test('trials stream into a buffer; subscribers see a snapshot at most every 250 
   await settle();
   const outside = h.pool.active!;
   assert.deepEqual(outside.common.bars, split.outOfSample);
+  assert.equal(outside.options.immutableParameters, true);
+  assert.equal(outside.parameters, run.parameters, 'both ranges borrow the same private sets');
   assert.equal(outside.common.realtimeTail, true);
-  assert.deepEqual(outside.parameters, run.parameters);
   const phase = h.session.getState().run;
   assert.deepEqual(phase.status === 'running' && [phase.progress.phase, phase.progress.completed], [
     'out',
