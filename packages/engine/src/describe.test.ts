@@ -92,6 +92,20 @@ test('computed strategy settings are reported by name and line, never evaluated'
   assert.deepEqual(description.computedSettings, { initial_capital: 2 });
 });
 
+test('describe names the declaration: strategy, indicator or library', () => {
+  const kind = (declaration: string) => describe(`//@version=6\n${declaration}\nplot(close)`).kind;
+  assert.equal(kind('strategy("S")'), 'strategy');
+  assert.equal(kind('indicator("I", overlay = true)'), 'indicator');
+  // A strategy whose title is not a literal is still a strategy.
+  assert.equal(kind('const string NAME = "S"\nstrategy(NAME)'), 'strategy');
+  assert.equal(
+    describe('//@version=6\n// @description Tools\nlibrary("Tools")\nexport f(float x) => x * 2')
+      .kind,
+    'library',
+  );
+  assert.equal(describe('//@version=6\nindicator("Broken")\nplot(nope)').kind, undefined);
+});
+
 test('a compile failure keeps its diagnostics and describes nothing', () => {
   const description = describe('//@version=4\nstrategy("Old version")');
   assert.equal(description.success, false);
