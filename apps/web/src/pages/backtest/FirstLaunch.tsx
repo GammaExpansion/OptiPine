@@ -3,7 +3,7 @@ import { Icon } from '../../components/Icon.tsx';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { useBacktestStore } from '../../state/backtest.ts';
 import { useUiStore } from '../../state/ui.ts';
-import { pickScriptFile, showPaste } from '../../dialogs/script/actions.ts';
+import { confirmReplace, pickScriptFile, showPaste } from '../../dialogs/script/actions.ts';
 import styles from './FirstLaunch.module.css';
 
 export function FirstLaunch() {
@@ -68,7 +68,10 @@ export function FirstLaunch() {
           </div>
         ))}
         <div className={styles.example}>
-          <Button variant="link" onClick={() => void loadExample('trend-breakout')}>
+          <Button
+            variant="link"
+            onClick={() => confirmReplace(() => void loadExample('trend-breakout'))}
+          >
             {t('backtest.loadExample')}
           </Button>
         </div>

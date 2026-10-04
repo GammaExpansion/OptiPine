@@ -1,3 +1,4 @@
+import { confirmReplace } from '../../../dialogs/script/actions.ts';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { getBacktestStore, openScript, useBacktestStore } from '../../../state/backtest.ts';
 import { useSelectionStore } from '../../../state/selection.ts';
@@ -21,7 +22,8 @@ function runIfReady() {
 
 async function openDroppedFile(file: File) {
   if (!/\.pine$/i.test(file.name)) return;
-  openScript({ source: await file.text(), fileName: file.name, origin: { kind: 'file' } });
+  const source = await file.text();
+  confirmReplace(() => openScript({ source, fileName: file.name, origin: { kind: 'file' } }));
 }
 
 /** B3's "v6 compiled" in the dock bar, or that the script is compiling or failed to compile. */

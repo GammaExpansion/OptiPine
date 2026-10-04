@@ -949,7 +949,7 @@ export const zh = {
   'script.clipboardError': '无法读取剪贴板。请使用 Ctrl + V 在此粘贴代码。',
   'script.source': 'Pine 源码',
   'script.replaceTitle': '替换当前脚本？',
-  'script.replaceBody': '当前源码与输入参数修改将被替换。',
+  'script.replaceEdited': '{name} 自打开以来的修改将丢失。',
   'script.downloadReminder': '如需保留当前源码，请先下载 .pine 文件。',
   'script.replace': '替换脚本',
   'script.useCode': '使用此代码',

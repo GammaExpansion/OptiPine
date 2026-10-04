@@ -40,3 +40,24 @@ export function downloadScript(fallbackName: string): void {
   // Allow the browser to begin reading the download before releasing the blob.
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
+
+/** Whether replacing the current script would lose edits made since it was opened. */
+export function replacingLosesEdits(): boolean {
+  const { source, origin } = getBacktestStore().getState();
+  return source.trim() !== '' && !!origin?.edited;
+}
+
+/** The replacement the replace dialog holds until the user answers it. */
+export const replaceStore = createStore<{ replace: (() => void) | null }>(() => ({
+  replace: null,
+}));
+
+/**
+ * Open another script through `replace` (an example, a file, a drop): at once when the current
+ * script is empty or unedited since it was opened, otherwise once the user agrees to lose the edits.
+ */
+export function confirmReplace(replace: () => void): void {
+  if (!replacingLosesEdits()) return replace();
+  replaceStore.setState({ replace });
+  uiStore.getState().setDialogOpen('replaceScript', true);
+}

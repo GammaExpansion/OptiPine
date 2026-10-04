@@ -973,7 +973,7 @@ export const en = {
   'script.clipboardError': 'Clipboard access is unavailable. Paste the code here using Ctrl + V.',
   'script.source': 'Pine source',
   'script.replaceTitle': 'Replace the current script?',
-  'script.replaceBody': 'The current source and its input edits will be replaced.',
+  'script.replaceEdited': 'Your edits to {name} since it was opened will be lost.',
   'script.downloadReminder': 'Download the current .pine file first if you want to keep it.',
   'script.replace': 'Replace script',
   'script.useCode': 'Use this code',

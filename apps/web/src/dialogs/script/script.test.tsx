@@ -1,7 +1,7 @@
 ﻿import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { cleanup } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import { I18nProvider } from '../../i18n/I18nProvider.tsx';
 import { getBacktestStore, openScript } from '../../state/backtest.ts';
 import { replaceServices } from '../../state/services.ts';
@@ -14,6 +14,10 @@ import { installShortcuts } from '../../shell/shortcuts.ts';
 import { downloadScript, pasteStore, showPaste } from './actions.ts';
 
 let restore: () => void;
+// The dialogs load lazily on first use; loading them here keeps that time out of each test.
+beforeAll(async () => {
+  await Promise.all([import('./ScriptDialog.tsx'), import('./ReplaceScriptDialog.tsx')]);
+}, 30_000);
 beforeEach(() => {
   restore = replaceServices(() => fakeServices());
   pasteStore.setState({ source: '', clipboardFailed: false });
@@ -54,8 +58,10 @@ test('first launch explains missing prerequisites and allows the store run when 
   await waitFor(() => expect(getBacktestStore().getState().result).not.toBeNull());
 });
 
-test('pasted code asks before replacing an existing script and cancelling keeps the source', async () => {
+test('pasted code asks before replacing an edited script and cancelling keeps the source', async () => {
   openScript({ source, fileName: 'local.pine', origin: { kind: 'file' } });
+  const edited = `${source}\n// edited`;
+  getBacktestStore().getState().actions.setSource(edited);
   mount();
   const user = userEvent.setup();
   await user.click(screen.getByRole('button', { name: 'Paste code' }));
@@ -65,12 +71,57 @@ test('pasted code asks before replacing an existing script and cancelling keeps 
   );
   await user.click(screen.getByRole('button', { name: 'Use this code' }));
   expect(screen.getByRole('dialog', { name: 'Replace the current script?' })).toBeVisible();
+  expect(
+    screen.getByText(/Your edits to local.pine since it was opened will be lost/),
+  ).toBeVisible();
   await user.click(screen.getByRole('button', { name: 'Cancel' }));
-  expect(getBacktestStore().getState().source).toBe(source);
+  expect(getBacktestStore().getState().source).toBe(edited);
   await user.click(screen.getByRole('button', { name: 'Use this code' }));
   await user.click(screen.getByRole('button', { name: 'Replace script' }));
-  expect(getBacktestStore().getState().origin).toEqual({ kind: 'pasted' });
+  expect(getBacktestStore().getState().origin).toEqual({ kind: 'pasted', edited: false });
   expect(getBacktestStore().getState().fileName).toBeNull();
+});
+
+test('pasted code replaces an unedited script at once', async () => {
+  openScript({ source, fileName: 'local.pine', origin: { kind: 'file' } });
+  mount();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: 'Paste code' }));
+  await user.type(await screen.findByRole('textbox', { name: 'Pine source' }), 'plot(open)');
+  await user.click(screen.getByRole('button', { name: 'Use this code' }));
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(getBacktestStore().getState().source).toBe('plot(open)');
+});
+
+test('an example, a file or a drop asks before replacing an edited script, through one dialog', async () => {
+  openScript({ source, fileName: 'local.pine', origin: { kind: 'file' } });
+  mount();
+  const user = userEvent.setup();
+  // Unedited: the example replaces the script without asking.
+  await user.click(screen.getByRole('button', { name: /trend-breakout.pine|local.pine/ }));
+  await user.click(await screen.findByRole('menuitem', { name: 'MA Cross' }));
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(getBacktestStore().getState().fileName).toBe('ma-cross.pine');
+  // An edit marks it, and running a backtest does not clear the mark.
+  const edited = `${getBacktestStore().getState().source}\n// mine`;
+  getBacktestStore().getState().actions.setSource(edited);
+  await waitFor(() => expect(getBacktestStore().getState().readiness.ok).toBe(true));
+  await getBacktestStore().getState().actions.run();
+  expect(getBacktestStore().getState().result).not.toBeNull();
+  expect(getBacktestStore().getState().origin).toEqual({
+    kind: 'example',
+    id: 'ma-cross',
+    edited: true,
+  });
+  await user.upload(screen.getByLabelText('Open .pine file'), file('other.pine', source));
+  const dialog = await screen.findByRole('dialog', { name: 'Replace the current script?' });
+  expect(dialog).toHaveTextContent('Your edits to ma-cross.pine since it was opened will be lost.');
+  await user.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(getBacktestStore().getState().source).toBe(edited);
+  await user.upload(screen.getByLabelText('Open .pine file'), file('other.pine', source));
+  await user.click(await screen.findByRole('button', { name: 'Replace script' }));
+  await waitFor(() => expect(getBacktestStore().getState().fileName).toBe('other.pine'));
+  expect(getBacktestStore().getState().origin).toEqual({ kind: 'file', edited: false });
 });
 
 test('clipboard menu seeds the paste dialog and failure still permits manual paste', async () => {
@@ -135,7 +186,11 @@ test('script menu has compile facts and marks the current example', async () => 
     screen.getByRole('menuitem', { name: 'Trend Breakout' }).querySelector('svg'),
   ).not.toBeNull();
   await user.click(screen.getByRole('menuitem', { name: 'MA Cross' }));
-  expect(getBacktestStore().getState().origin).toEqual({ kind: 'example', id: 'ma-cross' });
+  expect(getBacktestStore().getState().origin).toEqual({
+    kind: 'example',
+    id: 'ma-cross',
+    edited: false,
+  });
 });
 
 test('download uses the exact file name and source blob', () => {

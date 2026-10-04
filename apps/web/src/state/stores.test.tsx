@@ -147,7 +147,7 @@ test('a pending example cannot accept data after another script is opened', asyn
     openScript({ source: strategySource, fileName: null, origin: { kind: 'pasted' } });
     respond(Response.json(testDataset));
     await loading;
-    expect(getBacktestStore().getState().origin).toEqual({ kind: 'pasted' });
+    expect(getBacktestStore().getState().origin).toEqual({ kind: 'pasted', edited: false });
     expect(getBacktestStore().getState().dataset).toBeNull();
   } finally {
     reset();
