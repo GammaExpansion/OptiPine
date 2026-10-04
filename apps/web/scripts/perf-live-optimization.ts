@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { cp, mkdir, open, readFile, writeFile } from 'node:fs/promises';
 import { gunzipSync } from 'node:zlib';
 import type { FeedDataset } from '@pine/market-data';
 import { cpus, totalmem, platform, release } from 'node:os';
@@ -22,6 +22,7 @@ const windowCombinations = Number(process.env.PERF_WINDOW_COMBINATIONS ?? 3_000)
 const timeout = Number(process.env.PERF_TIMEOUT_MS ?? 7_200_000);
 const selected = process.env.PERF_SCENARIOS?.split(',');
 const timeframe = process.env.PERF_TIMEFRAME ?? '240';
+const trace = process.env.PERF_TRACE === '1';
 if (!['60', '240'].includes(timeframe)) throw new Error('PERF_TIMEFRAME must be 60 or 240');
 await mkdir(output, { recursive: true });
 
@@ -46,6 +47,8 @@ await build({
     },
   ],
 });
+// Keep the exact minified sources and maps next to each trace, even after another build.
+if (trace) await cp(`${buildDirectory}/assets`, `${output}/assets`, { recursive: true });
 // Refuse market traffic at the server as well as intercepting it in Playwright.
 // The production server's middleware also sees asset requests.
 const offlineServer = createAppServer(buildDirectory, (request, response, next) => {
@@ -123,8 +126,9 @@ async function painted(page: Page) {
 }
 
 async function interact(page: Page, phone: boolean, walk: boolean, late: boolean) {
-  const workflowActions = [];
+  const uiActions: { label: string; startedRunning: boolean; finishedRunning: boolean }[] = [];
   async function action(label: string, perform: () => Promise<unknown>) {
+    const startedRunning = await page.evaluate(() => window.liveProbe.state().status === 'running');
     await page.evaluate(
       (name) => window.liveProbe.label(name),
       `${late ? 'late' : 'early'}:${label}`,
@@ -132,6 +136,10 @@ async function interact(page: Page, phone: boolean, walk: boolean, late: boolean
     await perform();
     await painted(page);
     await page.evaluate(() => window.liveProbe.label(''));
+    const finishedRunning = await page.evaluate(
+      () => window.liveProbe.state().status === 'running',
+    );
+    uiActions.push({ label, startedRunning, finishedRunning });
   }
   async function tab(name: string) {
     if (phone) await page.getByRole('tab', { name, exact: true }).click();
@@ -145,29 +153,35 @@ async function interact(page: Page, phone: boolean, walk: boolean, late: boolean
       })
       .click(),
   );
-  // OptimizeSidebar currently puts Ranking inside an inert ancestor while running.
-  // Do not bypass inert and call it a successful UI interaction: report the workflow cost separately.
-  workflowActions.push({
-    uiBlocked: true,
-    ...(await page.evaluate((late) => window.liveProbe.viewAction('objective', late), late)),
-  });
-  if (walk)
-    workflowActions.push({
-      uiBlocked: true,
-      ...(await page.evaluate((late) => window.liveProbe.viewAction('filter', late), late)),
-    });
+  await tab('Settings');
+  await page.getByRole('button', { name: /^By (IS net profit|Profit factor)/ }).click();
+  const objective = page.getByRole('dialog', { name: 'Ranking objective', exact: true });
+  await action('objective', () =>
+    objective
+      .getByRole('radio', {
+        name: late ? 'IS net profit' : 'Profit factor',
+        exact: true,
+      })
+      .click(),
+  );
+  const filters = page.getByRole('group', { name: 'Filters', exact: true }).last();
+  await action('filter', () =>
+    filters
+      .getByRole('button', { name: /^Remove / })
+      .first()
+      .click(),
+  );
+  const settings = await page.evaluate(() => window.liveProbe.state().settings);
+  if (
+    settings.objective !== (late ? 'netProfit' : 'profitFactor') ||
+    settings.filters !== (late ? 0 : 1)
+  )
+    throw new Error(`Ranking UI did not apply: ${JSON.stringify(settings)}`);
   if (!walk) {
     await tab('Parameter map');
     const canvas = page.getByTestId('parameter-map');
     await action('map-hover', () => canvas.hover({ position: { x: 85, y: 60 } }));
     await tab('Leaderboard');
-    const board = page.getByRole('region', { name: 'Leaderboard', exact: true }).first();
-    await action('filter', () =>
-      board
-        .getByRole('button', { name: /^Remove / })
-        .first()
-        .click(),
-    );
     await action('leaderboard-page', () =>
       page.getByRole('button', { name: 'Next page', exact: true }).click(),
     );
@@ -183,7 +197,7 @@ async function interact(page: Page, phone: boolean, walk: boolean, late: boolean
     await action('windows-scroll', () => page.mouse.wheel(0, 400));
     await tab('Summary');
   }
-  return workflowActions;
+  return uiActions;
 }
 
 const reports: unknown[] = [];
@@ -278,18 +292,34 @@ try {
         if (setup.combinations !== (walk ? windowCombinations : combinations))
           throw new Error(`${name}: incorrect search size: ${setup.combinations}`);
         const before = await heap(browser, cdp, true);
-        if (process.env.PERF_PROFILE === '1') {
+        if (process.env.PERF_PROFILE === '1' || trace) {
           await cdp.send('Profiler.enable');
           await cdp.send('Profiler.start');
         }
+        if (trace)
+          await cdp.send('Tracing.start', {
+            traceConfig: {
+              recordMode: 'recordAsMuchAsPossible',
+              traceBufferSizeInKb: 512 * 1_024,
+              excludedCategories: ['*'],
+              includedCategories: [
+                'devtools.timeline',
+                'disabled-by-default-devtools.timeline',
+                'v8',
+                'blink.user_timing',
+              ],
+            },
+            transferMode: 'ReturnAsStream',
+          });
         if (phone) await page.getByRole('tab', { name: 'Settings', exact: true }).click();
         await page.evaluate(() => window.liveProbe.begin());
+        if (trace) await page.evaluate(() => performance.mark('perf-live-begin'));
         await page.getByRole('button', { name: 'Start', exact: true }).last().click();
         if (phone) await page.getByRole('tab', { name: 'Summary', exact: true }).click();
         const started = Date.now();
         const heapSamples: { at: number; bytes: number }[] = [];
         const interactionErrors: string[] = [];
-        const workflowActions = [];
+        const uiActions = [];
         let early = false;
         let late = false;
         let lastLog = 0;
@@ -310,7 +340,7 @@ try {
             if (early) late = true;
             else early = true;
             try {
-              workflowActions.push({
+              uiActions.push({
                 late: isLate,
                 actions: await interact(page, phone, walk, isLate),
               });
@@ -331,8 +361,30 @@ try {
           await page.waitForTimeout(1_000);
         }
         await painted(page);
+        if (trace) await page.evaluate(() => performance.mark('perf-live-end'));
         const raw = await page.evaluate(() => window.liveProbe.end());
-        if (process.env.PERF_PROFILE === '1')
+        if (trace) {
+          const complete = new Promise<{ stream?: string; dataLossOccurred: boolean }>((resolve) =>
+            cdp.once('Tracing.tracingComplete', resolve),
+          );
+          await cdp.send('Tracing.end');
+          const capture = await complete;
+          if (capture.dataLossOccurred || !capture.stream)
+            throw new Error(`${name}: incomplete Chrome trace`);
+          const handle = capture.stream;
+          const file = await open(`${output}/${name}.trace.json`, 'w');
+          try {
+            while (true) {
+              const chunk = await cdp.send('IO.read', { handle });
+              await file.write(Buffer.from(chunk.data, chunk.base64Encoded ? 'base64' : 'utf8'));
+              if (chunk.eof) break;
+            }
+          } finally {
+            await file.close();
+            await cdp.send('IO.close', { handle });
+          }
+        }
+        if (process.env.PERF_PROFILE === '1' || trace)
           await writeFile(
             `${output}/${name}.cpuprofile`,
             JSON.stringify((await cdp.send('Profiler.stop')).profile),
@@ -397,6 +449,13 @@ try {
           },
           viewIntervals: statistics(raw.views.slice(1).map((at, index) => at - raw.views[index])),
           messages: groups(raw.messages),
+          transfers: {
+            maxAppendTrials: Math.max(0, ...raw.messages.map((sample) => sample.trials ?? 0)),
+            reproductionRequests: raw.messages.filter((sample) => sample.name === 'reproduce')
+              .length,
+            reproductionSnapshots: raw.messages.filter((sample) => sample.bars !== undefined)
+              .length,
+          },
           interactions: groups(raw.interactions),
           heap: {
             before,
@@ -408,7 +467,7 @@ try {
           },
           errors,
           interactionErrors,
-          workflowActions,
+          uiActions,
         };
         await writeFile(`${output}/${name}-raw.json`, JSON.stringify({ ...raw, heapSamples }));
         await writeFile(`${output}/${name}.json`, JSON.stringify(report, null, 2));

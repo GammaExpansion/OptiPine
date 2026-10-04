@@ -14,7 +14,7 @@ function createProbe() {
   let events: Sample[] = [];
   let snapshots: Snapshot[] = [];
   let views: number[] = [];
-  let messages: Sample[] = [];
+  let messages: (Sample & { trials?: number; bars?: number })[] = [];
   let longFrames: unknown[] = [];
   let interactions: Sample[] = [];
   let label = '';
@@ -73,48 +73,15 @@ function createProbe() {
     const at = performance.now();
     post.call(this, message, Array.isArray(transfer) ? { transfer } : transfer);
     if (active && typeof message.kind === 'string')
-      messages.push({ at, duration: performance.now() - at, name: message.kind });
+      messages.push({
+        at,
+        duration: performance.now() - at,
+        name: message.kind,
+        trials: message.kind === 'runAppend' ? message.input.trials.length : undefined,
+        bars: message.kind === 'reproduce' ? message.common?.bars.length : undefined,
+      });
   };
   return {
-    /** Measure the real view action even when the sidebar's inert wrapper blocks its UI. */
-    async viewAction(kind: 'objective' | 'filter', late: boolean) {
-      const store = getOptimizationStore();
-      const started = performance.now();
-      if (kind === 'objective')
-        store.getState().actions.setObjective(late ? 'netProfit' : 'profitFactor');
-      else store.getState().actions.removeFilter(0);
-      const synchronousMs = performance.now() - started;
-      await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          off();
-          reject(new Error('View action did not settle'));
-        }, 60_000);
-        const check = () => {
-          const state = store.getState();
-          const diagnostics = getServices().optimization!.session.getDiagnostics();
-          if (
-            state.validation.mode === 'walk-forward'
-              ? state.walkForward?.pending
-              : diagnostics.viewKey !== diagnostics.analysisKey
-          )
-            return;
-          clearTimeout(timeout);
-          off();
-          resolve();
-        };
-        const off = store.subscribe(check);
-        check();
-      });
-      await new Promise<void>((resolve) =>
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-      );
-      return {
-        kind,
-        synchronousMs,
-        throughPaintMs: performance.now() - started,
-        running: store.getState().run.status === 'running',
-      };
-    },
     label(name: string) {
       label = name;
     },
@@ -149,6 +116,10 @@ function createProbe() {
       const state = getOptimizationStore().getState();
       return {
         status: state.run.status,
+        settings: {
+          objective: state.viewSettings.objective,
+          filters: state.viewSettings.filters.length,
+        },
         progress: state.run.status === 'running' ? state.run.progress : null,
         ready: state.readiness.ok,
         combinations: state.search.sampling?.combinations,
