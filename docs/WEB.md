@@ -364,17 +364,17 @@ names the set, with **Undo**, which puts back the inputs and result from before.
 
 ### 4.1 Stack
 
-| Need                               | Choice                                                                                                                                     |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| UI framework                       | React 19 with TypeScript, built by Vite                                                                                                    |
-| App state                          | Zustand stores over framework-free workflow modules (4.3)                                                                                  |
-| Panes, dialogs, popovers, menus    | `react-resizable-panels` and Radix UI primitives, styled with the mock's tokens                                                            |
-| Leaderboard and trade list         | TanStack Table with TanStack Virtual                                                                                                       |
-| Price chart and equity time series | `lightweight-charts` (Apache-2.0)                                                                                                          |
-| Parameter map, scatter, histograms | Components of our own: canvas for what updates live (map, scatter), SVG for the rest (histograms, P&L calendar, stability rows, timelines) |
-| Pine code tab                      | CodeMirror 6 with a Pine highlighting mode                                                                                                 |
-| Fonts                              | Barlow, Noto Sans SC and Source Code Pro, self-hosted with `@fontsource` so the app makes no third-party requests                          |
-| Tests                              | Vitest with Testing Library; Playwright for end-to-end smoke tests                                                                         |
+| Need                             | Choice                                                                                                                                                                                                                        |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UI framework                     | React 19 with TypeScript, built by Vite                                                                                                                                                                                       |
+| App state                        | Zustand stores over framework-free workflow modules (4.3)                                                                                                                                                                     |
+| Panes, dialogs, popovers, menus  | `react-resizable-panels` and Radix UI primitives, styled with the mock's tokens                                                                                                                                               |
+| Leaderboard and trade list       | TanStack Table; the trade list is virtualized with TanStack Virtual                                                                                                                                                           |
+| Price chart, equity and drawdown | `lightweight-charts` (Apache-2.0)                                                                                                                                                                                             |
+| Optimize charts and the rest     | Components of our own: canvas for what updates live or holds many points (map, scatter, Top 20 and walk-forward equity), SVG for the rest (histograms, P&L calendar, monthly returns, sensitivity, stability rows, timelines) |
+| Pine code tab                    | CodeMirror 6 with a Pine highlighting mode                                                                                                                                                                                    |
+| Fonts                            | Barlow, Noto Sans SC and Source Code Pro, self-hosted with `@fontsource` so the app makes no third-party requests                                                                                                             |
+| Tests                            | Node's test runner for workflows; Vitest with Testing Library; Playwright for end-to-end tests, with axe for accessibility                                                                                                    |
 
 React gives the widest choice of mature, accessible components and is familiar to most
 contributors. Its weak point, re-rendering under a fast stream of trials, is handled by keeping the
@@ -389,32 +389,39 @@ exports, and never on `@pine/golden`. The root build adds it last.
 ```text
 apps/web/
 ├── index.html
-├── vite.config.ts        # React plugin; /api/market middleware for dev and preview
+├── sheet.html            # the component sheet (G5), for tests and dev
+├── charts.html           # a chart workbench, for tests and dev
+├── vite.config.ts        # React plugin; /api/market middleware for dev and preview; e2e build
 ├── server/               # production server: built files plus /api/market
 ├── examples/             # the example strategies' Pine sources and data requests
+├── scripts/              # the Node test runner's entry
 ├── src/
 │   ├── main.tsx          # entry and providers
-│   ├── shell/            # header, page switch, language switch, shortcuts
-│   ├── pages/backtest/   # chart area, dock tabs, inputs and properties
+│   ├── shell/            # header, page switch, layouts, run controls, shortcuts, leave guard
+│   ├── pages/backtest/   # chart area, dock tabs, code, inputs and properties, preview
 │   ├── pages/optimize/   # data range, summary, leaderboard, map, sensitivity, walk-forward
 │   ├── dialogs/          # market data, date range, strategy properties, script menu
 │   ├── components/       # design-system primitives (G5)
-│   ├── charts/           # price chart, equity, drawdown, map, scatter, histograms, timelines
+│   ├── charts/           # price chart, equity and drawdown, P&L calendar, map and curve
 │   ├── workflows/        # framework-free workflows (4.3), tested in Node
-│   ├── state/            # Zustand stores and selectors over workflows/
+│   ├── state/            # Zustand stores over workflows/, and the services that own them
 │   ├── workers/          # Worker entry modules and factories
 │   ├── i18n/             # message catalogs and number and date formatting
-│   └── styles/           # tokens, base styles, fonts
-└── e2e/                  # Playwright tests and recorded provider responses
+│   ├── styles/           # tokens, base styles, fonts
+│   ├── sheet/            # the component sheet's page
+│   ├── charts-dev/       # the chart workbench's page
+│   └── test/             # Vitest setup
+└── e2e/                  # Playwright tests, their harness and recorded provider responses
 ```
 
 ### 4.3 Layering
 
 - `workflows/` holds every rule in section 3 and the computations the screens need beyond the
   packages (equity-tab figures, histogram bins, filter pass counts, the single-input curve's range).
-  It has no React and no DOM, talks to Workers through injected factories, and returns plain data,
+  It has no React and no DOM, talks to Workers through injected clients, and returns plain data,
   so it is tested in Node with fake Workers. It starts inside `apps/web`; it would move to a package
-  only if another frontend needed it.
+  only if another frontend needed it. Display rules that serve one screen, such as the run block's
+  caption, sit beside that screen as plain modules.
 - `state/` holds the Zustand stores. Components read state through selectors and change it through
   store actions that call `workflows/`.
 - `components/` and `charts/` are presentational. A chart owns its canvas or `lightweight-charts`
@@ -425,80 +432,92 @@ apps/web/
 
 ### 4.4 State
 
-| Store          | Holds                                                                                                                                                                       |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `workspace`    | Source and file name, the compile result, the dataset and how it was obtained, input values, property overrides                                                             |
-| `backtest`     | Run state, the latest result with its equity, whether it is outdated, and the preview set                                                                                   |
-| `optimization` | Search ranges, validation, ranking and filters, run progress, the trial buffer and snapshot, view settings (axes, slices, Smooth, surface), selection, walk-forward results |
-| `ui`           | Page, dock tab, pane sizes, open dialogs and language                                                                                                                       |
+| Store          | Holds                                                                                                                                                                                                                                                                       |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backtest`     | The open script (source, file name, origin and whether it was edited), the compile and its description, inputs, the script's properties and overrides, the dataset, run state, the latest result with its equity, whether it is outdated, and the preview and applied sets  |
+| `marketData`   | The market data dialog's fetch and preview, whether the data service is available, and where the accepted dataset came from                                                                                                                                                 |
+| `optimization` | Search ranges and sampling, validation and the window plan, view settings (objective, direction, filters, axes, slices, Smooth, surface, selected set and window, tolerance), the run block, run progress, results with their views, Top 20 equity and walk-forward results |
+| `selection`    | The hovered and focused trade and the code line to reveal, shared by the chart, the trade list, Issues and the code tab                                                                                                                                                     |
+| `ui`           | Page, dock tab, pane sizes, open dialogs, language, the tablet drawer and the phone's Optimize tab                                                                                                                                                                          |
+
+Each store bridges a workflow session. `state/services.ts` owns the sessions, the Worker clients
+and the feed client; the optimization side, with its pool and analysis client, loads when the
+Optimize page first needs it, and until then the shell reads only whether it exists and has
+results. A run's trials stay in the session, outside any store (3.2).
 
 ### 4.5 What each panel calls
 
-| Panel                                     | Package calls                                                                                                                                                                                                                                          |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Compile status, inputs, property defaults | `EngineWorkerClient.describe` → `describe` in `@pine/engine`                                                                                                                                                                                           |
-| Chart, report, equity, trades, issues     | `EngineWorkerClient.run` → `runWithEquity`; plot panes from `PlotOutput.overlay`; report rows from `metricRows`                                                                                                                                        |
-| Search ranges and combination counts      | `generateSearchSpace`; parameter lists through the analysis job `parameters` (`enumerateGrid`, `sampleRandom`)                                                                                                                                         |
-| IS / OOS validation                       | `splitBars`; the pool runs both ranges; an `AnalysisRun` sends each trial once (`runOpen`, `runAppend`), the Worker joins the ranges by trial id, and `runClose` releases a replaced run                                                               |
-| Optimization run and progress             | `OptimizationWorkerPool.optimize` with `onTrial` and `onProgress`; `cancel`                                                                                                                                                                            |
-| Leaderboard, filters, map, sensitivity    | `runView`: a `summarizeOptimizerAnalysis` summary of the run (ranks, per-set columns, maps, sensitivity, R10's removed ranks), `rankBy: 'neighborhood'` for the neighbourhood mean; `buildBinDetail` for R7; consecutive losses from `tradeStatistics` |
-| Top 20 equity                             | `OptimizationWorkerPool.reproduce`, which runs `runWithEquity`, for the 20 leading sets after a run and after a ranking change; a newer request cancels the older one                                                                                  |
-| Walk-forward                              | Analysis jobs `plan` (bounds and bar indices from bar times), `choose`, `finalize` and `stability`; the pool optimizes each window and reproduces each chosen set                                                                                      |
-| Market data                               | `FeedClient`, `FeedImportSession`, `parseCsv`, `parseRunMetadata`, `parseSessionCalendar`, `createSymbolProfile`                                                                                                                                       |
-| Errors                                    | Coded errors and `errorText` from `@pine/messages`, translated by the catalogs                                                                                                                                                                         |
+| Panel                                     | Package calls                                                                                                                                                                                                                                                   |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Compile status, inputs, property defaults | `EngineWorkerClient.describe` → `describe` in `@pine/engine`                                                                                                                                                                                                    |
+| Chart, report, equity, trades, issues     | `EngineWorkerClient.run` → `runWithEquity`; plot panes from `PlotOutput.overlay`; report rows from `metricRows`                                                                                                                                                 |
+| Search ranges and combination counts      | `generateSearchSpace`; parameter lists through the analysis job `parameters` (`enumerateGrid`, `sampleRandom`)                                                                                                                                                  |
+| IS / OOS validation                       | `splitBars`; the pool runs both ranges; an `AnalysisRun` sends each trial once (`runOpen`, `runAppend`), the Worker joins the ranges by trial id, and `runClose` releases a replaced run                                                                        |
+| Optimization run and progress             | `OptimizationWorkerPool.optimize` with `onTrial` and `onProgress`; `cancel`                                                                                                                                                                                     |
+| Leaderboard, filters, map, sensitivity    | `runView`: a `summarizeOptimizerAnalysis` summary of the run (ranks, per-set columns, maps, sensitivity, R10's removed ranks), `rankBy: 'neighborhood'` for the neighbourhood mean; `buildBinDetail` for R7; consecutive losses from `tradeStatistics`          |
+| Top 20 equity                             | `OptimizationWorkerPool.reproduce`, which runs `runWithEquity` in a Worker of its own, for the 20 leading sets after a run and after a ranking change, at most one per thread at a time and keeping curves already drawn; a newer request cancels the older one |
+| Walk-forward                              | Analysis jobs `plan` (bounds and bar indices from bar times), `choose`, `finalize`, `stability` and `view` for the window map; the pool optimizes each window and reproduces each chosen set                                                                    |
+| Market data                               | `FeedClient`, `FeedImportSession`, `parseCsv`, `parseRunMetadata`, `parseSessionCalendar`, `createSymbolProfile`                                                                                                                                                |
+| Errors                                    | Coded errors and `errorText` from `@pine/messages`, translated by the catalogs                                                                                                                                                                                  |
 
 The top-20 view needs equity per set, and optimization trials carry only metrics. `runWithEquity`
 returns one equity value per bar with metrics identical to the sweep's, at about 10% more time than
 `run` (333 ms against 305 ms on a 20,488-bar fixture). Rerunning 20 sets therefore costs about 20
-single runs spread over the pool, a second or two at typical sizes.
+single runs spread over the threads, a second or two at typical sizes.
 
 ### 4.6 Workers
 
-`src/workers/` holds two entry modules, `serveEngineWorker(self)` and `serveAnalysisWorker(self)`,
-and factories that create them with `new Worker(new URL(…, import.meta.url), { type: 'module' })`.
-The app keeps one `EngineWorkerClient` for describe and backtests, one `OptimizationWorkerPool`
-(one Worker per CPU thread minus one) and one `AnalysisWorkerClient`. Editing the source raises the
-source revision, which discards late replies. Cancel terminates Workers and is available whenever
-something runs.
+`src/workers/` holds two entry modules, `engine.worker.ts` and `analysis.worker.ts`, which call
+`serveEngineWorker(self)` and `serveAnalysisWorker(self)`, and factories that create them with
+`new Worker(new URL(…, import.meta.url), { type: 'module' })`. The app keeps one
+`EngineWorkerClient` for describe and backtests, started by the first compile, and, once the
+Optimize page first loads, one `OptimizationWorkerPool` (one Worker per CPU thread minus one) and
+one `AnalysisWorkerClient`. Editing the source raises the source revision, which discards late
+replies. Cancel terminates Workers and is available whenever something runs.
 
-A walk-forward run plans the windows, then for each window optimizes its IS range, chooses a set
-with the current ranking, filters and smoothing, reproduces that set on the IS range (its metrics
-must equal the sweep's) and on the OOS range, and finally assembles the stitched result and
-stability. Changing the stability tolerance recomputes only the stability.
+The walk-forward windows are planned whenever the walk-forward settings or the data change, which
+draws O3. A run takes that plan, then for each window optimizes its IS range, chooses a set with
+the current ranking, filters and smoothing, reproduces that set on the IS range (its metrics must
+equal the sweep's) and on the OOS range, and finally assembles the stitched result and stability.
+Changing the stability tolerance recomputes only the stability.
 
 ### 4.7 Market data and serving
 
 Provider data goes through the `/api/market` middleware from `@pine/market-data/proxy`. In
 development and preview a Vite plugin mounts it; in production `server/` serves the built app and
 the middleware on `127.0.0.1:5174` (`PORT` and `HOST` override). Without the middleware, as on a
-static host, CSV upload still works and the provider tabs say the data service is unavailable.
+static host, CSV upload still works, and once a request finds the middleware missing the provider
+tabs say the data service is unavailable.
 
 The example strategies are new Pine sources written for the app, stored in `examples/`. Each runs
 on BTCUSDT 1h from Binance spot over the two years ending now: the range ends at the current time
 rounded down to the hour, so the last bar is the latest closed one, and starts two years earlier,
-about 17,500 bars. The feed cache is keyed by both ends of the range, so loading an example again
-within the same hour reuses the cached data, and later loads fetch the newer range; example results
-change as new bars close. Examples fetch through the proxy like any other request. Without the data
-service, the example's source still loads and the market data dialog opens with the provider tabs
-marked unavailable, leaving **Upload CSV**.
+about 17,500 bars. The feed cache is keyed by both ends of the range and keeps a dataset for five
+minutes, so loading an example again within that time and the same hour reuses the cached data,
+and later loads fetch the newer range; example results change as new bars close. Examples fetch
+through the proxy like any other request; loading one accepts its data but does not start a
+backtest. Without the data service, the example's source still loads and the market data dialog
+opens with the provider tabs marked unavailable, leaving **Upload CSV**.
 
 ### 4.8 Persistence
 
-Local storage keeps the language, pane sizes and the last data selection (provider, symbol,
-timeframe, range). IndexedDB keeps the feed cache. Scripts, results and optimization runs are not
-saved in the first version.
+Local storage keeps the language and pane sizes (`optipine.ui`) and the last accepted provider
+selection (`optipine.marketSelection`: provider, symbol, timeframe and range). IndexedDB keeps the
+feed cache (`pine.market.v1`). Scripts, results and optimization runs are not saved in the first
+version.
 
 ### 4.9 Performance
 
 Measured with `runWithEquity` over the 43 v6 strategy fixtures on a 16-thread desktop CPU, one run
 takes about 0.2 s per 10,000 bars at the median and 0.35 s at the 90th percentile; real scripts can
-be heavier. The pool measures the first trial to estimate the run's duration (O1, O8). While a run
-streams, main-thread work stays under 50 ms per frame: tables are virtualized, live charts draw on
-canvas, and derived views are computed in the analysis Worker. The Worker keeps each run's trials,
-so a snapshot sends only the trials that arrived since the last one and receives a summary: at
-20,000 IS / OOS sets of 170 metrics each, a snapshot costs the page about 9 ms with 500 new trials
-and 5 ms to build the views, where sending every trial and receiving them back took 2.2 s
-(`packages/workers/bench/live-analysis.ts`).
+be heavier. The run block estimates a run's duration from the script's latest backtest or
+optimization (O1), and during a run the pool times its trials to estimate the time left (O8).
+While a run streams, main-thread work stays under 50 ms per frame: tables are virtualized or
+paged, live charts draw on canvas, and derived views are computed in the analysis Worker. The
+Worker keeps each run's trials, so a snapshot sends only the trials that arrived since the last
+one and receives a summary: at 20,000 IS / OOS sets of 170 metrics each, a snapshot costs the page
+about 9 ms with 500 new trials and 5 ms to build the views, where sending every trial and
+receiving them back took 2.2 s (`packages/workers/bench/live-analysis.ts`).
 
 ## 5. Visual system
 
@@ -522,14 +541,18 @@ and 5 ms to build the views, where sending every trial and receiving them back t
 | Script main plot               | `#2bb3a3` |
 | Unsupported, indicator pane    | `#8fb8de` |
 
-**Type.** Barlow, with Noto Sans SC for Chinese text and Source Code Pro for numbers and code: 22 /
-600 for key figures, 15 / 600 for dialog titles and empty states, 13 / 600 for section titles, 13 /
-400 for body text and controls, 12 for captions. The first version is dark only.
+The parameter map's nine steps run from `#9a4535` for loss to `#a6ddf2` for profit, with the
+divider colour in the middle.
+
+**Type.** Barlow, with Noto Sans SC for Chinese text, tabular figures for numbers, and Source Code
+Pro for code: 22 / 600 for key figures, 15 / 600 for dialog titles and empty states, 13 / 600 for
+section titles, 13 / 400 for body text and controls, 12 for captions and 11 for tags and chart
+axes. The first version is dark only.
 
 **Components.** G5 defines the primitives: segmented controls, primary and secondary buttons, icon
 buttons, dock tabs, chips, number fields with steppers, selects, toggles, tables, popovers,
-dialogs, toasts and empty states. Each is one React component with a CSS module, and every
-interactive one works with the keyboard.
+dialogs, toasts, tooltips, banners, tags and empty states. Each is one React component with a CSS
+module, and every interactive one works with the keyboard.
 
 ## 6. Language
 
@@ -540,8 +563,9 @@ for any `zh-*` locale, otherwise English) and remembers the choice.
 - Every user-facing string lives in a catalog keyed by message id, with English and Chinese
   entries; components hold no copy, and a test fails on user-facing text outside the catalogs.
 - Package errors arrive as message ids with values. A test checks that both catalogs cover
-  `optimizerMessageIds`, `marketDataMessageIds` and `workerMessageIds`.
-- Report metrics and strategy properties use TradingView's English names in both languages.
+  `optimizerMessageIds`, `marketDataMessageIds`, `workerMessageIds` and the workflows' own ids.
+- Report metrics use TradingView's English names in both languages. Strategy properties are
+  translated like the rest of the interface, as on the Chinese B13.
 - Pine source, symbols, the script's own input names and numbers are never translated; numbers
   are formatted the same way in both languages.
 - English copy prefers short forms where space is tight, as the mock does: IS / OOS, combos,
@@ -549,9 +573,11 @@ for any `zh-*` locale, otherwise English) and remembers the choice.
 
 ## 7. Engine and package changes
 
-- **Plot panes.** Done with this design: every `PlotOutput` from the engine now has `overlay`, true
-  when the script declares `overlay = true` or the plot call sets `force_overlay = true`. The chart
-  puts the other plots in a pane under the price (B7).
+- **Plot panes.** Every `PlotOutput` from the engine has `overlay`, true when the script declares
+  `overlay = true` or the plot call sets `force_overlay = true`. The chart puts the other plots in
+  a pane under the price (B7).
+- **Script kind.** `describe` names the script's declaration (`kind`: `strategy`, `indicator` or
+  `library`), so the Backtest page knows before a run that an indicator has no account (2.3).
 - **Top 20 equity.** No change needed (4.5).
 - **Fetch progress.** Not needed yet: the fetch indicator is simulated (2.2). S4's received count
   needs real progress, which `FeedClient.load` cannot report because it returns the whole dataset at
@@ -560,17 +586,24 @@ for any `zh-*` locale, otherwise English) and remembers the choice.
 
 ## 8. Testing
 
-- `workflows/` and `i18n/` have Node unit tests, with Workers replaced by fake transports as in the
-  package tests.
-- Components and pages have Vitest tests with Testing Library for behavior: outdated results,
-  filters that apply without a re-run, preview and apply, every error state, and both languages.
-- Playwright tests load each page against recorded Binance and Yahoo responses, run a backtest and
-  a small optimization, and check that no console errors appear. They fix the clock, so an example
-  requests the same range as its recording.
-- Layout is checked against the mock at 1440 × 900, 1024 × 768 and 390 × 844 in both languages: no
-  clipped labels and no horizontal page scroll.
+- `workflows/`, `i18n/` and the examples have Node unit tests, with Workers replaced by fake
+  clients as in the package tests.
+- Components, pages, stores and the server have Vitest tests with Testing Library for behavior:
+  outdated results, filters that apply without a re-run, preview and apply, every error state, and
+  both languages.
+- Playwright runs against the production server, a preview of a test build with the harness and
+  the component sheet, and the dev server. The data, results, keyboard and accessibility tests
+  load recorded Binance and Yahoo responses and fix the clock, so an example requests the same
+  range as its recording; the Optimize and walk-forward tests load a script and synthetic bars
+  through test hooks and run small optimizations. They check that no console errors appear, and
+  axe scans the main screens and dialogs for accessibility.
+- Layout is checked at 1440 × 900, 1024 × 768 and 390 × 844 in both languages on S1, B1, O1, R1
+  and W1: no clipped labels and no horizontal page scroll. The component sheet is compared with
+  G5.
 
 ## 9. Delivery phases
+
+The app was built in five phases, each leaving a working app:
 
 1. **Scaffold**: the workspace, Vite and React, tokens and fonts, the shell with page and language
    switches and resizable panes, the Workers, the catalogs, and CI.
