@@ -44,9 +44,15 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  # The browser suite runs real engine and optimization Workers on a 2-vCPU runner, so it is
+  # split into shards that run in parallel.
   web-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -56,11 +62,11 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npm run e2e --workspace @pine/web
+      - run: npm run e2e --workspace @pine/web -- --shard=${{ matrix.shard }}/3
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: web-smoke
+          name: web-smoke-${{ matrix.shard }}
           path: apps/web/test-results/
           if-no-files-found: ignore
           retention-days: 14
