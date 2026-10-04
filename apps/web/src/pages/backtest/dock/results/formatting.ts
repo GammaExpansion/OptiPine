@@ -92,7 +92,7 @@ export function metricMessage(
   const style = metricStyles[id];
   const result = numberMessage(value, { ...style, loss, percent: show === 'percent' });
   return style?.bars && typeof value === 'number' && Number.isFinite(value)
-    ? message('report.bars', { value: result })
+    ? message('report.bars', { value: result, count: value })
     : result;
 }
 

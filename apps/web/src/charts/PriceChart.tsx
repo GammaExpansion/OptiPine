@@ -375,7 +375,11 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
                 })}
           </span>
           <span>
-            {t('charts.held', { bars: selected.bars, quantity: number(selected.quantity) })}
+            {t('charts.held', {
+              count: selected.bars,
+              bars: selected.bars,
+              quantity: number(selected.quantity),
+            })}
           </span>
         </aside>
       )}

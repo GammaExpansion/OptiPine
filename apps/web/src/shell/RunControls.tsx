@@ -75,6 +75,7 @@ function StatusText({ status }: { status: RunStatus }) {
       return (
         <span className={styles.status}>
           {t('run.facts', {
+            count: status.bars,
             bars: formatNumber(status.bars),
             seconds: seconds(status.durationMs),
           })}
