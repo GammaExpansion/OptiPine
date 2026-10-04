@@ -35,7 +35,7 @@ export function ReportTab() {
   const result = useBacktestStore(displayedResult);
   const report = result && reportFor(result);
   return (
-    <ResultFrame>
+    <ResultFrame account>
       {report && (
         <DockActions>
           <IconButton

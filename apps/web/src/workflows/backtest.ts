@@ -681,11 +681,13 @@ function runCategory(kind: Diagnostic['kind']): IssueCategory {
 
 /**
  * The Issues tab: the failed compile's errors, the failed run's diagnostics, and the effects the
- * displayed result ignored. While a preview is open, its run and result are the displayed ones, so
+ * displayed result ignored, when it was computed with the current source. While a preview is open, its run and result are the displayed ones, so
  * a failed combination opened from the optimization shows its diagnostics (R11). An unsupported
  * feature has its own category: missing engine support, not a fault in the script.
  */
-export function backtestIssues(state: BacktestState): Issue[] {
+export function backtestIssues(
+  state: Pick<BacktestState, 'source' | 'compile' | 'run' | 'result' | 'preview'>,
+): Issue[] {
   const { run, result } = state.preview ?? state;
   const issues: Issue[] = [];
   const workerIssue = (text: Text): Issue => ({
@@ -719,7 +721,11 @@ export function backtestIssues(state: BacktestState): Issue[] {
     );
     if (error !== null) issues.push(workerIssue(error));
   }
-  for (const warning of result?.output.warnings ?? [])
+  // A result kept from other source text, such as the previous script's after this one's run
+  // failed, has warnings on lines this source does not share.
+  const warnings =
+    result && result.computedWith.source === state.source ? (result.output.warnings ?? []) : [];
+  for (const warning of warnings)
     issues.push({
       category: 'ignoredEffect',
       line: warning.line,

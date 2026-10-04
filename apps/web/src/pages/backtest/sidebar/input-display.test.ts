@@ -13,6 +13,7 @@ import {
   parseInputText,
   selectValues,
   sourceSeries,
+  timeframeChoices,
 } from './input-display.ts';
 
 const source = `//@version=6
@@ -49,6 +50,25 @@ test('each input type takes its control (B14)', () => {
     ['Direction', 'select'],
     ['Start date', 'time'],
   ]);
+});
+
+test('a timeframe input picks from TradingView’s list, keeping an unlisted value', () => {
+  const [higher, chart] = inputFields(
+    describe(`//@version=6
+strategy("Timeframes")
+higher = input.timeframe("240", "Higher TF")
+chart = input.timeframe("", "Signal TF")
+plot(close)`).inputs,
+  );
+  expect(inputControl(higher)).toBe('select');
+  expect(selectValues(higher)).toEqual([...timeframeChoices]);
+  expect(selectValues(higher).map((value) => en(inputValueText(higher.descriptor, value)))).toEqual(
+    ['Chart', '1m', '3m', '5m', '15m', '30m', '45m', '1h', '2h', '3h', '4h', '1D', '1W', '1M'],
+  );
+  expect(en(inputValueText(chart.descriptor, ''))).toBe('Chart');
+  const custom = setInputValue([higher], 'Higher TF', '7')[0];
+  expect(selectValues(custom).at(-1)).toBe('7');
+  expect(en(inputValueText(custom.descriptor, '7'))).toBe('7m');
 });
 
 test('values read with the step’s decimals, booleans as on and off, time in UTC', () => {

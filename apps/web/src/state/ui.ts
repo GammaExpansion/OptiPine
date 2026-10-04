@@ -13,7 +13,8 @@ export type DockTab = 'report' | 'equity' | 'trades' | 'inputs' | 'code' | 'issu
  */
 export type OptimizeTab =
   'leaderboard' | 'map' | 'sensitivity' | 'windows' | 'stability' | 'settings';
-export type Dialog = 'script' | 'marketData' | 'dateRange' | 'properties' | 'failedCombinations';
+export type Dialog =
+  'script' | 'replaceScript' | 'marketData' | 'dateRange' | 'properties' | 'failedCombinations';
 /** Pane sizes in pixels, kept per page; each page reads the fields of its own panes. */
 export interface PaneSizes {
   right: number;
