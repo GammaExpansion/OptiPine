@@ -832,7 +832,6 @@ export const en = {
   'optimize.leaderboard.best': 'Best reached: {value}',
   'optimize.leaderboard.remove': 'Remove',
   'optimize.leaderboard.removeFilter': 'Remove {condition}',
-  'optimize.leaderboard.condition': '{metric} {operator} {value}',
   'optimize.leaderboard.metric.netProfit': 'Net profit',
   'optimize.leaderboard.metric.annualizedReturn': 'Annualized return',
   'optimize.leaderboard.metric.profitFactor': 'Profit factor',

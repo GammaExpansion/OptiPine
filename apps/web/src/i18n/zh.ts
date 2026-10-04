@@ -811,7 +811,6 @@ export const zh = {
   'optimize.leaderboard.best': '最优值：{value}',
   'optimize.leaderboard.remove': '移除',
   'optimize.leaderboard.removeFilter': '移除 {condition}',
-  'optimize.leaderboard.condition': '{metric} {operator} {value}',
   'optimize.leaderboard.metric.netProfit': '净利润',
   'optimize.leaderboard.metric.annualizedReturn': '年化收益率',
   'optimize.leaderboard.metric.profitFactor': '盈利因子',

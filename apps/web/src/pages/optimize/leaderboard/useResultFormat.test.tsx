@@ -24,4 +24,11 @@ test('formats financial units, missing values and script parameters without losi
   expect(result.current.condition({ metric: 'winRate', operator: '>=', value: 45 })).toBe(
     'Win rate ≥ 45%',
   );
+  // Presets, the leaderboard's chips and R9 read conditions as the right panel's chips do (R10).
+  expect(result.current.condition({ metric: 'profitFactor', operator: '>=', value: 1.2 })).toBe(
+    'PF ≥ 1.2',
+  );
+  expect(result.current.condition({ metric: 'sharpeRatio', operator: '>=', value: 1 })).toBe(
+    'Sharpe ratio ≥ 1.0',
+  );
 });
