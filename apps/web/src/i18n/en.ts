@@ -780,7 +780,7 @@ export const en = {
   'optimize.summary.scatter': 'IS vs OOS',
   'optimize.summary.distribution': 'Distribution',
   'optimize.summary.leading': 'Top 20 (current ranking)',
-  'optimize.summary.fullRange': 'Top 20 (full-range net profit)',
+  'optimize.summary.fullRange': 'Top 20 ({objective}, full range)',
   'optimize.summary.median': 'Median',
   'optimize.summary.best': '#1',
   'optimize.summary.unvalidated': 'Unvalidated',
