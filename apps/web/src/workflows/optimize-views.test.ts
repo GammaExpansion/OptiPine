@@ -6,6 +6,7 @@ import {
   constraintValue,
   enumerateGrid,
   generateSearchSpace,
+  prepareHeatmap,
   scoreMetric,
   splitBars,
   summarizeOptimizerAnalysis,
@@ -112,6 +113,47 @@ function analyze(
 
 const small = searchSpace([3, 10], ['close', 'hl2']);
 const inOut = analyze(small, 'in-out');
+
+test('R9 preserves sampled values, sensitivity and descriptive Top 20 without a selectable rank', () => {
+  const filters: FilterCondition[] = [{ metric: 'trades', operator: '>=', value: 1_000_000 }];
+  const filtered = analyze(small, 'in-out', {}, { filters });
+  const results = filtered.results();
+  assert.equal(leaderboardView(results, 0).passing, 0);
+  assert.equal(selectionOf(results, null, 1), null);
+  assert.equal(filterDiagnosis(results, filters)[0].passing, 0);
+  assert.notEqual(filterDiagnosis(results, filters)[0].best, null);
+  assert.deepEqual(sensitivityView(results), sensitivityView(inOut.results()));
+  assert.deepEqual(leadingSets(results, 20), []);
+  const view = mapView(results, 'in', {})!;
+  assert.ok(view.map!.cells.every((cell) => cell.value !== null));
+  assert.ok(view.map!.cells.every((cell) => !cell.trialId));
+  const panel = prepareHeatmap(view.map!, { x: 2, y: 1 });
+  const detail = binDetail(view, panel.cells[0], panel)!;
+  assert.ok(detail);
+  assert.deepEqual(detail.selectedCell.xValues, panel.cells[0].xValues);
+  assert.deepEqual(detail.selectedCell.yValues, panel.cells[0].yValues);
+  const values = cellValues(filtered.summary, panel.cells[0]);
+  assert.equal(values.values.length, 8);
+  assert.ok(values.values.every((value) => value.inSample !== null && value.outOfSample !== null));
+});
+
+test('a filtered single-input curve retains neighbourhood means but cannot select excluded sets', () => {
+  const space = searchSpace([3, 6], ['close']);
+  const baseline = curveView(analyze(space, 'in-out').results())!;
+  const filtered = curveView(
+    analyze(
+      space,
+      'in-out',
+      {},
+      { filters: [{ metric: 'trades', operator: '>=', value: 1_000_000 }] },
+    ).results(),
+  )!;
+  assert.deepEqual(
+    filtered.points.map((point) => point.neighbourhoodMean),
+    baseline.points.map((point) => point.neighbourhoodMean),
+  );
+  assert.ok(filtered.points.every((point) => point.trialId === null));
+});
 
 test('the summary request covers the figures and every filter metric once', () => {
   assert.deepEqual(

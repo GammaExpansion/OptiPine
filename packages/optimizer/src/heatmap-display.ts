@@ -1,4 +1,5 @@
 import type { AnalysisValue, Heatmap, HeatmapCell } from './analysis.ts';
+import { combinedExclusions } from './heatmap-exclusions.ts';
 
 export interface HeatmapDisplay {
   minimum: number | null;
@@ -11,14 +12,20 @@ export interface HeatmapDisplay {
 }
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 const unique = (values: (AnalysisValue | undefined)[]) => [...new Set(values)];
-const mean = (values: number[]) => values.reduce((sum, value) => sum + value / values.length, 0);
 
-/** Display-only aggregation and rank statistics run inside the analysis Worker. */
-export function prepareHeatmap(map: Heatmap, bin = false): Heatmap {
+/** Adjacent cells are averaged, never treating missing samples as zero. Limits default to 24. */
+export function prepareHeatmap(
+  map: Heatmap,
+  bin: boolean | { x: number; y: number } = false,
+): Heatmap {
   const xs = unique(map.cells.map((cell) => cell.x)),
     ys = unique(map.cells.map((cell) => cell.y));
-  const xBinSize = bin && map.yKey ? Math.max(1, Math.ceil(xs.length / 24)) : 1;
-  const yBinSize = bin && map.yKey ? Math.max(1, Math.ceil(ys.length / 24)) : 1;
+  const limit = (axis: 'x' | 'y') =>
+    typeof bin === 'object' && Number.isFinite(bin[axis])
+      ? Math.max(1, Math.min(24, Math.floor(bin[axis])))
+      : 24;
+  const xBinSize = bin && map.yKey ? Math.max(1, Math.ceil(xs.length / limit('x'))) : 1;
+  const yBinSize = bin && map.yKey ? Math.max(1, Math.ceil(ys.length / limit('y'))) : 1;
   let cells: HeatmapCell[];
   if (xBinSize === 1 && yBinSize === 1) cells = map.cells.map((cell) => ({ ...cell }));
   else {
@@ -32,18 +39,24 @@ export function prepareHeatmap(map: Heatmap, bin = false): Heatmap {
       buckets.set(key, bucket);
     }
     cells = [...buckets.values()].map((bucket) => {
-      const valid = bucket.flatMap((cell) =>
-        cell.value !== null && Number.isFinite(cell.value) ? [cell.value] : [],
-      );
+      const valid = bucket.filter((cell) => cell.value !== null && Number.isFinite(cell.value));
+      const weight = valid.reduce((sum, cell) => sum + (cell.averagedCells ?? 1), 0);
       return {
         ...bucket[0],
-        value: valid.length ? mean(valid) : null,
+        value: weight
+          ? valid.reduce((sum, cell) => sum + cell.value! * ((cell.averagedCells ?? 1) / weight), 0)
+          : null,
         count: bucket.reduce((sum, cell) => sum + cell.count, 0),
-        xValues: unique(bucket.map((cell) => cell.x)) as AnalysisValue[],
-        yValues: unique(bucket.map((cell) => cell.y)).filter(
+        excludedCount: undefined,
+        failedConstraints: undefined,
+        ...combinedExclusions(bucket),
+        xValues: unique(bucket.flatMap((cell) => cell.xValues ?? [cell.x])) as AnalysisValue[],
+        yValues: unique(bucket.flatMap((cell) => cell.yValues ?? [cell.y])).filter(
           (value): value is AnalysisValue => value !== undefined,
         ),
-        averagedCells: valid.length,
+        averagedCells: weight,
+        // A bin opens detail; it must never select the first member as if it were the whole bin.
+        trialId: undefined,
       };
     });
   }
@@ -76,10 +89,10 @@ export function prepareHeatmap(map: Heatmap, bin = false): Heatmap {
       minimum: ranked[0]?.value ?? null,
       maximum: ranked.at(-1)?.value ?? null,
       median,
-      xBinSize,
-      yBinSize,
-      originalXCount: xs.length,
-      originalYCount: ys.length,
+      xBinSize: cells.reduce((size, cell) => Math.max(size, cell.xValues?.length ?? 1), 1),
+      yBinSize: cells.reduce((size, cell) => Math.max(size, cell.yValues?.length ?? 1), 1),
+      originalXCount: map.display?.originalXCount ?? xs.length,
+      originalYCount: map.display?.originalYCount ?? ys.length,
     },
   };
 }
