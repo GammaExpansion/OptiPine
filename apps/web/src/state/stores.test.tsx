@@ -147,7 +147,7 @@ test('a pending example cannot accept data after another script is opened', asyn
     openScript({ source: strategySource, fileName: null, origin: { kind: 'pasted' } });
     respond(Response.json(testDataset));
     await loading;
-    expect(getBacktestStore().getState().origin).toEqual({ kind: 'pasted' });
+    expect(getBacktestStore().getState().origin).toEqual({ kind: 'pasted', edited: false });
     expect(getBacktestStore().getState().dataset).toBeNull();
   } finally {
     reset();
@@ -171,6 +171,27 @@ test('the optimization side loads on first need; the shell reads its presence me
   });
   await act(() => actions.start());
   expect(presence.getState()).toEqual({ loaded: true, hasResults: true });
+});
+
+test('an opened script starts from its own search ranges, while an edit keeps them (#22)', async () => {
+  await ready();
+  await act(() => getServices().loadOptimization());
+  const optimization = () => getOptimizationStore().getState();
+  const length = () =>
+    optimization().search.rows.find((row) => row.descriptor.title === 'Length')?.draft?.values;
+  const edited = { kind: 'range', from: 2, to: 4, step: 1 };
+  act(() => optimization().actions.setRange('Length', { from: 2, to: 4, step: 1 }));
+  expect(length()).toEqual(edited);
+  act(() => getBacktestStore().getState().actions.setSource(`${strategySource}\n`));
+  await waitFor(() => expect(getBacktestStore().getState().compile.status).toBe('compiled'));
+  expect(length()).toEqual(edited);
+  // Another script with a Length of its own: from half to twice its default of 10.
+  const other = strategySource.replace(
+    'input.int(5, "Length", minval=2, maxval=50)',
+    'input.int(10, "Length", minval=2, maxval=30)',
+  );
+  act(() => openScript({ source: other, fileName: 'other.pine', origin: { kind: 'file' } }));
+  await waitFor(() => expect(length()).toEqual({ kind: 'range', from: 5, to: 20, step: 1 }));
 });
 
 test('disposal detaches store bridges from their sessions', async () => {

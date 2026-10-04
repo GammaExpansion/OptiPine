@@ -305,14 +305,23 @@ test('the search key follows what the run would search, not how it is written', 
   );
 });
 
-test('drafts survive a recompile while the input keeps its type and choices', () => {
+test('drafts survive a recompile while the input keeps its declaration', () => {
   const draft = range(12, 20, 2);
   const length = byTitle('Length');
-  assert.equal(keepSearchDraft(length, { descriptor: length, draft }), draft);
+  // An edit elsewhere in the script recompiles to the same declaration, on another line.
+  assert.equal(keepSearchDraft({ ...length, line: 9 }, { descriptor: length, draft }), draft);
   assert.equal(
     keepSearchDraft({ ...length, type: 'float' }, { descriptor: length, draft }),
     undefined,
   );
+  // Another script's Length, as an opened script declares it, starts from its own range (#22).
+  for (const other of [
+    { ...length, defaultValue: 10 },
+    { ...length, min: 2 },
+    { ...length, max: 100 },
+    { ...length, step: 2 },
+  ])
+    assert.equal(keepSearchDraft(other, { descriptor: length, draft }), undefined);
   const direction = byTitle('Direction');
   const kept: SearchDraft = { searched: true, values: { kind: 'list', values: ['Long'] } };
   assert.notEqual(

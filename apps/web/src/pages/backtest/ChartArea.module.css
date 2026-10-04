@@ -21,6 +21,10 @@
   height: 100%;
   min-height: 0;
 }
+/* The legend wraps before the tools, rather than running under them on a narrow chart. */
+.area:has(.tools) {
+  --legend-end: 78px;
+}
 /* B1: trade markers and reset zoom at the right of the legend row. */
 .tools {
   position: absolute;
