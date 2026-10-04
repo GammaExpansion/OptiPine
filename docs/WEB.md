@@ -315,9 +315,9 @@ component sheet is G5.
 - A run is either complete or absent. A cancelled or failed run leaves the previous result in place,
   marked as such; it never shows partial numbers as a result.
 - Changing the source, an input, a property or the data marks the backtest outdated (B9).
-  Changing search ranges, validation, properties or the data marks optimization results outdated
-  (R5). Outdated results stay visible and say what they were computed with; a backtest's can put
-  those inputs and properties back (B9).
+  Changing the source, search ranges or sampling, validation, properties or the data marks
+  optimization results outdated (R5). Outdated results stay visible; a backtest's say what they
+  were computed with and can put those inputs and properties back (B9).
 - The objective, direction and filters only change how results are viewed, so they apply at once
   and never require a re-run. The same holds for map axes, slices, Smooth and the IS / OOS switch.
 - Editing the source recompiles it in the background; inputs and properties are rebuilt from the
@@ -328,31 +328,37 @@ component sheet is G5.
 
 ### 3.2 Live optimization
 
-Trials arrive one by one from the Worker pool. They collect in a buffer outside React; the UI takes
-a snapshot at most every 250 ms, and the derived views (summary, leaderboard, map, sensitivity) are
-recomputed in the analysis Worker, with a newer request replacing a pending one. Nothing renders
-per trial. Cancel stops every Worker at once.
+Trials arrive one by one from the Worker pool. They collect in a buffer outside React; at most
+every 250 ms a snapshot sends the new ones to the analysis Worker, which keeps the run's trials and
+derives the summary, leaderboard, map and sensitivity from them. One analysis request runs at a
+time: changes made meanwhile become one follow-up request, and a reply for settings that have since
+changed is dropped. Nothing renders per trial. Cancel stops the pool's
+Workers at once and closes the run in the analysis Worker.
 
 ### 3.3 Preview and apply
 
-Selecting a leaderboard row or a walk-forward window opens a bar with **View backtest** and
-**Apply to inputs**. View backtest opens the Backtest page in a preview (B16): a banner names the
-set and says the current inputs are unchanged, with **Back to optimization** and **Set as current
-inputs**. Applying (B17) writes the set into the inputs, notes where it came from, and keeps each
-input's default visible.
+The selection bar under the leaderboard shows the selected set with **View backtest** and **Apply
+to inputs**; a selected walk-forward window has **View backtest**, as does a failed combination
+(R11). View backtest opens the Backtest page in a preview (B16), on Report, or on Issues for a
+failed set: a banner names the set with its searched values and says the current inputs are
+unchanged, with **Back to optimization** and **Set as current inputs**. Applying (B17) writes the
+set into the inputs, each noting where it came from beside its default ("From #1, default 20"),
+and runs the backtest, or takes the preview's result when it ran on the same settings. A notice
+names the set, with **Undo**, which puts back the inputs and result from before.
 
 ### 3.4 Limits
 
-| Limit                       | Value                      | Source                            |
-| --------------------------- | -------------------------- | --------------------------------- |
-| Bars per fetch              | 100,000                    | `@pine/market-data`               |
-| Feed cache                  | 5 minutes, last 4 datasets | `@pine/market-data`               |
-| Grid before random sampling | 20,000 combinations        | This design (O5)                  |
-| Random sample count         | 2,000 by default           | This design (O5)                  |
-| Values per searched input   | 100,000                    | `@pine/optimizer`                 |
-| Leaderboard page            | 13 rows                    | This design (R1)                  |
-| Map binning                 | above 24 values per axis   | This design and `@pine/optimizer` |
-| Engine steps                | 2,000,000 per bar          | `@pine/engine`                    |
+| Limit                       | Value                                      | Source                            |
+| --------------------------- | ------------------------------------------ | --------------------------------- |
+| Bars per fetch              | 100,000                                    | `@pine/market-data`               |
+| Feed cache                  | 5 minutes, last 4 datasets                 | `@pine/market-data`               |
+| Grid before random sampling | 20,000 combinations                        | This design (O5)                  |
+| Random sample count         | 2,000 by default                           | This design (O5)                  |
+| Values per searched input   | 100,000                                    | `@pine/optimizer`                 |
+| Leaderboard page            | 13 rows                                    | This design (R1)                  |
+| Map binning                 | above 24 values per axis, or more than fit | This design and `@pine/optimizer` |
+| Parameter map               | 1,000,000 cells                            | `@pine/optimizer`                 |
+| Engine steps                | 2,000,000 per bar                          | `@pine/engine`                    |
 
 ## 4. Architecture
 
