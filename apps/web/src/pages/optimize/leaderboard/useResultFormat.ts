@@ -1,7 +1,12 @@
 import type { LiteralValue } from '@pine/engine';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { formatNumber } from '../../../i18n/translate.ts';
-import type { FilterCondition, FilterMetricId } from '../../../workflows/optimize-ranking.ts';
+import {
+  objectiveFormat,
+  type FilterCondition,
+  type FilterMetricId,
+  type ObjectiveId,
+} from '../../../workflows/optimize-ranking.ts';
 import { parameterText } from '../../../workflows/optimize-parameters.ts';
 import { filterLabel } from '../filters/filter-label.ts';
 import type { SearchRow } from '../../../workflows/optimize-setup.ts';
@@ -43,5 +48,16 @@ export function useResultFormat(rows: readonly SearchRow[] = []) {
       : number(value);
   /** A condition as the filter chips read it (R9, R10). */
   const condition = (filter: FilterCondition) => text(filterLabel(filter));
-  return { number, drawdown, parameter, metricValue, condition };
+  /**
+   * A value of the ranking objective, as the map, its tooltip and sensitivity show it: "+31,642"
+   * for net profit, "1.71" for a profit factor, "12.40%" for a drawdown.
+   */
+  const objective = (value: number | null | undefined, id: ObjectiveId) => {
+    const { digits, percent, signed } = objectiveFormat(id);
+    const figure = number(value, signed, digits);
+    return value == null || Number.isNaN(value) || !percent
+      ? figure
+      : t('optimize.leaderboard.percent', { value: figure });
+  };
+  return { number, drawdown, parameter, metricValue, condition, objective };
 }
