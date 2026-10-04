@@ -3,6 +3,10 @@
 Audited 2026-10-03 on `web/qa`, based on `62104dd`. Chromium, axe-core 4.13.0 via
 `@axe-core/playwright`, English and Chinese, 1440 × 900 and 390 × 844.
 
+Shell follow-up on `web/a11y-shell`, based on `6a5fb1c`: the right-panel separator landmark and
+Last run naming findings are fixed. The phone Optimize Settings heading was then fixed in #30, so
+no finding is exempted.
+
 `a11y.spec.ts` makes 40 full-document scans: S1; B1 Report, Trades, Pine code and Equity;
 B13; S3; S5; O1; and Optimize setup, in each language and viewport. It loads Trend Breakout
 through the production UI, runs the actual engine Worker against the recorded 17,520 BTCUSDT
@@ -13,9 +17,11 @@ opened through Settings. Optimization results and walk-forward on other branches
 
 Every scan saves a screenshot and JSON under `apps/web/test-results/a11y-accessibility-*`.
 The JSON contains every violation, its nodes, axe's incomplete checks, and matched allow-list
-entries. Only unexpected serious/critical findings fail the axe gate. The two scoped exceptions
-are both moderate and identify rule, impact, screen, viewport, selector and owning file; no
-serious/critical finding is exempted. All lower-impact findings remain in the evidence.
+entries. Unexpected serious/critical findings fail the axe gate, as do violations or incomplete
+checks for `region`, `aria-prohibited-attr`, `landmark-main-is-top-level` and
+`page-has-heading-one`. No scoped exception remains; the allow-list keeps its shape (rule, impact,
+screen, viewport, selector and owning file) for a future moderate or minor one, and no
+serious/critical finding may be exempted. All lower-impact findings remain in the evidence.
 
 ## Automated findings
 
@@ -23,30 +29,34 @@ Counts below are failing nodes per scan, then total across the four language/vie
 The same DOM element appearing in several screen scans is counted each time. Virtualized code
 renders only visible lines, so line-number counts can change with scroll position. This baseline
 had 92 node occurrences, including 54 serious, 34 moderate and 4 minor; no critical violations.
-The fixes remove 74 occurrences. The remaining 18 moderate occurrences are outside the allowed
-paths. S3 and S5 had no violations in any of the four cases.
+The original fixes removed 74 occurrences; the shell follow-up removes another 16. The last
+two moderate occurrences, on phone Optimize Settings, were fixed in #30; none remain.
+S3 and S5 had no violations in any of the four cases.
 
-| Rule                          | Impact   | Screens and count before fix                                                          | Element / selector                                                                                         | Fix and owning file                                                                                                                                                                                                                                                                                                   | Status                                      |
-| ----------------------------- | -------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| `color-contrast`              | Serious  | B1 Code, both sizes and languages: 12 per scan, 48 total                              | Eleven visible `.cm-gutterElement` line numbers and the comment span containing `//@version=6`             | `src/pages/backtest/code/editor.ts`: use `--caption` for line numbers, placeholder and comments. Line numbers were 2.48:1 (`#4f565f` on `#111417`); the comment was 3.51:1 (`#6b727b` on the active line). Both now exceed 4.5:1. `code/StaticEditor.module.css` uses the same readable caption for the empty editor. | Fixed                                       |
-| `scrollable-region-focusable` | Serious  | B1 Code, both sizes and languages: 1 per scan, 4 total                                | `.cm-scroller[tabindex="-1"]`                                                                              | `src/pages/backtest/code/PineEditor.tsx`: make the scroll container a named region with `tabIndex=0`; its large editable child can extend outside the scroll viewport. This also covers read-only source.                                                                                                             | Fixed                                       |
-| `scrollable-region-focusable` | Serious  | B1 Report, phone, both languages: 1 per scan, 2 total                                 | Report's inner scrolling `div` (`Results.module.css` `.report`)                                            | `src/pages/backtest/dock/ReportTab.tsx`: give the region the catalog's Report name and `tabIndex=0`, allowing keyboard scrolling of the stacked report tables.                                                                                                                                                        | Fixed                                       |
-| `empty-table-header`          | Minor    | B1 Trades, both sizes and languages: 1 per scan, 4 total                              | `[role="columnheader"][data-column="locate"]`                                                              | `src/pages/backtest/dock/results/TradeTable.tsx`: supply the existing localized Locate label for the icon-action column.                                                                                                                                                                                              | Fixed                                       |
-| `page-has-heading-one`        | Moderate | B1 Report, Trades, Code and Equity, both sizes and languages: 1 per scan, 16 total    | `html`, no `h1` after first-launch instructions disappear                                                  | `src/pages/backtest/ChartArea.tsx` and `.module.css`: retain an accessible, visually hidden Backtest heading after S1. The existing first-launch heading stays the sole h1 on S1.                                                                                                                                     | Fixed                                       |
-| `region`                      | Moderate | Desktop S1, all four B1 tabs, B13, O1 and setup, both languages: 1 per scan, 16 total | `[role="separator"][aria-controls$="-main"]`, the right-panel resize handle, including its size/reset text | `src/shell/Workbench.tsx`: place the outer workbench group in a named landmark encompassing its separator, or place the handle within an appropriate existing landmark. Preserve separator semantics and its keyboard operation.                                                                                      | Reported; forbidden path; scoped allow-list |
-| `page-has-heading-one`        | Moderate | Phone Optimize Settings, both languages: 1 per scan, 2 total                          | `html` while Settings replaces the O1 empty state                                                          | `src/pages/optimize/PhoneOptimize.tsx`: a visually hidden Optimize h1 whenever O1's empty state, which holds the page's h1, is not on screen (Settings, or any tab with results). The scoped allow-list entry is removed.                                                                                             | Fixed on `web/phone-optimize`               |
+| Rule                          | Impact   | Screens and count before fix                                                          | Element / selector                                                                                         | Fix and owning file                                                                                                                                                                                                                                                                                                   | Status                   |
+| ----------------------------- | -------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `color-contrast`              | Serious  | B1 Code, both sizes and languages: 12 per scan, 48 total                              | Eleven visible `.cm-gutterElement` line numbers and the comment span containing `//@version=6`             | `src/pages/backtest/code/editor.ts`: use `--caption` for line numbers, placeholder and comments. Line numbers were 2.48:1 (`#4f565f` on `#111417`); the comment was 3.51:1 (`#6b727b` on the active line). Both now exceed 4.5:1. `code/StaticEditor.module.css` uses the same readable caption for the empty editor. | Fixed                    |
+| `scrollable-region-focusable` | Serious  | B1 Code, both sizes and languages: 1 per scan, 4 total                                | `.cm-scroller[tabindex="-1"]`                                                                              | `src/pages/backtest/code/PineEditor.tsx`: make the scroll container a named region with `tabIndex=0`; its large editable child can extend outside the scroll viewport. This also covers read-only source.                                                                                                             | Fixed                    |
+| `scrollable-region-focusable` | Serious  | B1 Report, phone, both languages: 1 per scan, 2 total                                 | Report's inner scrolling `div` (`Results.module.css` `.report`)                                            | `src/pages/backtest/dock/ReportTab.tsx`: give the region the catalog's Report name and `tabIndex=0`, allowing keyboard scrolling of the stacked report tables.                                                                                                                                                        | Fixed                    |
+| `empty-table-header`          | Minor    | B1 Trades, both sizes and languages: 1 per scan, 4 total                              | `[role="columnheader"][data-column="locate"]`                                                              | `src/pages/backtest/dock/results/TradeTable.tsx`: supply the existing localized Locate label for the icon-action column.                                                                                                                                                                                              | Fixed                    |
+| `page-has-heading-one`        | Moderate | B1 Report, Trades, Code and Equity, both sizes and languages: 1 per scan, 16 total    | `html`, no `h1` after first-launch instructions disappear                                                  | `src/pages/backtest/ChartArea.tsx` and `.module.css`: retain an accessible, visually hidden Backtest heading after S1. The existing first-launch heading stays the sole h1 on S1.                                                                                                                                     | Fixed                    |
+| `region`                      | Moderate | Desktop S1, all four B1 tabs, B13, O1 and setup, both languages: 1 per scan, 16 total | `[role="separator"][aria-controls$="-main"]`, the right-panel resize handle, including its size/reset text | `src/shell/Workbench.tsx`: make the workbench the named `main` landmark and its inner content a `div`, keeping `main` at the top level and enclosing the separator. Resize semantics and G1 behavior stay unchanged; remove the scoped allow-list entry.                                                              | Fixed in shell follow-up |
+| `page-has-heading-one`        | Moderate | Phone Optimize Settings, both languages: 1 per scan, 2 total                          | `html` while Settings replaces the O1 empty state                                                          | `src/pages/optimize/PhoneOptimize.tsx`: a visually hidden Optimize h1 whenever O1's empty state, which holds the page's h1, is not on screen (Settings, or any tab with results). The scoped allow-list entry is removed.                                                                                             | Fixed in #30             |
 
 Axe's `incomplete` results are retained for review, not treated as confirmed violations. This is
 an automated DOM audit and keyboard pass, not a screen-reader or canvas-equivalence certification.
-Charts keep their existing keyboard descriptions and navigation. No shared style tokens, shell,
-Optimize, workflows or package source files were changed.
+Charts keep their existing keyboard descriptions and navigation. No shared style tokens,
+Optimize, workflows or package source files were changed. The shell follow-up changes only
+landmark and group semantics in the production components.
 
 Manual-review details from those incomplete checks:
 
-- `aria-prohibited-attr`: the Last run wrapper is a generic `div[aria-label]` in
-  `src/shell/RunControls.tsx`. Axe requests review in 20 scans (one node each): desktop S1, all
-  B1 tabs, B13, O1 and setup, plus phone O1/setup, in both languages. Its owner should consider
-  `role="group"` so the label has supported naming semantics. This is a forbidden file.
+- `aria-prohibited-attr`: **fixed in shell follow-up**. The Last run wrappers in
+  `src/shell/RunControls.tsx` now have `role="group"` in both Backtest and Optimize, supporting
+  their existing localized labels (`Last run` / `上次运行`) while retaining status text as child
+  content. The original review finding occurred in 20 scans (one node each): desktop S1, all
+  B1 tabs, B13, O1 and setup, plus phone O1/setup, in both languages. Browser accessibility-tree
+  assertions check each language's group name and child status; no live-region behavior is added.
 - `aria-hidden-focus`: S3/S5 each report three candidates (the hidden app root and two Radix
   focus guards), 24 occurrences across both languages/layouts. The keyboard pass verifies modal
   containment and Escape restoration; focus never visits the hidden app while the modal is open.
@@ -126,10 +136,12 @@ sending the next arrow. This changes test synchronization, not application tab b
   implements WEB.md's keyboard requirement; the design did not prescribe editor Tab behavior.
 - Accessible page/region/column labels reuse catalog strings. The Backtest h1 is visually hidden
   so it does not add a heading to the mock's layout. No user-facing copy was added to components.
-- The two remaining moderate issues were explicitly reported because their files were forbidden
-  here. The phone Optimize h1 has since been fixed on `web/phone-optimize`; the Workbench
-  separator's landmark remains reported.
-  No package changes or coordination with other branches are needed for the fixes in this branch.
+- The desktop workbench becomes the page's named `main` landmark, with its inner content in a
+  plain `div`. This includes the separator without nesting `main` inside a region, which axe
+  flags as `landmark-main-is-top-level`. Last run retains its translated name on a group.
+  These semantic changes add no visible copy, wrappers or styling and do not deviate from
+  WEB.md or G1. The other moderate issue, the phone Optimize Settings heading, was fixed in #30,
+  so no exception remains.
 
 ## Verification
 
@@ -146,7 +158,7 @@ npm run e2e -w @pine/web -- --workers=4
 npm run e2e -w @pine/web -- --repeat-each=10 --workers=4
 ```
 
-All gates passed on the final changes:
+All gates passed on the original `web/qa` changes, before the shell follow-up:
 
 | Gate                                                                                    | Result                                          |
 | --------------------------------------------------------------------------------------- | ----------------------------------------------- |
@@ -158,7 +170,7 @@ All gates passed on the final changes:
 | Full e2e, four workers                                                                  | 66 passed                                       |
 | Final full e2e, ten repetitions / four workers, base port 7514                          | 660 passed, zero failures/retries (8.8 minutes) |
 
-The final stress run includes 400 axe scans and 40 keyboard journeys. Each repetition has only
+That original stress run includes 400 axe scans and 40 keyboard journeys. Each repetition has only
 the 18 reported moderate node occurrences and zero serious, critical or minor violations.
 Vitest emits the existing jsdom canvas-not-implemented diagnostics; browser checks exercise the
 actual canvas implementation. A unit run overlapped with the invalidated build attempt also hit
@@ -168,3 +180,37 @@ Run builds before starting e2e. An overlapping package rebuild invalidated an ea
 traces showed Vite's timestamped `ui.ts`/`backtest.ts` modules alongside the tests' unversioned
 dynamic imports, creating separate store instances. That attempt was stopped and discarded.
 The clean stress runs use fresh servers and no concurrent builds or application edits.
+
+## Shell follow-up verification
+
+Commands from the repository root; ports 7814–7816 were checked unused before starting e2e:
+
+```powershell
+npm run build
+npm run typecheck --workspaces
+npm run test -w @pine/web -- --maxWorkers=1
+npm run format:check
+$env:E2E_BASE_PORT = '7814'
+npm run e2e -w @pine/web -- --workers=2 --timeout=120000 --retries=1
+git diff --check
+```
+
+Root build and all-workspace typecheck passed. The final full web suite passed all 136 Node and
+332 Vitest tests. Earlier concurrent web runs timed out in existing lazy-page/dialog queries and
+a leaderboard test; the isolated shell test and the full single-worker suite passed without
+changing test timeouts. The existing jsdom canvas diagnostics remain.
+
+The four-worker e2e run timed out waiting for the Chinese phone backtest to finish. Its keyboard
+journey passed in the subsequent single-worker run, which instead exceeded the 30-second test
+budget while capturing 16 reference boards. A run with a larger test budget passed that capture
+but exceeded the English example's five-second run-completion assertion. The final command uses
+two workers, a 120-second per-test budget and one permitted retry for this shared machine;
+assertion timeouts and repository configuration are unchanged.
+
+The final full e2e run passed **74/74 in 7.7 minutes, with zero retries used**. Its 40 axe scans
+contained only the two phone Settings `page-has-heading-one` occurrences then allow-listed, since
+fixed in #30: no `region`, `aria-prohibited-attr` or `landmark-main-is-top-level` violations or
+incomplete findings. English and Chinese accessibility-tree assertions preserve the Last run
+group name and child status.
+All four keyboard journeys and the G1 resize/reset/persistence smoke test passed. Repository
+formatting and `git diff --check` also passed. No package or Optimize page files were changed.

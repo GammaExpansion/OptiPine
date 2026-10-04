@@ -363,18 +363,37 @@ export class BacktestSession implements Observable<BacktestState> {
     return change;
   }
 
-  /** Replace the script and recompile it; a run in progress is discarded with the old source. */
-  setSource(source: string): void {
+  /**
+   * Replace the script and recompile it; a run in progress is discarded with the old source. An
+   * edit keeps the values of inputs whose title and type survive, and the property overrides
+   * (WEB.md 3.1). `opened` marks a script opened in place of the current one, which starts from
+   * its own defaults instead: nothing carries over from the previous script.
+   */
+  setSource(source: string, opened = false): void {
     const state = this.getState();
-    if (source === state.source) return;
+    if (source === state.source) {
+      if (opened) {
+        this.#beforeApply = null;
+        this.#update({
+          inputs: resetInputValues(state.inputs),
+          propertyOverrides: {},
+          applied: null,
+        });
+      }
+      return;
+    }
     const sourceRevision = state.sourceRevision + 1;
     const now = this.#now();
     const stopped = this.#interrupt('source');
     this.#client.setSourceRevision(sourceRevision);
     this.#beforeApply = null;
+    const fresh: Partial<BaseState> = opened
+      ? { description: null, inputs: [], scriptProperties: null, propertyOverrides: {} }
+      : {};
     if (!source.trim()) {
       this.#update({
         ...stopped,
+        ...fresh,
         source,
         sourceRevision,
         compile: { status: 'empty' },
@@ -387,6 +406,7 @@ export class BacktestSession implements Observable<BacktestState> {
     }
     this.#update({
       ...stopped,
+      ...fresh,
       source,
       sourceRevision,
       compile: { status: 'compiling', startedAt: now },
