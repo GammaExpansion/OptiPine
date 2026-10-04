@@ -66,7 +66,13 @@ export function BinInspection() {
             {t('optimize.map.detailHint', { count: detail.mergedCells.length })}
           </p>
         </div>
-        <CellValuesTable values={values} x={map.x} y={map.y} validated={views?.mode === 'in-out'} />
+        <CellValuesTable
+          values={values}
+          x={map.x}
+          y={map.y}
+          validated={views?.mode === 'in-out'}
+          scroll={false}
+        />
       </div>
     </section>
   );

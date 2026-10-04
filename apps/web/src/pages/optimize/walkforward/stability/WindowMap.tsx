@@ -2,12 +2,12 @@ import { useMemo, useState } from 'react';
 import type { Heatmap } from '@pine/optimizer';
 import { HeatmapCanvas, type CellHover } from '../../../../charts/optimize/HeatmapCanvas.tsx';
 import { containsSelection } from '../../../../charts/optimize/geometry.ts';
-import { LegendRamp } from '../../../../charts/optimize/LegendRamp.tsx';
+import { ExcludedLegend, LegendRamp } from '../../../../charts/optimize/LegendRamp.tsx';
 import { SegmentedControl } from '../../../../components/SegmentedControl.tsx';
 import { Select } from '../../../../components/Select.tsx';
 import { useI18n } from '../../../../i18n/I18nProvider.tsx';
 import { useOptimizationStore } from '../../../../state/optimization.ts';
-import { bestSlice, rangeLabel, valueLabel } from '../../map/map-labels.ts';
+import { bestSlice, failedConstraintLabel, rangeLabel, valueLabel } from '../../map/map-labels.ts';
 import styles from './stability.module.css';
 
 /** The workflow supplies the selected window's IS map or the mean, already binned and ranked. */
@@ -158,6 +158,7 @@ export function WindowMap() {
           )}
         </span>
         <LegendRamp map={map.panel} className={styles.ramp} missing={text(valueLabel(null))} />
+        <ExcludedLegend map={map.panel} />
       </div>
       <p className={styles.note}>
         {t(
@@ -169,13 +170,25 @@ export function WindowMap() {
       </p>
       {hit && (
         <p className={styles.inspection} role="status">
-          {t('optimize.wfStability.cell', {
-            x: map.x,
-            xValue: text(rangeLabel(hit.cell.xValues ?? [hit.cell.x], input(map.x))),
-            y: map.y ?? '',
-            yValue: map.y ? text(rangeLabel(hit.cell.yValues ?? [hit.cell.y], input(map.y))) : '',
-            value: text(valueLabel(hit.cell.value)),
-          })}
+          {[
+            t('optimize.wfStability.cell', {
+              x: map.x,
+              xValue: text(rangeLabel(hit.cell.xValues ?? [hit.cell.x], input(map.x))),
+              y: map.y ?? '',
+              yValue: map.y ? text(rangeLabel(hit.cell.yValues ?? [hit.cell.y], input(map.y))) : '',
+              value: text(valueLabel(hit.cell.value)),
+            }),
+            // This map has no tooltip, so its line says what excluded sets fail, as the R1
+            // map's tooltip does.
+            ...(hit.cell.excludedCount
+              ? [
+                  t('optimize.summary.filtered'),
+                  ...(hit.cell.failedConstraints ?? []).map((constraint) =>
+                    text(failedConstraintLabel(constraint)),
+                  ),
+                ]
+              : []),
+          ].join(t('optimize.map.descriptionSeparator'))}
         </p>
       )}
     </div>

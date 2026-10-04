@@ -17,7 +17,12 @@ import {
   heatTokens,
   fitMap,
   mapGeometry,
+  maxYLabelWidth,
   verticalTitle,
+  yAxisLeft,
+  yLabelGap,
+  yTitleGap,
+  axisBottom,
 } from './geometry.ts';
 import styles from './canvas.module.css';
 import { markersByCell, type MapMarker } from './map-markers.ts';
@@ -60,9 +65,13 @@ export function HeatmapCanvas({
 }) {
   const { t, text } = useI18n();
   const [size, setSize] = useState({ width: 0, height: 0 });
+  // The widest Y label, measured as it is drawn: the grid starts beyond it and the Y title.
+  const [yLabelWidth, setYLabelWidth] = useState(0);
+  const left = yAxisLeft(yLabelWidth);
   const map = useMemo(
-    () => (showValues || !fitToPanel ? sourceMap : fitMap(sourceMap, size.width, size.height)),
-    [sourceMap, size, showValues, fitToPanel],
+    () =>
+      showValues || !fitToPanel ? sourceMap : fitMap(sourceMap, size.width, size.height, left),
+    [sourceMap, size, showValues, fitToPanel, left],
   );
   const rowFor = (title: string | undefined) =>
     searchRows?.find((row) => row.descriptor.title === title);
@@ -71,13 +80,12 @@ export function HeatmapCanvas({
   const zRow = rowFor(map.zKey);
   // The fitted map fills its panel; the bin detail keeps the dense pitch.
   const panel = showValues || !fitToPanel ? undefined : size;
-  const geometry = useMemo(() => mapGeometry(map, panel), [map, panel]);
+  const geometry = useMemo(() => mapGeometry(map, panel, left), [map, panel, left]);
   const viewport = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const active = useRef<HeatmapCell | null>(null);
   const redraw = useRef(() => {});
   const [description, setDescription] = useState('');
-  const [inspected, setInspected] = useState<HeatmapCell | null>(null);
   const hoverCallback = useRef(onHover);
   hoverCallback.current = onHover;
   const frames = useMemo(() => new Set(framed), [framed]);
@@ -98,7 +106,6 @@ export function HeatmapCanvas({
 
   useEffect(() => {
     active.current = null;
-    setInspected(null);
     setDescription('');
     hoverCallback.current(null);
   }, [map]);
@@ -127,10 +134,12 @@ export function HeatmapCanvas({
       const layoutWidth = Math.max(width, geometry.width);
       ctx.font = `11px ${color('--font-body')}`;
       ctx.textBaseline = 'middle';
+      let widest = 0;
       for (const layer of geometry.layers) {
         const { pitch } = layer;
         const bottom = layer.top + layer.ys.length * pitch;
-        if (bottom + 66 < host.scrollTop || layer.top - 30 > host.scrollTop + height) continue;
+        if (bottom + axisBottom < host.scrollTop || layer.top - 30 > host.scrollTop + height)
+          continue;
         const origin = cellRect(layer, 0, layoutWidth);
         if (map.zKey) {
           ctx.textAlign = 'left';
@@ -239,13 +248,16 @@ export function HeatmapCanvas({
           );
         }
         ctx.textAlign = 'right';
-        const yStride = layer.rows.some((values) => values.length > 1) ? 2 : 1;
+        // Binned rows, and rows too close for a line of text each, label every other one.
+        const yStride = layer.rows.some((values) => values.length > 1) || pitch < 14 ? 2 : 1;
+        const yLabels = layer.rows.map((values) => text(rangeLabel(values, yRow)));
+        widest = Math.max(widest, ...yLabels.map((label) => ctx.measureText(label).width));
         for (let index = 0; index < layer.rows.length; index += yStride) {
           ctx.fillText(
-            text(rangeLabel(layer.rows[index], yRow)),
-            origin.x - 8,
+            yLabels[index],
+            origin.x - yLabelGap,
             layer.top + index * pitch + origin.height / 2,
-            44,
+            maxYLabelWidth,
           );
         }
         ctx.textAlign = 'center';
@@ -256,11 +268,14 @@ export function HeatmapCanvas({
           const { centre, span } = verticalTitle(
             ctx.measureText(title).width,
             { top: layer.top, height: layer.ys.length * pitch },
-            { top: map.zKey ? layer.top : 2, bottom: bottom + 62 },
+            { top: map.zKey ? layer.top : 2, bottom: bottom + axisBottom - 4 },
           );
           ctx.save();
-          // Beside the row labels, which end 8 px left of the (centred) grid.
-          ctx.translate(origin.x - 50, centre);
+          // Beyond the widest row label, so it never covers one; its line is about 12 px high.
+          ctx.translate(
+            origin.x - yLabelGap - Math.min(yLabelWidth, maxYLabelWidth) - yTitleGap - 6,
+            centre,
+          );
           ctx.rotate(-Math.PI / 2);
           ctx.fillText(title, 0, 0, span);
           ctx.restore();
@@ -268,10 +283,11 @@ export function HeatmapCanvas({
         ctx.fillText(
           text(axisLabel(map.xKey, map.display?.xBinSize ?? 1)),
           layoutWidth / 2,
-          bottom + 34,
+          bottom + 30,
           layoutWidth - 20,
         );
       }
+      if (Math.ceil(widest) !== yLabelWidth) setYLabelWidth(Math.ceil(widest));
     };
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(draw);
@@ -285,19 +301,42 @@ export function HeatmapCanvas({
       cancelAnimationFrame(frame);
       redraw.current = () => {};
     };
-  }, [geometry, map, selection, frames, marked, showValues, t, text, xRow, yRow, zRow]);
+  }, [
+    geometry,
+    map,
+    selection,
+    frames,
+    marked,
+    showValues,
+    t,
+    text,
+    xRow,
+    yRow,
+    zRow,
+    yLabelWidth,
+  ]);
 
   const hover = (cell: HeatmapCell | null, left = 0, top = 0) => {
     if (active.current === cell) return;
     active.current = cell;
-    setInspected(cell);
     setDescription(
       cell
-        ? t('optimize.map.cell', {
-            x: text(rangeLabel(cell.xValues ?? [cell.x], xRow)),
-            y: text(rangeLabel(cell.yValues?.length ? cell.yValues : [cell.y], yRow)),
-            value: text(valueLabel(cell.value)),
-          })
+        ? [
+            t('optimize.map.cell', {
+              x: text(rangeLabel(cell.xValues ?? [cell.x], xRow)),
+              y: text(rangeLabel(cell.yValues?.length ? cell.yValues : [cell.y], yRow)),
+              value: text(valueLabel(cell.value)),
+            }),
+            // What a tooltip shows beside the values, for keyboard and screen reader users.
+            ...(cell.excludedCount
+              ? [
+                  t('optimize.summary.filtered'),
+                  ...(cell.failedConstraints ?? []).map((constraint) =>
+                    text(failedConstraintLabel(constraint)),
+                  ),
+                ]
+              : []),
+          ].join(t('optimize.map.descriptionSeparator'))
         : '',
     );
     onHover(cell ? { cell, left, top, map } : null);
@@ -406,20 +445,6 @@ export function HeatmapCanvas({
           {description}
         </span>
       </div>
-      {map.cells.some((cell) => cell.count > 0 && cell.excludedCount === cell.count) && (
-        <div className={styles.filteredLegend}>
-          <i aria-hidden="true" />
-          <span>{t('optimize.summary.filtered')}</span>
-        </div>
-      )}
-      {!!inspected?.excludedCount && (
-        <div className={styles.filterStatus} role="status">
-          <span>{t('optimize.summary.filtered')}</span>
-          {(inspected.failedConstraints ?? []).map((constraint, index) => (
-            <span key={index}>{text(failedConstraintLabel(constraint))}</span>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

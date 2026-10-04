@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Heatmap, HeatmapCell } from '@pine/optimizer';
 import { HeatmapCanvas, type CellHover } from '../../../charts/optimize/HeatmapCanvas.tsx';
-import { LegendRamp } from '../../../charts/optimize/LegendRamp.tsx';
+import { ExcludedLegend, LegendRamp } from '../../../charts/optimize/LegendRamp.tsx';
 import { Select } from '../../../components/Select.tsx';
 import { SegmentedControl } from '../../../components/SegmentedControl.tsx';
 import { ToggleSwitch } from '../../../components/ToggleSwitch.tsx';
@@ -26,6 +26,8 @@ export function MapPanel() {
   const { t, text } = useI18n();
   const views = useOptimizationStore((state) => state.views);
   const settings = useOptimizationStore((state) => state.viewSettings);
+  // The tooltip's height, measured once it renders, keeps it within the window.
+  const [tooltipHeight, setTooltipHeight] = useState(320);
   const actions = useOptimizationStore((state) => state.actions);
   const [hover, setHover] = useState<{ map: Heatmap; hit: CellHover } | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -172,19 +174,24 @@ export function MapPanel() {
                   {t(views.inProgress ? 'optimize.map.incomplete' : 'optimize.map.notSampled')}
                 </span>
               )}
+              <ExcludedLegend map={map.panel} />
             </div>
           </div>
           {hit &&
             hoveredValues &&
             createPortal(
               <div
+                ref={(element) => {
+                  if (element && element.offsetHeight !== tooltipHeight)
+                    setTooltipHeight(element.offsetHeight);
+                }}
                 role="tooltip"
                 className={styles.hover}
                 onPointerEnter={() => clearTimeout(hoverTimer.current)}
                 onPointerLeave={() => setHover(null)}
                 style={{
                   left: Math.max(8, Math.min(hit.left - 140, window.innerWidth - 300)),
-                  top: Math.max(8, Math.min(hit.top + 18, window.innerHeight - 320)),
+                  top: Math.max(8, Math.min(hit.top + 18, window.innerHeight - tooltipHeight - 8)),
                 }}
               >
                 <strong>{cellTitle(hit.cell)}</strong>

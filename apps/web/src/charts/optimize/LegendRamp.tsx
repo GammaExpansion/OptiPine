@@ -1,6 +1,8 @@
 import type { Heatmap } from '@pine/optimizer';
+import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { formatNumber } from '../../i18n/translate.ts';
 import { heatTokens, legendScale, neutralStep } from './geometry.ts';
+import styles from './canvas.module.css';
 
 /** An end of the ramp, short but never rounded to nothing: 2.4K, 272, 0.0315. */
 export function legendValue(value: number): string {
@@ -39,5 +41,17 @@ export function LegendRamp({
       </div>
       <span>{end(scale.best)}</span>
     </>
+  );
+}
+
+/** The legend's note for the corner mark on cells whose every set the filters exclude (R4). */
+export function ExcludedLegend({ map }: { map: Heatmap }) {
+  const { t } = useI18n();
+  if (!map.cells.some((cell) => cell.count > 0 && cell.excludedCount === cell.count)) return null;
+  return (
+    <span className={styles.excluded}>
+      <i aria-hidden="true" />
+      {t('optimize.summary.filtered')}
+    </span>
   );
 }

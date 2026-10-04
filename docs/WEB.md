@@ -247,10 +247,11 @@ are slices that fix a value, take the best (**Max**, or **Min** for a minimized 
 the mean. **IS** / **OOS** switches the surface; **Smooth** replaces each cell with the mean of its
 ±1 step neighbours in every searched input.
 
-- Cells are square with a 2 px gap: 16 px, or larger on a sparse single-layer map, which grows its
-  cells up to 38 px to fill the panel. The input with more values runs horizontally until the axes
-  are chosen. An axis with more values than fit the panel, or more than 24, averages adjacent
-  values into one cell and labels the axis with ranges.
+- Cells are square with a 2 px gap: 16 px on a layered map, which scrolls; a single-layer map
+  sizes them to fill its panel, from 10 px, so a 14-value axis keeps its rows at 1440 × 900, up to
+  38 px. The input with more values runs horizontally until the axes are chosen. An axis with more
+  values than fit the panel at 10 px, or more than 24, averages adjacent values into one cell and
+  labels the axis with ranges. The row labels are never cut; the Y title sits beyond them.
 - Colours run from the worst cell to the best in the objective's direction, on a ramp from loss to
   profit, and are assigned by rank, so one extreme set cannot flatten the rest. Where the objective
   breaks even (zero for amounts, returns and ratios, one for profit factor), losing cells take the
