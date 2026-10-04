@@ -39,7 +39,7 @@ function createBacktestStore(services: AppServices) {
     setSource: session.setSource.bind(session),
     setInput: session.setInput.bind(session),
     resetInputs: session.resetInputs.bind(session),
-    restoreResultInputs: session.restoreResultInputs.bind(session),
+    restoreResultSettings: session.restoreResultSettings.bind(session),
     setProperty: session.setProperty.bind(session),
     resetProperties: session.resetProperties.bind(session),
     resetProperty: session.resetProperty.bind(session),

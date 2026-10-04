@@ -151,7 +151,7 @@ test('a walk-forward window previews as Wn and the fixed set applies by name (B1
   await user.click(await screen.findByRole('button', { name: 'Apply to inputs' }));
   await waitFor(() =>
     expect(
-      screen.getByText('Applied the parameters of fixed set and re-ran the backtest'),
+      screen.getByText('Applied the fixed parameters for every window and re-ran the backtest'),
     ).toBeVisible(),
   );
   expect(backtest().inputs.find((field) => field.descriptor.title === 'Length')?.origin?.kind).toBe(

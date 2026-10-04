@@ -8,6 +8,7 @@ import {
   type Time,
   type TickMarkFormatter,
 } from 'lightweight-charts';
+import type { Language } from '../i18n/translate.ts';
 
 export function chartTheme(element: HTMLElement) {
   const css = getComputedStyle(element);
@@ -72,13 +73,18 @@ export function keepTimeLabelsInside(chart: IChartApi, format: TickMarkFormatter
   };
 }
 
+/** The locale a chart's day ticks follow: "Sep 28" in English, "9月28日" in Chinese. */
+const chartLocales: Record<Language, string> = { en: 'en-US', zh: 'zh-CN' };
+
 export function chartOptions(
   element: HTMLElement,
   timezone: string,
+  language: Language,
 ): DeepPartial<ChartOptions> & { timeScale: { tickMarkFormatter: TickMarkFormatter } } {
   const theme = chartTheme(element);
   const format = timeFormat(timezone);
-  const date = new Intl.DateTimeFormat('en-US', {
+  const locale = chartLocales[language];
+  const date = new Intl.DateTimeFormat(locale, {
     timeZone: timezone,
     month: 'short',
     day: 'numeric',
@@ -116,7 +122,7 @@ export function chartOptions(
       },
     },
     localization: {
-      locale: 'en-US',
+      locale,
       timeFormatter: (time: Time) => format.format(Number(time) * 1000),
     },
   } satisfies DeepPartial<ChartOptions>;

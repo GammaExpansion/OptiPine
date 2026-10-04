@@ -54,7 +54,8 @@ export function loadCatalog(language: Language): Promise<void> {
 /**
  * Literal source text stays literal; package messages and nested groups are translated
  * recursively. An id the language's catalog lacks, or a catalog not loaded, keeps the message's
- * plain fallback.
+ * plain fallback. A message whose `count` is 1 reads the catalog's `.one` form of its id where
+ * there is one: "1 bar", not "1 bars".
  */
 export function translate(text: Text, language: Language): string {
   if (typeof text === 'string') return text;
@@ -65,7 +66,9 @@ export function translate(text: Text, language: Language): string {
   }
   const catalog = catalogs[language];
   if (!catalog || !Object.hasOwn(catalog, text.id)) return plainText(text);
-  return catalog[text.id as MessageId]!.replace(/\{(\w+)\}/g, (placeholder, key: string) => {
+  const one = `${text.id}.one`;
+  const id = text.values.count === 1 && Object.hasOwn(catalog, one) ? one : text.id;
+  return catalog[id as MessageId]!.replace(/\{(\w+)\}/g, (placeholder, key: string) => {
     if (!Object.hasOwn(text.values, key)) return placeholder;
     const value = text.values[key];
     return typeof value === 'number' ? formatNumber(value) : translate(value, language);

@@ -335,7 +335,7 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
     preview: null,
   });
   await expect(
-    page.getByText('Applied the parameters of fixed set and re-ran the backtest'),
+    page.getByText('Applied the fixed parameters for every window and re-ran the backtest'),
   ).toBeVisible();
   await page.screenshot({ path: info.outputPath('B17-applied-en.png') });
   await page.getByRole('button', { name: 'Optimize', exact: true }).click();
