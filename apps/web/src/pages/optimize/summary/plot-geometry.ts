@@ -22,6 +22,15 @@ export function scale(domain: readonly [number, number], start: number, end: num
   return (value: number) => start + ((value - domain[0]) / (domain[1] - domain[0])) * (end - start);
 }
 
+/** Leave room for full UTC dates, including the inward-aligned first and last labels. */
+export function timeTicks(bounds: readonly [number, number], width: number): number[] {
+  const intervals = Math.min(4, Math.max(1, Math.floor(width / 110)));
+  return Array.from(
+    { length: intervals + 1 },
+    (_, index) => bounds[0] + ((bounds[1] - bounds[0]) * index) / intervals,
+  );
+}
+
 /** Expand to round 1/2/2.5/5 ticks. Zero is an exact tick whenever the domain crosses it. */
 export function roundAxis(
   bounds: readonly [number, number],

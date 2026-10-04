@@ -9,3 +9,7 @@
   height: 320px;
   flex: none;
 }
+/* B16's wrapping banner adds to the chart rather than covering the result tabs below it. */
+.chart:has([data-preview-banner]) {
+  height: auto;
+}

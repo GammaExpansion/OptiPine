@@ -257,9 +257,10 @@ The desktop reference is 1440 × 900. Every gap between panes is a drag handle; 
 pane size, double-clicking resets it, panes stop at a minimum, and sizes are remembered per page
 (G1). The right panel defaults to 336 px. From 768 to 1279 px wide the right panel becomes a drawer
 (G2). Below 768 px each page is a single column with tabs: Report, Equity, Trades, Inputs, Code and
-Issues on Backtest (G3); Summary, Leaderboard, Parameter map, Sensitivity and Settings on Optimize,
-with leaderboard rows as cards, or Summary, Windows, Stability and Settings for walk-forward
-results (G4). The component sheet is G5.
+Issues on Backtest (G3). On Optimize the summary stays above the tabs Leaderboard, Parameter map,
+Sensitivity and Settings, with leaderboard rows as cards, and the selected set's bar below them;
+walk-forward results keep the stitched equity above Windows, Stability and Settings, and the
+selected window's bar below (G4). The component sheet is G5.
 
 ## 3. Behavior
 
