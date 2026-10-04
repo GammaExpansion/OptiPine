@@ -10,7 +10,7 @@ import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { formatNumber } from '../../../i18n/translate.ts';
 import { useOptimizationStore } from '../../../state/optimization.ts';
 import { cellValues } from '../../../workflows/optimize-views.ts';
-import { axisLabel, isBinnedCell, rangeLabel, valueLabel } from './map-labels.ts';
+import { failedConstraintLabel, isBinnedCell, rangeLabel, valueLabel } from './map-labels.ts';
 import { CellValuesTable } from './CellValuesTable.tsx';
 import { ObjectiveCurve } from './ObjectiveCurve.tsx';
 import { inspectBin, resetInspection } from './inspection.ts';
@@ -32,17 +32,18 @@ export function MapPanel() {
     [],
   );
   const map = views?.map;
+  useEffect(() => setHover(null), [map]);
   const rowFor = (title: string | null | undefined) =>
     views?.searchRows.find((row) => row.descriptor.title === title);
-  const hit = hover?.map === map?.panel ? hover?.hit : undefined;
+  const hit = hover?.hit;
   const hoveredValues = useMemo(
     () => (hit && views ? cellValues(views.summary, hit.cell) : null),
     [views, hit],
   );
   const validated = views?.mode === 'in-out';
-  const choose = (cell: HeatmapCell) => {
+  const choose = (cell: HeatmapCell, panel: Heatmap) => {
     if (isBinnedCell(cell)) {
-      if (map?.map) inspectBin({ map: map.panel, cell });
+      if (map?.map) inspectBin({ map: map.panel, panel, cell });
     } else if (cell.trialId && cell.value !== null) actions.select(cell.trialId);
     setHover(null);
   };
@@ -146,11 +147,6 @@ export function MapPanel() {
             ))}
           </div>
           <div className={styles.body}>
-            {(map.panel.display?.yBinSize ?? 1) > 1 && (
-              <p className={styles.axisNote}>
-                {text(axisLabel(map.y ?? '', map.panel.display!.yBinSize))}
-              </p>
-            )}
             <HeatmapCanvas
               map={map.panel}
               searchRows={views.searchRows}
@@ -222,9 +218,21 @@ export function MapPanel() {
                     validated={validated}
                   />
                 )}
-                <span className={styles.note}>
-                  {t(isBinnedCell(hit.cell) ? 'optimize.map.openDetail' : 'optimize.map.selectSet')}
-                </span>
+                {!!hit.cell.excludedCount && (
+                  <div className={styles.note}>
+                    <span>{t('optimize.summary.filtered')}</span>
+                    {(hit.cell.failedConstraints ?? []).map((constraint, index) => (
+                      <div key={index}>{text(failedConstraintLabel(constraint))}</div>
+                    ))}
+                  </div>
+                )}
+                {(isBinnedCell(hit.cell) || hit.cell.trialId) && (
+                  <span className={styles.note}>
+                    {t(
+                      isBinnedCell(hit.cell) ? 'optimize.map.openDetail' : 'optimize.map.selectSet',
+                    )}
+                  </span>
+                )}
               </div>,
               document.body,
             )}

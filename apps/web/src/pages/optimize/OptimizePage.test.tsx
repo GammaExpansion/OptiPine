@@ -46,6 +46,38 @@ test('results lay out R1 in remembered splits, and dim when settings change (R5)
   expect(uiStore.getState().paneSizes.optimize.summary).toBe(defaultPaneSizes.summary);
 });
 
+test('G4 keeps the chosen summary view above four tabs and restores the selected cards', async () => {
+  setViewportWidth(390);
+  await loadOptimization();
+  act(() => {
+    optimization().actions.removeFilter(1);
+    optimization().actions.removeFilter(0);
+  });
+  await runOptimization();
+  renderInEnglish(<OptimizePage />);
+  expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+    'Leaderboard',
+    'Parameter map',
+    'Sensitivity',
+    'Settings',
+  ]);
+  expect(separators()).toEqual([]);
+  fireEvent.click(screen.getByRole('button', { name: 'Select set #2' }));
+  fireEvent.click(screen.getByRole('radio', { name: 'Distribution' }));
+  const chart = screen.getByRole('img', { name: 'Distribution' });
+  act(() => uiStore.getState().setOptimizeTab('settings'));
+  expect(screen.getByRole('region', { name: 'Optimization run' })).toBeVisible();
+  expect(screen.getByRole('img', { name: 'Distribution' })).toBe(chart);
+  expect(screen.getByRole('button', { name: 'View backtest' })).toBeVisible();
+  act(() => uiStore.getState().setOptimizeTab('leaderboard'));
+  expect(screen.getByRole('button', { name: 'Select set #2' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  act(() => optimization().actions.setRange('Length', { to: 5 }));
+  expect(chart.closest('[data-results]')).toHaveAttribute('data-outdated');
+});
+
 test('walk-forward results lay out W1 and stay so, dimmed, when validation changes (R5)', async () => {
   await loadWalkForward();
   renderInEnglish(<OptimizePage />);
@@ -81,7 +113,8 @@ test('on a tablet W1 keeps its splits, with the right panel left to the drawer (
   expect(screen.getByRole('region', { name: 'Walk-forward stability' })).toBeInTheDocument();
 });
 
-test('on a phone W1 takes the tabs Summary, Windows and Stability, then Settings (G4)', async () => {
+// Two real optimizations, walk-forward then IS / OOS, run in this test: it gets 15 s, not 5.
+test('on a phone W1 keeps its stitched equity above Windows, Stability and Settings (G4)', async () => {
   const user = userEvent.setup();
   // The charts draw on canvases, which jsdom does not provide; their tests cover the drawing.
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
@@ -96,18 +129,23 @@ test('on a phone W1 takes the tabs Summary, Windows and Stability, then Settings
     tabs()
       .getAllByRole('tab')
       .map((tab) => tab.textContent),
-  ).toEqual(['Summary', 'Windows', 'Stability', 'Settings']);
+  ).toEqual(['Windows', 'Stability', 'Settings']);
   expect(tabs().getByRole('tab', { name: 'Windows' })).toHaveAttribute('aria-selected', 'true');
   expect(separators()).toEqual([]);
-  expect(screen.getByRole('region', { name: 'Walk-forward window results' })).toBeVisible();
+  const summary = screen.getByRole('region', { name: 'Stitched OOS equity' });
+  expect(screen.getByRole('heading', { level: 1, name: 'Optimize' })).toBeInTheDocument();
+  const table = screen.getByRole('region', { name: 'Walk-forward window results' });
+  expect(table).toBeVisible();
   expect(screen.getByRole('region', { name: 'Fixed parameters for every window' })).toBeVisible();
-  await user.click(screen.getByRole('button', { name: 'Select W2' }));
+  await user.click(within(table).getByRole('button', { name: 'Select W2' }));
   expect(screen.getByRole('region', { name: 'Selected window' })).toHaveTextContent('W2');
   await user.click(tabs().getByRole('tab', { name: 'Stability' }));
   expect(screen.getByRole('region', { name: 'Walk-forward stability' })).toBeVisible();
-  await user.click(tabs().getByRole('tab', { name: 'Summary' }));
-  expect(screen.getByRole('region', { name: 'Stitched OOS equity' })).toBeVisible();
-  // Back on R1's results, the Stability tab shows the parameter map.
+  await user.click(tabs().getByRole('tab', { name: 'Settings' }));
+  expect(screen.getByRole('region', { name: 'Optimization run' })).toBeVisible();
+  // The summary stays mounted above whichever tab is open.
+  expect(screen.getByRole('region', { name: 'Stitched OOS equity' })).toBe(summary);
+  // Back on R1's results, the Stability tab shows the parameter map under R1's summary.
   act(() => uiStore.getState().setOptimizeTab('stability'));
   act(() => optimization().actions.setValidation({ mode: 'in-out' }));
   await runOptimization();
@@ -116,10 +154,11 @@ test('on a phone W1 takes the tabs Summary, Windows and Stability, then Settings
       .getAllByRole('tab')
       .map((tab) => [tab.textContent, tab.getAttribute('aria-selected')]),
   ).toEqual([
-    ['Summary', 'false'],
     ['Leaderboard', 'false'],
     ['Parameter map', 'true'],
     ['Sensitivity', 'false'],
     ['Settings', 'false'],
   ]);
-});
+  expect(screen.queryByRole('region', { name: 'Stitched OOS equity' })).toBeNull();
+  expect(screen.getByRole('region', { name: 'Selected parameter set' })).toBeVisible();
+}, 15_000);

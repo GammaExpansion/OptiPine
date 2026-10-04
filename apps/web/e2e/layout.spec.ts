@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { en } from '../src/i18n/en.ts';
+import { zh } from '../src/i18n/zh.ts';
 import type { BacktestHooks } from './backtest-hooks.ts';
 import type { OptimizeHooks } from './optimize-hooks.ts';
 import { origins } from './ports.ts';
@@ -16,11 +18,6 @@ const sizes = [
   { name: 'phone', width: 390, height: 844 },
 ] as const;
 const states = ['S1', 'B1', 'O1', 'R1', 'W1'] as const;
-/** W1's phone tabs past Summary, which the page opens on. */
-const phoneTabs = {
-  en: { windows: 'Windows', stability: 'Stability' },
-  zh: { windows: '窗口', stability: '稳定性' },
-} as const;
 type State = (typeof states)[number];
 
 /** Collect the page's errors and open it in `language` at the app's first screen (S1) or the harness. */
@@ -196,13 +193,23 @@ for (const language of ['en', 'zh'] as const)
         if (state === 'B1') expect(await page.evaluate(legendUnderTools)).toEqual([]);
         // The right panel's collapse chevron covers none of its rows (#32).
         expect(await page.evaluate(collapseCovers), state).toEqual([]);
-        // A phone shows W1's regions one per tab (G4); each is checked on its own.
+        // A phone shows W1's Windows and Stability one per tab under the stitched equity (G4).
         if (state === 'W1' && size.name === 'phone')
           for (const tab of ['windows', 'stability'] as const) {
-            await page.getByRole('tab', { name: phoneTabs[language][tab], exact: true }).click();
+            const copy = language === 'en' ? en : zh;
+            await page.getByRole('tab', { name: copy[`layout.${tab}`], exact: true }).click();
             await page.waitForTimeout(300);
             await page.screenshot({ path: info.outputPath(`W1-${tab}-phone-${language}.png`) });
             expect(await page.evaluate(layoutProblems), `W1 ${tab}`).toEqual([]);
+            // The stitched equity's view switch and the window's View backtest are touch targets.
+            for (const target of [
+              page.getByRole('radio', { name: copy['optimize.wfResults.stitched'], exact: true }),
+              page.getByRole('button', {
+                name: copy['optimize.wfResults.viewBacktest'],
+                exact: true,
+              }),
+            ])
+              expect((await target.boundingBox())!.height).toBeGreaterThanOrEqual(44);
           }
         expect(errors, state).toEqual([]);
       }
