@@ -403,7 +403,7 @@ export const zh = {
   'report.commission': 'Commission',
   'report.buyHold': 'Buy & hold',
   'report.maxRunUp': 'Max run-up',
-  'report.maxDrawdown': 'Max drawdown (intrabar)',
+  'report.maxDrawdown': '最大回撤（盘中）',
   'report.openPnl': 'Open',
   'report.tradeCount': 'Trades',
   'report.totalTrades': 'Total trades',
