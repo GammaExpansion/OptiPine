@@ -135,6 +135,21 @@ test('a new row spans half to twice the current value on its step; the grid stay
     kept.rows.map((row) => row.status),
     ['searched', 'searched', 'searched', 'searched', 'fixed'],
   );
+  // Unchecking rows shrinks the grid, but a row that started fixed stays fixed until checked.
+  const unchecked = searchSetup(
+    trend,
+    new Map([
+      ['Source', { ...rows[2].draft!, searched: false }],
+      ['Use trailing stop', { ...rows[3].draft!, searched: false }],
+    ]),
+    { ...trendValues, 'Trail %': 3 },
+    grid,
+  );
+  assert.deepEqual(
+    unchecked.rows.map((row) => row.status),
+    ['searched', 'searched', 'fixed', 'fixed', 'fixed'],
+  );
+  assert.equal(unchecked.sampling?.combinations, 31 * 13);
 });
 
 test('the default range follows the value, its bounds and its step', () => {
