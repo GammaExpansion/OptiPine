@@ -111,9 +111,10 @@ test('charts render, synchronize, focus trades, switch panes and handle 100,000 
         const { chartLabels } = window as unknown as {
           chartLabels: WeakMap<HTMLCanvasElement, string[]>;
         };
+        // The slower default may leave only the full-value last-price label in this short pane.
         return [...root.querySelectorAll('canvas')]
           .flatMap((canvas) => chartLabels.get(canvas) ?? [])
-          .some((label) => /^−[\d,.]+k$/.test(label));
+          .some((label) => /^[-−][\d,.]+k?$/.test(label));
       }),
     )
     .toBe(true);
@@ -198,6 +199,8 @@ test('charts render, synchronize, focus trades, switch panes and handle 100,000 
     })
     .toBe(true);
   await expect(page.locator('a[href*="tradingview.com"]')).toHaveCount(1);
+  // The RSI trend filter can leave the recent window empty; focus a closed trade for its signals.
+  await page.getByRole('button', { name: 'Focus trade', exact: true }).click();
   // Both force_overlay marker colours must occur in the price canvas, above the RSI pane.
   await expect
     .poll(() =>
