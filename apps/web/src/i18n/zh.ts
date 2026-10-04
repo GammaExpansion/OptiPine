@@ -222,6 +222,7 @@ export const zh = {
   'inputs.increase': '增加 {title}',
   'inputs.on': '开',
   'inputs.off': '关',
+  'inputs.chartTimeframe': '图表周期',
   'inputs.none': '此脚本未声明输入参数。',
   'inputs.lastCompile': '以下为上次编译成功时的输入，脚本修正后将刷新。',
   'inputs.timeInvalid': '请按 YYYY-MM-DD HH:MM 格式输入 UTC 时间',

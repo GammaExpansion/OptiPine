@@ -230,6 +230,7 @@ export const en = {
   'inputs.increase': 'Increase {title}',
   'inputs.on': 'on',
   'inputs.off': 'off',
+  'inputs.chartTimeframe': 'Chart',
   'inputs.none': 'This script declares no inputs.',
   'inputs.lastCompile':
     'These inputs are from the last successful compile and refresh once the script is fixed.',
