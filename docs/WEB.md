@@ -135,6 +135,9 @@ Each tab's code loads on first use; until then the tab says it is loading result
 has no account: Report and Equity say so instead of an empty report, and the right panel lists no
 strategy properties.
 
+Opening a script shows its Pine code. When the first run of a newly opened script succeeds, a dock
+still on Pine code moves to Report; after that the dock stays on the tab the user picks.
+
 **Right panel.** **Inputs** in declaration order with **Reset**: a number field with stepper and
 range, a select (declared options, a source, or for `input.timeframe` the chart's timeframe and the
 usual ones from 1m to 1M), a toggle, a UTC date and time, or a text field (sessions and strings),
