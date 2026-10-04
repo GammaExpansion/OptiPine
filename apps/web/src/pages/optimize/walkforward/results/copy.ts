@@ -4,6 +4,9 @@ import { formatDate, formatNumber } from '../../../../i18n/translate.ts';
 import { parameterText, searchedParameters } from '../../../../workflows/optimize-parameters.ts';
 import type { SearchRow } from '../../../../workflows/optimize-setup.ts';
 
+/** Negatives take a true minus sign, as the leaderboard's figures do. */
+export const minus = (value: string) => value.replace('-', '−');
+
 export function windowLabel(index: number): Message {
   return message('optimize.wfResults.windowLabel', { number: index + 1 });
 }
@@ -12,11 +15,13 @@ export function figure(value: number | null | undefined, digits = 0, signed = fa
   return value == null || !Number.isFinite(value)
     ? message('optimize.wfResults.missing')
     : message('optimize.wfResults.value', {
-        value: formatNumber(value, {
-          minimumFractionDigits: digits,
-          maximumFractionDigits: digits,
-          signDisplay: signed ? 'exceptZero' : 'auto',
-        }),
+        value: minus(
+          formatNumber(value, {
+            minimumFractionDigits: digits,
+            maximumFractionDigits: digits,
+            signDisplay: signed ? 'exceptZero' : 'auto',
+          }),
+        ),
       });
 }
 
@@ -24,11 +29,13 @@ export function compactNet(value: number | null | undefined): Message {
   return value == null || !Number.isFinite(value)
     ? message('optimize.wfResults.missing')
     : message('optimize.wfResults.value', {
-        value: formatNumber(value, {
-          notation: 'compact',
-          maximumFractionDigits: 1,
-          signDisplay: 'exceptZero',
-        }).toLowerCase(),
+        value: minus(
+          formatNumber(value, {
+            notation: 'compact',
+            maximumFractionDigits: 1,
+            signDisplay: 'exceptZero',
+          }).toLowerCase(),
+        ),
       });
 }
 

@@ -8,6 +8,7 @@ import { useI18n } from '../../../../i18n/I18nProvider.tsx';
 import { formatNumber } from '../../../../i18n/translate.ts';
 import { useOptimizationStore } from '../../../../state/optimization.ts';
 import { rangeLabel, valueLabel } from '../../map/map-labels.ts';
+import { minus } from '../results/copy.ts';
 import styles from './stability.module.css';
 
 /** The workflow supplies the selected window's IS map or the mean, already binned and ranked. */
@@ -35,7 +36,7 @@ export function WindowMap() {
   const compact = (value: number | null | undefined) =>
     value == null
       ? text(valueLabel(null))
-      : formatNumber(value, { notation: 'compact', maximumFractionDigits: 1 });
+      : minus(formatNumber(value, { notation: 'compact', maximumFractionDigits: 1 }));
   if (view?.error)
     return (
       <p className={styles.note} role="status">
