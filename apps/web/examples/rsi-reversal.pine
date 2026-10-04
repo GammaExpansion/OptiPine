@@ -1,7 +1,7 @@
 //@version=6
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 GammaExpansion
-// Original OptiPine example: buy a recovery out of oversold territory, long only.
+// Original OptiPine example: buy an oversold recovery above a long EMA, long only.
 strategy("RSI Reversal", overlay = false,
      initial_capital = 100000,
      default_qty_type = strategy.percent_of_equity,
@@ -13,11 +13,13 @@ length   = input.int(14, "RSI length", minval = 2, maxval = 100)
 oversold = input.float(30.0, "Oversold", minval = 10.0, maxval = 45.0, step = 1.0)
 src      = input.source(close, "Source")
 midline  = input.bool(true, "Exit at midline")
-stop     = input.float(3.0, "Stop %", minval = 0.5, maxval = 20.0, step = 0.5, group = "Risk")
+stop     = input.float(10.0, "Stop %", minval = 0.5, maxval = 20.0, step = 0.5, group = "Risk")
+trendLength = input.int(200, "Trend EMA length", minval = 50, maxval = 500, step = 10, group = "Filter")
 
 rsi = ta.rsi(src, length)
+trend = ta.ema(close, trendLength)
 exitLevel = midline ? 50.0 : 100.0 - oversold
-buySignal = ta.crossover(rsi, oversold) and strategy.position_size == 0
+buySignal = ta.crossover(rsi, oversold) and strategy.position_size == 0 and close > trend
 sellSignal = ta.crossover(rsi, exitLevel) and strategy.position_size > 0
 
 if buySignal

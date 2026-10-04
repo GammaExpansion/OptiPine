@@ -113,13 +113,16 @@ for (const example of examples) {
       description.inputs.map(({ title, type, defaultValue }) => ({ title, type, defaultValue })),
       example.inputs,
     );
-    assert.ok(description.inputs.length >= 3 && description.inputs.length <= 5);
+    assert.ok(description.inputs.length >= 3 && description.inputs.length <= 6);
     assert.ok(description.inputs.every((item) => !item.fixed));
     for (const item of description.inputs) {
       if (item.type === 'int' || item.type === 'float') {
         assert.equal(typeof item.defaultValue, 'number');
         assert.ok(item.min !== undefined && item.min <= Number(item.defaultValue));
         assert.ok(item.max !== undefined && item.max >= Number(item.defaultValue));
+        const margin = (item.max! - item.min!) * 0.1;
+        assert.ok(Number(item.defaultValue) - item.min! > margin, `${item.title}: lower margin`);
+        assert.ok(item.max! - Number(item.defaultValue) > margin, `${item.title}: upper margin`);
         assert.ok((item.step ?? 1) > 0);
       }
       if (item.type === 'source' || item.type === 'string') {
@@ -187,6 +190,30 @@ test('RSI Reversal supports an overbought exit and a different source', () => {
     result.plots.find((plot) => plot.title === 'Exit level')!.values.every((v) => v === 70),
   );
   assert.ok(result.trades.some((trade) => trade.exitId === 'L stop'));
+});
+
+test('RSI Reversal filters recoveries below its long EMA using only the current and prior bars', () => {
+  const source = readFileSync(new URL('rsi-reversal.pine', import.meta.url), 'utf8');
+  const audit = run(`${source}\nplot(trend, "Trend audit")`, input);
+  const trend = audit.plots.find((plot) => plot.title === 'Trend audit')!.values;
+  const buys = audit.plots.find((plot) => plot.title === 'Buy')!.values;
+  assert.deepEqual(audit.diagnostics, []);
+  assert.ok(buys.includes(true));
+  for (let bar = 0; bar < buys.length; bar++) {
+    if (buys[bar] === true) {
+      assert.equal(typeof trend[bar], 'number');
+      assert.ok(input.bars[bar].close > Number(trend[bar]));
+    }
+  }
+  // A prefix must emit exactly the same signals: later bars cannot change eligibility.
+  const prefixLength = Math.floor(input.bars.length / 2);
+  const prefix = run(source, { ...input, bars: input.bars.slice(0, prefixLength) });
+  assert.deepEqual(
+    prefix.plots.find((plot) => plot.title === 'Buy')!.values,
+    buys.slice(0, prefixLength),
+  );
+  const unfiltered = run(source.replace(' and close > trend', ''), input);
+  assert.notDeepEqual(unfiltered.plots.find((plot) => plot.title === 'Buy')!.values, buys);
 });
 
 test('MA Cross supports SMA and disabling the slope filter', () => {
