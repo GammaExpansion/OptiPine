@@ -169,34 +169,42 @@ edits the same properties.
 
 ### 2.4 Optimize page: setup (O1–O8)
 
-**Data range** is a bar above the results showing the dataset's span with the IS and OOS ranges,
-or the planned walk-forward windows (O3). Before the first run the results area explains what will
-appear there and that single-set details live on the Backtest page.
+**Data range** is a bar above the results showing the dataset's span with the IS and OOS ranges
+and their dates, or for walk-forward the window count with the IS, OOS and step lengths (O3).
+Before the first run the results area explains what will appear there and that single-set details
+live on the Backtest page; for walk-forward it first draws the planned windows.
 
 **Right panel**, top to bottom:
 
-- **Search ranges.** **Grid** or **Random**, then one row per input. A numeric input has from, to
-  and step and shows its value count; an option or boolean input shows its values as chips to keep
-  or drop, with the full list behind "N more" (O4). A row left with one value fixes that input. When
-  the grid exceeds 20,000 combinations the search switches to random sampling, says so, and shows
-  the sample count (default 2,000) and seed (O5). A range that cannot be searched is marked on its
-  row, and the run is blocked until it is fixed (O6). A new numeric row spans half to twice the
-  input's current value within its declared bounds, on its step through that value; a step that
-  would list more than 50 values there becomes 2, 5, 10… times itself. Zero and time inputs start
-  at their value. New rows are searched in declaration order while the grid stays within 20,000
-  combinations, so the first run is a whole grid; a row that would exceed it starts fixed with its
-  range filled in (O1). A row keeps its range once it is edited or a run has used it.
-- **Validation.** **None**, **IS / OOS** with the OOS share (default 30%), or **Walk-forward** with
-  IS months, OOS months, step months, and an IS start that rolls forward or stays anchored
-  (defaults 12, 3 and 3, rolling). With None, the panel warns that ranks only measure fit (O2).
+- **Search ranges.** **Grid** or **Random**, then one row per input with a **Search** checkbox; an
+  unchecked row is fixed at one value, and an input that cannot be searched says why. A numeric
+  input has from, to and step and shows its value count; an option or boolean input shows its
+  values as chips to keep or drop, with the rest behind "N more" (O4). A row left with one value
+  fixes that input. When the grid exceeds 20,000 combinations the search switches to random
+  sampling, says so, and shows the sample count (default 2,000) and seed (O5). A range that cannot
+  be searched is marked on its row, and the run is blocked until it is fixed (O6). A new numeric
+  row spans half to twice the input's current value within its declared bounds, on its step
+  through that value; a step that would list more than 50 values there becomes 2, 5, 10… times
+  itself. Zero and time inputs start at their value. New rows are searched in declaration order
+  while the grid stays within 20,000 combinations, so the first run is a whole grid; a row that
+  would exceed it starts fixed with its range filled in (O1). A row keeps its range once it is
+  edited or a run has used it, for as long as the input's declaration stays the same.
+- **Validation.** **None**, **IS / OOS** (the default) with the OOS share (default 30%), or
+  **Walk-forward** with IS months, OOS months, step months, and an IS start that rolls forward or
+  stays anchored (defaults 12, 3 and 3, rolling). With None, the panel warns that ranks only
+  measure fit (O2).
 - **Ranking and filters.** The objective and direction (O7), grouped as Returns (net profit,
   annualized return, profit factor, average P&L), Risk (max drawdown, Sharpe ratio, Sortino ratio)
   and Robustness (neighbourhood mean, ±1 step); then filter chips such as Trades ≥ 30 and Max DD ≤
   15%, and **+ Condition**. For walk-forward this section is **Per-window selection and filters**.
 - **Properties.** A summary with **Edit**, the same properties as on the Backtest page.
-- **Run block**, pinned to the bottom: the number of combinations (or backtests, for walk-forward),
-  an estimated duration and thread count, and **Start**, which becomes **Re-optimize** after a run.
-  During a run it shows progress and **Cancel** (O8).
+- **Run block**, pinned to the bottom: the number of combinations (or backtests, for walk-forward)
+  over one line: before a first run the estimated duration and thread count (for walk-forward,
+  windows × combinations), taken from the script's latest backtest or optimization; after a run its
+  duration, or **Re-optimize to update** once the settings change; otherwise what keeps the run
+  from starting. **Start** becomes **Re-optimize** after a run. During a run the settings above are
+  locked, and the block shows the phase, progress, elapsed and remaining time, failures and
+  **Cancel** (O8).
 
 ### 2.5 Optimize page: results (R1–R12)
 
@@ -205,42 +213,51 @@ appear there and that single-set details live on the Backtest page.
 - **Top 20 equity** (R1): the equity of the 20 best sets in the current ranking and filters, with
   their median and #1 highlighted, over the whole data range with the IS / OOS split marked.
 - **IS vs OOS** (R2): one dot per set, in-sample net against out-of-sample net, profit and loss
-  coloured, the current page of the leaderboard highlighted.
+  coloured, the current page of the leaderboard highlighted and sets the filters exclude faded.
+  Clicking a dot selects its set.
 - **Distribution** (R2b): histograms of net profit for IS and OOS with the count of profitable sets.
 
-With validation None the summary ranks by full-range net and marks the results as unvalidated
-(R3). During a run the views fill in as trials finish (O8).
+With validation None, sets are ranked by the objective over the full range, IS vs OOS is not
+available, and the results are marked unvalidated (R3). During a run IS vs OOS and Distribution
+fill in as trials finish; Top 20 equity follows when the run ends, as it reruns the 20 sets (O8).
 
 **Leaderboard.** Sets in ranking order, 13 per page, with how many pass the filters. Every searched
 input is a column while the width allows; the axis inputs come first and the rest collapse into
-"+N" (R4). Then IS and OOS net, profit factor, drawdown and trades. Selecting a row moves the
-parameter map to that set and opens the selection bar (3.3).
+"+N" (R4). Then IS and OOS net, profit factor, drawdown and trades. The header repeats the filters
+with **+ Condition** and links to the failed combinations (R11). The selected set, #1 until another
+row is picked, is marked on the parameter map and shown in the selection bar below (3.3).
 
 **Parameter map.** X and Y are any searched inputs, with an optional Z that draws one layer per Z
-value (R4). The remaining inputs are slice chips that fix a value, take the maximum, or take the
-mean. **IS** / **OOS** switches the surface; **Smooth** replaces each cell with the mean of its ±1
-step neighbours in every searched input.
+value (R4); choosing an input that is already on another axis swaps the two. The remaining inputs
+are slices that fix a value, take the maximum, or take the mean. **IS** / **OOS** switches the
+surface; **Smooth** replaces each cell with the mean of its ±1 step neighbours in every searched
+input.
 
-- Cells are square, 16 px with a 2 px gap. The input with more values runs horizontally. An axis
-  with more than 24 values, or more than fit, averages adjacent values into one cell and labels the
-  axis with ranges.
+- Cells are square with a 2 px gap: 16 px, or larger on a sparse single-layer map, which grows its
+  cells up to 38 px to fill the panel. The input with more values runs horizontally until the axes
+  are chosen. An axis with more values than fit the panel, or more than 24, averages adjacent
+  values into one cell and labels the axis with ranges.
 - Colours come in nine steps assigned by rank, so one extreme set cannot flatten the rest, on a
   ramp from loss to profit. The legend shows the minimum, zero and the maximum. Cells with no
   sampled set are marked as not sampled.
-- Hovering a cell lists the values it covers with their IS and OOS results and the mean (R6).
-  Clicking a binned cell opens it at full resolution with its values framed and their mean (R7).
+- The map counts every completed set, including those the filters exclude; a cell whose sets are
+  all excluded carries a corner mark, and the legend explains it.
+- Hovering a cell lists the values it covers with their IS and OOS results and the mean, and the
+  conditions its excluded sets fail (R6). Clicking a cell of one set selects it; clicking a binned
+  cell opens it at full resolution with its values framed and their mean (R7). While a run
+  streams, a binned cell shows only its mean.
 - With only one searched input, the map becomes a curve of the objective and its neighbourhood
   mean, marking the range within 90% of the peak (R8).
 
 **Sensitivity.** One row per searched input, sorted by the share of variance it explains
-(one-way η²): the share and the mean objective per value with its spread, on one shared scale. The
-X and Y rows carry markers; dragging a marker onto another row makes that input the axis, also
-with the keyboard: Space to pick up, arrow keys to move, Enter to confirm (R12).
+(one-way η²): the share and the mean objective per value with its interquartile spread, on one
+shared scale. The X and Y rows carry markers; dragging a marker onto another row makes that input
+the axis, also with the keyboard: Space to pick up, arrow keys to move, Enter to confirm (R12).
 
 **States.**
 
-- _No combination passes_ (R9): each filter with how many sets pass it alone; a filter nobody passes
-  shows the best value reached and **Remove**.
+- _No combination passes_ (R9): each filter with how many sets pass it alone and **Remove**; a
+  filter nobody passes also shows the best value reached.
 - _Add condition_ (R10): a metric, ≥ or ≤, a value, presets (PF ≥ 1.2, Win rate ≥ 45%, Sharpe ratio
   ≥ 1.0, Avg P&L ≥ 0, Consecutive losses ≤ 6), and a preview of how many more sets it would exclude
   and which ranks on the current page would drop out.
@@ -251,29 +268,32 @@ with the keyboard: Space to pick up, arrow keys to move, Enter to confirm (R12).
 
 ### 2.6 Optimize page: walk-forward (W1–W6)
 
-Each window optimizes on its IS range, picks a set with the current ranking and filters, and runs
-that set on the following OOS range.
+Each window optimizes on its IS range, picks a set with the current ranking and filters, reruns
+that set on its IS range, where it must match the sweep or the window fails, and runs it on the
+following OOS range. Changing the ranking or filters after a run picks again from the kept trials
+and reruns only the sets that changed.
 
 - **Summary**: stitched OOS equity, WFE (OOS annualized return over IS annualized return) and
-  profitable windows. **Stitched** shows one equity curve; **Per window** shows each window as a
-  lane with dashed IS equity, solid OOS equity, and the OOS net and running equity at the right
-  (W2).
+  profitable windows, once every window is done. **Stitched** shows one equity curve; **Per
+  window** shows each window as a lane with dashed IS equity, solid OOS equity, and the OOS net and
+  running equity at the right (W2).
 - **Per-window table**: window, OOS range, selected parameters, IS and OOS net, WFE and trades,
-  ending in a total row. A window where no set passes the filters stays flat for its OOS range and
-  says so with **Adjust**; a shorter final window is marked partial; the total counts profitable
-  and flat windows (W5).
+  ending in a total row, under a header that repeats the objective, direction and filters. A
+  window where no set passes the filters stays flat for its OOS range and says so with **Adjust**;
+  a shorter final window is marked partial; the total counts profitable, flat and failed windows
+  (W5).
 - **Fixed parameters for every window**: one set that holds up across all windows, with **Apply to
   inputs**.
 - **Stability** / **Window map.** Stability rows show, per input and window, the values within a
-  tolerance (default 10%) of that window's best when the other inputs are re-tuned, the chosen value
-  as a dot, the common range across windows and a fixed value with its mean loss, for example
-  "Common 26–28 · Fixed at 27, mean loss 1.6%". An input whose values are all near-optimal says so.
-  The window map shows the selected window's IS surface or the mean over all windows, with each
-  window's chosen set circled (W3).
+  tolerance (5, 10, 15 or 20%, default 10%) of that window's best when the other inputs are
+  re-tuned, the chosen value as a dot, the common range across windows and a fixed value with its
+  mean loss, for example "Common 26–28 · Fixed at 27, mean loss 1.6%". An input whose values are
+  all near-optimal says so. The window map shows the selected window's IS surface or the mean over
+  all windows, with each window's chosen set circled (W3).
 - **Selecting a window** shows its ranges, set and results with **View backtest**.
-- **In progress** (W4): finished windows fill the table, the rest wait, and the totals appear when
-  every window is done; the run block shows the window, combinations within it, elapsed and
-  remaining time, threads and **Cancel**.
+- **In progress** (W4): finished windows fill the table, the rest wait, and the totals, stability,
+  fixed parameters and window map appear when every window is done; the run block shows the
+  window, combinations within it, elapsed and remaining time, threads and **Cancel**.
 - **Anchored** (W6): every window starts IS at the same date.
 
 ### 2.7 Layout (G1–G5)
@@ -283,9 +303,10 @@ pane size, double-clicking resets it, panes stop at a minimum, and sizes are rem
 (G1). The right panel defaults to 336 px. From 768 to 1279 px wide the right panel becomes a drawer
 (G2). Below 768 px each page is a single column with tabs: Report, Equity, Trades, Inputs, Code and
 Issues on Backtest (G3). On Optimize the summary stays above the tabs Leaderboard, Parameter map,
-Sensitivity and Settings, with leaderboard rows as cards, and the selected set's bar below them;
-walk-forward results keep the stitched equity above Windows, Stability and Settings, and the
-selected window's bar below (G4). The component sheet is G5.
+Sensitivity and Settings once there are results, with leaderboard rows as cards, and the selected
+set's bar below them; Settings also holds the data range. Walk-forward results keep the stitched
+equity above Windows, Stability and Settings, and the selected window's bar below (G4). The
+component sheet is G5.
 
 ## 3. Behavior
 
