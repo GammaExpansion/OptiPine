@@ -10,7 +10,8 @@
     "start": "node server/main.ts",
     "typecheck": "tsc --noEmit",
     "test": "node scripts/test.ts",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "screenshots": "node scripts/readme-screenshots.ts"
   },
   "dependencies": {
     "@codemirror/commands": "^6.11.1",
