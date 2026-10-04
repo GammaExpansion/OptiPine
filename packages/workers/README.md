@@ -8,10 +8,14 @@ fresh one; late replies from an old Worker or an old source revision are discard
 
 | Export                   | Purpose                                                                                                                                                                                                                                                                           |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `EngineWorkerClient`     | `describe` and `run` in one Worker, correlated by request id. `setSourceRevision` rejects pending work with `WorkerStaleError`; `cancel` rejects it with `WorkerCancelledError`.                                                                                                  |
-| `OptimizationWorkerPool` | `optimize(source, common, parameterSets, options)` calibrates on one trial, then grows to `hardwareConcurrency - 1` Workers with chunks of about one second each. Trials stream through `onTrial`.                                                                                |
+| `EngineWorkerClient`     | `describe` and `run` (`runWithEquity`) in one Worker, correlated by request id. `setSourceRevision` rejects pending work with `WorkerStaleError`; `cancel` rejects it with `WorkerCancelledError`.                                                                                |
+| `OptimizationWorkerPool` | `optimize(source, common, parameterSets, options)` streams trials through `onTrial`; `reproduce(source, common, parameters)` reruns one set with `runWithEquity` in a Worker of its own.                                                                                          |
 | `AnalysisWorkerClient`   | Typed jobs for the heavy `@pine/optimizer` computations: `view`, `plan` (window bounds and bar indices from bar times), `records`, `parameters`, `choose`, `finalize` and `stability`, and the run jobs behind `AnalysisRun`.                                                     |
 | `AnalysisRun`            | One optimization run held in the analysis Worker: `append` keeps trials as they arrive, `view` sends only those not sent yet and answers with `summarizeOptimizerAnalysis`'s summary, whose positions index `trials`; a restarted Worker is sent the run again. `close` drops it. |
+
+The pool calibrates on one trial, then grows to `availableWorkerCount()` Workers, one per thread
+less one (`workerCount` overrides) and never more than the trials left, with chunks of about one
+second each, at most `chunkSize` (256). `onProgress` reports progress with the time left.
 
 Each client takes a factory that creates the Worker. The Worker entry module is one call:
 
