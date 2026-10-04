@@ -62,3 +62,40 @@
     margin-left: auto;
   }
 }
+@media (max-width: 767px) {
+  .bar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px 12px;
+    padding: 8px 12px;
+  }
+  .details {
+    max-height: 96px;
+    overflow-y: auto;
+    gap: 4px;
+  }
+  .parameters,
+  .metrics {
+    gap: 4px 10px;
+    font-size: 12px;
+  }
+  .parameters > span {
+    min-width: 0;
+    flex-wrap: wrap;
+    overflow-wrap: anywhere;
+  }
+  .actions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    margin: 0;
+  }
+  .actions button {
+    width: 100%;
+    height: auto;
+    min-height: 44px;
+    padding: 8px;
+    white-space: normal;
+  }
+}

@@ -16,7 +16,7 @@ JSON, so text and errors cross Worker and HTTP boundaries unchanged.
 | `CodedError`, `codedError`, `Coded` | Errors identified by a stable `code` and `values`; `codedError` keeps a `RangeError` or `TypeError` type. |
 | `isCodedError(error, ids?, code?)`  | Recognise a coded error, optionally from one package's id list.                                           |
 | `errorText(error)`                  | The text an error carries: its `uiText`, otherwise its message.                                           |
-| `serializeError`, `restoreError`    | Send an error through `postMessage` or JSON and rebuild it, keeping its name and text.                    |
+| `serializeError`, `restoreError`    | Send an error through `postMessage` or JSON and rebuild its name and text, but not its `code`.            |
 | `isText(value)`                     | Structural check applied to text received from another thread or process.                                 |
 
 Each package exports the ids it can emit (`optimizerMessageIds`, `marketDataMessageIds`,

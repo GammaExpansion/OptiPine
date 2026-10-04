@@ -28,7 +28,8 @@ it.each(examples.filter((example) => example.id !== 'ma-cross'))(
       new URL(`../../examples/${example.fileName}`, import.meta.url),
       'utf8',
     );
-    const bars = syntheticBars(1000);
+    // Match the demo's full history so the slower default bands also produce both trade sides.
+    const bars = syntheticBars();
     const result = runWithEquity(source, {
       bars,
       syminfo: { timezone: 'Etc/UTC', mincontract: 0.001 },

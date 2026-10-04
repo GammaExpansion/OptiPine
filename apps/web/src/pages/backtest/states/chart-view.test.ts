@@ -10,7 +10,7 @@ const current = { bars: [bars[0]], timeframe: '60', syminfo: {} };
 const computed = { bars, timeframe: '60', syminfo: { pointvalue: 2 } };
 const result = (trades: unknown[], initialCapital: number | null = 100_000) =>
   ({
-    computedWith: { dataset: { revision: 1, input: computed } },
+    computedWith: { source: 'strategy("x")', dataset: { revision: 1, input: computed } },
     output: { trades, plots: [] },
     initialCapital,
   }) as unknown as BacktestResult;
@@ -61,6 +61,10 @@ test('a failed run notes its first line and bar over the previous result (B11)',
   expect(chartView(state({ run: failedRun([], null, 'crashed') }))).toMatchObject({
     note: { kind: 'runFailed', line: null, bar: null, error: 'crashed' },
   });
+  // Another script's result does not stay under this one's failed run: no results at all.
+  const other = state({ source: 'strategy("y")', run, result: previous });
+  expect(chartView(other)).toMatchObject({ input: current, result: null, note: { line: 31 } });
+  expect(closedTradeCount(other)).toBeNull();
 });
 
 test('a strategy result without trades notes it; an indicator has none to miss (B12)', () => {

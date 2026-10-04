@@ -117,7 +117,10 @@ export function ConditionPopover({ close }: { close: () => void }) {
               {t('optimize.leaderboard.preview', { count: preview.excluded })}
               <div>
                 {preview.pageRanks.length
-                  ? t('optimize.leaderboard.dropRanks', { ranks: preview.pageRanks.join(', ') })
+                  ? t('optimize.leaderboard.dropRanks', {
+                      count: preview.pageRanks.length,
+                      ranks: preview.pageRanks.join(', '),
+                    })
                   : t('optimize.leaderboard.noDrop')}
               </div>
             </>

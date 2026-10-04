@@ -94,8 +94,9 @@ retain their existing contracts.
 
 ### describe
 
-`describe(source)` returns a `ScriptDescription`: `success`, `diagnostics`, `version`, the literal
-`strategy()` `title` and `settings`, `computedSettings` (name → line) for arguments given as
+`describe(source)` returns a `ScriptDescription`: `success`, `diagnostics`, `version`, `kind`
+(`strategy`, `indicator` or `library`, from the declaration; absent when the compile fails), the
+literal `strategy()` `title` and `settings`, `computedSettings` (name → line) for arguments given as
 expressions, `plots` (`{ title, line, isEquity }`), and `inputs`. Each `InputDescriptor` has `id`,
 `title`, `type`, `defaultValue`, `min` / `max` / `step`, `options`, `group`, `tooltip` and `line`. An input
 that a caller cannot override is `fixed`, with a `reason` code: `computed-default`, `computed-title`
@@ -106,8 +107,9 @@ or `duplicate-title`. Nothing is evaluated; a computed default keeps its runtime
 
 - 2,000,000 evaluation and statement steps per bar.
 - 100,000 elements per array, map or matrix, and 4,096 characters for a `str.repeat` result.
-- `request.*`, Bar Magnifier and library imports are outside the current scope and end a run
-  with an `unsupported` diagnostic.
+- Pine versions other than v5 and v6, and published library imports, fail to compile with an
+  `unsupported` diagnostic. `request.*` and Bar Magnifier are outside the current scope: a script
+  that uses them compiles, and its run ends with an `unsupported` diagnostic.
 
 ## Subpath exports
 

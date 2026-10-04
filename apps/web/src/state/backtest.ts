@@ -15,6 +15,9 @@ export type ScriptOrigin =
   | { readonly kind: 'file' }
   | { readonly kind: 'example'; readonly id: ExampleId };
 
+/** The open script's origin, and whether its source has changed since it was opened. */
+export type OpenedOrigin = ScriptOrigin & { readonly edited: boolean };
+
 export interface OpenScript {
   readonly source: string;
   readonly fileName: string | null;
@@ -30,11 +33,13 @@ const exampleSources: Record<ExampleId, string> = {
 function createBacktestStore(services: AppServices) {
   const session = services.backtest;
   let openVersion = 0;
+  /** The source as it was opened, which edits are measured against. */
+  let opened = '';
   const actions = {
     setSource: session.setSource.bind(session),
     setInput: session.setInput.bind(session),
     resetInputs: session.resetInputs.bind(session),
-    restoreResultInputs: session.restoreResultInputs.bind(session),
+    restoreResultSettings: session.restoreResultSettings.bind(session),
     setProperty: session.setProperty.bind(session),
     resetProperties: session.resetProperties.bind(session),
     resetProperty: session.resetProperty.bind(session),
@@ -48,7 +53,8 @@ function createBacktestStore(services: AppServices) {
     /** A script opened in place of the current one starts from its own inputs and properties. */
     openScript({ source, fileName, origin }: OpenScript) {
       openVersion++;
-      store.setState({ fileName, origin });
+      opened = source;
+      store.setState({ fileName, origin: { ...origin, edited: false } });
       session.setSource(source, true);
     },
     async loadExample(id: ExampleId) {
@@ -73,11 +79,22 @@ function createBacktestStore(services: AppServices) {
   const store = createStore<
     BacktestState & {
       readonly fileName: string | null;
-      readonly origin: ScriptOrigin | null;
+      readonly origin: OpenedOrigin | null;
       readonly actions: typeof actions;
     }
   >()(() => ({ ...session.getState(), fileName: null, origin: null, actions }));
-  services.onDispose(session.subscribe((state) => store.setState(state)));
+  // Running, previewing or applying a set keeps the source, so only an edit marks the script.
+  services.onDispose(
+    session.subscribe((state) =>
+      store.setState(({ origin }) => {
+        const edited = state.source !== opened;
+        return {
+          ...state,
+          origin: origin && origin.edited !== edited ? { ...origin, edited } : origin,
+        };
+      }),
+    ),
+  );
   services.onDispose(() => openVersion++);
   return store;
 }

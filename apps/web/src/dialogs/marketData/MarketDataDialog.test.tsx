@@ -12,7 +12,9 @@ import { uiStore } from '../../state/ui.ts';
 import { DialogsRoot } from '../../shell/DialogsRoot.tsx';
 import { HeaderData } from '../../shell/HeaderData.tsx';
 import { exampleRequest } from '../../workflows/market-data.ts';
+import { preloadChunks } from '../../test/lazy-chunks.ts';
 
+preloadChunks('dialogs');
 let restore: () => void;
 // Compile lazy chunks before timing dialog behavior, including on a busy multi-worktree host.
 beforeAll(async () => {

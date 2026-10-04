@@ -83,3 +83,26 @@ test('forex refusal translates its count and latest date with one actionable ran
     );
   }
 });
+
+test('a count of one reads the singular form, where the catalog has one (bug bash #28)', () => {
+  const facts = (count: number) =>
+    message('run.facts', { count, bars: String(count), seconds: '0.0' });
+  assert.equal(translate(facts(1), 'en'), '1 bar, 0.0 s');
+  assert.equal(translate(facts(2), 'en'), '2 bars, 0.0 s');
+  assert.equal(translate(facts(1), 'zh'), '1 根 K 线，用时 0.0 秒');
+  assert.equal(
+    translate(workflowMessage('optimize.fixErrors', { count: 1 }), 'en'),
+    'Fix the error above first',
+  );
+  assert.equal(
+    translate(workflowMessage('optimize.fixErrors', { count: 2 }), 'en'),
+    'Fix the 2 errors above first',
+  );
+  assert.equal(
+    translate(message('optimize.leaderboard.preview', { count: 1 }), 'en'),
+    'Would exclude 1 more set.',
+  );
+  assert.equal(translate(message('report.bars', { value: '1', count: 1 }), 'en'), '1 bar');
+  // An id without a singular form reads as usual for a count of one.
+  assert.equal(translate(message('optimize.leaderboard.more', { count: 1 }), 'en'), '+1');
+});

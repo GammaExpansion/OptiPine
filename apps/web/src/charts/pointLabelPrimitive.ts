@@ -6,7 +6,14 @@ import type {
   UTCTimestamp,
 } from 'lightweight-charts';
 
-/** Keep the annotation inside its pane while its dot stays anchored to the actual data point. */
+/** The dot's radius: a point this close outside the pane still shows, at the pane's edge. */
+const radius = 3;
+
+/**
+ * Keep the annotation inside its pane while its dot stays anchored to the actual data point. The
+ * first bar of a fitted chart sits a fraction of a pixel left of the pane, so a point that close to
+ * an edge is drawn at the edge rather than hidden: a peak on the first bar keeps its label.
+ */
 export function pointLabelPrimitive(
   chart: IChartApi,
   series: ISeriesApi<'Area'>,
@@ -19,11 +26,13 @@ export function pointLabelPrimitive(
         zOrder: () => 'top',
         renderer: () => ({
           draw(target) {
-            const x = chart.timeScale().timeToCoordinate(point.time as UTCTimestamp);
+            const atX = chart.timeScale().timeToCoordinate(point.time as UTCTimestamp);
             const y = series.priceToCoordinate(point.value);
-            if (x === null || y === null) return;
+            if (atX === null || y === null) return;
             target.useMediaCoordinateSpace(({ context, mediaSize }) => {
-              if (x < 0 || x > mediaSize.width || y < 0 || y > mediaSize.height) return;
+              if (atX < -radius || atX > mediaSize.width + radius || y < 0 || y > mediaSize.height)
+                return;
+              const x = Math.min(Math.max(atX, 0), mediaSize.width);
               context.save();
               context.font = `11px ${style.font}`;
               const width = context.measureText(point.text).width;
@@ -36,7 +45,7 @@ export function pointLabelPrimitive(
               context.textBaseline = 'top';
               context.fillText(point.text, left, top + 1);
               context.beginPath();
-              context.arc(x, y, 3, 0, Math.PI * 2);
+              context.arc(x, y, radius, 0, Math.PI * 2);
               context.fill();
               context.restore();
             });

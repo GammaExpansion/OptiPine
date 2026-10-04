@@ -35,7 +35,13 @@ it('keeps peak text inside either edge, tracks price scaling, and hides offscree
   y = 10;
   draw();
   expect(context.fillText).toHaveBeenLastCalledWith('Peak 100,000', 126, 3);
-  x = -1;
+  // A fitted chart's first bar sits just left of the pane: its peak stays labelled at the edge.
+  x = -0.875;
+  y = 30;
   draw();
-  expect(context.fillText).toHaveBeenCalledTimes(2);
+  expect(context.fillText).toHaveBeenLastCalledWith('Peak 100,000', 4, 9);
+  expect(context.arc).toHaveBeenLastCalledWith(0, 30, 3, 0, Math.PI * 2);
+  x = -10;
+  draw();
+  expect(context.fillText).toHaveBeenCalledTimes(3);
 });

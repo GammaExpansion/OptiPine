@@ -43,10 +43,11 @@ const state = (page: Page) =>
 const facts = (page: Page) => page.getByLabel('Last run');
 const block = (page: Page) => page.getByRole('region', { name: /^(Optimization run|优化运行)$/ });
 
-/** Search Length alone, from `from` to `to`; the other inputs stay at their values. */
+/** Search each integer Length in the range, regardless of the example's suggested search step. */
 async function searchLength(page: Page, from: number, to: number) {
   await page.getByRole('spinbutton', { name: 'Length from' }).fill(String(from));
   await page.getByRole('spinbutton', { name: 'Length to' }).fill(String(to));
+  await page.getByRole('spinbutton', { name: 'Length step' }).fill('1');
   for (const title of ['Multiplier', 'Source', 'Use trailing stop', 'Trail %']) {
     const box = page.getByRole('checkbox', { name: `Search ${title}` });
     if ((await box.getAttribute('aria-checked')) === 'true') await box.click();

@@ -45,7 +45,7 @@ export function EquityCharts({
   afterToolbar,
   className,
 }: EquityChartsProps) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [unit, setUnit] = useState<'amount' | 'percent'>('amount');
   const equityHost = useRef<HTMLDivElement>(null);
   const drawdownHost = useRef<HTMLDivElement>(null);
@@ -59,20 +59,21 @@ export function EquityCharts({
     const eqHost = equityHost.current!;
     const ddHost = drawdownHost.current!;
     const theme = chartTheme(eqHost);
-    const options = chartOptions(eqHost, input.timezone);
+    const options = chartOptions(eqHost, input.timezone, language);
     // Own sizing so fitting cannot race the library's asynchronous autoSize observer.
     options.autoSize = false;
     options.layout = { ...options.layout, attributionLogo: false };
     const equity = createChart(eqHost, options);
     const drawdown = createChart(ddHost, options);
     charts.current = [equity, drawdown];
+    // The two charts are stacked: neither may paint a tick label cut by their shared edge.
     equity.applyOptions({
       timeScale: { visible: false, minBarSpacing: 0.001 },
-      rightPriceScale: { scaleMargins: { top: 0.16, bottom: 0.12 } },
+      rightPriceScale: { scaleMargins: { top: 0.16, bottom: 0.12 }, entireTextOnly: true },
     });
     drawdown.applyOptions({
       timeScale: { visible: false, minBarSpacing: 0.001 },
-      rightPriceScale: { scaleMargins: { top: 0.08, bottom: 0.04 } },
+      rightPriceScale: { scaleMargins: { top: 0.08, bottom: 0.04 }, entireTextOnly: true },
     });
     const eq = equity.addSeries(AreaSeries, {
       lineColor: theme.primary,
@@ -272,7 +273,7 @@ export function EquityCharts({
       equity.remove();
       drawdown.remove();
     };
-  }, [input, summary, unit, t]);
+  }, [input, summary, unit, t, language]);
 
   useEffect(() => {
     // Ownership can change without reloading series or losing the visible range.

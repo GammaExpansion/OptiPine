@@ -125,10 +125,19 @@ export interface InputChange {
   readonly current: LiteralValue | undefined;
 }
 
+/** A strategy property whose value differs from the one the result used (B9). */
+export interface PropertyChange {
+  readonly id: PropertyId;
+  /** The override or the script's literal; undefined where the script's expression decides. */
+  readonly computed: PropertyValues[PropertyId] | undefined;
+  readonly current: PropertyValues[PropertyId] | undefined;
+}
+
 export interface Outdated {
   /** Empty while the result matches the current settings. */
   readonly reasons: readonly OutdatedReason[];
   readonly inputs: readonly InputChange[];
+  readonly properties: readonly PropertyChange[];
 }
 
 export interface Readiness {
@@ -198,8 +207,16 @@ type BaseState = Omit<BacktestState, 'properties' | 'outdated' | 'readiness' | '
 };
 type RunTarget = 'main' | 'preview';
 
-const sameProperties = (a: PropertyOverrides, b: PropertyOverrides): boolean =>
-  propertyIds.every((id) => Object.is(a[id], b[id]));
+/** A property's value under some overrides: the override, else the script's own literal. */
+function propertyValue(
+  script: ScriptProperties | null,
+  overrides: PropertyOverrides,
+  id: PropertyId,
+): PropertyValues[PropertyId] | undefined {
+  if (overrides[id] !== undefined) return overrides[id];
+  const own = script?.[id];
+  return own?.kind === 'value' ? own.value : undefined;
+}
 
 function outdatedOf(state: BaseState): Outdated | null {
   const result = state.result;
@@ -213,12 +230,19 @@ function outdatedOf(state: BaseState): Outdated | null {
     const now = Object.hasOwn(current, title) ? current[title] : undefined;
     if (!Object.is(computed, now)) inputs.push({ title, computed, current: now });
   }
+  const properties: PropertyChange[] = propertyIds
+    .filter((id) => !Object.is(was.properties[id], state.propertyOverrides[id]))
+    .map((id) => ({
+      id,
+      computed: propertyValue(state.scriptProperties, was.properties, id),
+      current: propertyValue(state.scriptProperties, state.propertyOverrides, id),
+    }));
   const reasons: OutdatedReason[] = [];
   if (was.source !== state.source) reasons.push('source');
   if (inputs.length) reasons.push('inputs');
-  if (!sameProperties(was.properties, state.propertyOverrides)) reasons.push('properties');
+  if (properties.length) reasons.push('properties');
   if (was.dataset.revision !== state.dataset?.revision) reasons.push('data');
-  return { reasons, inputs };
+  return { reasons, inputs, properties };
 }
 
 function readinessOf(
@@ -457,14 +481,15 @@ export class BacktestSession implements Observable<BacktestState> {
     this.#editInputs(resetInputValues(this.getState().inputs));
   }
 
-  /** B9: put back the input values the current result was computed with. */
-  restoreResultInputs(): void {
+  /** B9: put back the input values and property overrides the current result was computed with. */
+  restoreResultSettings(): void {
     const { result } = this.getState();
     if (!result) return;
     let inputs = this.getState().inputs;
     for (const [title, value] of Object.entries(result.computedWith.inputs))
       inputs = setInputValue(inputs, title, value);
-    this.#editInputs(inputs);
+    this.#beforeApply = null;
+    this.#update({ inputs, propertyOverrides: result.computedWith.properties, applied: null });
   }
 
   /** Override one strategy property; ignored until a compile has supplied the script's values. */
@@ -681,11 +706,13 @@ function runCategory(kind: Diagnostic['kind']): IssueCategory {
 
 /**
  * The Issues tab: the failed compile's errors, the failed run's diagnostics, and the effects the
- * displayed result ignored. While a preview is open, its run and result are the displayed ones, so
+ * displayed result ignored, when it was computed with the current source. While a preview is open, its run and result are the displayed ones, so
  * a failed combination opened from the optimization shows its diagnostics (R11). An unsupported
  * feature has its own category: missing engine support, not a fault in the script.
  */
-export function backtestIssues(state: BacktestState): Issue[] {
+export function backtestIssues(
+  state: Pick<BacktestState, 'source' | 'compile' | 'run' | 'result' | 'preview'>,
+): Issue[] {
   const { run, result } = state.preview ?? state;
   const issues: Issue[] = [];
   const workerIssue = (text: Text): Issue => ({
@@ -719,7 +746,11 @@ export function backtestIssues(state: BacktestState): Issue[] {
     );
     if (error !== null) issues.push(workerIssue(error));
   }
-  for (const warning of result?.output.warnings ?? [])
+  // A result kept from other source text, such as the previous script's after this one's run
+  // failed, has warnings on lines this source does not share.
+  const warnings =
+    result && result.computedWith.source === state.source ? (result.output.warnings ?? []) : [];
+  for (const warning of warnings)
     issues.push({
       category: 'ignoredEffect',
       line: warning.line,
