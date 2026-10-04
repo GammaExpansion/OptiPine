@@ -3,10 +3,17 @@ import type { Message } from '@pine/messages';
 import { workflowMessage, type WorkflowMessageId } from './messages.ts';
 import type { SearchRow } from './optimize-setup.ts';
 
+/** A walk-forward window's IS and OOS ranges: half-open, in Unix seconds. */
+export interface WindowRanges {
+  readonly inSample: { readonly start: number; readonly end: number };
+  readonly outOfSample: { readonly start: number; readonly end: number };
+}
+
 /**
  * Where a parameter set written into the inputs came from (B17): a leaderboard row, with its rank
  * when it was picked, a failed combination opened to read its diagnostics (R11), the set a
- * walk-forward window chose (0-based `window`), or the fixed parameters for every window (W1).
+ * walk-forward window chose (0-based `window`, with its ranges for the preview to mark), or the
+ * fixed parameters for every window (W1).
  */
 export type ParameterOrigin = (
   | {
@@ -21,6 +28,7 @@ export type ParameterOrigin = (
       readonly optimizationId: number;
       readonly trialId: string;
       readonly window: number;
+      readonly ranges: WindowRanges;
     }
   | { readonly kind: 'fixed'; readonly optimizationId: number }
 ) & {

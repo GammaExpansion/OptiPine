@@ -41,9 +41,58 @@ test('serves HTML, typed Worker assets, HEAD and browser navigation fallback', a
   );
 });
 
+test.each([undefined, '*/*', 'application/json', 'text/html'])(
+  'serves root and client routes for GET and HEAD with Accept %s',
+  async (accept) => {
+    for (const path of ['/', '/?health=1', '/backtest', '/optimize/windows/']) {
+      for (const method of ['GET', 'HEAD']) {
+        const result = await new Promise<{ status?: number; type?: string; body: string }>(
+          (resolve, reject) => {
+            request(
+              `${origin}${path}`,
+              { method, headers: accept === undefined ? {} : { Accept: accept } },
+              (response) => {
+                let body = '';
+                response.setEncoding('utf8');
+                response.on('data', (chunk: string) => (body += chunk));
+                response.on('end', () =>
+                  resolve({
+                    status: response.statusCode,
+                    type: response.headers['content-type'],
+                    body,
+                  }),
+                );
+                response.on('error', reject);
+              },
+            )
+              .on('error', reject)
+              .end();
+          },
+        );
+        expect(result).toEqual({
+          status: 200,
+          type: 'text/html; charset=utf-8',
+          body: method === 'HEAD' ? '' : '<!doctype html><title>OptiPine</title>',
+        });
+      }
+    }
+  },
+);
+
 test('missing assets and API routes do not fall back to HTML; methods and traversal are rejected', async () => {
-  expect((await fetch(`${origin}/missing.js`)).status).toBe(404);
-  expect((await fetch(`${origin}/api/missing`)).status).toBe(404);
+  for (const path of [
+    '/missing.js',
+    '/assets/missing.css',
+    '/assets/missing',
+    '/assets/',
+    '/api',
+    '/api/missing',
+  ])
+    for (const accept of ['*/*', 'text/html']) {
+      const response = await fetch(`${origin}${path}`, { headers: { Accept: accept } });
+      expect(response.status).toBe(404);
+      expect(await response.text()).toBe('');
+    }
   expect((await fetch(origin, { method: 'POST' })).status).toBe(405);
   expect((await fetch(`${origin}/%ZZ`)).status).toBe(400);
   const status = await new Promise<number | undefined>((resolve, reject) => {

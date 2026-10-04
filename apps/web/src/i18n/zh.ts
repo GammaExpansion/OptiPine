@@ -352,9 +352,11 @@ export const zh = {
   'optimize.map.layer': '{title} {value}',
   'optimize.map.cellTitle': '{x} {xValue}，{y} {yValue}',
   'optimize.map.cell': '{x}，{y}：{value}',
+  'optimize.map.descriptionSeparator': '。',
   'optimize.map.keyboard': '方向键查看单元格；Enter 选择参数或打开格内明细；Escape 取消悬停。',
   'optimize.map.canvas': '参数热力图',
   'optimize.map.legend': '排名色阶：从最差值到最优值',
+  'optimize.map.scrollValues': '共 {count} 组数值，滚动查看其余',
   'optimize.map.coveredValues': '单元格覆盖的取值',
   'optimize.map.notSampled': '未采样',
   'optimize.map.incomplete': '未完成',
@@ -493,6 +495,12 @@ export const zh = {
     '在右栏设置搜索范围与验证方式，右栏从顶栏打开。运行后，此处显示汇总图、排行、参数图与影响度。',
   'optimize.emptyHintSettings':
     '在「设置」中设置搜索范围与验证方式。运行后，汇总图显示在标签页上方，排行、参数图与影响度显示在各自的标签页。',
+  'optimize.emptyHintWalkForward':
+    '在右侧设置搜索范围与滚动窗口。运行后，此处显示拼接样本外权益、各窗口结果及其稳定性。',
+  'optimize.emptyHintPanelWalkForward':
+    '在右栏设置搜索范围与滚动窗口，右栏从顶栏打开。运行后，此处显示拼接样本外权益、各窗口结果及其稳定性。',
+  'optimize.emptyHintSettingsWalkForward':
+    '在「设置」中设置搜索范围与滚动窗口。运行后，拼接样本外权益显示在标签页上方，各窗口结果及其稳定性显示在各自的标签页。',
   'optimize.singleSetHint': '单组参数的 K 线、权益曲线、报告与成交在「回测」页查看。',
   'optimize.dataRange': '数据区间',
   'optimize.searchRanges': '搜索范围',
@@ -865,6 +873,8 @@ export const zh = {
   'preview.failedTitle': '正在预览报错组合的参数',
   'preview.fixedTitle': '正在预览全部窗口的固定参数',
   'preview.unchanged': '原参数未被修改。',
+  'preview.windowRanges':
+    '回测覆盖全部数据区间，图表标出 {window} 的样本内 {inSample} 与样本外 {outOfSample}。',
   'preview.back': '返回优化',
   'preview.apply': '设为当前参数',
   'preview.applied': '已应用 {set} 的参数并重新回测',

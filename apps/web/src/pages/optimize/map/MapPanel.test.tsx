@@ -71,7 +71,9 @@ it('scrolls a large hover list without mounting every value and keeps the full m
     <CellValuesTable values={values} x="Length" y="Multiplier" validated={false} />,
   );
   expect(screen.queryByText('OOS')).not.toBeInTheDocument();
-  expect(screen.getByText('+99.5')).toBeInTheDocument();
+  // Net profit, the default objective, reads in whole amounts as R1 writes them.
+  expect(screen.getByText('+100')).toBeInTheDocument();
+  expect(screen.getByText('200 values; scroll for the rest')).toBeInTheDocument();
   const table = screen.getByRole('table');
   expect(within(table).getAllByRole('row').length).toBeLessThan(14);
   fireEvent.scroll(table.parentElement!, { target: { scrollTop: 2400 } });
@@ -146,4 +148,27 @@ it('renders R8 from the one-input view and inspects values with the keyboard', a
   fireEvent.keyDown(canvas, { key: 'End' });
   expect(screen.getByText('Neighbourhood mean (±1 step)', { selector: 'dt' })).toBeInTheDocument();
   expect(screen.getByText('IS range within 90% of peak')).toBeInTheDocument();
+});
+
+it('says once, in the tooltip, what an excluded cell fails, with no box over the map', async () => {
+  await loadOptimization();
+  act(() => optimization().actions.setRange('Length', { from: 2, to: 28, step: 1 }));
+  await runOptimization();
+  act(() => optimization().actions.addFilter({ metric: 'trades', operator: '>=', value: 100_000 }));
+  await waitFor(() => expect(optimization().views?.pending).toBe(false));
+  renderInEnglish(<MapPanel />);
+  const canvas = screen.getByTestId('parameter-map');
+  fireEvent.keyDown(canvas, { key: 'Home' });
+  const tooltip = screen.getByRole('tooltip');
+  expect(within(tooltip).getAllByText('Excluded by filters')).toHaveLength(1);
+  expect(tooltip).toHaveTextContent('Trades ≥ 100,000');
+  // Every set is excluded, so the legend explains the corner mark; nothing else repeats it.
+  const legend = screen.getByLabelText('Rank colours from the worst value to the best');
+  expect(within(legend).getByText('Excluded by filters')).toBeInTheDocument();
+  expect(screen.getAllByText('Excluded by filters')).toHaveLength(2);
+  // Keyboard and screen reader users hear the same, with the value in the objective's format.
+  const status = within(canvas.parentElement!.parentElement!).getByRole('status');
+  expect(status.textContent).toBe(
+    '2–3, ohlc4: +2,317. Excluded by filters. Trades ≥ 30. Trades ≥ 100,000',
+  );
 });

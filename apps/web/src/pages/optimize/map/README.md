@@ -1,14 +1,15 @@
 # Parameter map and sensitivity
 
 `MapPanel.tsx` and `../sensitivity/SensitivityPanel.tsx` are the Optimize page's map and
-sensitivity regions. They read optimization snapshots and call the stable store actions. The workflow supplies all
-aggregation, rank bins, smoothing, surfaces, selection, cell values, bin detail, curve values and
-sensitivity. View changes never start optimization.
+sensitivity regions. They read optimization snapshots and call the stable store actions. The
+workflow supplies all aggregation, rank bins, smoothing, surfaces, selection, cell values, bin
+detail, curve values and sensitivity. View changes never start optimization.
 
 - `src/charts/optimize/` owns the map and single-input canvas renderers, drawing at device pixel
   ratio. A viewport-sized canvas draws visible Z layers; React never reconciles heatmap cells.
-  Geometry keeps 2 px gaps and 16 px squares, which a sparse single-layer map grows to fill its
-  panel (up to a 40 px pitch); the full-resolution detail keeps 16 px.
+  Geometry keeps 2 px gaps and 16 px squares on layered maps and the full-resolution detail; a
+  single-layer map sizes its squares to its panel, at a pitch from 12 to 40 px, and reserves room
+  left of the grid for its widest row label and the Y title beyond it.
 - `CellValuesTable.tsx` shows IS/OOS and workflow means. Large bins mount only the visible rows.
   The hover remains open while the pointer enters its scrollable list. Live bins show the available
   aggregate and explain that individual values arrive after completion.
@@ -33,9 +34,9 @@ titles, so long titles wrap the controls instead of being shortened to the mock'
 aliases. Z layers scroll within the canvas viewport; pane sizes remain owned by Split.
 
 The map fits its panel: `fitMap` in `src/charts/optimize/geometry.ts` bins each axis again with
-`prepareHeatmap` to as many cells as fit the panel's width and height, at most 24, so a narrow
-pane averages more values per cell instead of scrolling. The walk-forward window map and the bin
-detail keep the analysis's 24-value bins and scroll.
+`prepareHeatmap` to as many cells as fit the panel's width and height at a 12 px pitch, at most
+24, so a narrow pane averages more values per cell instead of scrolling. The walk-forward window
+map and the bin detail keep the analysis's 24-value bins and scroll.
 
 ## Verification
 

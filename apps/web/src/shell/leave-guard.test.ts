@@ -24,7 +24,7 @@ const leave = () => {
   return event.defaultPrevented;
 };
 
-test('leaving asks first only while a run is in progress', async () => {
+test('leaving asks first while a run is in progress', async () => {
   expect(leave()).toBe(false);
   openScript({ source: strategySource, fileName: 'test.pine', origin: { kind: 'file' } });
   getMarketDataStore().getState().actions.useCsv(testInput, 'prices.csv');
@@ -34,5 +34,22 @@ test('leaving asks first only while a run is in progress', async () => {
   expect(getBacktestStore().getState().run.status).toBe('running');
   expect(leave()).toBe(true);
   await waitFor(() => expect(getBacktestStore().getState().run.status).toBe('done'));
+  expect(leave()).toBe(false);
+});
+
+test('leaving asks first while the script has edits since it was opened, or was typed in', async () => {
+  const { actions } = getBacktestStore().getState();
+  // Text typed into the empty editor exists nowhere else.
+  actions.setSource(strategySource);
+  expect(leave()).toBe(true);
+  actions.setSource('');
+  expect(leave()).toBe(false);
+  // An opened file or example can be opened again, until it is edited.
+  openScript({ source: strategySource, fileName: 'test.pine', origin: { kind: 'file' } });
+  expect(leave()).toBe(false);
+  actions.setSource(`${strategySource}
+// mine`);
+  expect(leave()).toBe(true);
+  actions.setSource(strategySource);
   expect(leave()).toBe(false);
 });

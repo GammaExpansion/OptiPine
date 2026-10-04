@@ -149,6 +149,9 @@ Each tab's code loads on first use; until then the tab says it is loading result
 has no account: Report and Equity say so instead of an empty report, and the right panel lists no
 strategy properties.
 
+Opening a script shows its Pine code. When the first run of a newly opened script succeeds, a dock
+still on Pine code moves to Report; after that the dock stays on the tab the user picks.
+
 **Right panel.** **Inputs** in declaration order with **Reset**: a number field with stepper and
 range, a select (declared options, a source, or for `input.timeframe` the chart's timeframe and the
 usual ones from 1m to 1M), a toggle, a UTC date and time, or a text field (sessions and strings),
@@ -247,10 +250,11 @@ are slices that fix a value, take the best (**Max**, or **Min** for a minimized 
 the mean. **IS** / **OOS** switches the surface; **Smooth** replaces each cell with the mean of its
 ±1 step neighbours in every searched input.
 
-- Cells are square with a 2 px gap: 16 px, or larger on a sparse single-layer map, which grows its
-  cells up to 38 px to fill the panel. The input with more values runs horizontally until the axes
-  are chosen. An axis with more values than fit the panel, or more than 24, averages adjacent
-  values into one cell and labels the axis with ranges.
+- Cells are square with a 2 px gap: 16 px on a layered map, which scrolls; a single-layer map
+  sizes them to fill its panel, from 10 px, so a 14-value axis keeps its rows at 1440 × 900, up to
+  38 px. The input with more values runs horizontally until the axes are chosen. An axis with more
+  values than fit the panel at 10 px, or more than 24, averages adjacent values into one cell and
+  labels the axis with ranges. The row labels are never cut; the Y title sits beyond them.
 - Colours run from the worst cell to the best in the objective's direction, on a ramp from loss to
   profit, and are assigned by rank, so one extreme set cannot flatten the rest. Where the objective
   breaks even (zero for amounts, returns and ratios, one for profit factor), losing cells take the
@@ -292,8 +296,16 @@ following OOS range. Changing the ranking or filters after a run picks again fro
 and reruns only the sets that changed.
 
 - **Summary**: stitched OOS equity, WFE (OOS annualized return over IS annualized return) and
-  profitable windows, once every window is done. **Stitched** shows one equity curve; **Per
-  window** shows each window as a lane with dashed IS equity, solid OOS equity, and the OOS net and
+  profitable windows, once every window is done. WFE is undefined, shown as “—”, when the IS
+  annualized return is ≤ 0 or either return is unavailable. Each window uses its reported CAGR.
+  Total WFE annualizes the stitched IS and OOS accounts separately, never sums window CAGRs:
+  each starts at its first run's initial capital and adds each run's ending equity minus its
+  initial capital, including open profit, as the stitched curve does. IS concatenates each run's
+  first-to-last-bar duration (overlapping training periods count for each run); OOS spans its
+  first to last bar, including idle gaps. Annualization uses 365-day years; missing equity,
+  nonpositive initial or ending capital, zero duration and nonfinite results are unavailable.
+  **Stitched** shows one equity curve; **Per window** shows each window as a lane with dashed IS
+  equity, solid OOS equity, and the OOS net and
   running equity at the right (W2).
 - **Per-window table**: window, OOS range, selected parameters, IS and OOS net, WFE and trades,
   ending in a total row, under a header that repeats the objective, direction and filters. A
@@ -308,7 +320,9 @@ and reruns only the sets that changed.
   mean loss, for example "Common 26–28 · Fixed at 27, mean loss 1.6%". An input whose values are
   all near-optimal says so. The window map shows the selected window's IS surface or the mean over
   all windows, with each window's chosen set circled (W3).
-- **Selecting a window** shows its ranges, set and results with **View backtest**.
+- **Selecting a window** shows its ranges, set and results with **View backtest**. Its preview (B16)
+  runs the set over the whole data range and says so; the chart shades the window's IS and OOS
+  ranges as the summary marks its split, and opens on the OOS range.
 - **In progress** (W4): finished windows fill the table, the rest wait, and the totals, stability,
   fixed parameters and window map appear when every window is done; the run block shows the
   window, combinations within it, elapsed and remaining time, threads and **Cancel**.
@@ -341,8 +355,10 @@ component sheet is G5.
 - Editing the source recompiles it in the background; inputs and properties are rebuilt from the
   new compile, keeping values for inputs whose title and type did not change. Opening another
   script starts it from its own defaults instead (2.1).
-- Nothing is saved (4.8), so reloading, going back or closing the tab while a backtest, a preview or
-  an optimization runs asks first.
+- Nothing is saved (4.8), so reloading, going back or closing the tab asks first while a backtest, a
+  preview or an optimization runs, while the script has edits since it was opened (or was typed
+  into the empty editor), and while there are optimization results. Ctrl + O opens the app's file
+  picker everywhere, in the code editor and fields too, never the browser's own Open File.
 
 ### 3.2 Live optimization
 

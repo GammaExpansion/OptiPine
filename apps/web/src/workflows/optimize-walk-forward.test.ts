@@ -6,6 +6,7 @@ import type { AnalysisJobs, OptimizationTrial } from '@pine/workers';
 import { BacktestSession, type DatasetInput } from './backtest.ts';
 import { workflowMessage } from './messages.ts';
 import { OptimizationSession, type OptimizationState } from './optimize-session.ts';
+import { windowRanges } from './walk-forward.ts';
 import {
   engineHarness,
   engineTrials,
@@ -508,6 +509,7 @@ test('selecting a window gives its set to preview; the map shows it or the mean 
     optimizationId: state.results!.id,
     trialId: view.windows[1].trialId,
     window: 1,
+    ranges: windowRanges(view.windows[1].plan),
   });
   assert.equal(view.selection?.explicit, true);
   h.session.setWindowMapSurface('mean');

@@ -485,14 +485,24 @@ test('the median curve takes each bar from the curves that reach it', () => {
   );
 });
 
-test('the views of 20,000 sets read columns, not trials, and stay fast', () => {
+test('20,000-set views read columns and only fetch parameters for visible rows and selection', () => {
   const total = 20_000;
+  let identityReads = 0;
+  let parameterReads = 0;
   const column = (value: (position: number) => number) =>
     Float64Array.from({ length: total }, (_, index) => value(index));
   const trials = Array.from({ length: total }, (_, index) => ({
-    trialId: String(index),
-    parameters: { inputs: { Length: index % 200, Mult: Math.floor(index / 200) } },
-    metrics: {},
+    get trialId() {
+      identityReads++;
+      return String(index);
+    },
+    get parameters() {
+      parameterReads++;
+      return { inputs: { Length: index % 200, Mult: Math.floor(index / 200) } };
+    },
+    get metrics() {
+      return assert.fail('views must read summary columns, never trial metrics');
+    },
     tradeCount: 0,
     diagnostics: [],
   }));
@@ -518,17 +528,22 @@ test('the views of 20,000 sets read columns, not trials, and stay fast', () => {
     sensitivity: { parameters: [], sharedScale: null },
     removedConstraintRanks: new Int32Array(),
   };
-  const started = performance.now();
   const results = rankResults(summary, trials, 'in-out', 'netProfit', 'maximize', []);
   const page = leaderboardView(results, 3);
+  assert.ok(parameterReads <= page.rows.length);
+  assert.ok(identityReads <= page.rows.length);
+  const readsBeforeCharts = [identityReads, parameterReads];
   const scatter = scatterView(results, 3)!;
   const distribution = distributionView(results);
-  selectionOf(results, '19990', 1);
-  const elapsed = performance.now() - started;
+  assert.deepEqual([identityReads, parameterReads], readsBeforeCharts);
+  const selection = selectionOf(results, '19990', 1);
+  assert.equal(selection?.row.trialId, '19990');
+  assert.ok(parameterReads <= page.rows.length + 1);
+  // Selection may scan IDs once, but must never materialize all trials' parameters or metrics.
+  assert.ok(identityReads <= total + page.rows.length + 1);
   assert.equal(page.rows[0].rank, 40);
   assert.equal(page.rows[0].trialId, String(total - 40));
   assert.equal(scatter.inSample.length, total);
   assert.equal(distribution.inSample.sets, total);
   assert.equal(distribution.inSample.profitable, total - 5_001);
-  assert.ok(elapsed < 50, `views took ${elapsed.toFixed(1)} ms`);
 });

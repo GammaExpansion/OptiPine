@@ -363,11 +363,13 @@ export const en = {
   'optimize.map.layer': '{title} {value}',
   'optimize.map.cellTitle': '{x} {xValue}, {y} {yValue}',
   'optimize.map.cell': '{x}, {y}: {value}',
+  'optimize.map.descriptionSeparator': '. ',
   'optimize.map.keyboard':
     'Arrow keys inspect cells; Enter selects a set or opens bin detail. Escape clears the hover.',
   'optimize.map.canvas': 'Parameter heatmap',
   'optimize.map.legend': 'Rank colours from the worst value to the best',
   'optimize.map.coveredValues': 'Values covered by the cell',
+  'optimize.map.scrollValues': '{count} values; scroll for the rest',
   'optimize.map.notSampled': 'Not sampled',
   'optimize.map.incomplete': 'Incomplete',
   'optimize.map.waiting': 'Waiting for the first snapshot…',
@@ -509,6 +511,12 @@ export const en = {
     'Set the search ranges and validation in the right panel, from the top bar. After a run, the summary chart, leaderboard, parameter map and sensitivity appear here.',
   'optimize.emptyHintSettings':
     'Set the search ranges and validation under Settings. After a run, the summary appears above the tabs, and the leaderboard, parameter map and sensitivity in their tabs.',
+  'optimize.emptyHintWalkForward':
+    'Set the search ranges and the walk-forward windows on the right. After a run, the stitched OOS equity, the results of each window and their stability appear here.',
+  'optimize.emptyHintPanelWalkForward':
+    'Set the search ranges and the walk-forward windows in the right panel, from the top bar. After a run, the stitched OOS equity, the results of each window and their stability appear here.',
+  'optimize.emptyHintSettingsWalkForward':
+    'Set the search ranges and the walk-forward windows under Settings. After a run, the stitched OOS equity appears above the tabs, and the windows and their stability in their tabs.',
   'optimize.singleSetHint':
     'Chart, equity, report and trades of one parameter set are on the Backtest page.',
   'optimize.dataRange': 'Data range',
@@ -887,6 +895,8 @@ export const en = {
   'preview.failedTitle': 'Previewing the parameters of a failed set',
   'preview.fixedTitle': 'Previewing the fixed parameters for every window',
   'preview.unchanged': 'Current inputs are unchanged.',
+  'preview.windowRanges':
+    'It runs over the whole data range; the chart marks {window}’s IS {inSample} and OOS {outOfSample}.',
   'preview.back': 'Back to optimization',
   'preview.apply': 'Set as current inputs',
   'preview.applied': 'Applied the parameters of {set} and re-ran the backtest',

@@ -32,3 +32,18 @@ test('formats financial units, missing values and script parameters without losi
     'Sharpe ratio ≥ 1.0',
   );
 });
+
+test('objective values read as R1 writes them, on the map, its tooltip and sensitivity', () => {
+  const { result } = renderHook(useResultFormat, { wrapper: I18nProvider });
+  const { objective } = result.current;
+  expect([objective(31_642.38, 'netProfit'), objective(-1_078.84, 'netProfit')]).toEqual([
+    '+31,642',
+    '−1,079',
+  ]);
+  expect(objective(1.714, 'profitFactor')).toBe('1.71');
+  expect(objective(-0.5, 'sharpeRatio')).toBe('−0.50');
+  expect(objective(12.4, 'maxDrawdown')).toBe('12.40%');
+  expect(objective(8.256, 'annualizedReturn')).toBe('+8.26%');
+  expect(objective(31_738.2540496, 'neighbourhoodMean')).toBe('+31,738');
+  expect(objective(null, 'netProfit')).toBe('—');
+});

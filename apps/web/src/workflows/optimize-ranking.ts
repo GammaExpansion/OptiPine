@@ -61,6 +61,24 @@ export function objectiveBreakEven(objective: ObjectiveId): number | undefined {
   return objective === 'profitFactor' ? 1 : 0;
 }
 
+/**
+ * How an objective's values read, as R1 writes its figures: amounts whole, ratios and percentages
+ * to two decimals, signed where zero is the break-even.
+ */
+export function objectiveFormat(objective: ObjectiveId): {
+  readonly digits: number;
+  readonly percent: boolean;
+  readonly signed: boolean;
+} {
+  const amount =
+    objective === 'netProfit' || objective === 'averagePnl' || objective === 'neighbourhoodMean';
+  return {
+    digits: amount ? 0 : 2,
+    percent: objective === 'annualizedReturn' || objective === 'maxDrawdown',
+    signed: objectiveBreakEven(objective) === 0,
+  };
+}
+
 /** The direction an objective starts with: less drawdown is better, more of the rest. */
 export function naturalDirection(objective: ObjectiveId): Direction {
   return objective === 'maxDrawdown' ? 'minimize' : 'maximize';

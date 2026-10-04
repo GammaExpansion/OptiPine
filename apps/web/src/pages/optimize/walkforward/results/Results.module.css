@@ -269,6 +269,89 @@
   border-top: 1px solid var(--control-border);
   border-bottom: 0;
 }
+/* The phone's window cards (G4), laid out like the leaderboard's. */
+.cards {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.cards > li {
+  border-bottom: 1px solid var(--row-border);
+}
+.card,
+.totalCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.card {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+.card:hover {
+  background: var(--hover);
+}
+.card[aria-pressed='true'] {
+  background: var(--current-row);
+  box-shadow: inset 2px 0 var(--primary);
+}
+.card:focus-visible {
+  outline: 1px solid var(--primary);
+  outline-offset: -2px;
+}
+.cards > li[data-status='waiting'] .card,
+.cards > li[data-status='running'] [data-tone] {
+  color: var(--caption);
+}
+.cards > li[data-status='running'] .parameters {
+  color: var(--link);
+}
+.cardWindow {
+  min-width: 36px;
+  color: var(--secondary);
+  font-weight: 600;
+}
+.card[aria-pressed='true'] .cardWindow {
+  color: var(--link);
+}
+.cardDetails {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.cardFigures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  color: var(--secondary);
+  font-size: 12px;
+}
+.cardFigures > span {
+  display: flex;
+  gap: 5px;
+}
+.cardFigures b {
+  color: var(--text);
+  font-weight: 500;
+}
+.cardAdjust {
+  margin: 0 12px 10px 58px;
+  padding: 0;
+  font-size: 12px;
+}
+.totalCard {
+  border-top: 1px solid var(--control-border);
+}
 .waitingTotal {
   text-align: left !important;
   color: var(--caption);
@@ -360,11 +443,13 @@
 }
 .summary [data-tone='profit'],
 .table [data-tone='profit'],
+.cardList [data-tone='profit'],
 .selection [data-tone='profit'] {
   color: var(--profit) !important;
 }
 .summary [data-tone='loss'],
 .table [data-tone='loss'],
+.cardList [data-tone='loss'],
 .selection [data-tone='loss'] {
   color: var(--loss) !important;
 }
