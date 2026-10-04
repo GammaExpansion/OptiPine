@@ -149,7 +149,7 @@ test('S1 keeps results, dialogs, the script menu, Optimize and Chinese out of th
   await page.waitForLoadState('networkidle');
   const scripts = await Promise.all(requested);
   const lazy =
-    /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|ScriptMenuContent|OptimizePage|optimization-services|optimize-|PreviewContent|PineEditor|RightDrawer|\/sheet-|\/zh-)/;
+    /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|market-selection|symbol-search|ScriptMenuContent|OptimizePage|optimization-services|optimize-|PreviewContent|PineEditor|RightDrawer|\/sheet-|\/zh-)/;
   expect(scripts.map(({ file }) => file).filter((file) => lazy.test(file))).toEqual([]);
   // Measured with the editor deferred until there is something to edit, the tablet and phone
   // layouts, the optimization side, walk-forward included, loading when Optimize first opens, and

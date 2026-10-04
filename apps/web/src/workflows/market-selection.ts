@@ -5,7 +5,7 @@ import {
   presetRange,
   rangeDates,
   type RangePreset,
-} from '../../workflows/market-data.ts';
+} from './market-data.ts';
 import type { Message } from '@pine/messages';
 
 export interface Selection {
