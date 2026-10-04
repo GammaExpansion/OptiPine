@@ -860,6 +860,8 @@ export const zh = {
   'preview.failedTitle': '正在预览报错组合的参数',
   'preview.fixedTitle': '正在预览全部窗口的固定参数',
   'preview.unchanged': '原参数未被修改。',
+  'preview.windowRanges':
+    '回测覆盖全部数据区间，图表标出 {window} 的样本内 {inSample} 与样本外 {outOfSample}。',
   'preview.back': '返回优化',
   'preview.apply': '设为当前参数',
   'preview.applied': '已应用 {set} 的参数并重新回测',

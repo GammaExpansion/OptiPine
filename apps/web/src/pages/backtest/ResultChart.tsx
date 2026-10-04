@@ -27,6 +27,10 @@ export function ResultChart({ view }: { view: Extract<ChartView, { kind: 'chart'
       (state.preview?.run ?? state.run).status === 'running' ||
       (!state.preview && Boolean(state.outdated?.reasons.length)),
   );
+  // A previewed walk-forward window runs over the whole data range; the chart marks its ranges.
+  const windowRanges = useBacktestStore((state) =>
+    state.preview?.origin.kind === 'window' ? state.preview.origin.ranges : null,
+  );
   const { input, result, note } = view;
   const trades = useMemo(
     () => (result ? tradeRows(result.output.trades, tradeContext(input)) : noTrades),
@@ -58,6 +62,7 @@ export function ResultChart({ view }: { view: Extract<ChartView, { kind: 'chart'
         symbol={ticker}
         timeframe={timeframeLabel(input.timeframe)}
         dimMarkers={dimMarkers}
+        windowRanges={windowRanges}
         timezone={input.syminfo.timezone ?? 'Etc/UTC'}
         mintick={input.syminfo.mintick}
       />

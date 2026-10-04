@@ -882,6 +882,8 @@ export const en = {
   'preview.failedTitle': 'Previewing the parameters of a failed set',
   'preview.fixedTitle': 'Previewing the fixed parameters for every window',
   'preview.unchanged': 'Current inputs are unchanged.',
+  'preview.windowRanges':
+    'It runs over the whole data range; the chart marks {window}’s IS {inSample} and OOS {outOfSample}.',
   'preview.back': 'Back to optimization',
   'preview.apply': 'Set as current inputs',
   'preview.applied': 'Applied the parameters of {set} and re-ran the backtest',

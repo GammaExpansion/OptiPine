@@ -144,8 +144,23 @@ test('a walk-forward window previews as Wn and the fixed set applies by name (B1
     screen.getByText(`Length ${window.parameters!.Length}, ${window.parameters!.Source}`),
   ).toBeVisible();
   expect(backtest().preview?.origin).toMatchObject({ kind: 'window', window: window.plan.index });
+  // The set runs over the whole data range; the banner says so and names the window's ranges.
+  const day = (seconds: number) => new Date(seconds * 1000).toISOString().slice(0, 10);
+  const { plan } = window;
+  const inSample = `${day(plan.inSampleStart)} → ${day(plan.inSampleEnd - 1)}`;
+  const outOfSample = `${day(plan.outOfSampleStart)} → ${day(plan.outOfSampleEnd - 1)}`;
+  expect(
+    screen.getByText(
+      `It runs over the whole data range; the chart marks ${name}’s IS ${inSample} and OOS ${outOfSample}.`,
+    ),
+  ).toBeVisible();
   act(() => uiStore.getState().setLanguage('zh'));
   expect(screen.getByText(`正在预览优化结果 ${name} 的参数`)).toBeVisible();
+  expect(
+    screen.getByText(
+      `回测覆盖全部数据区间，图表标出 ${name} 的样本内 ${inSample} 与样本外 ${outOfSample}。`,
+    ),
+  ).toBeVisible();
   act(() => uiStore.getState().setLanguage('en'));
   await user.click(screen.getByRole('button', { name: 'Back to optimization' }));
   await user.click(await screen.findByRole('button', { name: 'Apply to inputs' }));

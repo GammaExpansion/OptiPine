@@ -1,5 +1,9 @@
 import type { ParameterOrigin } from '../../../../workflows/inputs.ts';
-import type { WalkForwardView, WindowResult } from '../../../../workflows/walk-forward.ts';
+import {
+  windowRanges,
+  type WalkForwardView,
+  type WindowResult,
+} from '../../../../workflows/walk-forward.ts';
 import { fixtureMap, stabilityFixture } from '../stability/fixture.ts';
 
 export type ResultsScenario = 'complete' | 'live' | 'flat';
@@ -23,7 +27,13 @@ function curve(count: number, start: number, net: number, seed: number) {
 
 export function fixtureOrigin(window: WindowResult): ParameterOrigin | null {
   return window.status === 'done' && window.trialId !== null
-    ? { kind: 'window', optimizationId: 1, trialId: window.trialId, window: window.plan.index }
+    ? {
+        kind: 'window',
+        optimizationId: 1,
+        trialId: window.trialId,
+        window: window.plan.index,
+        ranges: windowRanges(window.plan),
+      }
     : null;
 }
 

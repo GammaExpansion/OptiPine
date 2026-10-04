@@ -293,7 +293,9 @@ and reruns only the sets that changed.
   mean loss, for example "Common 26–28 · Fixed at 27, mean loss 1.6%". An input whose values are
   all near-optimal says so. The window map shows the selected window's IS surface or the mean over
   all windows, with each window's chosen set circled (W3).
-- **Selecting a window** shows its ranges, set and results with **View backtest**.
+- **Selecting a window** shows its ranges, set and results with **View backtest**. Its preview (B16)
+  runs the set over the whole data range and says so; the chart shades the window's IS and OOS
+  ranges as the summary marks its split, and opens on the OOS range.
 - **In progress** (W4): finished windows fill the table, the rest wait, and the totals, stability,
   fixed parameters and window map appear when every window is done; the run block shows the
   window, combinations within it, elapsed and remaining time, threads and **Cancel**.
