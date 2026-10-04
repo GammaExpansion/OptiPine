@@ -25,6 +25,9 @@ export function HeaderData({ layout = 'desktop' }: { layout?: Layout }) {
   const dataset = useBacktestStore((state) => state.dataset);
   const origin = useMarketDataStore((state) => state.origin);
   const fetchData = useMarketDataStore((state) => state.actions.fetch);
+  const fetching = useMarketDataStore((state) =>
+    state.fetch.status === 'fetching' ? state.fetch.request : null,
+  );
   const input = dataset?.input;
   const request = origin?.kind === 'provider' ? origin.request : null;
   const timeframe = input?.timeframe === 'D' ? '1D' : (input?.timeframe ?? '');
@@ -59,6 +62,12 @@ export function HeaderData({ layout = 'desktop' }: { layout?: Layout }) {
               </span>
             )}
           </>
+        ) : fetching ? (
+          // Before any data, a fetch started outside the dialog (an example's) shows here.
+          t('data.fetching', {
+            symbol: fetching.symbol,
+            timeframe: t(timeframeIds[fetching.timeframe]),
+          })
         ) : (
           t('shell.selectData')
         )}

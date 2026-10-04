@@ -9,6 +9,7 @@ import {
 } from '../../../dialogs/properties/property-display.ts';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { useBacktestStore } from '../../../state/backtest.ts';
+import { scriptIsIndicator } from '../states/chart-view.ts';
 import { useUiStore } from '../../../state/ui.ts';
 import styles from '../Sidebar.module.css';
 
@@ -24,11 +25,15 @@ export function PropertiesSummary() {
     return typeof value === 'string' ? value : defaultCurrency;
   });
   const setDialogOpen = useUiStore((state) => state.setDialogOpen);
-  if (!fields.length)
+  // An indicator has no account to configure.
+  const indicator = useBacktestStore(scriptIsIndicator);
+  if (!fields.length || indicator)
     return (
       <section className={styles.section}>
         <SectionHeading>{t('backtest.properties')}</SectionHeading>
-        <p className={styles.empty}>{t('backtest.propertiesHint')}</p>
+        <p className={styles.empty}>
+          {t(indicator ? 'backtest.propertiesIndicator' : 'backtest.propertiesHint')}
+        </p>
       </section>
     );
   return (

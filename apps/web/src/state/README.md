@@ -9,7 +9,9 @@ bridge subscriptions and record provenance. Optimization snapshots never publish
 - `openScript({ source, fileName, origin })` and `loadExample(id)` are shared exports from
   `backtest.ts`. A pasted script can use `fileName: null`. Origins are `{ kind: 'pasted' }`,
   `{ kind: 'file' }` or `{ kind: 'example', id }`. `actions.setSource` edits the current script
-  without changing its identity.
+  without changing its identity. The stored origin adds `edited`, true while the source differs
+  from the text that was opened; `confirmReplace` in `dialogs/script/actions.ts` asks before
+  replacing such a script.
 - Market `actions.fetch` and `retry` prepare a preview. `actions.accept()` installs the validated
   preview in Backtest and records `{ kind: 'provider', request }`. `actions.useCsv(input, fileName)`
   installs an input already validated by the CSV workflow, cancels pending provider work and records

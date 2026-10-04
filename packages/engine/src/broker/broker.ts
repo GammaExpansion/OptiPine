@@ -465,6 +465,19 @@ export class Broker {
 
   private activateExits(previous: readonly Order[] = []): void {
     for (const template of this.exits) {
+      // An na price places no leg of the exit, and strategy.exit never exits at market (Pine
+      // User Manual, Strategies: "It is not possible to exit a position with a market order using
+      // the command strategy.exit"). A call whose every price is na, such as one computed from
+      // strategy.position_avg_price while flat, so places no order: the exit waits for a later
+      // call with a price instead of filling at the next tick.
+      if (
+        [template.limit, template.stop, template.profit, template.loss].every(
+          (price) => price === undefined,
+        ) &&
+        template.trailPrice === undefined &&
+        template.trailPoints === undefined
+      )
+        continue;
       for (const lot of this.lots) {
         if (template.from !== undefined && template.from !== lot.id) continue;
         if (this.filledExits.has(`${template.id}/${lot.uid}`)) continue;

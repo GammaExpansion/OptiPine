@@ -255,12 +255,22 @@ test('native file picker, Ctrl+O, paste confirmation and download', async ({ pag
   await page.keyboard.press('Control+o');
   await (await filePicker).setFiles({ ...file, name: 'next.pine' });
   await expect(page.getByRole('button', { name: /next.pine/ })).toBeVisible();
-  await page.getByRole('button', { name: 'Paste code', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Pine source' }).fill('//@version=6\nstrategy("Pasted")');
-  await page.getByRole('button', { name: 'Use this code' }).click();
+  // An unedited script is replaced at once; an edited one asks first.
+  const paste = async (source: string) => {
+    await page.getByRole('button', { name: 'Paste code', exact: true }).click();
+    await page.getByRole('textbox', { name: 'Pine source' }).fill(source);
+    await page.getByRole('button', { name: 'Use this code' }).click();
+  };
+  await paste('//@version=6\nstrategy("Pasted")');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /script.pine/ })).toBeVisible();
+  await page.getByRole('textbox', { name: 'Pine code editor' }).click();
+  await page.keyboard.press('Control+End');
+  await page.keyboard.type('\nplot(open)');
+  await paste('//@version=6\nstrategy("Again")');
   await expect(page.getByRole('dialog', { name: 'Replace the current script?' })).toBeVisible();
   await page.getByRole('button', { name: 'Replace script' }).click();
-  await expect(page.getByRole('button', { name: /script.pine/ })).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
 for (const language of ['en', 'zh'] as const)

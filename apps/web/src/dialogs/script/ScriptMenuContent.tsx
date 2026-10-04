@@ -4,7 +4,7 @@ import { Icon } from '../../components/Icon.tsx';
 import { examples } from '../../../examples/index.ts';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { useBacktestStore } from '../../state/backtest.ts';
-import { downloadScript, pickScriptFile, showPaste } from './actions.ts';
+import { confirmReplace, downloadScript, pickScriptFile, showPaste } from './actions.ts';
 import { ScriptButton, scriptName } from './ScriptButton.tsx';
 
 /**
@@ -62,7 +62,7 @@ export function ScriptMenuContent() {
       label: example.title,
       icon:
         origin?.kind === 'example' && origin.id === example.id ? <Icon name="check" /> : undefined,
-      onSelect: () => void loadExample(example.id),
+      onSelect: () => confirmReplace(() => void loadExample(example.id)),
     })),
   ];
   return (

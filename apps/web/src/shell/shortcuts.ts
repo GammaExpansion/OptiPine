@@ -11,6 +11,11 @@ export function registerFilePicker(handler: () => void): () => void {
   };
 }
 
+/**
+ * Ctrl + Enter runs the backtest and Ctrl + O opens a file. The listener runs in the capture
+ * phase, ahead of a focused button's own Enter: the script menu's trigger, which keeps the focus
+ * after an example loads, would otherwise reopen its menu and swallow the shortcut.
+ */
 export function installShortcuts(target: Window = window): () => void {
   const onKeyDown = (event: KeyboardEvent) => {
     if (
@@ -24,13 +29,15 @@ export function installShortcuts(target: Window = window): () => void {
       uiStore.getState().openDialogs.length
     )
       return;
-    // Editors and input widgets own their keys. A dialog also owns keys before its UI state updates.
+    // Editors, input widgets and open menus own their keys. A dialog also owns keys before its UI
+    // state updates.
     const element = event.composedPath().find((item) => item instanceof Element);
     if (
       element instanceof Element &&
       element.closest(
         'input, textarea, select, [contenteditable]:not([contenteditable="false"]), ' +
-          '[role="textbox"], [role="combobox"], [role="spinbutton"], [role="dialog"], [role="alertdialog"]',
+          '[role="textbox"], [role="combobox"], [role="spinbutton"], [role="dialog"], ' +
+          '[role="alertdialog"], [role="menu"]',
       )
     )
       return;
@@ -45,6 +52,6 @@ export function installShortcuts(target: Window = window): () => void {
       }
     }
   };
-  target.addEventListener('keydown', onKeyDown);
-  return () => target.removeEventListener('keydown', onKeyDown);
+  target.addEventListener('keydown', onKeyDown, true);
+  return () => target.removeEventListener('keydown', onKeyDown, true);
 }
