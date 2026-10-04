@@ -6,6 +6,11 @@ fresh one; late replies from an old Worker or an old source revision are discard
 
 ## Clients
 
+`EngineRunClient` contains only the run/describe transport and its cancellation/revision handling.
+The Backtest page uses it so reproduction and input packing stay behind the app's lazy optimization
+boundary. `EngineWorkerClient` extends it with the existing `reproduce` API; its input snapshots,
+transfer ownership and replay behavior are unchanged. Worker restarts clear its prepared input.
+
 | Export                   | Purpose                                                                                                                                                                                                                                                                           |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `EngineWorkerClient`     | `describe` and `run` (`runWithEquity`) in one Worker, correlated by request id. `setSourceRevision` rejects pending work with `WorkerStaleError`; `cancel` rejects it with `WorkerCancelledError`.                                                                                |

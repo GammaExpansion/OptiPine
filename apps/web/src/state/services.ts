@@ -1,6 +1,6 @@
 import { FeedClient, type FeedCache } from '@pine/market-data';
 import {
-  EngineWorkerClient,
+  EngineRunClient,
   availableWorkerCount,
   type AnalysisWorkerFactory,
   type EngineWorkerFactory,
@@ -29,10 +29,10 @@ export function createServices(options: ServiceOptions = {}) {
   const threads = availableWorkerCount(
     options.hardwareConcurrency ?? globalThis.navigator?.hardwareConcurrency,
   );
-  let engine: EngineWorkerClient | undefined;
+  let engine: EngineRunClient | undefined;
   const getEngine = () =>
-    (engine ??= new EngineWorkerClient(options.engineWorker ?? createEngineWorker));
-  // EngineWorkerClient starts a Worker in its constructor. Reading the empty workspace must not.
+    (engine ??= new EngineRunClient(options.engineWorker ?? createEngineWorker));
+  // EngineRunClient starts a Worker in its constructor. Reading the empty workspace must not.
   const lazyEngine: EngineClient = {
     get sourceRevision() {
       return engine?.sourceRevision ?? 0;

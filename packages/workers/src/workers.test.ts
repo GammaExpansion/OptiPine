@@ -9,6 +9,7 @@ import {
   WorkerStaleError,
 } from './client.ts';
 import { handleEngineWorkerRequest } from './dispatcher.ts';
+import { EngineRunClient } from './engine-run-client.ts';
 import { availableWorkerCount } from './protocol.ts';
 import type {
   EngineWorkerRequest,
@@ -92,6 +93,45 @@ test('a reproduction snapshot failure rejects without posting or leaking pending
   assert.equal(client.pendingCount, 0);
   assert.equal(workers[0].requests.length, 0);
   client.dispose();
+});
+
+test('the run-only client describes and runs, and cancellation rejects pending work', async () => {
+  const workers: FakeWorker[] = [];
+  const client = new EngineRunClient(() => {
+    const worker = new FakeWorker();
+    workers.push(worker);
+    return worker;
+  });
+  const description = client.describe(source, 1);
+  workers[0].respond(handleEngineWorkerRequest(workers[0].requests[0]));
+  assert.deepEqual(await description, describe(source));
+  const running = client.run(source, input, 1);
+  workers[0].respond(handleEngineWorkerRequest(workers[0].requests[1]));
+  assert.deepEqual(await running, runStrategy(source, input));
+  const cancelled = assert.rejects(client.run(source, input, 1), WorkerCancelledError);
+  client.cancel();
+  await cancelled;
+  assert.equal(workers[0].terminated, true);
+  client.dispose();
+  assert.equal(workers[1].terminated, true);
+});
+
+test('reproduction resets its prepared snapshot when the inherited transport restarts', async () => {
+  const { client, workers } = createHarness();
+  const reproduce = async (worker: FakeWorker) => {
+    const pending = client.reproduce(source, input, {});
+    const request = worker.requests.at(-1)!;
+    assert.ok(request.kind === 'reproduce' && request.common);
+    worker.respond(handleEngineWorkerRequest(request));
+    assert.deepEqual(await pending, runStrategy(source, input));
+  };
+  await reproduce(workers[0]);
+  client.cancel();
+  await reproduce(workers[1]);
+  workers[1].crash();
+  await reproduce(workers[2]);
+  client.dispose();
+  await assert.rejects(client.reproduce(source, input, {}), WorkerCancelledError);
 });
 
 test('concurrent requests are correlated by request id even when replies arrive out of order', async () => {
