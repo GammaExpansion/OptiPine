@@ -146,6 +146,7 @@ export const zh = {
   'backtest.properties': '策略属性',
   'backtest.propertiesHint': '默认值取自 strategy() 调用。',
   'backtest.resultsHint': '运行回测后，此处显示结果。',
+  'backtest.resultsLoading': '正在加载结果…',
   'backtest.issuesHint': '暂无问题',
   'dock.tabs': '回测结果',
   'dock.report': '报告',

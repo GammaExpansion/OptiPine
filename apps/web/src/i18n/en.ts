@@ -150,6 +150,7 @@ export const en = {
   'backtest.properties': 'Properties',
   'backtest.propertiesHint': 'Defaults come from the strategy() call.',
   'backtest.resultsHint': 'Run a backtest to see results here.',
+  'backtest.resultsLoading': 'Loading results…',
   'backtest.issuesHint': 'No issues',
   'dock.tabs': 'Backtest results',
   'dock.report': 'Report',
