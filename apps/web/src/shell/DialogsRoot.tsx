@@ -21,7 +21,7 @@ const DateRangeDialog = lazy(() =>
   })),
 );
 
-/** Phase 2 supplies dialogs/ components here; open state and mounting have one owner. */
+/** Every open dialog mounts here; `slots` adds the ones a page owns. Open state has one owner. */
 export function DialogsRoot({ slots = {} }: { slots?: Partial<Record<Dialog, ComponentType>> }) {
   const openDialogs = useUiStore((state) => state.openDialogs);
   const allSlots: Partial<Record<Dialog, ComponentType>> = {
