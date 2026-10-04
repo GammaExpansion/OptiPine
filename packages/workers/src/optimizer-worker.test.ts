@@ -15,6 +15,7 @@ import {
 import { trialIdForParameters } from '@pine/optimizer';
 import { parseBars } from '../test/fixtures.ts';
 import { metricValue } from '@pine/optimizer';
+import { restoreInput } from './run-input.ts';
 import type {
   EngineWorkerRequest,
   EngineWorkerResponse,
@@ -28,15 +29,16 @@ class FakeWorker implements EngineWorkerTransport {
   onerror: EngineWorkerTransport['onerror'] = null;
   onmessageerror: EngineWorkerTransport['onmessageerror'] = null;
   terminated = false;
-  postMessage(request: EngineWorkerRequest): void {
+  postMessage(request: EngineWorkerRequest, transfer: Transferable[] = []): void {
     if (this.terminated) throw new Error('terminated');
-    request = structuredClone(request);
+    request = structuredClone(request, { transfer });
     this.requests.push(request);
     queueMicrotask(() => {
       if (this.terminated) return;
       const deliver = (response: EngineWorkerResponse) =>
         this.onmessage?.(new MessageEvent('message', { data: response }));
-      if (request.kind === 'optimize') handleOptimizationWorkerRequest(request, undefined, deliver);
+      if (request.kind === 'optimize')
+        handleOptimizationWorkerRequest(request, undefined, deliver, this.state);
       else deliver(handleEngineWorkerRequest(request, undefined, this.state));
     });
   }
@@ -160,13 +162,14 @@ plot(slow + third)`;
 });
 
 class ControlledWorker implements EngineWorkerTransport {
+  readonly state: EngineWorkerState = {};
   onmessage: EngineWorkerTransport['onmessage'] = null;
   onerror: EngineWorkerTransport['onerror'] = null;
   onmessageerror: EngineWorkerTransport['onmessageerror'] = null;
   requests: EngineWorkerRequest[] = [];
   terminated = false;
-  postMessage(request: EngineWorkerRequest): void {
-    this.requests.push(structuredClone(request));
+  postMessage(request: EngineWorkerRequest, transfer: Transferable[] = []): void {
+    this.requests.push(structuredClone(request, { transfer }));
   }
   terminate(): void {
     this.terminated = true;
@@ -176,7 +179,12 @@ class ControlledWorker implements EngineWorkerTransport {
     assert.equal(request.kind, 'optimize');
     if (request.kind !== 'optimize') return;
     const handler = this.onmessage!;
-    for (const response of handleOptimizationWorkerRequest(request)) {
+    for (const response of handleOptimizationWorkerRequest(
+      request,
+      undefined,
+      undefined,
+      this.state,
+    )) {
       if (response.kind === 'optimized') response.elapsedMs = elapsedMs;
       handler(new MessageEvent('message', { data: response }));
     }
@@ -519,19 +527,139 @@ test('flat parameter groups fail explicitly and canonical ids preserve nested pa
 test('submitted source and nested input snapshots do not follow later caller mutations', async () => {
   const { pool, workers } = controlledPool();
   const input = structuredClone(common);
-  const parameters = [{ inputs: { Length: 1 } }, { inputs: { Length: 2 } }];
+  const parameters = [
+    { inputs: { Length: 1, Extra: { value: 1 } } },
+    { inputs: { Length: 2, Extra: { value: 2 } } },
+  ];
   const run = pool.optimize(source, input, parameters, { workerCount: 1 });
   input.bars[0]!.close = 999;
   input.syminfo.pointvalue = 100;
   parameters[1]!.inputs.Length = 99;
+  parameters[1]!.inputs.Extra.value = 99;
   workers[0].complete(1000);
   const second = workers[0].requests[1] as Extract<EngineWorkerRequest, { kind: 'optimize' }>;
-  assert.equal(second.common.bars[0].close, common.bars[0].close);
-  assert.equal(second.common.syminfo.pointvalue, common.syminfo.pointvalue);
+  assert.equal(second.common, undefined);
+  assert.equal(workers[0].state.optimization!.common.bars[0].close, common.bars[0].close);
+  assert.equal(workers[0].state.optimization!.common.syminfo.pointvalue, common.syminfo.pointvalue);
   assert.equal(second.parameters[0].inputs!.Length, 2);
+  assert.deepEqual(second.parameters[0].inputs!.Extra, { value: 2 });
   workers[0].complete(1000);
   assert.equal((await run).trials[1].parameters.inputs!.Length, 2);
   pool.dispose();
+});
+
+test('immutable parameter lists are borrowed and bars transfer only once per sweep Worker', async () => {
+  const workers: FakeWorker[] = [];
+  const pool = new OptimizationWorkerPool(() => {
+    const worker = new FakeWorker();
+    workers.push(worker);
+    return worker;
+  });
+  // A proxy list cannot be structured-cloned; its plain chunk slices can cross the boundary.
+  const parameters = new Proxy(
+    Object.freeze(
+      Array.from({ length: 12 }, (_, index) =>
+        Object.freeze({
+          inputs: Object.freeze({ Length: (index % 4) + 1 }),
+          settings: Object.freeze({ initial_capital: 10_000 + index }),
+        }),
+      ),
+    ),
+    {},
+  );
+  const result = await pool.optimize(source, common, parameters, {
+    immutableParameters: true,
+    workerCount: 3,
+    chunkSize: 1,
+  });
+  assert.equal(result.trials.length, parameters.length);
+  assert.equal(workers.length, 3);
+  for (const worker of workers) {
+    const requests = worker.requests.filter((request) => request.kind === 'optimize');
+    assert.ok(requests.length > 1);
+    assert.equal(requests.filter((request) => request.common).length, 1);
+    assert.ok(requests[0].common!.bars instanceof Float64Array);
+    assert.deepEqual(restoreInput(requests[0].common!), common);
+    assert.ok(worker.terminated);
+  }
+  for (const [index, trial] of result.trials.entries()) {
+    assert.deepEqual(trial.parameters, parameters[index]);
+    assert.deepEqual(
+      trial.metrics,
+      runStrategy(source, {
+        ...common,
+        inputs: parameters[index].inputs,
+        settings: parameters[index].settings,
+      }).metrics,
+    );
+  }
+  pool.dispose();
+});
+
+test('a sweep replays lost common input once without skipping or duplicating a chunk', async () => {
+  const { pool, workers } = controlledPool();
+  const pending = pool.optimize(
+    source,
+    common,
+    [{ inputs: { Length: 1 } }, { inputs: { Length: 2 } }],
+    {
+      workerCount: 1,
+      chunkSize: 1,
+    },
+  );
+  const worker = workers[0];
+  worker.complete();
+  delete worker.state.optimization;
+  const lost = worker.requests.at(-1)!;
+  assert.equal(lost.kind, 'optimize');
+  if (lost.kind !== 'optimize') assert.fail('Expected a sweep');
+  const lateFailure = handleOptimizationWorkerRequest(lost)[0];
+  worker.complete();
+  assert.deepEqual(
+    worker.requests.map((request) => request.kind === 'optimize' && !!request.common),
+    [true, false, true],
+  );
+  worker.onmessage!(new MessageEvent('message', { data: lateFailure }));
+  assert.equal(worker.terminated, false, 'a late failure from before replay is ignored');
+  worker.complete();
+  assert.deepEqual(
+    (await pending).trials.map((trial) => trial.parameters.inputs!.Length),
+    [1, 2],
+  );
+  pool.dispose();
+});
+
+test('a cached sweep input is scoped to its source and revision', () => {
+  const state: EngineWorkerState = {};
+  const request = {
+    kind: 'optimize' as const,
+    source,
+    common,
+    parameters: [{}],
+    chunkIndex: 0,
+    totalChunks: 1,
+    requestId: 1,
+    sourceRevision: 0,
+  };
+  handleOptimizationWorkerRequest(request, undefined, undefined, state);
+  const saved = state.optimization!.common;
+  const same = handleOptimizationWorkerRequest(
+    { ...request, common: undefined },
+    undefined,
+    undefined,
+    state,
+  );
+  assert.equal(same.at(-1)!.kind, 'optimized');
+  assert.equal(state.optimization!.common, saved);
+  for (const change of [{ source: `${source}\nplot(close)` }, { sourceRevision: 1 }]) {
+    const replies = handleOptimizationWorkerRequest(
+      { ...request, ...change, common: undefined },
+      undefined,
+      undefined,
+      state,
+    );
+    assert.equal(replies[0].kind, 'failed');
+  }
 });
 
 test('wrong revisions and repeated delivered trials cannot corrupt run counts', async () => {

@@ -134,11 +134,10 @@ captures do not establish their exact internal cause or prove that contention ex
 The earlier LoAF evidence put them in startup reply/layout or an unattributed render phase.
 WF uses `records`/`choose`/`stability` rather than the IS/OOS `AnalysisRun.view` append path.
 
-Concrete follow-ups, kept out of this change because they are pre-existing costs:
+Concrete follow-ups identified by that trace:
 
-- Split the initial parameter snapshot clone in `OptimizationWorkerPool.optimize` across host
-  tasks while preserving invocation-time snapshot/cancellation semantics. Cache common input
-  per sweep Worker too; it is still posted with every optimization chunk.
+- Avoid the initial parameter snapshot clone and cache common input per sweep Worker. The
+  input-transfer follow-up below addresses this without changing default caller snapshot semantics.
 - In `SummaryCanvas`, read each CSS token once per draw, batch scatter points by color, cache
   geometry by summary identity, and avoid redrawing the whole plot solely for hover. Move
   `distributionView` sorting/histogram construction into the analysis Worker summary.
@@ -156,6 +155,63 @@ Concrete follow-ups, kept out of this change because they are pre-existing costs
 GC cannot be assigned to a particular allocation site from this CPU trace. Heap sampling and
 retained-size profiling would be required before claiming a GC fix. Throttling and host scheduling
 also inflate wall time: the 159 ms GC task used only 4 ms of renderer thread CPU.
+
+## Input transfer follow-up
+
+Baseline: `5a36b2a`, including PR #45 and the subsequent main merge. The input-copy audit found:
+
+| Path                                                         | Before                                                                                                                               | This follow-up                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OptimizeSession.#parameterSets` / analysis Worker           | One generated scalar parameter graph crosses to the page; the page wraps each inputs record.                                         | Unchanged; this list stays private and immutable until all ranges/windows finish.                                                                                                                                                                                                     |
+| `OptimizationWorkerPool.optimize` startup                    | Deep-clones common input and the entire parameter list per call: twice for IS/OOS, four times for these WF windows.                  | Packs numeric bars once per call into six Float64 columns; snapshots remaining metadata. The app lends its private parameters with `immutableParameters`; default callers still receive a deep parameter snapshot.                                                                    |
+| Pool chunk `postMessage` / `handleOptimizationWorkerRequest` | Every chunk clones all common bars, metadata and its parameter slice.                                                                | Each Worker receives one private transferred bar buffer and metadata, expands bars once, and reuses the common input. Later chunks carry only parameters and dispatch metadata. One buffer copy per Worker preserves the retained snapshot for replay and never detaches caller data. |
+| `splitBars`, `rangeInput`, session common-input spreads      | Range slices copy bar references; common-input spreads copy the small envelope.                                                      | Unchanged; no bar objects are cloned here.                                                                                                                                                                                                                                            |
+| Engine `sweep` / execution                                   | Each trial shallow-merges inputs/settings, copies returned parameter namespaces and the input envelope; bars are shared.             | Unchanged; there was no deep bar clone per trial. Each parameter chunk still crosses once and each trial result returns once.                                                                                                                                                         |
+| Top 20 / `OptimizationWorkerPool.reproduce`                  | One common deep snapshot per input identity, one full object clone per reproduction Worker; one small override snapshot per request. | One packed common snapshot per identity; bar buffers transfer once per reproduction Worker. Existing idle reuse, staggered dispatch, per-request override snapshots and cancellation remain.                                                                                          |
+
+Worker tests exercise transfer detachment, exact numeric/metadata round trips, nested caller
+mutation isolation, borrowed parameters, common-input reuse, source/revision isolation and replay
+without lost or duplicate trials. Engine and optimizer implementations are unchanged.
+
+Measurements use the same recorded fixture, desktop viewport, 4× page throttle, 20,000 IS/OOS
+sets and four 3,000-set WF windows as above. The existing repeat runner runs three baseline pairs
+then three changed pairs; the aggregate uses `perf-repeat-report.ts`. Before each pair it requires
+two 2-second host samples at most 35% busy, 15 seconds apart. It waited through 55–100% contention
+between baseline pairs. No builds/tests from this agent overlap timing runs. This remains a shared
+host comparison, with no tracing in the timing runs. Artifacts use `perf/clone-{before,after}-{1,2,3}`
+and load logs `perf-clone-{before,after}-matrix.log` under `apps/web/test-results/`.
+
+Each cell is **median / maximum across three runs**, before → after:
+
+| Scenario          |        Long-task max (ms) |       Long-task count |         Frames >50 ms |
+| ----------------- | ------------------------: | --------------------: | --------------------: |
+| IS/OOS desktop 4× | 145 / 153 → **115 / 125** | 56 / 84 → **43 / 47** | 63 / 82 → **40 / 40** |
+| WF desktop 4×     |   122 / 133 → **77 / 79** |    4 / 21 → **2 / 2** |    2 / 20 → **1 / 1** |
+
+The IS/OOS task containing the first sweep post was 87, 118 and 88 ms before; afterward **none
+crossed 50 ms** (not a claim of zero startup work). Median optimize-post p95 fell **7.0 → 0.3 ms**;
+median cumulative posting time fell **7,051.8 → 297.0 ms** (96% less). Common-input deliveries drop
+from 2,652–2,993 chunks to one per Worker, 30 across IS/OOS; remaining posts contain just chunk
+parameters. WF optimize-post p95 fell **0.9 → 0.5 ms**, cumulative median **79.6 → 26.5 ms**;
+its initial dispatch was already below the long-task threshold. These post timers exclude the
+buffer slice just before posting; full-task/frame observations include it. Top 20 post p95 was
+0.3–0.5 ms after the change, with 15 common-input transfers for 20 requests.
+
+All twelve scenarios completed with zero page/interaction errors and no snapshot intervals below
+250 ms. Accepted launch samples were 10.7–31.8% busy before and 2.9–7.9% afterward: both pass the
+same load gate, but the quieter after runs and non-alternating order limit causal claims about
+overall timing gains. The strict 50 ms target remains open. Default mutable callers still pay
+for a full parameter snapshot, and initial bar packing remains linear in bar count. No new CPU
+profile was taken, so the remaining maxima are not newly attributed to a specific function.
+Reproduce using `PERF_SCENARIOS=is-oos-desktop-4x,walk-desktop-4x`, `PERF_PORT=6374` and the labels
+above, then pass each version's three directories to `perf-repeat-report.ts`; aggregate artifacts
+are `perf-clone-{before,after}-summary.json` and `perf-clone-{before,after}-details.json`.
+
+Validation for this follow-up: build, workspace typechecks, all workspace tests (732 Node passes,
+four skipped; 435 component passes), format, and all 84 e2e tests passed. E2e used
+`E2E_BASE_PORT=7374 --workers=2` with output `test-results/e2e-perf-clone`. `npm run check` preserved
+all 293 compilation, 45,075,817 series, 4,091,028 trade and 9,982 metric assertions, with zero
+mismatches, unsupported cases or crashes. Gate logs are `apps/web/test-results/perf-clone-*.log`.
 
 ## Verification and reproduction
 

@@ -7,6 +7,7 @@ import {
 import { serializeError } from '@pine/messages';
 import { tradeStatistics, trialIdForParameters } from '@pine/optimizer';
 import { workerError } from './messages.ts';
+import { restoreInput } from './run-input.ts';
 import type {
   EngineWorkerRequest,
   EngineWorkerResponse,
@@ -20,9 +21,10 @@ export interface EngineWorkerOperations {
   sweepStrategy?: typeof sweepStrategy;
 }
 
-/** A single immutable reproduction snapshot, owned by one Worker and released on termination. */
+/** Immutable inputs owned by one Worker and released on termination. */
 export interface EngineWorkerState {
   reproduction?: { source: string; revision: number; common: RunInput };
+  optimization?: { source: string; revision: number; common: RunInput };
 }
 
 /** Only the module worker invokes this dispatcher in the browser. */
@@ -47,7 +49,7 @@ export function handleEngineWorkerRequest(
         state.reproduction = {
           source: request.source,
           revision: request.sourceRevision,
-          common: request.common,
+          common: restoreInput(request.common),
         };
       const snapshot = state.reproduction;
       if (
@@ -82,6 +84,7 @@ export function handleOptimizationWorkerRequest(
   request: Extract<EngineWorkerRequest, { kind: 'optimize' }>,
   operations: Pick<EngineWorkerOperations, 'sweepStrategy'> = { sweepStrategy },
   emit: (response: EngineWorkerResponse) => void = () => {},
+  state: EngineWorkerState = {},
 ): EngineWorkerResponse[] {
   const metadata = { requestId: request.requestId, sourceRevision: request.sourceRevision };
   const responses: EngineWorkerResponse[] = [];
@@ -91,6 +94,19 @@ export function handleOptimizationWorkerRequest(
   };
   const started = Date.now();
   try {
+    if (request.common)
+      state.optimization = {
+        source: request.source,
+        revision: request.sourceRevision,
+        common: restoreInput(request.common),
+      };
+    const snapshot = state.optimization;
+    if (
+      !snapshot ||
+      snapshot.source !== request.source ||
+      snapshot.revision !== request.sourceRevision
+    )
+      throw workerError('invalidOptimizationDispatch');
     for (const parameter of request.parameters) {
       if (
         !parameter ||
@@ -110,7 +126,7 @@ export function handleOptimizationWorkerRequest(
     }
     const sweep = (operations.sweepStrategy ?? sweepStrategy)(
       request.source,
-      request.common,
+      snapshot.common,
       request.parameters,
     );
     if (!sweep.compilation.success) {
@@ -167,8 +183,11 @@ export function serveEngineWorker(scope: WorkerScope<EngineWorkerResponse>): voi
   const state: EngineWorkerState = {};
   scope.onmessage = (event: MessageEvent<EngineWorkerRequest>) => {
     if (event.data.kind === 'optimize') {
-      handleOptimizationWorkerRequest(event.data, undefined, (response) =>
-        scope.postMessage(response),
+      handleOptimizationWorkerRequest(
+        event.data,
+        undefined,
+        (response) => scope.postMessage(response),
+        state,
       );
     } else {
       scope.postMessage(handleEngineWorkerRequest(event.data, undefined, state));
