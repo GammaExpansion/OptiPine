@@ -6,6 +6,7 @@ import {
   colorStep,
   containsSelection,
   heatTokens,
+  fitMap,
   mapGeometry,
 } from './geometry.ts';
 import { curveGeometry } from './curve-geometry.ts';
@@ -25,6 +26,53 @@ const map: Heatmap = prepareHeatmap(
 );
 
 describe('map geometry', () => {
+  it('fits both dimensions with axis captions, even below the 24-value limit', () => {
+    const original: Heatmap = {
+      xKey: 'Length',
+      yKey: 'Multiplier',
+      cells: Array.from({ length: 31 * 13 }, (_, i) => ({
+        x: i % 31,
+        y: Math.floor(i / 31),
+        value: i,
+        count: 1,
+      })),
+    };
+    for (const [width, height] of [
+      [480, 174],
+      [240, 138],
+      [1024, 600],
+    ]) {
+      const fitted = fitMap(original, width, height);
+      const geometry = mapGeometry(fitted);
+      expect(geometry.width).toBeLessThanOrEqual(width);
+      expect(geometry.height).toBeLessThanOrEqual(height);
+      expect(geometry.layers[0].xs.length).toBeLessThanOrEqual(24);
+      expect(geometry.layers[0].ys.length).toBeLessThanOrEqual(24);
+      expect(fitted.cells.reduce((sum, cell) => sum + cell.count, 0)).toBe(403);
+      expect(cellRect(geometry.layers[0], 0, width).width).toBe(16);
+    }
+    expect(fitMap(original, 480, 174).display?.yBinSize).toBe(3);
+    expect(fitMap(original, 0, 0).display?.xBinSize).toBe(2);
+  });
+  it('fits every Z layer vertically and preserves separate layers for scrolling', () => {
+    const layered: Heatmap = {
+      xKey: 'A',
+      yKey: 'B',
+      zKey: 'C',
+      cells: [false, true].flatMap((z) =>
+        Array.from({ length: 24 }, (_, y) => ({ x: 1, y, z, value: y, count: 1 })),
+      ),
+    };
+    layered.layers = [false, true].map((z) => ({
+      z,
+      cells: layered.cells.filter((cell) => cell.z === z),
+    }));
+    const fitted = fitMap(layered, 360, 186);
+    const geometry = mapGeometry(fitted);
+    expect(geometry.layers).toHaveLength(2);
+    expect(geometry.height / 2).toBeLessThanOrEqual(186);
+    expect(fitted.cells.reduce((sum, cell) => sum + cell.count, 0)).toBe(48);
+  });
   it('keeps square 16px cells, 2px gaps, reversed Y and exact bin membership', () => {
     const geometry = mapGeometry(map);
     const layer = geometry.layers[0];

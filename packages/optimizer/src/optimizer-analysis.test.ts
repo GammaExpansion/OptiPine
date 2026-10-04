@@ -11,7 +11,7 @@ import { summarizeOptimizerAnalysis } from './optimizer-summary.ts';
 import { generateSearchSpace } from './search-space.ts';
 import { consecutiveLossesMetric } from './trade-statistics.ts';
 import { trialIdForParameters } from './trial-id.ts';
-import { leaderboard, type TrialRecord } from './validation.ts';
+import { constraintValue, leaderboard, type TrialRecord } from './validation.ts';
 
 const descriptor = (id: string, title: string, max: number): InputDescriptor => ({
   id,
@@ -137,4 +137,63 @@ test('a summary keeps per-set columns and positions instead of the trials', () =
   assert.deepEqual(summarizeOptimizerAnalysis(analysis, { fullMaps: true }).maps, analysis.maps);
   assert.deepEqual(summary.sensitivity, analysis.sensitivity);
   assert.deepEqual(structuredClone(summary), summary);
+});
+
+test('filters constrain ranking and selection without removing the searched surface or sensitivity', () => {
+  for (const neighborhood of [false, true]) {
+    const baseline = analyzeOptimizer({ ...state, neighborhood });
+    for (const value of [40, 1000]) {
+      const constraint = { metric: 'Total trades', operator: '>=' as const, value };
+      const analysis = analyzeOptimizer({ ...state, neighborhood, constraints: [constraint] });
+      assert.deepEqual(analysis.sensitivity, baseline.sensitivity);
+      assert.deepEqual(analysis.neighbors, baseline.neighbors);
+      assert.deepEqual(analysis.defaultAxes, baseline.defaultAxes);
+      for (const [index, surface] of analysis.maps.entries()) {
+        assert.deepEqual(
+          surface.map.cells.map((cell) => cell.value),
+          baseline.maps[index].map.cells.map((cell) => cell.value),
+        );
+        const sampled = surface.map.cells.filter((cell) => cell.count > 0);
+        assert.ok(sampled.some((cell) => cell.excludedCount === cell.count));
+        for (const cell of sampled.filter((cell) => cell.excludedCount === cell.count)) {
+          assert.equal(cell.trialId, undefined);
+          assert.deepEqual(cell.failedConstraints, [constraint]);
+          assert.notEqual(cell.value, null);
+        }
+      }
+      const summary = structuredClone(summarizeOptimizerAnalysis(analysis, { fullMaps: true }));
+      assert.deepEqual(summary.maps, analysis.maps);
+      assert.deepEqual(summary.sensitivity, baseline.sensitivity);
+      if (value === 1000) {
+        assert.equal(analysis.ranked.length, 0);
+        assert.equal(summary.selection, -1);
+      } else
+        assert.ok(
+          analysis.ranked.every((trial) => constraintValue(trial, 'Total trades')! >= value),
+        );
+    }
+  }
+});
+
+test('walk-forward window and mean maps retain sets from windows with no passing combination', () => {
+  const constraints = [{ metric: 'Total trades', operator: '>=' as const, value: 1000 }];
+  for (const wfSurface of ['window', 'mean'] as const) {
+    const input = {
+      ...state,
+      mode: 'walk-forward' as const,
+      wfSurface,
+      meanTrialGroups: [trials, trials],
+    };
+    const baseline = analyzeOptimizer(input);
+    const filtered = analyzeOptimizer({ ...input, constraints });
+    assert.equal(filtered.ranked.length, 0);
+    assert.deepEqual(
+      filtered.maps[0].map.cells.map((cell) => cell.value),
+      baseline.maps[0].map.cells.map((cell) => cell.value),
+    );
+    for (const cell of filtered.maps[0].map.cells.filter((cell) => cell.count)) {
+      assert.equal(cell.excludedCount, cell.count);
+      assert.deepEqual(cell.failedConstraints, constraints);
+    }
+  }
 });
