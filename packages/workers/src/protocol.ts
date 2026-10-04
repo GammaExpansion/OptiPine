@@ -12,6 +12,7 @@ export type EngineWorkerRequest = WorkerTaskMetadata &
   (
     | { kind: 'describe'; source: string }
     | { kind: 'run'; source: string; input: RunInput }
+    | { kind: 'reproduce'; source: string; common?: RunInput; parameters: ParameterSet }
     | {
         kind: 'optimize';
         source: string;

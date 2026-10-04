@@ -82,6 +82,8 @@ export interface AnalysisWorkerTransport {
 }
 export type AnalysisWorkerFactory = () => AnalysisWorkerTransport;
 export interface AnalysisClient {
+  /** Changes on cancellation/crash, including while no request is pending. */
+  readonly epoch?: number;
   request<K extends keyof AnalysisJobs>(
     kind: K,
     input: AnalysisJobs[K]['input'],

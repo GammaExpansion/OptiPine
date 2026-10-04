@@ -44,6 +44,32 @@ which is how the tests run without a browser.
 Errors cross the Worker boundary with `serializeError` / `restoreError` from
 [@pine/messages](../messages/README.md); the ids this package emits are in `workerMessageIds`.
 
+### Live analysis and reproduction lifetime
+
+`AnalysisRun.view` captures both range lengths at call time. It sends unsent trials in batches
+of at most 100 trials per host task across both ranges, acknowledges each batch before advancing
+its sent position, and yields between batches. Small range suffixes can share the same task.
+`runView` is queued only after all captured trials have been posted.
+Concurrent views are serialized; trials arriving during a flush belong to the next view.
+A failed post leaves its suffix unsent, and an unknown run reopens and replays both ranges
+once. Close prevents further posts. `AnalysisWorkerClient.epoch` changes on cancellation or
+crash so a flush also stops while yielding with no request pending. Custom clients should
+expose that optional epoch if they support cancellation between requests.
+
+`OptimizationWorkerPool.reproduce` treats each `common` object as one immutable run snapshot:
+it clones that object once, reuses idle reproduction Workers, and sends the full snapshot to
+each Worker only on its first use (or when the snapshot/source/revision changes). Subsequent
+requests send only parameter overrides. Initial transfers are staggered across host tasks,
+so launching Top 20 does not clone every input in one task. Use a new `common` object for a new
+snapshot; later mutations of an already captured object do not change its saved input.
+
+Each active reproduction owns its Worker, so an AbortSignal terminates only that request.
+Completed Workers remain reusable until pool cancellation, the next optimization, or disposal;
+those operations terminate active and idle Workers and release saved inputs. Requests waiting
+for a host turn also check cancellation before creating a Worker. The per-Worker snapshot lives
+in `EngineWorkerState`, owned by `serveEngineWorker`; custom transports calling the dispatcher
+must pass one state object per Worker to reproduce the same lifetime.
+
 ## Development
 
 ```sh
