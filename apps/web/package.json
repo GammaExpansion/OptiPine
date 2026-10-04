@@ -9,7 +9,7 @@
     "preview": "vite preview --host 127.0.0.1 --port 5174",
     "start": "node server/main.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node scripts/test-node.ts && vitest run",
+    "test": "node scripts/test.ts",
     "e2e": "playwright test"
   },
   "dependencies": {
