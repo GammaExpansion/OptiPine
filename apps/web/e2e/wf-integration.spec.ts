@@ -1,11 +1,23 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import type { FeedDataset } from '@pine/market-data';
+import { syntheticBars } from '../src/charts-dev/synthetic.ts';
 import type { BacktestStoreState } from '../src/state/backtest.ts';
 import type { OptimizationStoreState } from '../src/state/optimization.ts';
 import type { UiState } from '../src/state/ui.ts';
-import { installMarketFixtures } from './market-fixtures.ts';
+import { workerWaitTimeout } from './optimize-waits.ts';
 import { origins } from './ports.ts';
 
 test.use({ baseURL: origins.dev });
+const emulatedHardwareConcurrency = Number(process.env.E2E_HARDWARE_CONCURRENCY ?? 3);
+const cpuThrottleRate = Number(process.env.E2E_CPU_THROTTLE ?? 0);
+/**
+ * Sized for a 2-vCPU CI runner, as the other real-Worker specs are: 2,900 hourly bars walk forward
+ * one IS month and one OOS month a step, four windows rolling or anchored, the last partial, each
+ * searching 24 sets (Length 10–20 by 2, Multiplier 1.5–3 by 0.5).
+ */
+const barCount = 2_900;
+const windowCount = 4;
+const combinations = 24;
 
 type Hooks = Window & {
   wf: () => OptimizationStoreState;
@@ -13,6 +25,7 @@ type Hooks = Window & {
   ui: () => UiState;
   analysisJobs: string[];
   beforeTolerance: OptimizationStoreState;
+  releaseWindows: () => void;
 };
 
 async function capture(page: Page, info: TestInfo, board: string) {
@@ -47,7 +60,7 @@ async function settled(page: Page) {
             !view.stability?.pending
           );
         }),
-      { timeout: 240_000 },
+      { timeout: workerWaitTimeout },
     )
     .toBe(true);
 }
@@ -55,16 +68,52 @@ async function settled(page: Page) {
 test('real walk-forward: live, rolling, flat, anchored, stability, preview and apply', async ({
   page,
 }, info) => {
-  test.setTimeout(600_000);
+  // Measured at 12–27 s here, and at 21–32 s on 2 threads with 4× CPU throttling
+  // (E2E_CPU_THROTTLE=4), up to 1.5 minutes while the machine was otherwise at full load; the
+  // limit leaves twice that.
+  test.setTimeout(180_000);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(message.text());
   });
-  const requests = await installMarketFixtures(page);
-  await page.addInitScript(() =>
-    localStorage.setItem('optipine.ui', JSON.stringify({ state: { language: 'en' }, version: 1 })),
-  );
+  const dataset: FeedDataset = {
+    input: {
+      bars: syntheticBars(barCount),
+      timeframe: '60',
+      syminfo: {
+        ticker: 'BTCUSDT',
+        type: 'crypto',
+        mintick: 0.01,
+        mincontract: 0.001,
+        pointvalue: 1,
+        currency: 'USD',
+        timezone: 'Etc/UTC',
+      },
+    },
+    fetchedAt: Date.UTC(2025, 4, 5),
+    profileEstimated: false,
+  };
+  await page.clock.setFixedTime(new Date('2025-05-05T00:00:00Z'));
+  await page.route('**/*', async (route) => {
+    const url = new URL(route.request().url());
+    if (url.hostname !== '127.0.0.1') {
+      errors.push(`Unexpected network: ${url.hostname}`);
+      await route.abort();
+    } else if (url.pathname === '/api/market/bars') await route.fulfill({ json: dataset });
+    else if (url.pathname.startsWith('/api/market')) {
+      errors.push(`Unexpected market request: ${url.pathname}`);
+      await route.abort();
+    } else await route.continue();
+  });
+  if (cpuThrottleRate > 0) {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: cpuThrottleRate });
+  }
+  await page.addInitScript((hardwareConcurrency) => {
+    localStorage.setItem('optipine.ui', JSON.stringify({ state: { language: 'en' }, version: 1 }));
+    Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => hardwareConcurrency });
+  }, emulatedHardwareConcurrency);
   await page.goto('/');
   await page.evaluate(async () => {
     const load = (path: string) => import(/* @vite-ignore */ path);
@@ -78,7 +127,9 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
   await page.waitForFunction(
     () => (window as unknown as Hooks).backtest().compile.status === 'compiled',
   );
-  expect(requests.some((url) => url.pathname.endsWith('/bars'))).toBe(true);
+  expect(
+    await page.evaluate(() => (window as unknown as Hooks).backtest().dataset?.input.bars.length),
+  ).toBe(barCount);
   await page.getByRole('button', { name: 'Optimize', exact: true }).click();
   await expect(page.getByRole('radio', { name: 'Walk-forward' })).toBeVisible();
   await page.evaluate(async () => {
@@ -88,12 +139,15 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
   });
   await page.getByRole('radio', { name: 'Walk-forward' }).click();
   for (const [name, value] of Object.entries({
-    'Length from': '18',
-    'Length to': '38',
-    'Length step': '1',
-    'Multiplier from': '1',
+    'In-sample months': '1',
+    'Out-of-sample months': '1',
+    'Step in months': '1',
+    'Length from': '10',
+    'Length to': '20',
+    'Length step': '2',
+    'Multiplier from': '1.5',
     'Multiplier to': '3',
-    'Multiplier step': '0.25',
+    'Multiplier step': '0.5',
   }))
     await page.getByRole('spinbutton', { name, exact: true }).fill(value);
   for (const title of ['Source', 'Use trailing stop', 'Trail %']) {
@@ -105,8 +159,32 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
     const hooks = window as unknown as Hooks;
     while (hooks.wf().viewSettings.filters.length) hooks.wf().actions.removeFilter(0);
   });
+  expect(
+    await page.evaluate(() => {
+      const { plan, search } = (window as unknown as Hooks).wf();
+      return {
+        windows: plan.status === 'planned' ? plan.windows.length : null,
+        combinations: search.sampling?.combinations,
+      };
+    }),
+  ).toEqual({ windows: windowCount, combinations });
   const run = page.getByRole('region', { name: 'Optimization run', exact: true });
-  await expect(run).toContainText('189');
+
+  // Windows this small finish in moments, so the second one waits on the real pool until the
+  // test has seen the first done and the rest waiting (W4).
+  await page.evaluate(async () => {
+    const path = '/src/state/services.ts';
+    const { getServices } = await import(/* @vite-ignore */ path);
+    const pool = getServices().optimization.pool;
+    const optimize = pool.optimize.bind(pool);
+    const hooks = window as unknown as Hooks;
+    const held = new Promise<void>((resolve) => (hooks.releaseWindows = resolve));
+    let calls = 0;
+    pool.optimize = async (...args: unknown[]) => {
+      if (calls++ === 1) await held;
+      return optimize(...args);
+    };
+  });
   await run.getByRole('button', { name: 'Start', exact: true }).click();
   await expect
     .poll(
@@ -119,17 +197,18 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
             view.windows.some((window) => window.status === 'waiting')
           );
         }),
-      { timeout: 180_000 },
+      { timeout: workerWaitTimeout },
     )
     .toBe(true);
   await capture(page, info, 'W4');
+  await page.evaluate(() => (window as unknown as Hooks).releaseWindows());
   await settled(page);
   const initial = await page.evaluate(() => {
     const state = (window as unknown as Hooks).wf();
     return {
-      id: state.results?.id,
       windows: state.walkForward!.windows.length,
       statuses: state.walkForward!.windows.map((window) => window.status),
+      inSampleNet: state.walkForward!.windows.map((window) => window.inSample?.netProfit ?? null),
       error: state.walkForward!.error,
     };
   });
@@ -201,7 +280,7 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
   await page.getByRole('button', { name: 'View backtest', exact: true }).click();
   await expect
     .poll(() => page.evaluate(() => (window as unknown as Hooks).backtest().preview?.run.status), {
-      timeout: 60_000,
+      timeout: workerWaitTimeout,
     })
     .toBe('done');
   expect(
@@ -234,7 +313,7 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
   await page.getByRole('button', { name: 'Apply to inputs', exact: true }).click();
   await expect
     .poll(() => page.evaluate(() => (window as unknown as Hooks).backtest().run.status), {
-      timeout: 60_000,
+      timeout: workerWaitTimeout,
     })
     .toBe('done');
   expect(
@@ -261,16 +340,23 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
   await page.screenshot({ path: info.outputPath('B17-applied-en.png') });
   await page.getByRole('button', { name: 'Optimize', exact: true }).click();
 
-  // R10's shared popover is a stub; exercise W5 through the real filter action.
-  await page.evaluate(() =>
-    (window as unknown as Hooks)
-      .wf()
-      .actions.addFilter({ metric: 'netProfit', operator: '>=', value: 20_000 }),
+  // R10's shared popover is a stub; exercise W5 through the real filter action. Just above the
+  // weakest window's best IS net profit, that window has no set left and the others keep theirs.
+  const threshold = Math.min(...initial.inSampleNet.map((net) => net ?? Infinity)) + 1;
+  await page.evaluate(
+    (value) =>
+      (window as unknown as Hooks)
+        .wf()
+        .actions.addFilter({ metric: 'netProfit', operator: '>=', value }),
+    threshold,
   );
   await settled(page);
   expect(
-    await page.evaluate(() => (window as unknown as Hooks).wf().walkForward!.totals.flat),
-  ).toBeGreaterThan(0);
+    await page.evaluate(() => {
+      const { totals } = (window as unknown as Hooks).wf().walkForward!;
+      return { flat: totals.flat > 0, traded: totals.traded > 0 };
+    }),
+  ).toEqual({ flat: true, traded: true });
   await capture(page, info, 'W5');
   await page.evaluate(() => (window as unknown as Hooks).wf().actions.removeFilter(0));
   await settled(page);
@@ -282,11 +368,12 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
     await page.evaluate(() => {
       const view = (window as unknown as Hooks).wf().walkForward!;
       return {
+        windows: view.windows.length,
         starts: new Set(view.windows.map((window) => window.plan.inSampleStart)).size,
         error: view.error,
       };
     }),
-  ).toEqual({ starts: 1, error: null });
+  ).toEqual({ windows: windowCount, starts: 1, error: null });
   await capture(page, info, 'W6');
   expect(errors).toEqual([]);
 });
