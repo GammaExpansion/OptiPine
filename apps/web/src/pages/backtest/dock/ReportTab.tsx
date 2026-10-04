@@ -45,7 +45,7 @@ export function ReportTab() {
           />
         </DockActions>
       )}
-      <div className={styles.report}>
+      <div className={styles.report} role="region" aria-label={t('dock.report')} tabIndex={0}>
         <div className={styles.figures}>
           {report?.keyFigures.map((figure) => (
             <div className={styles.figure} key={figure.id}>

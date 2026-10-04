@@ -2,7 +2,7 @@ import { Button } from '../../../components/Button.tsx';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { useOptimizationStore } from '../../../state/optimization.ts';
 import { useUiStore } from '../../../state/ui.ts';
-import { parameterValue } from './results/copy.ts';
+import { shownParameters } from './results/copy.ts';
 import styles from './results/Results.module.css';
 
 /** Applying a fixed set is an explicit session action, with its workflow-owned provenance. */
@@ -18,10 +18,10 @@ export function FixedParameters() {
       <div className={styles.fixedContent}>
         <h2>{t('optimize.wfResults.fixed')}</h2>
         <dl>
-          {Object.entries(view.fixed.parameters).map(([title, value]) => (
+          {shownParameters(view.fixed.parameters, view.searchRows).map(({ title, value }) => (
             <div key={title}>
               <dt>{title}</dt>
-              <dd>{text(parameterValue(value))}</dd>
+              <dd>{text(value)}</dd>
             </div>
           ))}
         </dl>

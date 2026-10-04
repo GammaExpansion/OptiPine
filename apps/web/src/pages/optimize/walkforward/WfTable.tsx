@@ -177,12 +177,14 @@ export function WfTable() {
                       <td
                         className={styles.parameters}
                         title={
-                          unavailable ? undefined : text(parameterSet(window.parameters, true))
+                          unavailable
+                            ? undefined
+                            : text(parameterSet(window.parameters, view.searchRows, true))
                         }
                       >
                         {unavailable
                           ? t(`optimize.wfResults.status.${window.status}`)
-                          : text(parameterSet(window.parameters))}
+                          : text(parameterSet(window.parameters, view.searchRows))}
                       </td>
                       <td>
                         {text(figure(unavailable ? null : window.inSample?.netProfit, 0, true))}

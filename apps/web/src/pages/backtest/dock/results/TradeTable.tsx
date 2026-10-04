@@ -63,7 +63,7 @@ export function TradeTable({ rows }: { rows: readonly TradeRow[] }) {
       })),
       {
         id: 'locate',
-        header: () => null,
+        header: () => <span className={styles.actionHeading}>{t('sheet.icon.locate')}</span>,
         cell: ({ row }) => (
           <button
             className={styles.locate}

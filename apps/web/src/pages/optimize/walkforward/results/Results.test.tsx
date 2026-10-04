@@ -43,14 +43,15 @@ it('renders W1 totals and fixed parameters in both languages, switching W2 witho
   expect(screen.getByText('Part')).toBeInTheDocument();
   expect(
     screen.getByRole('region', { name: 'Fixed parameters for every window' }),
-  ).toHaveTextContent('27');
+  ).toHaveTextContent('Length27Multiplier2.00SourcecloseUse trailing stopoff');
   fireEvent.click(screen.getByRole('radio', { name: 'Per window' }));
   expect(screen.getByRole('img', { name: '6 windows with IS and OOS equity' })).toBeInTheDocument();
   expect(state().walkForward).toBe(view);
   act(() => uiStore.getState().setLanguage('zh'));
   expect(screen.getByRole('button', { name: '应用到输入' })).toBeEnabled();
   expect(screen.getByText('5 / 6 盈利')).toBeInTheDocument();
-  expect(screen.getByRole('region', { name: '选定窗口' })).toHaveTextContent('关闭');
+  // Searched inputs in declaration order, at their search steps' precision.
+  expect(screen.getByRole('region', { name: '选定窗口' })).toHaveTextContent('26，2.25，close，关');
 });
 
 it('selects through rows and lanes, and delegates preview/apply without mutating Backtest', async () => {

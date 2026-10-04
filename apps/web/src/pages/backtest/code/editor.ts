@@ -1,4 +1,4 @@
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import {
   HighlightStyle,
   StreamLanguage,
@@ -152,13 +152,13 @@ const pineLanguage = StreamLanguage.define<PineState>({
   token: (stream, state) => pineTokens.token(stream as unknown as PineStream, state),
 });
 
-/** The mock's syntax colours (`.kw`, `.fn`, `.st`, `.nu`, `.cm` in gen/ui.mjs). */
+/** The mock's syntax colours, with comments raised to readable AA contrast. */
 const pineHighlight = HighlightStyle.define([
   { tag: [tags.keyword, tags.typeName], color: '#8fb8de' },
   { tag: tags.function(tags.variableName), color: '#d9c38c' },
   { tag: tags.string, color: '#a9c98f' },
   { tag: tags.number, color: '#e0a577' },
-  { tag: tags.comment, color: '#6b727b' },
+  { tag: tags.comment, color: 'var(--caption)' },
   { tag: tags.operator, color: 'var(--text)' },
 ]);
 
@@ -171,11 +171,11 @@ const pineTheme = EditorView.theme(
       color: 'var(--text)',
       fontSize: '12.5px',
     },
-    '&.cm-focused': { outline: 'none' },
+    '&:focus-within': { outline: '2px solid var(--primary)', outlineOffset: '-2px' },
     '.cm-scroller': { fontFamily: 'var(--font-code)', lineHeight: '19px' },
     '.cm-content': { padding: '10px 0', caretColor: 'var(--text)' },
     '.cm-line': { padding: '0' },
-    '.cm-gutters': { backgroundColor: 'transparent', border: 'none', color: 'var(--code-caption)' },
+    '.cm-gutters': { backgroundColor: 'transparent', border: 'none', color: 'var(--caption)' },
     '.cm-lineNumbers .cm-gutterElement': {
       boxSizing: 'border-box',
       minWidth: '48px',
@@ -187,7 +187,7 @@ const pineTheme = EditorView.theme(
     '.cm-cursor, .cm-dropCursor': { borderLeft: '1.5px solid var(--text)' },
     '.cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground':
       { backgroundColor: 'var(--amber-border)' },
-    '.cm-placeholder': { color: 'var(--code-caption)' },
+    '.cm-placeholder': { color: 'var(--caption)' },
     '.cm-line-in, .cm-gutterElement.cm-gutter-in': { backgroundColor: 'rgb(242 163 58 / 6%)' },
     '.cm-line-fx, .cm-gutterElement.cm-gutter-fx': {
       backgroundColor: 'rgb(255 255 255 / 2.5%)',
@@ -266,8 +266,8 @@ export function pineExtensions(
         },
       },
       ...historyKeymap,
+      // Tab stays browser navigation; Mod-[ / Mod-] in the default keymap indent selections.
       ...defaultKeymap,
-      indentWithTab,
     ]),
     EditorView.updateListener.of((update) => {
       if (update.docChanged) handlers.current.onChange(update.state.doc.toString());

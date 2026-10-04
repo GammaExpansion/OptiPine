@@ -183,6 +183,7 @@ function Group({ heading, children }: { heading: MessageId; children: ReactNode 
  * script's `strategy()` values are the defaults; overrides go through the session.
  */
 export function PropertiesDialog() {
+  const opener = useRef<HTMLElement | null>(null);
   const { t } = useI18n();
   const field = useFields();
   const fields = useBacktestStore((state) => state.properties);
@@ -222,6 +223,16 @@ export function PropertiesDialog() {
         <Primitive.Content
           className={styles.panel}
           style={{ width }}
+          onOpenAutoFocus={() => {
+            opener.current = document.activeElement as HTMLElement | null;
+          }}
+          onCloseAutoFocus={(event) => {
+            // This panel is mounted by the store, outside the button that opened it.
+            if (opener.current?.isConnected) {
+              event.preventDefault();
+              opener.current.focus();
+            }
+          }}
           onInteractOutside={(event) => event.preventDefault()}
         >
           <div className={styles.header}>

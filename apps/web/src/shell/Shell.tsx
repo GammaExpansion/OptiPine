@@ -17,6 +17,12 @@ const OptimizePage = lazy(() => {
     default: module.OptimizePage,
   }));
 });
+// It opens from optimization results only, so the optimization side has loaded by then.
+const FailedCombinationsDialog = lazy(() =>
+  import('../pages/optimize/leaderboard/FailedCombinationsDialog.tsx').then((module) => ({
+    default: module.FailedCombinationsDialog,
+  })),
+);
 
 export function Shell({ canOptimize }: { canOptimize?: boolean }) {
   const page = useUiStore((state) => state.page);
@@ -35,7 +41,9 @@ export function Shell({ canOptimize }: { canOptimize?: boolean }) {
           <OptimizePage />
         </Suspense>
       )}
-      <DialogsRoot slots={{ properties: LazyPropertiesDialog }} />
+      <DialogsRoot
+        slots={{ properties: LazyPropertiesDialog, failedCombinations: FailedCombinationsDialog }}
+      />
     </div>
   );
 }

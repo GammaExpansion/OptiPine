@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, expect, test, vi } from 'vitest';
-import { en } from '../i18n/en.ts';
+import { catalogs } from '../i18n/catalogs.ts';
 import { Button } from './Button.tsx';
 import { Combobox } from './Combobox.tsx';
 import { Dialog, DialogClose } from './Dialog.tsx';
@@ -10,6 +10,8 @@ import { DropdownMenu } from './DropdownMenu.tsx';
 import { Popover, PopoverClose } from './Popover.tsx';
 import { Select } from './Select.tsx';
 import { TextInput } from './TextInput.tsx';
+
+const { en } = catalogs;
 
 // These platform APIs have no jsdom layout implementation; browser tests cover positioning.
 beforeAll(() => {
@@ -107,6 +109,36 @@ test('a dialog without description emits no missing-description warning and clos
   expect(warning).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: en['sheet.close'] }));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});
+
+test('a conditionally mounted dialog returns focus to an external opener without a Radix trigger', async () => {
+  const user = userEvent.setup();
+  function Harness() {
+    const [open, setOpen] = useState(false);
+    return (
+      <>
+        <Button onClick={() => setOpen(true)}>{en['sheet.allSettings']}</Button>
+        {open && (
+          <Dialog
+            open
+            onOpenChange={setOpen}
+            title={en['sheet.properties']}
+            closeLabel={en['sheet.close']}
+          >
+            <TextInput aria-label={en['sheet.length']} />
+          </Dialog>
+        )}
+      </>
+    );
+  }
+  render(<Harness />);
+  const opener = screen.getByRole('button', { name: en['sheet.allSettings'] });
+  await user.tab();
+  await user.keyboard('{Enter}');
+  expect(screen.getByRole('button', { name: en['sheet.close'] })).toHaveFocus();
+  await user.keyboard('{Escape}');
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(opener).toHaveFocus();
 });
 test('popover exposes content, dismisses outside and returns focus after Escape', async () => {
   const user = userEvent.setup();

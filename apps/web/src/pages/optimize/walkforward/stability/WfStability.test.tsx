@@ -24,6 +24,8 @@ it('renders the six-window bands, common and fixed values, and selected column i
   const { container } = renderInEnglish(<WfStability />);
   expect(screen.getByText('Common 26–28')).toBeInTheDocument();
   expect(screen.getByText('Fixed at 27, mean loss 1.6%')).toBeInTheDocument();
+  // Values read at the search step's precision: Multiplier steps by 0.25.
+  expect(screen.getByText('Fixed at 2.00, mean loss 2.5%')).toBeInTheDocument();
   expect(screen.getAllByText('All near-optimal')).toHaveLength(2);
   expect(screen.getByRole('combobox', { name: 'Tolerance' })).toHaveTextContent('10%');
   expect(screen.getAllByRole('img')).toHaveLength(4);

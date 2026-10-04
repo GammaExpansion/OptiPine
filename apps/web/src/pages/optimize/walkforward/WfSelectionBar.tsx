@@ -11,6 +11,7 @@ export function WfSelectionBar() {
   const view = useOptimizationStore((state) => state.walkForward);
   const actions = useOptimizationStore((state) => state.actions);
   const setPage = useUiStore((state) => state.setPage);
+  const setDockTab = useUiStore((state) => state.setDockTab);
   if (!view?.selection) return null;
   const { window, origin } = view.selection;
   const { plan } = window;
@@ -27,9 +28,12 @@ export function WfSelectionBar() {
       >
         {t('optimize.wfResults.oos')} {text(dateRange(plan.outOfSampleStart, plan.outOfSampleEnd))}
       </span>
-      <span className={styles.selectionSet} title={text(parameterSet(window.parameters, true))}>
+      <span
+        className={styles.selectionSet}
+        title={text(parameterSet(window.parameters, view.searchRows, true))}
+      >
         {window.parameters
-          ? text(parameterSet(window.parameters))
+          ? text(parameterSet(window.parameters, view.searchRows))
           : t(`optimize.wfResults.status.${window.status}`)}
       </span>
       <div className={styles.selectionFigures}>
@@ -56,6 +60,8 @@ export function WfSelectionBar() {
         onClick={() => {
           actions.selectWindow(plan.index);
           void previewWindow();
+          // As from the leaderboard (R1): the preview opens on its report.
+          setDockTab('report');
           setPage('backtest');
         }}
       >

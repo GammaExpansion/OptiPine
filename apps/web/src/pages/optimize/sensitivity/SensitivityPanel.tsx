@@ -7,12 +7,15 @@ import { moveAxis, type AxisMove, type AxisRole } from './axis-move.ts';
 import { sensitivityPaths } from './spark-geometry.ts';
 import { useBinInspection } from '../map/inspection.ts';
 import { BinInspection, CurveInspection } from '../map/MapInspection.tsx';
+import { useResultFormat } from '../leaderboard/useResultFormat.ts';
 import styles from './SensitivityPanel.module.css';
 
 /** Sensitivity: one row per searched input, with transactional axis moves (R12). */
 export function SensitivityPanel() {
   const { t, text } = useI18n();
   const view = useOptimizationStore((state) => state.views?.sensitivity);
+  const searchRows = useOptimizationStore((state) => state.views?.searchRows);
+  const { parameter, number } = useResultFormat(searchRows);
   const map = useOptimizationStore((state) => state.views?.map);
   const curve = useOptimizationStore((state) => state.views?.curve);
   const bin = useBinInspection();
@@ -64,14 +67,18 @@ export function SensitivityPanel() {
   if (map?.map && bin?.map === map.panel) return <BinInspection />;
 
   return (
-    <section ref={root} className={styles.panel} aria-label={t('optimize.sensitivity.title')}>
+    <section
+      ref={root}
+      className={styles.panel}
+      aria-label={t('optimize.sensitivity.title')}
+      aria-busy={inProgress}
+    >
       <h2>{t('optimize.sensitivity.title')}</h2>
       <p id={help} className={styles.srOnly}>
         {t('optimize.sensitivity.keyboard')}
       </p>
-      {inProgress ? (
-        <p className={styles.waiting}>{t('optimize.sensitivity.inProgress')}</p>
-      ) : (
+      {inProgress && <p className={styles.waiting}>{t('optimize.summary.inProgress')}</p>}
+      {view && (
         <div className={styles.rows}>
           {view?.rows.map((row, index) => (
             <div
@@ -86,6 +93,7 @@ export function SensitivityPanel() {
                 {(row.role === 'x' || row.role === 'y') && (
                   <button
                     type="button"
+                    disabled={inProgress}
                     className={styles.marker}
                     data-axis-marker={row.role}
                     data-dragging={(!!pointer && move?.role === row.role) || undefined}
@@ -179,6 +187,18 @@ export function SensitivityPanel() {
                 role="img"
                 aria-label={t('optimize.sensitivity.spark', { title: row.parameter })}
               >
+                <title>
+                  {row.points
+                    .map((point) =>
+                      t('optimize.sensitivity.value', {
+                        value: parameter(point.value, row.parameter),
+                        mean: number(point.mean),
+                        from: number(point.q1),
+                        to: number(point.q3),
+                      }),
+                    )
+                    .join('\n')}
+                </title>
                 {paths[index].segments.map((segment, index) => (
                   <g key={index}>
                     <path className={styles.band} d={segment.band} />

@@ -17,6 +17,9 @@ export function WindowMap() {
   const actions = useOptimizationStore((state) => state.actions);
   const [hover, setHover] = useState<{ map: Heatmap; hit: CellHover } | null>(null);
   const map = view?.map;
+  // Parameter values read at the precision their input was searched with.
+  const input = (title: string | null | undefined) =>
+    view?.searchRows.find((row) => row.descriptor.title === title);
   const selected = view?.selection?.window.plan.index ?? map?.window;
   const markers = useMemo(
     () =>
@@ -105,7 +108,7 @@ export function WindowMap() {
               options={[
                 ...slice.values.map((value, index) => ({
                   value: `value:${index}`,
-                  label: text(valueLabel(value)),
+                  label: text(valueLabel(value, input(slice.title))),
                 })),
                 { value: 'max', label: t('optimize.map.max') },
                 { value: 'mean', label: t('optimize.map.mean') },
@@ -126,6 +129,7 @@ export function WindowMap() {
         key={`${map.x}:${map.y}:${map.z}:${map.surface}:${map.window}`}
         map={map.panel}
         markers={markers}
+        searchRows={view?.searchRows}
         label={t('optimize.wfStability.canvas')}
         keyboardDescription={t('optimize.wfStability.keyboard')}
         onHover={(hit) => setHover(hit ? { map: map.panel, hit } : null)}
@@ -167,9 +171,9 @@ export function WindowMap() {
         <p className={styles.inspection} role="status">
           {t('optimize.wfStability.cell', {
             x: map.x,
-            xValue: text(rangeLabel(hit.cell.xValues ?? [hit.cell.x])),
+            xValue: text(rangeLabel(hit.cell.xValues ?? [hit.cell.x], input(map.x))),
             y: map.y ?? '',
-            yValue: map.y ? text(rangeLabel(hit.cell.yValues ?? [hit.cell.y])) : '',
+            yValue: map.y ? text(rangeLabel(hit.cell.yValues ?? [hit.cell.y], input(map.y))) : '',
             value: text(valueLabel(hit.cell.value)),
           })}
         </p>

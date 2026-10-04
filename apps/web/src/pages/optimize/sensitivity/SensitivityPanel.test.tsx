@@ -57,13 +57,14 @@ it('pointer capture commits a marker dropped on another sensitivity row', async 
   vi.unstubAllGlobals();
 });
 
-it('hides sensitivity until the snapshot is complete', async () => {
+it('shows provisional sensitivity from live snapshots, with axis moves disabled until complete', async () => {
   await loadOptimization();
   await runOptimization();
   act(() =>
     getOptimizationStore().setState({ views: { ...optimization().views!, inProgress: true } }),
   );
   renderInEnglish(<SensitivityPanel />);
-  expect(screen.getByText('Shown when all sets finish')).toBeInTheDocument();
-  expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  expect(screen.getByText('In progress')).toBeInTheDocument();
+  expect(screen.getAllByRole('img')).toHaveLength(2);
+  for (const button of screen.getAllByRole('button')) expect(button).toBeDisabled();
 });

@@ -1,6 +1,8 @@
 import type { LiteralValue } from '@pine/engine';
 import { message, type Message, type Text } from '@pine/messages';
 import { formatDate, formatNumber } from '../../../../i18n/translate.ts';
+import { parameterText, searchedParameters } from '../../../../workflows/optimize-parameters.ts';
+import type { SearchRow } from '../../../../workflows/optimize-setup.ts';
 
 export function windowLabel(index: number): Message {
   return message('optimize.wfResults.windowLabel', { number: index + 1 });
@@ -40,27 +42,35 @@ export function dateRange(start: number, end: number, compact = false): Message 
   });
 }
 
-export function parameterValue(value: LiteralValue): Text {
-  if (typeof value === 'boolean')
-    return message(value ? 'optimize.wfResults.on' : 'optimize.wfResults.off');
-  if (typeof value === 'number')
-    return message('optimize.wfResults.value', { value: formatNumber(value) });
-  return value === null ? message('optimize.wfResults.missing') : value;
+/** The searched inputs of a set in declaration order, each at its search step's precision. */
+export function shownParameters(
+  parameters: Readonly<Record<string, LiteralValue>>,
+  rows: readonly SearchRow[],
+): { title: string; value: Text }[] {
+  return searchedParameters(parameters, rows).map(({ title, value }) => ({
+    title,
+    value: parameterText(
+      value,
+      rows.find((row) => row.descriptor.title === title),
+    ),
+  }));
 }
 
-/** Titles are script data; labels, separators and boolean values belong to the catalogs. */
+/**
+ * A window's set as W1 writes it (`shownParameters`), with titles when `named`. Titles are script
+ * data; separators and boolean values belong to the catalogs.
+ */
 export function parameterSet(
   parameters: Readonly<Record<string, LiteralValue>> | null,
+  rows: readonly SearchRow[],
   named = false,
 ): Text {
   if (!parameters) return message('optimize.wfResults.missing');
   return {
     kind: 'message-group',
     separator: message(named ? 'optimize.wfResults.setSeparator' : 'optimize.wfResults.separator'),
-    parts: Object.entries(parameters).map(([title, value]) =>
-      named
-        ? message('optimize.wfResults.parameter', { title, value: parameterValue(value) })
-        : parameterValue(value),
+    parts: shownParameters(parameters, rows).map(({ title, value }) =>
+      named ? message('optimize.wfResults.parameter', { title, value }) : value,
     ),
   };
 }

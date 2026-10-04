@@ -20,6 +20,10 @@
   background: rgb(255 255 255 / 3.5%);
   pointer-events: none;
 }
+.static:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
 .gutter {
   flex: none;
   box-sizing: border-box;
@@ -27,7 +31,7 @@
   padding: 10px 14px 0 0;
   border-left: 2px solid transparent;
   text-align: right;
-  color: var(--code-caption);
+  color: var(--caption);
   font-variant-numeric: tabular-nums;
 }
 .text {
@@ -46,6 +50,6 @@
   white-space: pre;
 }
 .text::placeholder {
-  color: var(--code-caption);
+  color: var(--caption);
   opacity: 1;
 }

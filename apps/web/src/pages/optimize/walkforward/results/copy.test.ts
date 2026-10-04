@@ -1,11 +1,12 @@
 import { expect, it } from 'vitest';
 import { translate } from '../../../../i18n/translate.ts';
+import { fixtureSearchRows } from '../stability/fixture.ts';
 import {
   compactNet,
   dateRange,
   figure,
   parameterSet,
-  parameterValue,
+  shownParameters,
   windowLabel,
 } from './copy.ts';
 
@@ -33,14 +34,27 @@ it('uses half-open UTC dates across leap days and years', () => {
   );
 });
 
-it('keeps script titles and option values, translating booleans and set separators', () => {
-  const parameters = { Length: 26, Multiplier: 2.25, Source: 'close', Stop: false };
-  expect(translate(parameterSet(parameters), 'en')).toBe('26, 2.25, close, off');
-  expect(translate(parameterSet(parameters, true), 'zh')).toBe(
-    'Length 26 · Multiplier 2.25 · Source close · Stop 关闭',
+it('writes the searched inputs in declaration order at step precision, translating booleans', () => {
+  // A set lists its inputs in any order, the fixed ones too; W1 shows the searched ones only.
+  const parameters = {
+    'Use trailing stop': false,
+    Source: 'close',
+    Fixed: 7,
+    Multiplier: 2,
+    Length: 24,
+  };
+  expect(translate(parameterSet(parameters, fixtureSearchRows), 'en')).toBe('24, 2.00, close, off');
+  expect(translate(parameterSet(parameters, fixtureSearchRows, true), 'zh')).toBe(
+    'Length 24 · Multiplier 2.00 · Source close · Use trailing stop 关',
   );
-  expect(translate(parameterValue(true), 'zh')).toBe('开启');
-  expect(translate(parameterValue(null), 'en')).toBe('—');
-  expect(translate(parameterSet(null), 'en')).toBe('—');
+  expect(
+    shownParameters({ Length: 26, 'Use trailing stop': true }, fixtureSearchRows).map(
+      ({ title, value }) => [title, translate(value, 'zh')],
+    ),
+  ).toEqual([
+    ['Length', '26'],
+    ['Use trailing stop', '开'],
+  ]);
+  expect(translate(parameterSet(null, fixtureSearchRows), 'en')).toBe('—');
   expect(translate(windowLabel(5), 'en')).toBe('W6');
 });

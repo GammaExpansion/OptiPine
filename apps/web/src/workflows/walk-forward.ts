@@ -25,7 +25,7 @@ import {
   type FilterCondition,
   type ObjectiveId,
 } from './optimize-ranking.ts';
-import { walkForwardConfig, type WalkForwardSettings } from './optimize-setup.ts';
+import { walkForwardConfig, type SearchRow, type WalkForwardSettings } from './optimize-setup.ts';
 import { sliceChips, type MapView } from './optimize-views.ts';
 
 /** Stability starts with the values within 10% of each window's best (W1). */
@@ -420,6 +420,8 @@ export interface WindowSelection {
 
 /** Everything the walk-forward results area shows, for the live run or the latest results. */
 export interface WalkForwardView {
+  /** The run's search rows: which inputs it searched, in declaration order, and at what step. */
+  readonly searchRows: readonly SearchRow[];
   /** A run is still filling the windows in (W4). */
   readonly inProgress: boolean;
   /** Windows are being chosen again after the ranking, filters or smoothing changed. */

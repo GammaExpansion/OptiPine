@@ -9,8 +9,10 @@ function Row({ row, view }: { row: StabilityRow; view: WalkForwardView }) {
   const { t, text } = useI18n();
   const selected = view.selection?.window.plan.index;
   const count = Math.max(1, view.windows.length);
+  // Values read at the precision this input was searched with.
+  const input = view.searchRows.find((search) => search.descriptor.title === row.title);
   const common = row.common
-    .map(({ from, to }) => text(rangeLabel(from === to ? [from] : [from, to])))
+    .map(({ from, to }) => text(rangeLabel(from === to ? [from] : [from, to], input)))
     .join(', ');
   return (
     <div className={styles.row}>
@@ -25,7 +27,7 @@ function Row({ row, view }: { row: StabilityRow; view: WalkForwardView }) {
         </span>
         <span className={styles.fixedText}>
           {t('optimize.wfStability.fixed', {
-            value: text(valueLabel(row.fixed)),
+            value: text(valueLabel(row.fixed, input)),
             loss:
               row.meanLoss === null
                 ? text(valueLabel(null))
@@ -69,9 +71,9 @@ function Row({ row, view }: { row: StabilityRow; view: WalkForwardView }) {
                 <title>
                   {t('optimize.wfStability.lane', {
                     window: window.plan.index + 1,
-                    chosen: text(valueLabel(band?.chosen)),
+                    chosen: text(valueLabel(band?.chosen, input)),
                     values: band?.near.length
-                      ? band.near.map((value) => text(valueLabel(value))).join(', ')
+                      ? band.near.map((value) => text(valueLabel(value, input))).join(', ')
                       : text(valueLabel(null)),
                   })}
                 </title>
@@ -104,9 +106,9 @@ function Row({ row, view }: { row: StabilityRow; view: WalkForwardView }) {
             );
           })}
         </svg>
-        <span className={styles.maximum}>{text(valueLabel(row.values.at(-1)))}</span>
+        <span className={styles.maximum}>{text(valueLabel(row.values.at(-1), input))}</span>
         {row.values.length > 1 && (
-          <span className={styles.minimum}>{text(valueLabel(row.values[0]))}</span>
+          <span className={styles.minimum}>{text(valueLabel(row.values[0], input))}</span>
         )}
       </div>
     </div>

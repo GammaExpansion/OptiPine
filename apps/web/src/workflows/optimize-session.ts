@@ -65,6 +65,7 @@ import {
   failedCombination,
   filterDiagnosis,
   leadingSets,
+  leaderboardPageSize,
   leaderboardView,
   mapView,
   medianCurve,
@@ -302,6 +303,8 @@ export interface TopEquity {
 
 /** Everything the results area shows, for the live run or the latest results. */
 export interface ResultsViews {
+  /** Input order and precision belong to the displayed run, including while settings are outdated. */
+  readonly searchRows: SearchSetup['rows'];
   /** A run is still streaming: these are not results yet (O8). */
   readonly inProgress: boolean;
   /** Validation None ranks by full-range figures, which only measure fit (R3). */
@@ -358,6 +361,21 @@ export interface OptimizationState {
   readonly topEquity: TopEquity;
   /** The walk-forward run or results on display (W1–W6); null when the results are not walk-forward. */
   readonly walkForward: WalkForwardView | null;
+}
+
+/** Internal state captured when a Worker-backed view or Top 20 request is still pending. */
+export interface OptimizationDiagnostics {
+  readonly topEquity: {
+    readonly status: TopEquity['status'];
+    readonly key: string | null;
+    readonly requestActive: boolean;
+  };
+  readonly viewKey: string;
+  readonly analysisKey: string | null;
+  readonly leaderboardFirstTrialId: string | null;
+  readonly run: OptimizationRunState;
+  readonly lastAnalysisRequestAt: number | null;
+  readonly lastReproductionRequestAt: number | null;
 }
 
 export interface OptimizationSessionOptions {
@@ -536,6 +554,8 @@ export class OptimizationSession implements Observable<OptimizationState> {
   #topRequest: AbortController | null = null;
   /** The results and sets of the Top 20 request running or done. */
   #topKey: string | null = null;
+  #lastAnalysisRequestAt: number | null = null;
+  #lastReproductionRequestAt: number | null = null;
   readonly #curves = new Map<string, { equity: readonly number[] | null; error: Text | null }>();
 
   /** The walk-forward run going, and the latest walk-forward results' windows. */
@@ -574,6 +594,24 @@ export class OptimizationSession implements Observable<OptimizationState> {
 
   getState(): OptimizationState {
     return this.#store.getState();
+  }
+
+  /** A read-only snapshot for diagnosing a slow or stuck Worker-backed view in end-to-end tests. */
+  getDiagnostics(): OptimizationDiagnostics {
+    const state = this.getState();
+    return {
+      topEquity: {
+        status: state.topEquity.status,
+        key: this.#topKey,
+        requestActive: state.topEquity.status === 'running' && this.#topRequest !== null,
+      },
+      viewKey: this.#viewKey(),
+      analysisKey: this.#resultsAnalysis?.key ?? this.#liveAnalysis?.key ?? null,
+      leaderboardFirstTrialId: state.views?.leaderboard.rows[0]?.trialId ?? null,
+      run: state.run,
+      lastAnalysisRequestAt: this.#lastAnalysisRequestAt,
+      lastReproductionRequestAt: this.#lastReproductionRequestAt,
+    };
   }
 
   subscribe(listener: (state: OptimizationState) => void): () => void {
@@ -657,7 +695,24 @@ export class OptimizationSession implements Observable<OptimizationState> {
   // ----- view settings: never a re-run
 
   #setView(change: Partial<ViewSettings>): void {
-    this.#viewSettings = { ...this.#viewSettings, ...change };
+    const previous = this.#viewSettings;
+    const next = { ...previous, ...change };
+    this.#viewSettings = next;
+    // Ready curves must belong to the current ranking, even while its analysis is pending.
+    // Walk-forward results have no Top 20 curves to wait for.
+    if (
+      previous.objective !== next.objective ||
+      previous.direction !== next.direction ||
+      !sameJson(previous.filters, next.filters)
+    ) {
+      this.#topRequest?.abort();
+      this.#topRequest = null;
+      this.#topKey = null;
+      this.#topEquity =
+        this.#results && this.#results.mode !== 'walk-forward'
+          ? { ...idleEquity, status: 'running', resultsId: this.#results.id }
+          : idleEquity;
+    }
     this.#publish();
     this.#requestView();
     this.#requestWalkForward();
@@ -728,9 +783,15 @@ export class OptimizationSession implements Observable<OptimizationState> {
     this.#setView({ surface });
   }
 
-  /** Select a leaderboard row (3.3): the map moves to the set; null returns to #1. */
+  /** Select a set (3.3): reveal its leaderboard page and move the map; null returns to #1. */
   select(trialId: string | null): void {
-    this.#setView({ selectedTrialId: trialId });
+    this.#viewSettings = { ...this.#viewSettings, selectedTrialId: trialId };
+    const selection = this.#views()?.selection;
+    this.#setView(
+      selection?.explicit
+        ? { page: Math.floor((selection.row.rank - 1) / leaderboardPageSize) }
+        : {},
+    );
   }
 
   setPage(page: number): void {
@@ -761,18 +822,23 @@ export class OptimizationSession implements Observable<OptimizationState> {
    * Backtest page without changing the current inputs. Does nothing unless the window ran a set.
    */
   previewWindow(): Promise<void> {
-    const selection = this.getState().walkForward?.selection;
-    const parameters = selection?.window.parameters;
-    return selection?.origin && parameters
-      ? this.#backtest.preview(parameters, selection.origin)
+    const view = this.getState().walkForward;
+    const origin = view?.selection?.origin;
+    const parameters = view?.selection?.window.parameters;
+    // The banner names the set and its values as this run searched them, whatever runs next.
+    return view && origin && parameters
+      ? this.#backtest.preview(parameters, { ...origin, searchRows: view.searchRows })
       : Promise.resolve();
   }
 
   /** Apply to inputs for the fixed parameters for every window (W1, B17). */
   applyFixedParameters(): Promise<void> {
-    const fixed = this.getState().walkForward?.fixed;
-    return fixed
-      ? this.#backtest.applyParameters(fixed.parameters, fixed.origin)
+    const view = this.getState().walkForward;
+    return view?.fixed
+      ? this.#backtest.applyParameters(view.fixed.parameters, {
+          ...view.fixed.origin,
+          searchRows: view.searchRows,
+        })
       : Promise.resolve();
   }
 
@@ -856,6 +922,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
       this.#publish();
       key = this.#viewKey();
       draft = this.#validDraft();
+      this.#lastAnalysisRequestAt = this.#now();
       summary = await live.analysis.view(this.#viewInput(space, mode), this.#summaryRequest(true));
       if (this.#live !== live) return;
       this.#measure(snapshot.source, elapsed.workerMs, sets.length * bars.length);
@@ -1616,6 +1683,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
         const current = this.#liveAnalysis;
         if (!completed || (current?.key === key && current.completed === completed))
           return this.#upToDate();
+        this.#lastAnalysisRequestAt = this.#now();
         const summary = await live.analysis.view(
           this.#viewInput(live.space, live.mode),
           this.#summaryRequest(false),
@@ -1634,6 +1702,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
         const run = this.#resultsRun;
         const current = this.#resultsAnalysis;
         if (current?.key === key && current.runId === results.id) return this.#upToDate();
+        this.#lastAnalysisRequestAt = this.#now();
         const summary = await run.view(
           this.#viewInput(results.space, results.mode),
           this.#summaryRequest(true),
@@ -1659,9 +1728,12 @@ export class OptimizationSession implements Observable<OptimizationState> {
 
   /** Nothing to compute: an error from a request since replaced no longer applies. */
   #upToDate(): void {
-    if (this.#analysisError === null) return;
-    this.#analysisError = null;
-    this.#publish();
+    if (this.#analysisError !== null) {
+      this.#analysisError = null;
+      this.#publish();
+    }
+    // A ranking change undone before its reply can reuse this analysis, but needs curves again.
+    this.#requestTopEquity();
   }
 
   #requestPlan(): void {
@@ -1728,6 +1800,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
     const request = new AbortController();
     this.#topRequest = request;
     this.#topKey = key;
+    this.#lastReproductionRequestAt = this.#now();
     this.#topEquity = { ...idleEquity, status: 'running', resultsId: results.id };
     this.#publish();
     void this.#reproduce(results, top, request);
@@ -1745,6 +1818,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
       while (queue.length && !request.signal.aborted) {
         const trial = queue.shift()!;
         try {
+          this.#lastReproductionRequestAt = this.#now();
           const output = await this.#pool.reproduce(
             source,
             common,
@@ -1857,6 +1931,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
     if (memo && memo.key.every((part, index) => part === key[index])) return memo.value;
     const ranked = this.#ranked(slot, mode, space);
     const value: ResultsViews = {
+      searchRows: (live ? live.snapshot : results!.computedWith).search.rows,
       inProgress: !!live,
       unvalidated: mode === 'none',
       mode,
@@ -1896,6 +1971,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
     const selection = selectionKey(settings);
     const { stability, map } = data;
     const value: WalkForwardView = {
+      searchRows: data.snapshot.search.rows,
       inProgress: !!live,
       pending: data.windows.some((window) => window.choice && window.choice.key !== selection),
       windows: rows,

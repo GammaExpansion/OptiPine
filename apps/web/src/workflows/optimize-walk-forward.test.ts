@@ -443,6 +443,8 @@ test('a ranking change chooses every window again and reruns only the sets that 
   const before = walkForward(h);
   const reruns = h.pool.reproductions.length;
   h.session.setDirection('minimize');
+  // Walk-forward results draw no Top 20 curves, so none are awaited.
+  assert.equal(h.session.getState().topEquity.status, 'idle');
   await settle();
   assert.deepEqual(h.analysis.kinds, ['choose']);
   assert.equal(walkForward(h).pending, true);
@@ -521,13 +523,19 @@ test('selecting a window gives its set to preview; the map shows it or the mean 
   await h.engine.answerAll();
   await preview;
   const previewed = h.backtest.getState().preview!;
-  assert.deepEqual(previewed.origin, view.selection!.origin);
+  // Each origin carries the run's search rows, so its values read as this run searched them.
+  assert.deepEqual(previewed.origin, { ...view.selection!.origin, searchRows: view.searchRows });
+  assert.equal(view.searchRows, state.results!.computedWith.search.rows);
   assert.deepEqual({ ...previewed.set }, { ...view.windows[1].parameters });
   const apply = h.session.applyFixedParameters();
   await h.engine.answerAll();
   await apply;
   const { applied, inputs } = h.backtest.getState();
-  assert.deepEqual(applied?.origin, { kind: 'fixed', optimizationId: state.results!.id });
+  assert.deepEqual(applied?.origin, {
+    kind: 'fixed',
+    optimizationId: state.results!.id,
+    searchRows: view.searchRows,
+  });
   const fixed = view.fixed!.parameters;
   for (const field of inputs) assert.equal(field.value, fixed[field.descriptor.title]);
   // Neither moves the ranges the run took, so the results stay current.

@@ -195,7 +195,8 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
 
   const beforePreview = await page.evaluate(() => {
     const hooks = window as unknown as Hooks;
-    return { inputs: hooks.backtest().inputs, selection: hooks.wf().walkForward!.selection };
+    const view = hooks.wf().walkForward!;
+    return { inputs: hooks.backtest().inputs, selection: view.selection, rows: view.searchRows };
   });
   await page.getByRole('button', { name: 'View backtest', exact: true }).click();
   await expect
@@ -217,11 +218,18 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
     page: 'backtest',
     inputs: beforePreview.inputs,
     set: beforePreview.selection!.window.parameters,
-    origin: beforePreview.selection!.origin,
+    // The origin keeps the run's search rows, so the banner reads the values as it searched them.
+    origin: { ...beforePreview.selection!.origin, searchRows: beforePreview.rows },
   });
+  await expect(
+    page.getByText(
+      `Previewing the parameters of optimization result W${beforePreview.selection!.window.plan.index + 1}`,
+    ),
+  ).toBeVisible();
   await page.screenshot({ path: info.outputPath('B16-preview-en.png') });
   await page.getByRole('button', { name: 'Optimize', exact: true }).click();
   const fixed = await page.evaluate(() => (window as unknown as Hooks).wf().walkForward!.fixed);
+  const rows = await page.evaluate(() => (window as unknown as Hooks).wf().walkForward!.searchRows);
   expect(fixed).not.toBeNull();
   await page.getByRole('button', { name: 'Apply to inputs', exact: true }).click();
   await expect
@@ -241,7 +249,15 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
         preview: hooks.backtest().preview,
       };
     }),
-  ).toEqual({ page: 'backtest', inputs: fixed!.parameters, origin: fixed!.origin, preview: null });
+  ).toEqual({
+    page: 'backtest',
+    inputs: fixed!.parameters,
+    origin: { ...fixed!.origin, searchRows: rows },
+    preview: null,
+  });
+  await expect(
+    page.getByText('Applied the parameters of fixed set and re-ran the backtest'),
+  ).toBeVisible();
   await page.screenshot({ path: info.outputPath('B17-applied-en.png') });
   await page.getByRole('button', { name: 'Optimize', exact: true }).click();
 

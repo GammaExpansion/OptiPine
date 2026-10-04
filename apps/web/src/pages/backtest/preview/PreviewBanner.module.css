@@ -1,0 +1,26 @@
+.banner {
+  border-radius: 0;
+  border-width: 0 0 1px;
+  padding: 9px 12px 9px 16px;
+  flex-wrap: wrap;
+}
+.parameters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.banner > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 70;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+}

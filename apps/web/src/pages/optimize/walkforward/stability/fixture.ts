@@ -1,10 +1,26 @@
+import { describe } from '@pine/engine';
 import { prepareHeatmap, type AnalysisValue } from '@pine/optimizer';
+import { searchSetup } from '../../../../workflows/optimize-setup.ts';
 import type {
   StabilityRow,
   WalkForwardView,
   WindowMapView,
   WindowResult,
 } from '../../../../workflows/walk-forward.ts';
+
+/** The inputs the picks below searched, in declaration order and at their steps, as a run saw them. */
+export const fixtureSearchRows = searchSetup(
+  describe(`//@version=6
+strategy("Fixture")
+length = input.int(20, "Length", minval=5, maxval=200)
+mult = input.float(2.0, "Multiplier", step=0.25)
+src = input.source(close, "Source")
+trailing = input.bool(false, "Use trailing stop")
+`).inputs,
+  new Map(),
+  {},
+  { method: 'grid', count: 2000, seed: 42 },
+).rows;
 
 const lengthValues = Array.from({ length: 19 }, (_, index) => index + 18);
 const multipliers = [1.5, 1.75, 2, 2.25, 2.5, 2.75];
@@ -110,6 +126,7 @@ export function stabilityFixture(tolerance = 0.1): WalkForwardView {
     },
   ];
   const view: WalkForwardView = {
+    searchRows: fixtureSearchRows,
     inProgress: false,
     pending: false,
     windows,
