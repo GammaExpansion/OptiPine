@@ -32,6 +32,8 @@ async function anchoredWindowReference() {
   const common: RunInput = { bars, syminfo: meta.syminfo, timeframe: meta.timeframe };
   assert.equal(bars.length, 1822);
   let capital = 100000;
+  let inCapital = 100000;
+  let inSeconds = 0;
   const windows = [0, 2, 4, 6].map((offset, index) => {
     // Anchored windows keep January as the IS start; only the IS end advances.
     const start = Date.UTC(2015, 0, 1) / 1000;
@@ -68,6 +70,9 @@ async function anchoredWindowReference() {
     const initial = metric(outResult.metrics, 'Performance/Initial capital/All USD')!;
     const startCapital = capital;
     capital = outsideAccount.equity.at(-1)! - initial + startCapital;
+    inCapital +=
+      inResult.equity.at(-1)! - metric(inResult.metrics, 'Performance/Initial capital/All USD')!;
+    inSeconds += inside.at(-1)!.time - inside[0].time;
     const inCagr = cagr(best.metrics),
       outCagr = cagr(outResult.metrics);
     const end = Math.min(plannedEnd, bars.at(-1)!.time + 3600);
@@ -81,6 +86,7 @@ async function anchoredWindowReference() {
       inBars: inside.length,
       outBars: outside.length,
       lastBar: outside.at(-1)!.time,
+      firstBar: outside[0].time,
       parameters: best.inputs,
       trialId: best.trialId,
       trials,
@@ -90,7 +96,7 @@ async function anchoredWindowReference() {
       outTrades: trades(outResult.metrics),
       inCagr,
       outCagr,
-      wfe: inCagr !== null && inCagr !== 0 && outCagr !== null ? outCagr / inCagr : null,
+      wfe: inCagr !== null && inCagr > 0 && outCagr !== null ? outCagr / inCagr : null,
       inMetrics: best.metrics,
       outMetrics: outResult.metrics,
       startCapital,
@@ -103,15 +109,16 @@ async function anchoredWindowReference() {
     windows.some((window) => window[key] === null)
       ? null
       : windows.reduce((total, window) => total + window[key]!, 0);
-  const inCagr = sum('inCagr'),
-    outCagr = sum('outCagr');
+  const inCagr = ((inCapital / 100000) ** ((365 * 86400) / inSeconds) - 1) * 100;
+  const outSeconds = windows.at(-1)!.lastBar - windows[0].firstBar;
+  const outCagr = ((capital / 100000) ** ((365 * 86400) / outSeconds) - 1) * 100;
   const totals = {
     inNet: sum('inNet'),
     outNet: sum('outNet'),
     inTrades: sum('inTrades'),
     outTrades: sum('outTrades'),
     winningWindows: windows.filter((window) => window.outNet !== null && window.outNet > 0).length,
-    wfe: inCagr !== null && inCagr !== 0 && outCagr !== null ? outCagr / inCagr : null,
+    wfe: inCagr > 0 ? outCagr / inCagr : null,
     endCapital: capital,
   };
   // There is one searched parameter, so each fixed-value profile is a direct run score.

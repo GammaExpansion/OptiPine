@@ -166,7 +166,7 @@ test('real engine windows reoptimize, aggregate net and trades, and use percent 
     const inAnnualized = metricValue(expectedIn.metrics, 'Annualized return (CAGR)', 'All', true);
     assert.equal(
       window.wfe,
-      outAnnualized !== null && inAnnualized !== null && inAnnualized !== 0
+      outAnnualized !== null && inAnnualized !== null && inAnnualized > 0
         ? outAnnualized / inAnnualized
         : null,
     );
@@ -183,10 +183,10 @@ test('real engine windows reoptimize, aggregate net and trades, and use percent 
   assert.equal(result.totals.inSampleNet, sum('inSampleNet'));
   assert.equal(result.totals.outOfSampleNet, sum('outOfSampleNet'));
   assert.equal(result.totals.outOfSampleTrades, sum('outOfSampleTrades'));
-  assert.equal(
+  assert.notEqual(
     result.totals.wfe,
     null,
-    'the one-bar tail has no CAGR, so aggregate WFE stays unknown',
+    'the one-bar tail has no CAGR, but the complete stitched account can be annualized',
   );
   assert.notEqual(
     result.totals.wfe,
