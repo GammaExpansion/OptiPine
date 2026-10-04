@@ -3,7 +3,7 @@ import { Icon } from '../../components/Icon.tsx';
 import { TextInput } from '../../components/TextInput.tsx';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { expectedBarCount, presetRange, rangeDates } from '../../workflows/market-data.ts';
-import type { Selection } from './selection.ts';
+import type { Selection } from '../../workflows/market-selection.ts';
 import styles from './DataDialog.module.css';
 
 export function RangeFields({

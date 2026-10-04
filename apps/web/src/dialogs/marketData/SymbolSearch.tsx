@@ -1,14 +1,13 @@
 ﻿import { useEffect, useId, useState } from 'react';
-import type { Feed, FeedSymbol } from '@pine/market-data';
-import { errorText, type Text } from '@pine/messages';
+import type { Feed } from '@pine/market-data';
 import { Icon } from '../../components/Icon.tsx';
 import { Note } from '../../components/Note.tsx';
 import { TextInput } from '../../components/TextInput.tsx';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
-import { getServices } from '../../state/services.ts';
+import { useMarketDataDialogStore } from '../../state/marketDataDialog.ts';
 import styles from './DataDialog.module.css';
 
-/** Remote search owns its query, cancellation and keyboard navigation; a selection invalidates the preview. */
+/** The store owns requests; the field owns suggestion visibility and keyboard navigation. */
 export function SymbolSearch({
   feed,
   value,
@@ -23,41 +22,20 @@ export function SymbolSearch({
   const { t, text } = useI18n();
   const id = useId();
   const [open, setOpen] = useState(false);
-  const [results, setResults] = useState<FeedSymbol[]>([]);
+  const results = useMarketDataDialogStore((state) => state.results);
   const [active, setActive] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [failure, setFailure] = useState<Text | null>(null);
+  const loading = useMarketDataDialogStore((state) => state.loading);
+  const failure = useMarketDataDialogStore((state) => state.failure);
+  const actions = useMarketDataDialogStore((state) => state.actions);
+  useEffect(() => actions.resetSearch, [actions]);
   useEffect(() => {
     if (open) document.getElementById(`${id}-${active}`)?.scrollIntoView?.({ block: 'nearest' });
   }, [active, id, open]);
   useEffect(() => {
-    setResults([]);
     setActive(0);
-    if (!open || disabled || !value.trim()) {
-      setLoading(false);
-      return;
-    }
-    setFailure(null);
-    const controller = new AbortController();
-    setLoading(true);
-    const timer = setTimeout(() => {
-      void getServices()
-        .feed.search(feed, value.trim(), controller.signal)
-        .then((symbols) => {
-          if (!controller.signal.aborted) setResults(symbols);
-        })
-        .catch((error: unknown) => {
-          if (!controller.signal.aborted) setFailure(errorText(error));
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) setLoading(false);
-        });
-    }, 180);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [disabled, feed, open, value]);
+    actions.search(feed, value, open && !disabled);
+    return actions.cancelSearch;
+  }, [actions, disabled, feed, open, value]);
   const choose = (symbol: string) => {
     onChange(symbol);
     setOpen(false);
