@@ -82,6 +82,30 @@ async function open(page: Page, language: 'en' | 'zh', state: State) {
  * horizontal scroll. Content inside a region that scrolls, such as code or a wide table, is not
  * clipped: it scrolls.
  */
+/** Price legend entries the chart's own tools (trade markers, reset zoom) cover. */
+function legendUnderTools() {
+  const chart = document.querySelector('[data-testid="price-chart"]');
+  if (!chart) return [];
+  const tools = [...chart.parentElement!.querySelectorAll('button')]
+    .filter((button) => !chart.contains(button))
+    .map((button) => button.getBoundingClientRect());
+  const entries = [...chart.firstElementChild!.querySelectorAll('span')].filter(
+    (span) => !span.querySelector('span') && span.textContent?.trim(),
+  );
+  return entries
+    .filter((entry) => {
+      const box = entry.getBoundingClientRect();
+      return tools.some(
+        (tool) =>
+          box.left < tool.right &&
+          box.right > tool.left &&
+          box.top < tool.bottom &&
+          box.bottom > tool.top,
+      );
+    })
+    .map((entry) => entry.textContent!.trim());
+}
+
 function layoutProblems() {
   const problems: string[] = [];
   const page = document.scrollingElement!;
@@ -146,6 +170,8 @@ for (const language of ['en', 'zh'] as const)
         await page.waitForTimeout(300);
         await page.screenshot({ path: info.outputPath(`${state}-${size.name}-${language}.png`) });
         expect(await page.evaluate(layoutProblems), state).toEqual([]);
+        // On a phone the legend wraps before the chart's tools rather than under them (#30).
+        if (state === 'B1') expect(await page.evaluate(legendUnderTools)).toEqual([]);
         // A phone shows W1's regions one per tab (G4); each is checked on its own.
         if (state === 'W1' && size.name === 'phone')
           for (const tab of ['windows', 'stability'] as const) {
