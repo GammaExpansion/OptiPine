@@ -719,6 +719,8 @@ export const zh = {
   feedTooManyBars: '单次最多获取 {count} 根 K 线，请缩短区间。',
   feedUpstreamDetail: '数据源拒绝了请求：{detail}',
   feedYahooInstrument: '暂不支持此 Yahoo Finance 品种。',
+  feedYahooOhlc:
+    'Yahoo 返回的 {symbol} 的 OHLC 存在不一致，超出 {percent}% 的修正上限。受影响天数：{count}；最近日期：{date}。请选择起始日期晚于 {date} 的范围，或使用其他数据源。',
   feedYahooRange: 'Yahoo Finance 将此周期限制在最近 {days} 天内。',
   importCalendar: '交易日历',
   importNotReady: '请先预览数据再使用。',
@@ -905,7 +907,9 @@ export const zh = {
   'data.from': '从',
   'data.to': '至',
   'data.limits': '单次最多 100,000 根，仅加载已收盘的 K 线。',
-  'data.yahooLimits': 'Yahoo 历史范围：1小时与日线为 729 天；较短日内周期为 59 天。',
+  'data.yahooLimits': 'Yahoo 历史范围：1小时为 730 天；较短日内周期为 60 天；日线可获取全部历史。',
+  'data.calendarEstimated':
+    '较早的日线收盘时间按 Yahoo 当前常规交易时段估算，可能与历史提前收盘或交易时段变更不符。',
   'data.limited': '此预设已缩短至数据源支持的历史范围。',
   'data.fetch': '获取数据',
   'data.use': '使用此数据',
@@ -915,6 +919,7 @@ export const zh = {
   'data.fetching': '正在获取 {symbol} {timeframe}',
   'data.fetchingAbout': '正在获取约 {count} 根 K 线',
   'data.previewFor': '预览 · {symbol}，{timeframe}',
+  'data.previewTimeframe': '预览 · {timeframe}',
   'data.previewHint': '选择品种与日期并获取数据后，此处显示预览',
   'data.pricePreview': '所选区间的收盘价',
   'data.cached': '已缓存，5 分钟内有效',
@@ -934,6 +939,8 @@ export const zh = {
   'data.profile.timezone': '时区',
   'data.serverNote': '行情由服务端获取；脚本与回测仅在浏览器本地运行',
   'data.unadjusted': '价格采用数据源 OHLC，不另行复权。',
+  'data.ohlcNormalized':
+    '已扩大 {count} 根 Yahoo 外汇 K 线的最高价/最低价以包含开盘价/收盘价（幅度不超过 0.05%）。开盘价、收盘价和成交量未改动。',
   'data.estimated':
     'Yahoo 未提供交易规则：最小变动价位按报价精度估算，合约乘数与最小下单量默认为 1，请在使用前核对。',
   'data.refusedBy': '{provider} 拒绝了请求',
@@ -981,6 +988,8 @@ export const zh = {
   'csv.hint':
     '可拖放 TradingView「导出图表数据」CSV：time、open、high、low、close 和 Volume。time 为 Unix 秒；其它列将被忽略。',
   'csv.timeframeHint': 'Pine 单位，如 60 或 1D',
+  'csv.timeframeMismatch':
+    'K 线最常见的间隔为 {minutes} 分钟，所选周期为 {timeframe}。请核对周期；休市或缺失 K 线也可能改变间隔。',
   'csv.type': '品种类型',
   'csv.type.crypto': '加密货币',
   'csv.type.stock': '股票',

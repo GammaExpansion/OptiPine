@@ -1,0 +1,382 @@
+{
+  "recordedAt": "2026-10-04T02:49:19Z",
+  "probes": [
+    {
+      "interval": "1m",
+      "period1": 1721962159,
+      "period2": 1791082159,
+      "response": {
+        "chart": {
+          "result": null,
+          "error": {
+            "code": "Unprocessable Entity",
+            "description": "1m data not available for startTime=1721962159 and endTime=1791082158. Only 8 days worth of 1m granularity data are allowed to be fetched per request."
+          }
+        }
+      }
+    },
+    {
+      "interval": "2m",
+      "period1": 1721962159,
+      "period2": 1791082159,
+      "response": {
+        "chart": {
+          "result": null,
+          "error": {
+            "code": "Unprocessable Entity",
+            "description": "2m data not available for startTime=1721962159 and endTime=1791082158. The requested range must be within the last 60 days."
+          }
+        }
+      }
+    },
+    {
+      "interval": "5m",
+      "period1": 1721962159,
+      "period2": 1791082159,
+      "response": {
+        "chart": {
+          "result": null,
+          "error": {
+            "code": "Unprocessable Entity",
+            "description": "5m data not available for startTime=1721962159 and endTime=1791082158. The requested range must be within the last 60 days."
+          }
+        }
+      }
+    },
+    {
+      "interval": "15m",
+      "period1": 1721962159,
+      "period2": 1791082159,
+      "response": {
+        "chart": {
+          "result": null,
+          "error": {
+            "code": "Unprocessable Entity",
+            "description": "15m data not available for startTime=1721962159 and endTime=1791082158. The requested range must be within the last 60 days."
+          }
+        }
+      }
+    },
+    {
+      "interval": "30m",
+      "period1": 1721962159,
+      "period2": 1791082159,
+      "response": {
+        "chart": {
+          "result": null,
+          "error": {
+            "code": "Unprocessable Entity",
+            "description": "30m data not available for startTime=1721962159 and endTime=1791082159. The requested range must be within the last 60 days."
+          }
+        }
+      }
+    },
+    {
+      "interval": "60m",
+      "period1": 1721962159,
+      "period2": 1791082159,
+      "response": {
+        "chart": {
+          "result": null,
+          "error": {
+            "code": "Unprocessable Entity",
+            "description": "1h data not available for startTime=1721962159 and endTime=1791082159. The requested range must be within the last 730 days."
+          }
+        }
+      }
+    },
+    {
+      "interval": "90m",
+      "period1": 1721962159,
+      "period2": 1791082159,
+      "response": {
+        "chart": {
+          "result": null,
+          "error": {
+            "code": "Unprocessable Entity",
+            "description": "90m data not available for startTime=1721962159 and endTime=1791082159. The requested range must be within the last 60 days."
+          }
+        }
+      }
+    },
+    {
+      "interval": "1d",
+      "period1": 0,
+      "period2": 1444176000,
+      "response": {
+        "chart": {
+          "result": [
+            {
+              "meta": {
+                "currency": "USD",
+                "symbol": "AAPL",
+                "exchangeName": "NMS",
+                "fullExchangeName": "NasdaqGS",
+                "instrumentType": "EQUITY",
+                "firstTradeDate": 345479400,
+                "regularMarketTime": 1790971201,
+                "hasPrePostMarketData": true,
+                "gmtoffset": -14400,
+                "timezone": "EDT",
+                "exchangeTimezoneName": "America/New_York",
+                "regularMarketPrice": 333.69,
+                "regularMarketChangePercent": 1.02,
+                "fulldayPrice": 333.54,
+                "fulldayChange": 3.37,
+                "fulldayChangePercent": 1.02,
+                "fiftyTwoWeekHigh": 345.34,
+                "fiftyTwoWeekLow": 243.42,
+                "regularMarketDayHigh": 334.54,
+                "regularMarketDayLow": 330.61,
+                "regularMarketVolume": 31878433,
+                "longName": "Apple Inc.",
+                "shortName": "Apple Inc.",
+                "chartPreviousClose": 0.128,
+                "priceHint": 2,
+                "currentTradingPeriod": {
+                  "pre": {
+                    "timezone": "EDT",
+                    "start": 1790928000,
+                    "end": 1790947800,
+                    "gmtoffset": -14400
+                  },
+                  "regular": {
+                    "timezone": "EDT",
+                    "start": 1790947800,
+                    "end": 1790971200,
+                    "gmtoffset": -14400
+                  },
+                  "post": {
+                    "timezone": "EDT",
+                    "start": 1790971200,
+                    "end": 1790985600,
+                    "gmtoffset": -14400
+                  }
+                },
+                "dataGranularity": "1d",
+                "range": "",
+                "validRanges": [
+                  "1d",
+                  "5d",
+                  "1mo",
+                  "3mo",
+                  "6mo",
+                  "1y",
+                  "2y",
+                  "5y",
+                  "10y",
+                  "ytd",
+                  "max"
+                ]
+              },
+              "timestamp": [345479400, 345738600, 1444138200],
+              "indicators": {
+                "quote": [
+                  {
+                    "high": [0.1289059966802597, 0.12221000343561172, 27.934999465942383],
+                    "open": [0.1283479928970337, 0.12221000343561172, 27.657499313354492],
+                    "volume": [469033600, 175884800, 192787200],
+                    "close": [0.1283479928970337, 0.12165199965238571, 27.827499389648438],
+                    "low": [0.1283479928970337, 0.12165199965238571, 27.4424991607666]
+                  }
+                ],
+                "adjclose": [
+                  {
+                    "adjclose": [0.09812238067388535, 0.09300331026315689, 24.92214012145996]
+                  }
+                ]
+              }
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
+      "interval": "1wk",
+      "period1": 0,
+      "period2": 1444176000,
+      "response": {
+        "chart": {
+          "result": [
+            {
+              "meta": {
+                "currency": "USD",
+                "symbol": "AAPL",
+                "exchangeName": "NMS",
+                "fullExchangeName": "NasdaqGS",
+                "instrumentType": "EQUITY",
+                "firstTradeDate": 345479400,
+                "regularMarketTime": 1790971201,
+                "hasPrePostMarketData": true,
+                "gmtoffset": -14400,
+                "timezone": "EDT",
+                "exchangeTimezoneName": "America/New_York",
+                "regularMarketPrice": 333.69,
+                "regularMarketChangePercent": 1.02,
+                "fulldayPrice": 333.54,
+                "fulldayChange": 3.37,
+                "fulldayChangePercent": 1.02,
+                "fiftyTwoWeekHigh": 345.34,
+                "fiftyTwoWeekLow": 243.42,
+                "regularMarketDayHigh": 334.54,
+                "regularMarketDayLow": 330.61,
+                "regularMarketVolume": 31878433,
+                "longName": "Apple Inc.",
+                "shortName": "Apple Inc.",
+                "chartPreviousClose": 0.128,
+                "priceHint": 2,
+                "currentTradingPeriod": {
+                  "pre": {
+                    "timezone": "EDT",
+                    "start": 1790928000,
+                    "end": 1790947800,
+                    "gmtoffset": -14400
+                  },
+                  "regular": {
+                    "timezone": "EDT",
+                    "start": 1790947800,
+                    "end": 1790971200,
+                    "gmtoffset": -14400
+                  },
+                  "post": {
+                    "timezone": "EDT",
+                    "start": 1790971200,
+                    "end": 1790985600,
+                    "gmtoffset": -14400
+                  }
+                },
+                "dataGranularity": "1wk",
+                "range": "",
+                "validRanges": [
+                  "1d",
+                  "5d",
+                  "1mo",
+                  "3mo",
+                  "6mo",
+                  "1y",
+                  "2y",
+                  "5y",
+                  "10y",
+                  "ytd",
+                  "max"
+                ]
+              },
+              "timestamp": [345099600, 345704400, 1444017600],
+              "indicators": {
+                "quote": [
+                  {
+                    "high": [0.1289059966802597, 0.12667399644851685, 27.934999465942383],
+                    "low": [0.1283479928970337, 0.11272300034761429, 27.267499923706055],
+                    "open": [0.1283479928970337, 0.12221000343561172, 27.469999313354492],
+                    "close": [0.1283479928970337, 0.12611599266529083, 27.827499389648438],
+                    "volume": [469033600, 490134400, 401046000]
+                  }
+                ],
+                "adjclose": [
+                  {
+                    "adjclose": [0.09812238812446594, 0.09641603380441666, 24.922142028808594]
+                  }
+                ]
+              }
+            }
+          ],
+          "error": null
+        }
+      }
+    },
+    {
+      "interval": "1mo",
+      "period1": 0,
+      "period2": 1444176000,
+      "response": {
+        "chart": {
+          "result": [
+            {
+              "meta": {
+                "currency": "USD",
+                "symbol": "AAPL",
+                "exchangeName": "NMS",
+                "fullExchangeName": "NasdaqGS",
+                "instrumentType": "EQUITY",
+                "firstTradeDate": 345479400,
+                "regularMarketTime": 1790971201,
+                "hasPrePostMarketData": true,
+                "gmtoffset": -14400,
+                "timezone": "EDT",
+                "exchangeTimezoneName": "America/New_York",
+                "regularMarketPrice": 333.69,
+                "regularMarketChangePercent": 1.02,
+                "fulldayPrice": 333.54,
+                "fulldayChange": 3.37,
+                "fulldayChangePercent": 1.02,
+                "fiftyTwoWeekHigh": 345.34,
+                "fiftyTwoWeekLow": 243.42,
+                "regularMarketDayHigh": 334.54,
+                "regularMarketDayLow": 330.61,
+                "regularMarketVolume": 31878433,
+                "longName": "Apple Inc.",
+                "shortName": "Apple Inc.",
+                "chartPreviousClose": 0.128,
+                "priceHint": 2,
+                "currentTradingPeriod": {
+                  "pre": {
+                    "timezone": "EDT",
+                    "end": 1790947800,
+                    "start": 1790928000,
+                    "gmtoffset": -14400
+                  },
+                  "regular": {
+                    "timezone": "EDT",
+                    "end": 1790971200,
+                    "start": 1790947800,
+                    "gmtoffset": -14400
+                  },
+                  "post": {
+                    "timezone": "EDT",
+                    "end": 1790985600,
+                    "start": 1790971200,
+                    "gmtoffset": -14400
+                  }
+                },
+                "dataGranularity": "1mo",
+                "range": "",
+                "validRanges": [
+                  "1d",
+                  "5d",
+                  "1mo",
+                  "3mo",
+                  "6mo",
+                  "1y",
+                  "2y",
+                  "5y",
+                  "10y",
+                  "ytd",
+                  "max"
+                ]
+              },
+              "timestamp": [473403600, 476082000, 1443672000],
+              "indicators": {
+                "quote": [
+                  {
+                    "close": [0.12946400046348572, 0.11049100011587143, 29.875],
+                    "low": [0.12444200366735458, 0.11049100011587143, 26.827499389648438],
+                    "open": [0.13002200424671173, 0.12946400046348572, 27.267499923706055],
+                    "high": [0.13895100355148315, 0.1372770071029663, 30.30500030517578],
+                    "volume": [6366416000, 4733388800, 4450048400]
+                  }
+                ],
+                "adjclose": [
+                  {
+                    "adjclose": [0.09897559136152267, 0.08447069674730301, 26.755870819091797]
+                  }
+                ]
+              }
+            }
+          ],
+          "error": null
+        }
+      }
+    }
+  ]
+}

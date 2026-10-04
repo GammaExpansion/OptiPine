@@ -9,6 +9,7 @@ import styles from './DataDialog.module.css';
 export function PreviewSummary({ input, badge }: { input: DatasetInput; badge: string }) {
   const { t } = useI18n();
   const { bars, sessionCalendar } = input;
+  const symbol = String(input.syminfo.ticker ?? input.syminfo.tickerid ?? '').trim();
   const points = previewPoints(bars, 440, 100);
   const days = sessionCalendar
     ? new Set(sessionCalendar.sessions.map((session) => session.tradingDay)).size
@@ -17,8 +18,8 @@ export function PreviewSummary({ input, badge }: { input: DatasetInput; badge: s
     <>
       <div className={styles.previewHead}>
         <strong>
-          {t('data.previewFor', {
-            symbol: String(input.syminfo.ticker ?? input.syminfo.tickerid ?? ''),
+          {t(symbol ? 'data.previewFor' : 'data.previewTimeframe', {
+            symbol,
             timeframe: timeframeIds[input.timeframe]
               ? t(timeframeIds[input.timeframe])
               : input.timeframe,

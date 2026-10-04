@@ -1,0 +1,410 @@
+{
+  "symbols": [
+    {
+      "symbol": "AAVEBTC",
+      "baseAsset": "AAVE",
+      "quoteAsset": "BTC",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ADABTC",
+      "baseAsset": "ADA",
+      "quoteAsset": "BTC",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ARBBTC",
+      "baseAsset": "ARB",
+      "quoteAsset": "BTC",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ATOMBTC",
+      "baseAsset": "ATOM",
+      "quoteAsset": "BTC",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "AVAXBTC",
+      "baseAsset": "AVAX",
+      "quoteAsset": "BTC",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BCHBTC",
+      "baseAsset": "BCH",
+      "quoteAsset": "BTC",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BNBBTC",
+      "baseAsset": "BNB",
+      "quoteAsset": "BTC",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BTCARS",
+      "baseAsset": "BTC",
+      "quoteAsset": "ARS",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BTCBRL",
+      "baseAsset": "BTC",
+      "quoteAsset": "BRL",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BTCEUR",
+      "baseAsset": "BTC",
+      "quoteAsset": "EUR",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BTCFDUSD",
+      "baseAsset": "BTC",
+      "quoteAsset": "FDUSD",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BTCIDR",
+      "baseAsset": "BTC",
+      "quoteAsset": "IDR",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BTCJPY",
+      "baseAsset": "BTC",
+      "quoteAsset": "JPY",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BTCMXN",
+      "baseAsset": "BTC",
+      "quoteAsset": "MXN",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BTCUSDT",
+      "baseAsset": "BTC",
+      "quoteAsset": "USDT",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BTCUSDC",
+      "baseAsset": "BTC",
+      "quoteAsset": "USDC",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BTCTRY",
+      "baseAsset": "BTC",
+      "quoteAsset": "TRY",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BTCUSD",
+      "baseAsset": "BTC",
+      "quoteAsset": "USD",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BTCUSD1",
+      "baseAsset": "BTC",
+      "quoteAsset": "USD1",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BTCU",
+      "baseAsset": "BTC",
+      "quoteAsset": "U",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BTCUSDS",
+      "baseAsset": "BTC",
+      "quoteAsset": "USDS",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "AAVEETH",
+      "baseAsset": "AAVE",
+      "quoteAsset": "ETH",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ADAETH",
+      "baseAsset": "ADA",
+      "quoteAsset": "ETH",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ARBETH",
+      "baseAsset": "ARB",
+      "quoteAsset": "ETH",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "BNBETH",
+      "baseAsset": "BNB",
+      "quoteAsset": "ETH",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHARS",
+      "baseAsset": "ETH",
+      "quoteAsset": "ARS",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHBRL",
+      "baseAsset": "ETH",
+      "quoteAsset": "BRL",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHBTC",
+      "baseAsset": "ETH",
+      "quoteAsset": "BTC",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHEUR",
+      "baseAsset": "ETH",
+      "quoteAsset": "EUR",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHFDUSD",
+      "baseAsset": "ETH",
+      "quoteAsset": "FDUSD",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHFITRY",
+      "baseAsset": "ETHFI",
+      "quoteAsset": "TRY",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHFIUSDC",
+      "baseAsset": "ETHFI",
+      "quoteAsset": "USDC",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHFIUSDT",
+      "baseAsset": "ETHFI",
+      "quoteAsset": "USDT",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHIDR",
+      "baseAsset": "ETH",
+      "quoteAsset": "IDR",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHJPY",
+      "baseAsset": "ETH",
+      "quoteAsset": "JPY",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHUSDT",
+      "baseAsset": "ETH",
+      "quoteAsset": "USDT",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHUSDC",
+      "baseAsset": "ETH",
+      "quoteAsset": "USDC",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHTRY",
+      "baseAsset": "ETH",
+      "quoteAsset": "TRY",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHMXN",
+      "baseAsset": "ETH",
+      "quoteAsset": "MXN",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHUSD1",
+      "baseAsset": "ETH",
+      "quoteAsset": "USD1",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHU",
+      "baseAsset": "ETH",
+      "quoteAsset": "U",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHUSD",
+      "baseAsset": "ETH",
+      "quoteAsset": "USD",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHUSDS",
+      "baseAsset": "ETH",
+      "quoteAsset": "USDS",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "ETHTHB",
+      "baseAsset": "ETH",
+      "quoteAsset": "THB",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "1MBABYDOGETRY",
+      "baseAsset": "1MBABYDOGE",
+      "quoteAsset": "TRY",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "1MBABYDOGEUSDC",
+      "baseAsset": "1MBABYDOGE",
+      "quoteAsset": "USDC",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "1MBABYDOGEUSDT",
+      "baseAsset": "1MBABYDOGE",
+      "quoteAsset": "USDT",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "DOGEBRL",
+      "baseAsset": "DOGE",
+      "quoteAsset": "BRL",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "DOGEBTC",
+      "baseAsset": "DOGE",
+      "quoteAsset": "BTC",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "DOGEEUR",
+      "baseAsset": "DOGE",
+      "quoteAsset": "EUR",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "DOGEFDUSD",
+      "baseAsset": "DOGE",
+      "quoteAsset": "FDUSD",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "DOGEIDR",
+      "baseAsset": "DOGE",
+      "quoteAsset": "IDR",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "DOGEJPY",
+      "baseAsset": "DOGE",
+      "quoteAsset": "JPY",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "DOGETRY",
+      "baseAsset": "DOGE",
+      "quoteAsset": "TRY",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "DOGEU",
+      "baseAsset": "DOGE",
+      "quoteAsset": "U",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "DOGEUSD1",
+      "baseAsset": "DOGE",
+      "quoteAsset": "USD1",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "DOGEUSDC",
+      "baseAsset": "DOGE",
+      "quoteAsset": "USDC",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    },
+    {
+      "symbol": "DOGEUSDT",
+      "baseAsset": "DOGE",
+      "quoteAsset": "USDT",
+      "status": "TRADING",
+      "isSpotTradingAllowed": true
+    }
+  ]
+}
