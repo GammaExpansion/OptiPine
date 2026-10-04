@@ -871,8 +871,8 @@ export const en = {
   'preview.title': 'Previewing the parameters of optimization result {set}',
   'preview.parameter': '{title} {value}',
   'preview.separator': ', ',
-  'preview.failed': 'failed set',
-  'preview.fixed': 'fixed set',
+  'preview.failedTitle': 'Previewing the parameters of a failed set',
+  'preview.fixedTitle': 'Previewing the fixed parameters for every window',
   'preview.unchanged': 'Current inputs are unchanged.',
   'preview.back': 'Back to optimization',
   'preview.apply': 'Set as current inputs',
@@ -880,6 +880,17 @@ export const en = {
   'preview.applying': 'Applied the parameters of {set}; running the backtest…',
   'preview.appliedFailed': 'Applied the parameters of {set}; the backtest failed',
   'preview.appliedCancelled': 'Applied the parameters of {set}; the backtest was cancelled',
+  'preview.failedApplied': 'Applied the parameters of a failed set and re-ran the backtest',
+  'preview.failedApplying': 'Applied the parameters of a failed set; running the backtest…',
+  'preview.failedAppliedFailed': 'Applied the parameters of a failed set; the backtest failed',
+  'preview.failedAppliedCancelled':
+    'Applied the parameters of a failed set; the backtest was cancelled',
+  'preview.fixedApplied': 'Applied the fixed parameters for every window and re-ran the backtest',
+  'preview.fixedApplying': 'Applied the fixed parameters for every window; running the backtest…',
+  'preview.fixedAppliedFailed':
+    'Applied the fixed parameters for every window; the backtest failed',
+  'preview.fixedAppliedCancelled':
+    'Applied the fixed parameters for every window; the backtest was cancelled',
   'preview.undo': 'Undo',
   'preview.undoHint': 'Restore the inputs and backtest from before applying this set',
   'preview.notifications': 'Notifications',
