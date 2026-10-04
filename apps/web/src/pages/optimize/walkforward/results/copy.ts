@@ -5,7 +5,7 @@ import { parameterText, searchedParameters } from '../../../../workflows/optimiz
 import type { SearchRow } from '../../../../workflows/optimize-setup.ts';
 
 /** Negatives take a true minus sign, as the leaderboard's figures do. */
-export const minus = (value: string) => value.replace('-', '−');
+const minus = (value: string) => value.replace('-', '−');
 
 export function windowLabel(index: number): Message {
   return message('optimize.wfResults.windowLabel', { number: index + 1 });
