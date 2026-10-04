@@ -1,9 +1,18 @@
 import { message } from '@pine/messages';
 import type { AnalysisValue, HeatmapCell, MetricConstraint } from '@pine/optimizer';
-import { filterMetricIds, reportMetrics } from '../../../workflows/optimize-ranking.ts';
+import {
+  filterMetricIds,
+  reportMetrics,
+  type Direction,
+} from '../../../workflows/optimize-ranking.ts';
 import { filterLabel } from '../filters/filter-label.ts';
 import { parameterText } from '../../../workflows/optimize-parameters.ts';
 import type { SearchRow } from '../../../workflows/optimize-setup.ts';
+
+/** The slice that takes the best value: Max, or Min when the objective is minimized (R4). */
+export function bestSlice(direction: Direction): 'optimize.map.max' | 'optimize.map.min' {
+  return direction === 'minimize' ? 'optimize.map.min' : 'optimize.map.max';
+}
 
 export function axisLabel(title: string, binSize: number) {
   return message(binSize > 1 ? 'optimize.map.binnedAxis' : 'optimize.map.axisTitle', {

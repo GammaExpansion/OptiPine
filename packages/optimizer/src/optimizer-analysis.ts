@@ -27,6 +27,8 @@ export interface OptimizerAnalysisInput {
   mode: 'none' | 'in-out' | 'walk-forward';
   objective: string;
   direction: 'maximize' | 'minimize';
+  /** The objective's break-even, which splits the maps' loss and profit colours (`HeatmapScale`). */
+  breakEven?: number;
   constraints: MetricConstraint[];
   /**
    * What ranks the sets: `in`, the objective's IS value (the default); `secondary`, the OOS value,
@@ -68,6 +70,7 @@ export function optimizerAnalysisInput(state: OptimizerAnalysisInput): Optimizer
     mode,
     objective,
     direction,
+    breakEven,
     constraints,
     rankBy,
     axes,
@@ -88,6 +91,7 @@ export function optimizerAnalysisInput(state: OptimizerAnalysisInput): Optimizer
     mode,
     objective,
     direction,
+    breakEven,
     constraints,
     rankBy,
     axes,
@@ -216,6 +220,7 @@ export function analyzeOptimizer(state: OptimizerAnalysisInput): OptimizerAnalys
         value: (trial: TrialRecord) =>
           surface === 'out' ? trial.outOfSampleValue : trial.inSampleValue,
         direction: state.direction,
+        breakEven: state.breakEven,
       };
       const map =
         surface === 'mean'

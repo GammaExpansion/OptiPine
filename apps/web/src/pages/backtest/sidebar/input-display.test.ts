@@ -1,7 +1,14 @@
 import { describe, sourceSeries as engineSeries } from '@pine/engine';
 import { expect, test } from 'vitest';
 import { translate } from '../../../i18n/translate.ts';
-import { inputFields, setInputValue, type InputField } from '../../../workflows/inputs.ts';
+import {
+  applyInputValues,
+  inputFields,
+  resetInputValues,
+  setInputValue,
+  type InputField,
+  type ParameterOrigin,
+} from '../../../workflows/inputs.ts';
 import {
   formatTime,
   inputControl,
@@ -93,6 +100,30 @@ test('edits parse to values, and unreadable text is sent as typed for the workfl
   expect(parseInputText(field('Start date').descriptor, '2024-02-29')).toBe(Date.UTC(2024, 1, 29));
   expect(parseInputText(field('Start date').descriptor, '2023-02-30')).toBe('2023-02-30');
   expect(parseInputText(field('Trade window').descriptor, '0930-1600')).toBe('0930-1600');
+});
+
+test('an applied value names its set beside the default until edited or reset (B17)', () => {
+  const rank: ParameterOrigin = { kind: 'rank', optimizationId: 1, trialId: 'a', rank: 1 };
+  const applied = applyInputValues(fields, { Length: 28, Multiplier: 2 }, rank);
+  expect(en(inputHint(byTitle(applied, 'Length')))).toBe('From #1, default 20');
+  expect(translate(inputHint(byTitle(applied, 'Length'))!, 'zh')).toBe('来自 #1，默认 20');
+  // A set value equal to the default changes nothing, so the caption stays the step (B17).
+  expect(en(inputHint(byTitle(applied, 'Multiplier')))).toBe('Step 0.25');
+  const hint = (origin: ParameterOrigin, language: 'en' | 'zh' = 'en') =>
+    translate(
+      inputHint(byTitle(applyInputValues(fields, { Length: 28 }, origin), 'Length'))!,
+      language,
+    );
+  expect(hint({ kind: 'window', optimizationId: 1, trialId: 'b', window: 2 })).toBe(
+    'From W3, default 20',
+  );
+  expect(hint({ kind: 'failed', optimizationId: 1, trialId: 'c' })).toBe(
+    'From a failed set, default 20',
+  );
+  expect(hint({ kind: 'fixed', optimizationId: 1 })).toBe('From the fixed parameters, default 20');
+  expect(hint({ kind: 'fixed', optimizationId: 1 }, 'zh')).toBe('来自固定参数，默认 20');
+  expect(en(inputHint(byTitle(setInputValue(applied, 'Length', 30), 'Length')))).toBe('Default 20');
+  expect(en(inputHint(byTitle(resetInputValues(applied), 'Length')))).toBe('5 – 200');
 });
 
 test('hints show the range or step, and the default once changed (B1, B14)', () => {

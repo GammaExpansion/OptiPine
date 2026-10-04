@@ -1,13 +1,14 @@
 # Parameter map and sensitivity
 
-`MapPanel.tsx` and `../sensitivity/SensitivityPanel.tsx` fill the setup task's existing slots.
-They read optimization snapshots and call the stable store actions. The workflow supplies all
+`MapPanel.tsx` and `../sensitivity/SensitivityPanel.tsx` are the Optimize page's map and
+sensitivity regions. They read optimization snapshots and call the stable store actions. The workflow supplies all
 aggregation, rank bins, smoothing, surfaces, selection, cell values, bin detail, curve values and
 sensitivity. View changes never start optimization.
 
 - `src/charts/optimize/` owns the map and single-input canvas renderers, drawing at device pixel
   ratio. A viewport-sized canvas draws visible Z layers; React never reconciles heatmap cells.
-  Geometry preserves 16 px squares and 2 px gaps, including in the full-resolution detail.
+  Geometry keeps 2 px gaps and 16 px squares, which a sparse single-layer map grows to fill its
+  panel (up to a 40 px pitch); the full-resolution detail keeps 16 px.
 - `CellValuesTable.tsx` shows IS/OOS and workflow means. Large bins mount only the visible rows.
   The hover remains open while the pointer enters its scrollable list. Live bins show the available
   aggregate and explain that individual values arrive after completion.
@@ -18,22 +19,23 @@ sensitivity. View changes never start optimization.
   Enter commits, Escape cancels. Focus follows the moved axis after analysis; a live region
   announces pickup, target, completion and cancellation.
 
-## Visual decisions and remaining limitation
+## Visual decisions
 
-Compared R1, R4, R6–R8 and R12 at 1440 × 900 in English and Chinese. Other phase-3 slots in this
-checkout are still stubs; screenshots therefore have empty summary/leaderboard areas and setup
-placeholders. Synthetic results differ from the mock's fixed examples.
+Compared R1, R4, R6–R8 and R12 at 1440 × 900 in English and Chinese. Synthetic results differ from
+the mock's fixed examples.
 
 The workflow assigns nine rank steps while the mock/tokens supply eight heat colors. The existing
-neutral divider color is inserted between the three loss colors and five profit colors. Numeric
-detail cells use compact amounts, with precise amounts in the value list. Input titles remain the
-script's own titles, so long titles wrap the controls instead of being shortened to the mock's
-handwritten aliases. Z layers scroll within the canvas viewport; pane sizes remain owned by Split.
+neutral divider color is inserted between the three loss colors and five profit colors, and marks
+the objective's break-even: losing cells take the loss colors and winning cells the profit colors
+(WEB.md 2.5). `LegendRamp` shows only the sides the cells fall on. Numeric detail cells use
+compact amounts, with precise amounts in the value list. Input titles remain the script's own
+titles, so long titles wrap the controls instead of being shortened to the mock's handwritten
+aliases. Z layers scroll within the canvas viewport; pane sizes remain owned by Split.
 
-The session only supplies bins capped at 24 values per axis. It has no action or analysis option
-for available pixel width. Narrow panes scroll horizontally instead of recomputing bins when fewer
-than 24 cells fit. Implementing that last WEB.md behavior requires an additive width/bin-limit
-option through the optimization workflow and package; neither was edited in this task.
+The map fits its panel: `fitMap` in `src/charts/optimize/geometry.ts` bins each axis again with
+`prepareHeatmap` to as many cells as fit the panel's width and height, at most 24, so a narrow
+pane averages more values per cell instead of scrolling. The walk-forward window map and the bin
+detail keep the analysis's 24-value bins and scroll.
 
 ## Verification
 
@@ -55,8 +57,8 @@ npx playwright test e2e/optimize-map.spec.ts --workers=2
 ```
 
 The browser tests use the dev server owned by the existing Playwright setup and the real Worker
-pool. They initialize a nine-combination grid and a 2,646-combination grid through store actions
-because the setup controls are a separate task. The clock and synthetic dataset are fixed; route
+pool. They open a script and synthetic bars and start a nine-combination grid and a dense grid
+through store actions. The clock and synthetic dataset are fixed; route
 interception refuses external requests and `/api/market`. Screenshots under `test-results/` include
 hover, detail, layers, pointer drag and the one-input curve in both languages. Assertions cover
 canvas pixel changes, changed smoothed values, stable run identity after view changes, selection,

@@ -2,15 +2,20 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Heatmap, HeatmapCell } from '@pine/optimizer';
 import { HeatmapCanvas, type CellHover } from '../../../charts/optimize/HeatmapCanvas.tsx';
-import { heatTokens } from '../../../charts/optimize/geometry.ts';
+import { LegendRamp } from '../../../charts/optimize/LegendRamp.tsx';
 import { Select } from '../../../components/Select.tsx';
 import { SegmentedControl } from '../../../components/SegmentedControl.tsx';
 import { ToggleSwitch } from '../../../components/ToggleSwitch.tsx';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
-import { formatNumber } from '../../../i18n/translate.ts';
 import { useOptimizationStore } from '../../../state/optimization.ts';
 import { cellValues } from '../../../workflows/optimize-views.ts';
-import { failedConstraintLabel, isBinnedCell, rangeLabel, valueLabel } from './map-labels.ts';
+import {
+  bestSlice,
+  failedConstraintLabel,
+  isBinnedCell,
+  rangeLabel,
+  valueLabel,
+} from './map-labels.ts';
 import { CellValuesTable } from './CellValuesTable.tsx';
 import { ObjectiveCurve } from './ObjectiveCurve.tsx';
 import { inspectBin, resetInspection } from './inspection.ts';
@@ -127,7 +132,7 @@ export function MapPanel() {
                       value: `value:${index}`,
                       label: text(valueLabel(value, rowFor(slice.title))),
                     })),
-                    { value: 'max', label: t('optimize.map.max') },
+                    { value: 'max', label: t(bestSlice(settings.direction)) },
                     { value: 'mean', label: t('optimize.map.mean') },
                   ]}
                   onChange={(value) =>
@@ -161,29 +166,7 @@ export function MapPanel() {
             />
             <div className={styles.legend} aria-label={t('optimize.map.legend')}>
               <span>{t(`optimize.map.objective.${settings.objective}`)}</span>
-              <span>
-                {map.panel.display?.minimum == null
-                  ? t('optimize.map.na')
-                  : formatNumber(map.panel.display.minimum, {
-                      maximumFractionDigits: 1,
-                      notation: 'compact',
-                    })}
-              </span>
-              <div className={styles.ramp}>
-                {heatTokens.map((token, index) => (
-                  <i key={token} style={{ background: `var(${token})` }}>
-                    {index === 3 && <span>{formatNumber(0)}</span>}
-                  </i>
-                ))}
-              </div>
-              <span>
-                {map.panel.display?.maximum == null
-                  ? t('optimize.map.na')
-                  : formatNumber(map.panel.display.maximum, {
-                      maximumFractionDigits: 1,
-                      notation: 'compact',
-                    })}
-              </span>
+              <LegendRamp map={map.panel} className={styles.ramp} missing={t('optimize.map.na')} />
               {map.panel.cells.some((cell) => cell.value === null) && (
                 <span className={styles.missing}>
                   {t(views.inProgress ? 'optimize.map.incomplete' : 'optimize.map.notSampled')}
