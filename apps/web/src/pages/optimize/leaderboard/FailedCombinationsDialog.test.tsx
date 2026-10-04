@@ -60,4 +60,6 @@ test('failed combinations carry inputs and diagnostics, export CSV, and preview 
   expect(uiStore.getState().page).toBe('backtest');
   await waitFor(() => expect(getBacktestStore().getState().preview?.run.status).toBe('failed'));
   expect(getBacktestStore().getState().inputs).toBe(inputs);
+  // A failed set has no rank to name (bug bash #29).
+  expect(await screen.findByText('Previewing the parameters of a failed set')).toBeVisible();
 });

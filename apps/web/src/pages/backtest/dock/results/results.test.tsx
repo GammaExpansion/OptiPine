@@ -170,6 +170,47 @@ test('report renders all groups, keeps English metric names in Chinese, and rest
   ).toBeVisible();
 });
 
+test('the outdated banner reads the result values as the inputs show them (B9)', async () => {
+  await run(`${strategySource}stop = input.bool(false, "Stop")\n`);
+  render(
+    <I18nProvider>
+      <ReportTab />
+    </I18nProvider>,
+  );
+  act(() => getBacktestStore().getState().actions.setInput('Multiplier', 1.5));
+  expect(screen.getByRole('button', { name: 'Reset to 1.00' })).toBeVisible();
+  act(() => getBacktestStore().getState().actions.setInput('Stop', true));
+  expect(screen.getByRole('status')).toHaveTextContent(
+    'Current results use Multiplier 1.00, Stop off.',
+  );
+});
+
+test('a property change states the value the result used and restores it (B9)', async () => {
+  await run();
+  render(
+    <I18nProvider>
+      <ReportTab />
+    </I18nProvider>,
+  );
+  const { actions } = getBacktestStore().getState();
+  act(() => actions.setProperty('initialCapital', 20000));
+  expect(screen.getByRole('status')).toHaveTextContent(
+    'Current results use Initial capital 10,000.',
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Reset to 10,000' }));
+  expect(screen.queryByRole('status')).toBeNull();
+  expect(getBacktestStore().getState().propertyOverrides).toEqual({});
+  act(() => {
+    actions.setProperty('initialCapital', 20000);
+    actions.setInput('Length', 7);
+  });
+  expect(screen.getByRole('status')).toHaveTextContent(
+    'Current results use Length 5, Initial capital 10,000.',
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Restore result settings' }));
+  expect(screen.queryByRole('status')).toBeNull();
+});
+
 test.each(['en', 'zh'] as const)(
   'restore uses the run value for one change and generic copy for several (%s)',
   async (language) => {

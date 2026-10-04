@@ -21,12 +21,16 @@
   background: var(--panel);
   border-left: 1px solid var(--divider);
 }
+/*
+ * The collapse chevron sits in the panel's 16 px left gutter, beside the separator, where no row
+ * reaches: at the top right it covered the first row's actions (Reset, Grid / Random).
+ */
 .collapse {
   position: absolute;
   top: 12px;
-  right: 4px;
+  left: 0;
   z-index: 2;
-  width: 20px;
+  width: 16px;
   opacity: 0;
 }
 .sidebar:hover .collapse,
@@ -35,5 +39,7 @@
   opacity: 1;
 }
 .edge {
+  left: auto;
   right: 5px;
+  width: 20px;
 }

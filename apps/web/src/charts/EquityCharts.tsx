@@ -45,7 +45,7 @@ export function EquityCharts({
   afterToolbar,
   className,
 }: EquityChartsProps) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [unit, setUnit] = useState<'amount' | 'percent'>('amount');
   const equityHost = useRef<HTMLDivElement>(null);
   const drawdownHost = useRef<HTMLDivElement>(null);
@@ -59,7 +59,7 @@ export function EquityCharts({
     const eqHost = equityHost.current!;
     const ddHost = drawdownHost.current!;
     const theme = chartTheme(eqHost);
-    const options = chartOptions(eqHost, input.timezone);
+    const options = chartOptions(eqHost, input.timezone, language);
     // Own sizing so fitting cannot race the library's asynchronous autoSize observer.
     options.autoSize = false;
     options.layout = { ...options.layout, attributionLogo: false };
@@ -272,7 +272,7 @@ export function EquityCharts({
       equity.remove();
       drawdown.remove();
     };
-  }, [input, summary, unit, t]);
+  }, [input, summary, unit, t, language]);
 
   useEffect(() => {
     // Ownership can change without reloading series or losing the visible range.
