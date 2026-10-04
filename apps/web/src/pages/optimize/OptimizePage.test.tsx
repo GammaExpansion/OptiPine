@@ -1,9 +1,10 @@
-import { act, fireEvent, screen, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import { defaultPaneSizes, uiStore } from '../../state/ui.ts';
 import { setViewportWidth } from '../../test/viewport.ts';
 import { OptimizePage } from './OptimizePage.tsx';
+import { installResultsFixture } from './walkforward/results/fixture-store.ts';
 import {
   loadOptimization,
   loadWalkForward,
@@ -113,17 +114,34 @@ test('on a tablet W1 keeps its splits, with the right panel left to the drawer (
   expect(screen.getByRole('region', { name: 'Walk-forward stability' })).toBeInTheDocument();
 });
 
-// Two real optimizations, walk-forward then IS / OOS, run in this test: it gets 15 s, not 5.
+// A layout test: one small IS / OOS run supplies R1, and the walk-forward fixture W1, so no
+// walk-forward runs on Workers here (the walk-forward tests above and the e2e do that).
 test('on a phone W1 keeps its stitched equity above Windows, Stability and Settings (G4)', async () => {
   const user = userEvent.setup();
   // The charts draw on canvases, which jsdom does not provide; their tests cover the drawing.
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
   setViewportWidth(390);
-  await loadWalkForward();
+  await loadOptimization();
+  // Two sets, and no default filters, so R1 has a selected set to show at the least cost.
+  act(() => {
+    optimization().actions.setRange('Length', { from: 2, to: 3, step: 1 });
+    optimization().actions.setSearched('Source', false);
+    optimization().actions.removeFilter(1);
+    optimization().actions.removeFilter(0);
+  });
+  await runOptimization();
+  // Nothing of the run may publish over the fixture: its views and Top 20 curves come first.
+  await waitFor(() => {
+    expect(optimization().views?.pending).toBe(false);
+    expect(optimization().topEquity.status).toBe('ready');
+  });
   // The leaderboard's tab shows the windows, their walk-forward counterpart.
   act(() => uiStore.getState().setOptimizeTab('leaderboard'));
+  let fixture!: ReturnType<typeof installResultsFixture>;
+  act(() => {
+    fixture = installResultsFixture();
+  });
   renderInEnglish(<OptimizePage />);
-  await runOptimization();
   const tabs = () => within(screen.getByRole('tablist', { name: 'Page sections' }));
   expect(
     tabs()
@@ -147,8 +165,7 @@ test('on a phone W1 keeps its stitched equity above Windows, Stability and Setti
   expect(screen.getByRole('region', { name: 'Stitched OOS equity' })).toBe(summary);
   // Back on R1's results, the Stability tab shows the parameter map under R1's summary.
   act(() => uiStore.getState().setOptimizeTab('stability'));
-  act(() => optimization().actions.setValidation({ mode: 'in-out' }));
-  await runOptimization();
+  act(() => fixture.restore());
   expect(
     tabs()
       .getAllByRole('tab')
@@ -161,4 +178,4 @@ test('on a phone W1 keeps its stitched equity above Windows, Stability and Setti
   ]);
   expect(screen.queryByRole('region', { name: 'Stitched OOS equity' })).toBeNull();
   expect(screen.getByRole('region', { name: 'Selected parameter set' })).toBeVisible();
-}, 15_000);
+});
