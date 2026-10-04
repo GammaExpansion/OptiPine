@@ -39,6 +39,14 @@ it('renders W1 totals and fixed parameters in both languages, switching W2 witho
   panels();
   const summary = screen.getByRole('region', { name: 'Stitched OOS equity' });
   expect(within(summary).getByText('+7,600')).toBeInTheDocument();
+  expect(within(summary).getByText('+7,600')).toHaveAttribute(
+    'title',
+    "Equity change at each window's last bar, including open P&L without an unexecuted exit fee",
+  );
+  expect(screen.getByRole('columnheader', { name: 'IS' })).toHaveAttribute(
+    'title',
+    "Equity change at each window's last bar, including open P&L without an unexecuted exit fee",
+  );
   expect(within(summary).getByText('5 / 6')).toBeInTheDocument();
   expect(screen.getByText('5 / 6 profitable')).toBeInTheDocument();
   expect(screen.getByText('Part')).toBeInTheDocument();
@@ -49,6 +57,10 @@ it('renders W1 totals and fixed parameters in both languages, switching W2 witho
   expect(screen.getByRole('img', { name: '6 windows with IS and OOS equity' })).toBeInTheDocument();
   expect(state().walkForward).toBe(view);
   act(() => uiStore.getState().setLanguage('zh'));
+  expect(screen.getByRole('columnheader', { name: '样本内' })).toHaveAttribute(
+    'title',
+    '按各窗口最后一根 K 线计算权益变化，包含未平仓盈亏，不扣除尚未发生的平仓手续费',
+  );
   expect(screen.getByRole('button', { name: '应用到输入' })).toBeEnabled();
   expect(screen.getByText('5 / 6 盈利')).toBeInTheDocument();
   // Searched inputs in declaration order, at their search steps' precision.

@@ -2,6 +2,27 @@ import { fileURLToPath } from 'node:url';
 import { createMarketMiddleware } from '@pine/market-data/proxy';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
+import { collectLicenseAssets } from './scripts/licenses.ts';
+
+function licenses(): Plugin {
+  return {
+    name: 'optipine-licenses',
+    generateBundle() {
+      for (const [fileName, source] of Object.entries(collectLicenseAssets()))
+        this.emitFile({ type: 'asset', fileName, source });
+    },
+    configureServer(server) {
+      const assets = collectLicenseAssets();
+      server.middlewares.use((request, response, next) => {
+        const path = new URL(request.url ?? '/', 'http://localhost').pathname.slice(1);
+        if (!Object.hasOwn(assets, path)) return next();
+        response.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        response.setHeader('X-Content-Type-Options', 'nosniff');
+        response.end(request.method === 'HEAD' ? undefined : assets[path]);
+      });
+    },
+  };
+}
 
 function marketProxy(): Plugin {
   return {
@@ -17,7 +38,7 @@ function marketProxy(): Plugin {
 }
 
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), marketProxy()],
+  plugins: [react(), marketProxy(), licenses()],
   build: {
     // Test and dev entries exercise production bundling without shipping the harness, sheet or chart
     // workbench.

@@ -1,4 +1,6 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import { run as runStrategy } from '@pine/engine';
 import type { FeedDataset } from '@pine/market-data';
 import { syntheticBars } from '../src/charts-dev/synthetic.ts';
 import type { BacktestStoreState } from '../src/state/backtest.ts';
@@ -208,7 +210,11 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
     return {
       windows: state.walkForward!.windows.length,
       statuses: state.walkForward!.windows.map((window) => window.status),
-      inSampleNet: state.walkForward!.windows.map((window) => window.inSample?.netProfit ?? null),
+      choices: state.walkForward!.windows.map((window) => ({
+        parameters: window.parameters!,
+        from: window.plan.inSampleStartIndex,
+        to: window.plan.outOfSampleStartIndex,
+      })),
       error: state.walkForward!.error,
     };
   });
@@ -342,7 +348,23 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
 
   // R10's shared popover is a stub; exercise W5 through the real filter action. Just above the
   // weakest window's best IS net profit, that window has no set left and the others keep theirs.
-  const threshold = Math.min(...initial.inSampleNet.map((net) => net ?? Infinity)) + 1;
+  // Ranking still uses reported net profit; displayed window amounts now include open P&L.
+  const source = await readFile(
+    new URL('../examples/trend-breakout.pine', import.meta.url),
+    'utf8',
+  );
+  const threshold =
+    Math.min(
+      ...initial.choices.map(({ parameters, from, to }) => {
+        const result = runStrategy(source, {
+          ...dataset.input,
+          bars: dataset.input.bars.slice(from, to),
+          inputs: { ...parameters },
+        });
+        expect(result.diagnostics).toEqual([]);
+        return Number(result.metrics['Performance/Net profit/All USD']);
+      }),
+    ) + 1;
   await page.evaluate(
     (value) =>
       (window as unknown as Hooks)

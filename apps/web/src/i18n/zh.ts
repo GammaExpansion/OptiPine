@@ -1,6 +1,7 @@
 import type { MessageId } from './en.ts';
 
 export const zh = {
+  'shell.licenses': '许可证',
   'backtest.noScript': '请先打开脚本',
   'backtest.noData': '请先选择行情',
   'backtest.compiling': '正在编译脚本',
@@ -1034,6 +1035,11 @@ export const zh = {
   'optimize.wfResults.stitched': '拼接',
   'optimize.wfResults.view': '窗口视图',
   'optimize.wfResults.wfe': 'WFE',
+  'optimize.wfResults.markedToMarket':
+    '按各窗口最后一根 K 线计算权益变化，包含未平仓盈亏，不扣除尚未发生的平仓手续费',
+  'optimize.wfResults.wfeHint':
+    '样本外年化权益收益率除以样本内年化权益收益率；样本内收益率非正时不适用',
+  'optimize.wfResults.profitableHint': '报告样本外净利润为正的窗口，不含未平仓盈亏',
   'optimize.wfResults.is': '样本内',
   'optimize.wfResults.oos': '样本外',
   'optimize.wfResults.profitableWindows': '盈利窗口',

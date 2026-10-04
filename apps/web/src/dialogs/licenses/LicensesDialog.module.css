@@ -1,0 +1,44 @@
+.content {
+  display: grid;
+  gap: 18px;
+  color: var(--secondary);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.content section {
+  display: grid;
+  gap: 6px;
+}
+.content h3 {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+}
+.fonts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 18px;
+  margin: 4px 0 0;
+}
+.fonts dd {
+  margin: 0;
+}
+.independent {
+  border-top: 1px solid var(--divider);
+  padding-top: 14px;
+  font-size: 12px;
+}
+@media (max-width: 480px) {
+  .fonts {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .fonts dt:not(:first-child) {
+    margin-top: 8px;
+  }
+}

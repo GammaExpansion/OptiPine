@@ -152,7 +152,7 @@ test('data ending in a step gap retains the complete prior OOS without an empty 
   }
 });
 
-test('real engine windows reoptimize, aggregate net and trades, and use percent CAGR for WFE', () => {
+test('real engine windows reoptimize, aggregate equity changes and trades, and annualize equity for WFE', () => {
   const result = runWalkForward([{ Quantity: 1 }, { Quantity: 2 }], bars, evaluate, config);
   assert.equal(result.windows.length, 11);
   for (const window of result.windows) {
@@ -160,10 +160,15 @@ test('real engine windows reoptimize, aggregate net and trades, and use percent 
     const expectedOut = evaluate(window.chosenParameters!, window.outOfSampleBars);
     assert.deepEqual(window.inSampleResult?.metrics, expectedIn.metrics);
     assert.deepEqual(window.outOfSampleResult?.metrics, expectedOut.metrics);
-    assert.equal(window.inSampleNet, metricValue(expectedIn.metrics, 'Net profit'));
-    assert.equal(window.outOfSampleNet, metricValue(expectedOut.metrics, 'Net profit'));
-    const outAnnualized = metricValue(expectedOut.metrics, 'Annualized return (CAGR)', 'All', true);
-    const inAnnualized = metricValue(expectedIn.metrics, 'Annualized return (CAGR)', 'All', true);
+    const initial = metricValue(expectedIn.metrics, 'Initial capital')!;
+    assert.equal(window.inSampleNet, expectedIn.equity.at(-1)! - initial);
+    assert.equal(window.outOfSampleNet, expectedOut.equity.at(-1)! - initial);
+    const annualized = (equity: number, bars: readonly MarketBar[]) =>
+      bars.length < 2
+        ? null
+        : ((equity / initial) ** ((365 * 86400) / (bars.at(-1)!.time - bars[0].time)) - 1) * 100;
+    const outAnnualized = annualized(expectedOut.equity.at(-1)!, window.outOfSampleBars);
+    const inAnnualized = annualized(expectedIn.equity.at(-1)!, window.inSampleBars);
     assert.equal(
       window.wfe,
       outAnnualized !== null && inAnnualized !== null && inAnnualized > 0

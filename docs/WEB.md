@@ -295,9 +295,14 @@ that set on its IS range, where it must match the sweep or the window fails, and
 following OOS range. Changing the ranking or filters after a run picks again from the kept trials
 and reruns only the sets that changed.
 
+IS and OOS results are marked to market at each window's last bar: the change in account equity
+includes open positions at their open profit, without commission for an exit that did not happen.
+
 - **Summary**: stitched OOS equity, WFE (OOS annualized return over IS annualized return) and
   profitable windows, once every window is done. WFE is undefined, shown as “—”, when the IS
-  annualized return is ≤ 0 or either return is unavailable. Each window uses its reported CAGR.
+  annualized return is ≤ 0 or either return is unavailable. Each window annualizes its marked-to-market
+  IS and OOS returns over each range's first-to-last-bar span. Profitable-window counts still use
+  reported net profit excluding open P&L; ranking and stability keep their selected objective.
   Total WFE annualizes the stitched IS and OOS accounts separately, never sums window CAGRs:
   each starts at its first run's initial capital and adds each run's ending equity minus its
   initial capital, including open profit, as the stitched curve does. IS concatenates each run's

@@ -11,10 +11,9 @@
 
 </div>
 
-> **Status.** This repository contains the Pine engine, the optimizer, market data, Web Worker
-> execution and the TradingView verification suite as TypeScript packages. The browser app that
-> puts them on screen is being rebuilt and is not included yet; its design is drawn in
-> [docs/web-mock-terminal](docs/web-mock-terminal/README.md).
+[![Trend Breakout on BTCUSDT: chart, trades and backtest report](docs/screenshots/backtest.png)](docs/screenshots/backtest.png)
+
+> **Status.** The engine, optimizer and browser app run locally, including walk-forward in the app.
 
 ## Why this exists
 
@@ -29,6 +28,11 @@ you optimize is the one you would see on the chart.
 
 ## What you get
 
+- **A browser workbench.** Charts with plots and trades, reports, equity and editable inputs, in
+  English and Chinese. Backtest and Optimize both support desktop, tablet and phone. Scripts and
+  calculations stay in your browser; your scripts never leave your machine. Optimization views
+  update as trials finish: summary charts, a leaderboard, parameter maps and sensitivity, with
+  preview and apply for any selected set.
 - **Your Pine, unchanged.** Indicators and strategies in v5 and v6: `ta.*`, `math.*`, `str.*`,
   arrays, matrices, maps, enums, orders and exits, risk limits, commission, slippage and sessions.
 - **A real optimizer.** Grid or random search over every input type, booleans and option lists
@@ -36,26 +40,49 @@ you optimize is the one you would see on the chart.
   leaderboard.
 - **Overfitting checks built in.** In-sample / out-of-sample splits, walk-forward with rolling or
   anchored windows, parameter heatmaps, sensitivity and neighbourhood averages that reward stable
-  regions rather than lucky cells.
+  regions rather than lucky cells. Run walk-forward in the app to inspect stitched OOS equity,
+  per-window results and parameter stability, or use the packages in your own code.
 - **Numbers you can trust.** 240 fixtures captured from TradingView, more than 45 million plot
   values, trade fields and report metrics compared cell by cell on every commit.
 - **Runs where JavaScript runs.** The engine has no filesystem or network dependency and works in
-  Node or a browser; `@pine/workers` spreads a search across Web Workers, one per CPU core.
+  Node or a browser; `@pine/workers` spreads a search across an adaptive Web Worker pool.
 - **Market data included.** Binance spot and perpetuals and Yahoo Finance through a small Node
   proxy, plus CSV files.
 
+## See it
+
+[![Optimization summary, leaderboard, parameter map and sensitivity](docs/screenshots/optimize.png)](docs/screenshots/optimize.png)
+
+A 40-set grid search shows the leading equity curves, IS / OOS results, a complete parameter map
+and the selected set ready to preview or apply.
+
+[![Walk-forward stitched equity, window results and parameter stability](docs/screenshots/walk-forward.png)](docs/screenshots/walk-forward.png)
+
+Three rolling windows show stitched out-of-sample equity, each window's selected parameters and
+their stability across windows.
+
+[![Equity, drawdown, daily P&L and monthly returns](docs/screenshots/equity.png)](docs/screenshots/equity.png)
+
+The Equity tab puts the account curve, drawdown, daily P&L and monthly returns on a shared timeline.
+
+<table>
+  <tr>
+    <td width="260">
+      <a href="docs/screenshots/phone.png">
+        <img src="docs/screenshots/phone.png" width="234" alt="Backtest chart and report on a phone" />
+      </a>
+    </td>
+    <td>
+      Backtest keeps the chart above its report and input tabs on a phone; Optimize keeps its summary
+      above tabs for results and settings.
+    </td>
+  </tr>
+</table>
+
+These are real runs over recorded BTCUSDT data, with the example's default backtest inputs;
+[regenerate the screenshots](docs/screenshots/README.md) without fetching live market data.
+
 ## Running the app
-
-The first browser scaffold is in `apps/web`: a bilingual shell with resizable panes. Script loading,
-market selection and run controls will be connected in later phases.
-
-After `npm ci && npm run build`, run `npm run dev -w @pine/web` for development, or
-`npm run start -w @pine/web` to serve the build at `http://127.0.0.1:5174` (`HOST` and `PORT`
-override the production address). Dev, preview and production include `/api/market`.
-Run `npm run test -w @pine/web` without a browser; install Chromium with
-`npx playwright install chromium`, then run `npm run e2e -w @pine/web` for browser smoke tests.
-
-## Quick start
 
 Requires [Node.js](https://nodejs.org) 24.5 or newer.
 
@@ -63,12 +90,19 @@ Requires [Node.js](https://nodejs.org) 24.5 or newer.
 git clone https://github.com/GammaExpansion/OptiPine.git
 cd OptiPine
 npm ci && npm run build
-npm run check
+npm run dev -w @pine/web
 ```
 
-`npm run check` replays every TradingView fixture against the engine and compares the result
-with the accepted baseline; it takes a few minutes. To run a strategy of your own, use the
-packages from your code as shown below.
+Open the URL printed by Vite (normally `http://127.0.0.1:5173`). Click **Load example: Trend
+Breakout, BTCUSDT 1 hour**, then **Run backtest**. Switch to **Optimize**, set the search ranges
+and press **Start**. To use your own strategy, open a `.pine` file or paste its source, then select
+market data or upload a CSV. Example loading and provider data need internet access; calculations
+run locally.
+
+To serve the build, run `npm run start -w @pine/web` and open `http://127.0.0.1:5174` (`HOST` and
+`PORT` override the address). Dev, preview and production include the market data proxy.
+Run `npm run test -w @pine/web` for unit and component tests; after
+`npx playwright install chromium`, run `npm run e2e -w @pine/web` for browser tests.
 
 ## What is not supported yet
 
@@ -132,12 +166,16 @@ Node proxy and parses CSV files.
 | `packages/messages`    | `@pine/messages`    | Plain-data text and coded errors shared by the packages                  |
 | `packages/golden`      | `@pine/golden`      | TradingView fixtures, the comparison harness and the regression baseline |
 | `apps/cli`             | `@pine/cli`         | Fixture runner behind `npm run golden` and `npm run check`               |
+| `apps/web`             | `@pine/web`         | Bilingual browser app, charts, backtesting and live optimization         |
 
 ```sh
-npm run test --workspaces   # every package and the CLI
+npm run test --workspaces   # packages, CLI and browser app
 npm run golden              # run every TradingView fixture
 npm run check               # the regression gate CI enforces
 ```
+
+`npm run check` replays the TradingView fixtures and compares them with the accepted baseline;
+it takes a few minutes.
 
 - [Engine design](docs/DESIGN.md), [compatibility notes](docs/COMPATIBILITY_NOTES.md) and the
   [web interface design](docs/WEB.md)

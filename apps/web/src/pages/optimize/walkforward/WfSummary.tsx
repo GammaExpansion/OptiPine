@@ -31,13 +31,16 @@ export function WfSummary() {
         <h2>{t('optimize.wfResults.summary')}</h2>
         {complete ? (
           <div className={styles.facts}>
-            <strong data-tone={(view.totals.outOfSampleNet ?? 0) < 0 ? 'loss' : 'profit'}>
+            <strong
+              title={t('optimize.wfResults.markedToMarket')}
+              data-tone={(view.totals.outOfSampleNet ?? 0) < 0 ? 'loss' : 'profit'}
+            >
               {text(figure(view.totals.outOfSampleNet, 0, true))}
             </strong>
-            <span>
+            <span title={t('optimize.wfResults.wfeHint')}>
               {t('optimize.wfResults.wfe')} <b>{text(figure(view.totals.wfe, 2))}</b>
             </span>
-            <span>
+            <span title={t('optimize.wfResults.profitableHint')}>
               {t('optimize.wfResults.profitableWindows')}{' '}
               <b>
                 {t('optimize.wfResults.count', {

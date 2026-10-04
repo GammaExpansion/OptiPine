@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node scripts/test.ts",
     "e2e": "playwright test",
+    "screenshots": "node scripts/readme-screenshots.ts",
     "perf:live": "node --test scripts/perf-statistics.test.ts scripts/perf-market.test.ts scripts/perf-trace.test.ts && node scripts/perf-live-optimization.ts"
   },
   "dependencies": {

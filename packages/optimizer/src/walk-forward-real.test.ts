@@ -50,7 +50,8 @@ test('real B_orders fixture completes 6+2 month windows stepped by two months', 
     assert.deepEqual(window.outOfSampleResult?.diagnostics, []);
     assert.equal(
       window.outOfSampleNet,
-      metricValue(window.outOfSampleResult!.metrics, 'Net profit'),
+      window.outOfSampleResult!.equity!.at(-1)! -
+        metricValue(window.outOfSampleResult!.metrics, 'Initial capital')!,
     );
     assert.equal(window.equity.length, window.outOfSampleBars.length);
     assert.equal(window.inSampleEquity.at(-1), window.startCapital);
@@ -127,8 +128,14 @@ test('a single 200,003-bar OOS window retains every real engine equity observati
     result.windows[0].inSampleEquity.at(-1),
     metricValue(outOfSampleResult.metrics, 'Initial capital'),
   );
-  assert.equal(result.totals.inSampleNet, metricValue(inSampleResult.metrics, 'Net profit'));
-  assert.equal(result.totals.outOfSampleNet, metricValue(outOfSampleResult.metrics, 'Net profit'));
+  assert.equal(
+    result.totals.inSampleNet,
+    inSampleResult.equity.at(-1)! - metricValue(inSampleResult.metrics, 'Initial capital')!,
+  );
+  assert.equal(
+    result.totals.outOfSampleNet,
+    outOfSampleResult.equity.at(-1)! - metricValue(outOfSampleResult.metrics, 'Initial capital')!,
+  );
   assert.equal(
     result.totals.outOfSampleTrades,
     metricValue(outOfSampleResult.metrics, 'Total trades'),
