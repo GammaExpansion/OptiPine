@@ -149,6 +149,9 @@ export const en = {
     'Once the script compiles, its inputs are listed here in declaration order.',
   'backtest.properties': 'Properties',
   'backtest.propertiesHint': 'Defaults come from the strategy() call.',
+  'backtest.propertiesIndicator': 'An indicator has no account, so no strategy properties.',
+  'backtest.indicatorResults':
+    'An indicator has no account, so no strategy report or equity. The chart shows its plots.',
   'backtest.resultsHint': 'Run a backtest to see results here.',
   'backtest.issuesHint': 'No issues',
   'dock.tabs': 'Backtest results',

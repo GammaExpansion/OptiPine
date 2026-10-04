@@ -15,6 +15,7 @@ import { ReportTab } from '../ReportTab.tsx';
 import { EquityTab } from '../EquityTab.tsx';
 import { TradesTab } from '../TradesTab.tsx';
 import { DockActionsHost } from '../DockActions.tsx';
+import { PropertiesSummary } from '../../sidebar/PropertiesSummary.tsx';
 import { displayedResult, equityFor, reportFor, tradesFor } from './model.ts';
 
 vi.mock('../../../../charts/EquityCharts.tsx', () => ({
@@ -56,6 +57,40 @@ test.each([ReportTab, EquityTab, TradesTab])(
     expect(screen.getByText('Run a backtest to see results here.')).toBeVisible();
   },
 );
+
+test('an indicator has no account: Report and Equity say so, and Properties too', async () => {
+  await run(`//@version=6
+indicator("Momentum")
+length = input.int(10, "Length")
+plot(ta.mom(close, length), "Momentum")
+`);
+  const indicator =
+    'An indicator has no account, so no strategy report or equity. The chart shows its plots.';
+  for (const Tab of [ReportTab, EquityTab]) {
+    const view = render(
+      <I18nProvider>
+        <Tab />
+        <PropertiesSummary />
+      </I18nProvider>,
+    );
+    expect(screen.getByText(indicator)).toBeVisible();
+    expect(screen.queryByRole('table')).toBeNull();
+    expect(
+      screen.getByText('An indicator has no account, so no strategy properties.'),
+    ).toBeVisible();
+    view.unmount();
+  }
+  // A strategy's run of other source brings the report back.
+  await run();
+  render(
+    <I18nProvider>
+      <ReportTab />
+      <PropertiesSummary />
+    </I18nProvider>,
+  );
+  expect(screen.queryByText(indicator)).toBeNull();
+  expect(screen.getByRole('button', { name: 'All settings' })).toBeVisible();
+});
 
 test('result adapters preserve workflow outputs and identities across input changes', async () => {
   const result = await run();

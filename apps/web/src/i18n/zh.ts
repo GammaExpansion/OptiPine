@@ -145,6 +145,8 @@ export const zh = {
   'backtest.inputsHint': '脚本编译后，此处按 input 声明列出可调参数。',
   'backtest.properties': '策略属性',
   'backtest.propertiesHint': '默认值取自 strategy() 调用。',
+  'backtest.propertiesIndicator': '指标没有账户，因此没有策略属性。',
+  'backtest.indicatorResults': '指标没有账户，因此没有策略报告与权益曲线。图表显示其绘图。',
   'backtest.resultsHint': '运行回测后，此处显示结果。',
   'backtest.issuesHint': '暂无问题',
   'dock.tabs': '回测结果',

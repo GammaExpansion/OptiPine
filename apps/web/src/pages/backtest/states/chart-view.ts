@@ -40,6 +40,17 @@ export function shownResult(
   return run.status === 'failed' && result?.computedWith.source !== state.source ? null : result;
 }
 
+/**
+ * Whether the current script is an indicator, as its latest run of this source showed: an
+ * indicator has no account, so the run reports no initial capital. Unknown before a run.
+ */
+export function scriptIsIndicator(state: Pick<BacktestState, 'source' | 'result'>): boolean {
+  const { result } = state;
+  return (
+    result !== null && result.computedWith.source === state.source && result.initialCapital === null
+  );
+}
+
 /** The count beside the Trades tab: the shown result's closed trades (B1); null without one. */
 export function closedTradeCount(
   state: Pick<BacktestState, 'source' | 'compile' | 'run' | 'result' | 'preview'>,
