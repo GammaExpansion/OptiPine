@@ -3,7 +3,7 @@ import { Button } from '../../../../components/Button.tsx';
 import { Icon } from '../../../../components/Icon.tsx';
 import { useI18n } from '../../../../i18n/I18nProvider.tsx';
 import { useBacktestStore } from '../../../../state/backtest.ts';
-import { shownResult } from '../../states/chart-view.ts';
+import { scriptIsIndicator, shownResult } from '../../states/chart-view.ts';
 import { EmptyResults } from './EmptyResults.tsx';
 import styles from './Results.module.css';
 
@@ -28,7 +28,8 @@ export function ResultFrame({
   const running = useBacktestStore(
     (state) => (state.preview?.run ?? state.run).status === 'running',
   );
-  if (account && result?.initialCapital === null)
+  const indicator = useBacktestStore(scriptIsIndicator);
+  if (account && (indicator || result?.initialCapital === null))
     return <EmptyResults message="backtest.indicatorResults" />;
   if (!result || empty) return <EmptyResults />;
   return (

@@ -13,7 +13,7 @@ import { EmptyResults, LoadingResults } from './dock/results/EmptyResults.tsx';
 import { DockActionsHost } from './dock/DockActions.tsx';
 import actionStyles from './dock/DockActions.module.css';
 import { Sidebar } from './Sidebar.tsx';
-import { closedTradeCount, shownResult } from './states/chart-view.ts';
+import { closedTradeCount, scriptIsIndicator, shownResult } from './states/chart-view.ts';
 import phone from '../../shell/PhoneTabs.module.css';
 
 const loadReport = () => import('./dock/ReportTab.tsx');
@@ -47,6 +47,9 @@ function useTabOptions(tabs: readonly DockTab[], short: boolean) {
 /** What a tab shows; S1 shows the empty dock without importing charts, tables or reporting. */
 function TabContent({ tab }: { tab: DockTab }) {
   const hasResult = useBacktestStore((state) => shownResult(state) !== null);
+  // An indicator's Report and Equity say it has no account, before its run as after.
+  const indicator = useBacktestStore(scriptIsIndicator);
+  const noAccount = <EmptyResults message={indicator ? 'backtest.indicatorResults' : undefined} />;
   // Once there is a result, the result tabs' code loads ahead of a click on them. A failed
   // prefetch is left to the tab's own load, which reports it.
   useEffect(() => {
@@ -57,8 +60,8 @@ function TabContent({ tab }: { tab: DockTab }) {
     <>
       {/* While a tab's code loads, a result shows as loading, never as "run a backtest". */}
       <Suspense fallback={hasResult ? <LoadingResults /> : <EmptyResults />}>
-        {tab === 'report' && (hasResult ? <ReportTab /> : <EmptyResults />)}
-        {tab === 'equity' && (hasResult ? <EquityTab /> : <EmptyResults />)}
+        {tab === 'report' && (hasResult ? <ReportTab /> : noAccount)}
+        {tab === 'equity' && (hasResult ? <EquityTab /> : noAccount)}
         {tab === 'trades' && (hasResult ? <TradesTab /> : <EmptyResults />)}
       </Suspense>
       {tab === 'inputs' && <Sidebar />}
