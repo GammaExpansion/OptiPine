@@ -45,6 +45,7 @@ export const marketDataMessageIds = [
   'feedTooManyBars',
   'feedUpstreamDetail',
   'feedYahooInstrument',
+  'feedYahooOhlc',
   'feedYahooRange',
   'importCalendar',
   'importNotReady',

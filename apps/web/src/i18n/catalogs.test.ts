@@ -65,6 +65,25 @@ test('workflow values and nested property names translate in both languages', ()
   assert.equal(translate(property, 'zh'), '请修正初始资金的值');
 });
 
+test('forex refusal translates its count and latest date with one actionable range in both languages', () => {
+  for (const count of [1, 11]) {
+    const error = message('feedYahooOhlc', {
+      symbol: 'EURUSD=X',
+      count,
+      date: '2022-12-26',
+      percent: 0.05,
+    });
+    assert.equal(
+      translate(error, 'en'),
+      `Yahoo returned inconsistent OHLC for EURUSD=X, beyond the 0.05% correction limit. Affected days: ${count}; latest: 2022-12-26. Choose a range that starts after 2022-12-26, or use another data source.`,
+    );
+    assert.equal(
+      translate(error, 'zh'),
+      `Yahoo 返回的 EURUSD=X 的 OHLC 存在不一致，超出 0.05% 的修正上限。受影响天数：${count}；最近日期：2022-12-26。请选择起始日期晚于 2022-12-26 的范围，或使用其他数据源。`,
+    );
+  }
+});
+
 test('a count of one reads the singular form, where the catalog has one (bug bash #28)', () => {
   const facts = (count: number) =>
     message('run.facts', { count, bars: String(count), seconds: '0.0' });

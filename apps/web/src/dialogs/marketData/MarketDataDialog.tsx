@@ -112,6 +112,14 @@ export function MarketDataDialog() {
   return (
     <Dialog
       open
+      onEscapeKeyDown={(event) => {
+        // Radix handles document capture before the input can dismiss its inline suggestions.
+        if (
+          event.target instanceof Element &&
+          event.target.matches('[role="combobox"][aria-expanded="true"]')
+        )
+          event.preventDefault();
+      }}
       onOpenChange={(value) => {
         if (!value) dismiss();
       }}

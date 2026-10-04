@@ -81,7 +81,14 @@ ETFs, indices and forex (Yahoo Finance), and **Upload CSV**.
 
 - **Provider tabs (S3–S6).** Market (spot or USDⓈ-M perpetual), symbol search, timeframe and range
   (1M, 1Y, 2Y, All, Custom). The tab states the provider's limits: up to 100,000 bars per fetch, only
-  closed bars, and Yahoo's shorter history for intraday timeframes. A fetch shows a progress bar
+  closed bars, and Yahoo's shorter history for intraday timeframes: the last 60 days for 5m, 15m
+  and 30m, and 730 days for 1h. Daily prices allow full available history. Intraday presets leave
+  one day of margin so a selection remains valid while the dialog is open; Custom validates
+  against the full provider window. Yahoo also allows full history at 1wk and 1mo, which are not
+  currently exposed by the app. Daily sessions within the hourly window use exact provider
+  metadata; older observed trading days use the current regular closing time in the exchange's
+  timezone, with an explicit estimate note in the preview (historical early closes and changes
+  to trading hours are not known). A fetch shows a progress bar
   with **Cancel fetch** (S4). For now the bar is simulated, because the data arrives in one
   response: it advances on a timer, slows before the end, and fills when the data arrives. Its label
   gives only the expected count ("Fetching about 20,500 bars"); S4's received count waits for real
@@ -89,12 +96,19 @@ ETFs, indices and forex (Yahoo Finance), and **Upload CSV**.
   the exchange's sessions), whether the data came from the cache, and the symbol info (tick size,
   point value, minimum order size, timezone), which is editable. For Yahoo, the preview states that
   prices are not adjusted and that the tick size is estimated because Yahoo does not publish trading
-  rules (S6).
+  rules (S6). Small Yahoo forex OHLC inconsistencies are normalized by widening high/low to
+  contain open/close, by at most 0.05% of the smallest OHLC price. The preview reports the number
+  of corrected bars. Larger discrepancies refuse the whole dataset after all eligible bars have
+  been checked, reporting the count of affected UTC dates and the latest date. The refusal advises
+  starting after that date or using another data source; no failed bars are silently dropped.
 - **Upload CSV (S7).** Accepts TradingView's "Export chart data" format: `time` in Unix seconds,
   `open`, `high`, `low`, `close` and `Volume`; other columns are ignored. The user sets the symbol,
   timeframe and symbol type, enters the symbol info by hand, and may add a trading calendar JSON
   (not needed for 24 × 7 symbols). A file that fails to parse lists each error with its row and the
-  rule it broke, next to the raw lines (S8).
+  rule it broke, next to the raw lines (S8). A timeframe that differs from the bars' most common
+  spacing shows a warning without changing or resampling the data; gaps and session breaks can
+  make that inference uncertain. Calendar timeframes compare local calendar slots to allow DST,
+  holiday weeks and differing month lengths. An empty symbol is omitted from the preview title.
 - **Refusals (S9).** A provider error says which provider refused and why, for example HTTP 451
   from Binance in some regions, and offers **Use Yahoo Finance instead** (after a Binance refusal
   that the request itself did not cause), **Upload CSV** and, where trying again can help,

@@ -6,6 +6,24 @@ profile and session-calendar files that go with them. Every result is a validate
 fragment; nothing is estimated silently, and `profileEstimated` marks metadata a provider does not
 publish.
 
+Yahoo's supported intraday intervals have rolling lookbacks of 60 days (5m, 15m, 30m) and 730
+days (1h); daily prices have no history cutoff. `yahooHistoryDays` shares these limits with the
+app. Daily loads request exact session metadata only inside the hourly window. Older daily
+sessions reuse the provider's current local closing time, keeping the observed bar opening and
+trading date; `calendarEstimated` marks this explicitly. Historical early closes and changes to
+regular hours cannot be recovered from Yahoo's daily response. No missing bars are synthesized.
+
+Yahoo forex can publish open/close just outside the reported high/low. For `CURRENCY` instruments
+only, the loader widens high/low to include those prices when each expansion is at most 0.05%
+(5 basis points) of the smallest OHLC price. Open, close, volume and timestamps stay unchanged;
+`ohlcNormalized` counts the corrected bars for disclosure in the app. Nonpositive prices,
+inverted high/low and other malformed fields still fail. Larger discrepancies reject the entire
+dataset with `feedYahooOhlc` after all eligible bars have been checked. The error gives the count
+of distinct affected UTC dates and the latest date, so a range starting the following day excludes
+all oversized discrepancies; bars are never silently dropped. This bounded policy deliberately
+refuses some full forex histories with bad older rows. It is a data-quality limit, not a claim
+that Yahoo's small inconsistencies are floating-point rounding errors.
+
 ## Entry points
 
 **`@pine/market-data`** works in a browser and in Node.
