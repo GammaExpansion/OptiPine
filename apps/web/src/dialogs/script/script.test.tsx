@@ -1,4 +1,4 @@
-﻿import { act, render, screen, waitFor } from '@testing-library/react';
+﻿import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
@@ -56,6 +56,25 @@ test('first launch explains missing prerequisites and allows the store run when 
   await waitFor(() => expect(screen.getByRole('button', { name: 'Run backtest' })).toBeEnabled());
   await user.click(screen.getByRole('button', { name: 'Run backtest' }));
   await waitFor(() => expect(getBacktestStore().getState().result).not.toBeNull());
+});
+
+test('an example fetching its data shows the fetch in the first steps and the header', async () => {
+  restore();
+  // A fetch that never answers keeps the example loading.
+  restore = replaceServices(() => fakeServices({ fetcher: () => new Promise<Response>(() => {}) }));
+  mount();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: /Load example/ }));
+  const steps = screen.getByRole('region', { name: 'Run backtest' });
+  expect(await within(steps).findByRole('status')).toHaveTextContent('Fetching BTCUSDT 1h');
+  expect(within(steps).getByRole('progressbar')).toHaveAccessibleName(/Fetching about [\d,]+ bars/);
+  expect(screen.getAllByText('Fetching BTCUSDT 1h')).toHaveLength(2);
+  await user.click(screen.getByRole('button', { name: 'Cancel fetch' }));
+  expect(within(steps).getByRole('status')).toHaveTextContent(
+    'Binance, Yahoo Finance, or upload a CSV',
+  );
+  expect(within(steps).queryByRole('progressbar')).toBeNull();
+  expect(screen.getAllByRole('button', { name: 'Select market data' })).toHaveLength(2);
 });
 
 test('pasted code asks before replacing an edited script and cancelling keeps the source', async () => {

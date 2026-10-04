@@ -1,7 +1,10 @@
 import { Button } from '../../components/Button.tsx';
 import { Icon } from '../../components/Icon.tsx';
+import { ProgressBar } from '../../components/ProgressBar.tsx';
+import { timeframeIds } from '../../dialogs/marketData/timeframes.ts';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { useBacktestStore } from '../../state/backtest.ts';
+import { useMarketDataStore } from '../../state/marketData.ts';
 import { useUiStore } from '../../state/ui.ts';
 import { confirmReplace, pickScriptFile, showPaste } from '../../dialogs/script/actions.ts';
 import styles from './FirstLaunch.module.css';
@@ -14,6 +17,11 @@ export function FirstLaunch() {
   const run = useBacktestStore((state) => state.actions.run);
   const source = useBacktestStore((state) => state.source);
   const dataset = useBacktestStore((state) => state.dataset);
+  // A fetch started without the dialog, as an example's, shows here (the dialog shows its own).
+  const fetching = useMarketDataStore((state) =>
+    state.fetch.status === 'fetching' ? state.fetch : null,
+  );
+  const cancelFetch = useMarketDataStore((state) => state.actions.cancel);
   const reason =
     !source.trim() && !dataset
       ? t('shell.runMissing')
@@ -34,8 +42,23 @@ export function FirstLaunch() {
     },
     {
       title: t('backtest.marketData'),
-      hint: t('backtest.marketHint'),
-      actions: <Button onClick={() => open('marketData', true)}>{t('shell.selectData')}</Button>,
+      hint: fetching
+        ? t('data.fetching', {
+            symbol: fetching.request.symbol,
+            timeframe: t(timeframeIds[fetching.request.timeframe]),
+          })
+        : t('backtest.marketHint'),
+      progress: fetching && (
+        <ProgressBar
+          className={styles.progress}
+          label={t('data.fetchingAbout', { count: fetching.expectedBars })}
+        />
+      ),
+      actions: fetching ? (
+        <Button onClick={cancelFetch}>{t('data.cancelFetch')}</Button>
+      ) : (
+        <Button onClick={() => open('marketData', true)}>{t('shell.selectData')}</Button>
+      ),
     },
     {
       title: t('backtest.run'),
@@ -62,7 +85,9 @@ export function FirstLaunch() {
             <span className={styles.number}>{index + 1}</span>
             <div className={styles.copy}>
               <strong>{step.title}</strong>
-              <span>{step.hint}</span>
+              {/* The data step's hint is a live region, so a fetch it starts is announced. */}
+              <span role={'progress' in step ? 'status' : undefined}>{step.hint}</span>
+              {'progress' in step && step.progress}
             </div>
             <div className={styles.actions}>{step.actions}</div>
           </div>
