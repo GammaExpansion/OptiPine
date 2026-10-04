@@ -558,6 +558,21 @@ one and receives a summary: at 20,000 IS / OOS sets of 170 metrics each, a snaps
 about 9 ms with 500 new trials and 5 ms to build the views, where sending every trial and
 receiving them back took 2.2 s (`packages/workers/bench/live-analysis.ts`).
 
+### 4.10 Internationalization
+
+The initial catalog contains only the active language's shell, Backtest, first-launch and shared
+copy. Separate English and Chinese catalogs load with Optimize (setup, results and walk-forward),
+the data dialogs (market data, CSV and date range), the script dialogs and menu, the properties
+dialog, the component sheet (including chart-workbench dev copy) and the licenses dialog. A lazy
+area's catalog must be ready before its UI renders. Switching language keeps the shown language
+until core and every requested area's
+catalogs are ready, including areas opened while the switch is pending.
+
+Message ids are global and unique: each lives in exactly one area, shared copy stays in core,
+and the compile-time `MessageId` union covers every catalog without eagerly importing its copy.
+Tests enforce English/Chinese key and placeholder parity, unique ownership and no literal copy
+in components. The first-load catalog has its own byte budget, independent of the code budget.
+
 ## 5. Visual system
 
 **Tokens** come from the component sheet (G5) and become CSS custom properties.

@@ -59,11 +59,22 @@ formatting is always en-US; dates use UTC and take a Date or milliseconds, so co
 seconds before calling `formatDate`. Components use `I18nProvider` and `useI18n`. The AST test scans
 all `src/**/*.tsx` for literal JSX copy and accessible text attributes.
 
-Each language's catalog is a chunk of its own. An app entry awaits `loadActiveCatalog()` (the stored
-or browser language) before its first render, and `I18nProvider` fetches the other catalog the
-first time the language switches to it, keeping the current language on screen until it arrives.
-Tests and the dev pages import `src/i18n/catalogs.ts`, which registers both; the app's keys stay in
-`en.ts` and `zh.ts`, the component sheet's in `sheet-en.ts` and `sheet-zh.ts`.
+`en.ts` and `zh.ts` are the core catalogs: shell, Backtest, first launch and shared copy. An app
+entry awaits `loadActiveCatalog()` before its first render. Each lazy area has an English and a
+Chinese catalog: `optimize` (setup, results and walk-forward), `data` (market data, CSV and date
+range), `script` (dialogs and menu), `properties`, `sheet` (including the chart workbench's dev
+copy) and `licenses`. Shared ids stay in core even when their prefix names an area. Package
+messages live with the area that displays them;
+shared engine and feed failures remain in core for Backtest and loading an example.
+
+Use `lazyWithCatalog(area, factory)` at a lazy UI boundary to fetch its chunk and active-language
+copy together and suspend until both are ready. Its `preload(language)` supports menu prefetch.
+`I18nProvider` keeps the shown language until core and every requested area's replacement catalog
+arrive, including an area opened during the switch. Loaded catalogs are cached per language and
+area; failed catalog loads can retry. The sheet entry uses the same loader for its own copy and
+the Optimize controls it demonstrates. Tests alone import the eager `src/i18n/catalogs.ts`
+aggregate. `MessageId` spans all areas via type-only imports; parity, placeholders and unique
+ownership are checked in `catalogs.test.ts`, and `source-copy.test.ts` guards component copy.
 
 Visual review at 1440 × 900: S1 follows the reference's 48 px header, 430 px chart, 36 px dock bar
 and 336 px sidebar, with a sidebar collapse control revealed on hover or keyboard focus. The smoke

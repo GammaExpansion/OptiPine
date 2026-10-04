@@ -1,8 +1,9 @@
 import { writeFile } from 'node:fs/promises';
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { en } from '../src/i18n/en.ts';
-import { zh } from '../src/i18n/zh.ts';
+import { catalogs } from '../src/i18n/catalogs.ts';
 import { installMarketFixtures } from './market-fixtures.ts';
+
+const { en, zh } = catalogs;
 
 /** Every interaction in this pass is a key press; DOM reads only identify the current stop. */
 async function tabTo(page: Page, target: Locator, stops: string[], backwards = false) {

@@ -1,6 +1,7 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
+import { lazyWithCatalog } from '../../i18n/lazyWithCatalog.tsx';
 
-const PropertiesDialog = lazy(() =>
+const PropertiesDialog = lazyWithCatalog('properties', () =>
   import('./PropertiesDialog.tsx').then((module) => ({ default: module.PropertiesDialog })),
 );
 

@@ -1,4 +1,4 @@
-/** Copy used only by the component sheet and its tests. */
+/** Copy used only by the component sheet and chart workbench. */
 export const sheetEn = {
   'sheet.title': 'Components and states',
   'sheet.surfaces': 'Surfaces and text',
@@ -255,4 +255,23 @@ export const sheetEn = {
   'sheet.icon.maximize': 'Maximize',
   'sheet.icon.panel': 'Panel',
   'sheet.icon.logo': 'OptiPine',
+  'charts.devTitle': 'OptiPine · Chart workbench',
+  'charts.devExample': 'Example strategy',
+  'charts.devTrend': 'Trend Breakout',
+  'charts.devRsi': 'RSI Reversal',
+  'charts.devBars': 'Synthetic hourly bars',
+  'charts.devFocus': 'Focus trade',
+  'charts.devTrade': 'Trade number',
+  'charts.devClear': 'Clear focus',
+  'charts.devReset': 'Recent bars',
+  'charts.devLoading': 'Running the example…',
+  'charts.devFailure': 'The example could not run: {reason}',
+  'charts.devReady': '{bars} bars · {trades} trades',
+  'charts.devData': 'BTCUSDT · 1h · Etc/UTC',
+  'charts.devNote': 'Deterministic synthetic data · Examples run locally in a Worker.',
+  'charts.devTrades': 'Trades · hover to highlight, select to focus',
+  'charts.devLanguage': 'Language',
+  'charts.devEnglish': 'EN',
+  'charts.devChinese': '中',
+  'charts.devBarCount': '{count} bars',
 } as const;

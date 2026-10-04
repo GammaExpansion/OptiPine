@@ -1,26 +1,27 @@
-import { lazy, Suspense, type ComponentType } from 'react';
+import { Suspense, type ComponentType } from 'react';
+import { lazyWithCatalog } from '../i18n/lazyWithCatalog.tsx';
 import { useUiStore, type Dialog } from '../state/ui.ts';
 
 // A dialog matters only once it opens, so each loads in a chunk of its own on first use.
-const ScriptDialog = lazy(() =>
+const ScriptDialog = lazyWithCatalog('script', () =>
   import('../dialogs/script/ScriptDialog.tsx').then((module) => ({ default: module.ScriptDialog })),
 );
-const ReplaceScriptDialog = lazy(() =>
+const ReplaceScriptDialog = lazyWithCatalog('script', () =>
   import('../dialogs/script/ReplaceScriptDialog.tsx').then((module) => ({
     default: module.ReplaceScriptDialog,
   })),
 );
-const MarketDataDialog = lazy(() =>
+const MarketDataDialog = lazyWithCatalog('data', () =>
   import('../dialogs/marketData/MarketDataDialog.tsx').then((module) => ({
     default: module.MarketDataDialog,
   })),
 );
-const DateRangeDialog = lazy(() =>
+const DateRangeDialog = lazyWithCatalog('data', () =>
   import('../dialogs/dateRange/DateRangeDialog.tsx').then((module) => ({
     default: module.DateRangeDialog,
   })),
 );
-const LicensesDialog = lazy(() =>
+const LicensesDialog = lazyWithCatalog('licenses', () =>
   import('../dialogs/licenses/LicensesDialog.tsx').then((module) => ({
     default: module.LicensesDialog,
   })),

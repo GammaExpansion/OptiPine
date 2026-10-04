@@ -5,9 +5,7 @@ import { marketDataMessageIds } from '@pine/market-data';
 import { optimizerMessageIds } from '@pine/optimizer';
 import { workerMessageIds } from '@pine/workers';
 import { workflowMessageIds, workflowMessage } from '../workflows/messages.ts';
-import { catalogs } from './catalogs.ts';
-import { en } from './en.ts';
-import { zh } from './zh.ts';
+import { catalogAreas, catalogs } from './catalogs.ts';
 import { sheetEn } from './sheet-en.ts';
 import { sheetZh } from './sheet-zh.ts';
 import { translate, type Language } from './translate.ts';
@@ -21,20 +19,27 @@ test('catalogs have identical keys and placeholders', () => {
   }
 });
 
-test('production catalogs keep both languages complete without component-sheet copy', () => {
-  assert.deepEqual(Object.keys(en).sort(), Object.keys(zh).sort());
-  for (const [language, app] of Object.entries({ en, zh })) {
-    const full = catalogs[language as keyof typeof catalogs];
-    for (const id of Object.keys(full)) {
-      if (!id.startsWith('sheet.')) assert.ok(Object.hasOwn(app, id), id);
-    }
-    assert.ok(Object.keys(app).every((id) => !id.startsWith('sheet.')));
+test('each area has matching languages and every global id has exactly one owner', () => {
+  for (const area of Object.keys(catalogAreas.en) as (keyof typeof catalogAreas.en)[]) {
+    assert.deepEqual(
+      Object.keys(catalogAreas.en[area]).sort(),
+      Object.keys(catalogAreas.zh[area]).sort(),
+      area,
+    );
+  }
+  for (const language of ['en', 'zh'] as const) {
+    const keys = Object.values(catalogAreas[language]).flatMap(Object.keys);
+    assert.equal(new Set(keys).size, keys.length, language);
+  }
+  assert.ok(Object.hasOwn(catalogAreas.en.core, 'shell.backtest'));
+  for (const area of ['optimize', 'data', 'script', 'properties', 'sheet', 'licenses'] as const) {
+    assert.ok(Object.keys(catalogAreas.en[area]).length > 0, area);
   }
 });
 
 test('component-sheet catalogs register their copy only for tests and dev pages', () => {
   for (const [language, sheet] of Object.entries({ en: sheetEn, zh: sheetZh })) {
-    assert.ok(Object.keys(sheet).every((id) => id.startsWith('sheet.')));
+    assert.ok(Object.keys(sheet).every((id) => /^(sheet\.|charts\.dev)/.test(id)));
     for (const id of Object.keys(sheet) as (keyof typeof sheetEn)[]) {
       assert.equal(translate(message(id), language as Language), sheet[id]);
     }

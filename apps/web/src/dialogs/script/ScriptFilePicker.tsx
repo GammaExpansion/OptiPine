@@ -1,11 +1,12 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { lazyWithCatalog } from '../../i18n/lazyWithCatalog.tsx';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { openScript } from '../../state/backtest.ts';
 import { registerFilePicker } from '../../shell/shortcuts.ts';
 import { confirmReplace, setScriptPicker, setScriptReader } from './actions.ts';
 
 // Only a file that cannot be opened shows it, so it loads then.
-const FileErrorDialog = lazy(() =>
+const FileErrorDialog = lazyWithCatalog('script', () =>
   import('./FileErrorDialog.tsx').then((module) => ({ default: module.FileErrorDialog })),
 );
 

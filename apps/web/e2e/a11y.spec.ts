@@ -1,9 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { writeFile } from 'node:fs/promises';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { en } from '../src/i18n/en.ts';
-import { zh } from '../src/i18n/zh.ts';
+import { catalogs } from '../src/i18n/catalogs.ts';
 import { installMarketFixtures } from './market-fixtures.ts';
+
+const { en, zh } = catalogs;
 
 const sizes = [
   { name: 'desktop', width: 1440, height: 900 },

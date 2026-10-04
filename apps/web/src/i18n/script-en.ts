@@ -1,0 +1,20 @@
+/** Copy loaded with the script area. */
+export const scriptEn = {
+  'script.menu': 'Script menu',
+  'script.pasteReplace': 'Paste from clipboard and replace',
+  'script.download': 'Download .pine',
+  'script.shortcut': 'Ctrl O',
+  'script.examples': 'Example strategies',
+  'script.facts': 'Pine v{version}, {inputs} inputs, {plots} plots, compiled in {duration} ms',
+  'script.fileError': 'Could not open the file. Choose a readable .pine file.',
+  'script.pasteTitle': 'Paste Pine code',
+  'script.pasteHint': 'Paste a Pine Script v5 or v6 strategy.',
+  'script.pastePlaceholder': 'Paste code here',
+  'script.clipboardError': 'Clipboard access is unavailable. Paste the code here using Ctrl + V.',
+  'script.source': 'Pine source',
+  'script.replaceTitle': 'Replace the current script?',
+  'script.replaceEdited': 'Your edits to {name} since it was opened will be lost.',
+  'script.downloadReminder': 'Download the current .pine file first if you want to keep it.',
+  'script.replace': 'Replace script',
+  'script.useCode': 'Use this code',
+} as const;

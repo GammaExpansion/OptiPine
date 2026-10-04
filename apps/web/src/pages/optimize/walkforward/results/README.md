@@ -27,10 +27,10 @@ There is no fixture route, branch or import in production code.
 
 ## Copy and first-load budgets
 
-WF results copy stays in contiguous optimize.wfResults blocks at the end of the shared i18n/en.ts
-and zh.ts objects. Catalog loading uses the existing mechanism; a uniform page split is deferred.
-The shared English catalog measures 51,889 bytes, so its S1 budget is 58,000 bytes (about 6 KB of
-headroom). The code budget stays at 788,000 bytes and the entry budget at 484,500 bytes.
+WF results copy lives in `i18n/optimize-en.ts` and `optimize-zh.ts`, loaded with the Optimize page.
+Shared window labels stay in core because Backtest also uses them. The English core catalog is
+19,851 bytes with a 26,000-byte S1 budget. The independent code and entry budgets remain unchanged
+in `e2e/results.spec.ts`.
 
 ## Verification
 

@@ -149,12 +149,11 @@ test('S1 keeps results, dialogs, the script menu, Optimize and Chinese out of th
   await page.waitForLoadState('networkidle');
   const scripts = await Promise.all(requested);
   const lazy =
-    /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|market-selection|symbol-search|ScriptMenuContent|OptimizePage|optimization-services|optimize-|PreviewContent|PineEditor|RightDrawer|\/sheet-|\/zh-)/;
+    /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|market-selection|symbol-search|ScriptMenuContent|OptimizePage|optimization-services|optimize-|PreviewContent|PineEditor|RightDrawer|\/(?:sheet|licenses|data|script|properties)-(?:en|zh)-|\/zh-)/;
   expect(scripts.map(({ file }) => file).filter((file) => lazy.test(file))).toEqual([]);
   // Measured with the editor deferred until there is something to edit, the tablet and phone
-  // layouts, the optimization side, walk-forward included, loading when Optimize first opens, and
-  // the component sheet's copy in a catalog of its own: 487,658 bytes of code, without
-  // CodeMirror's, 483,451 of them in the entry, and the English catalog's 49,585. The code budgets
+  // layouts and the optimization side, walk-forward included, loading when Optimize first opens:
+  // 487,658 bytes of code without CodeMirror, 483,451 of them in the entry. The code budgets
   // leave about 6 KB, less than the script menu (14 KB) or the market data dialog (19 KB) would
   // add if either loaded with the page again.
   const catalog = /\/en-[^/]*\.js$/;
@@ -162,12 +161,11 @@ test('S1 keeps results, dialogs, the script menu, Optimize and Chinese out of th
   const code = sum(scripts.filter(({ file }) => !catalog.test(file)));
   expect(code).toBeGreaterThan(0);
   expect(code).toBeLessThan(493_500);
-  // The catalog grows with the copy of every feature. It is checked on its own, about 6 KB over
-  // its size, so new copy never pushes the code over its budget; a catalog that outgrows this
-  // budget is a reason to look at what it carries, then to raise the budget.
+  // Area copy loads with its UI. Core fell from 53,508 to 19,851 bytes; allow about 6 KB for
+  // shell, Backtest and shared additions without changing the independent code budgets.
   const catalogBytes = sum(scripts.filter(({ file }) => catalog.test(file)));
   expect(catalogBytes).toBeGreaterThan(0);
-  expect(catalogBytes).toBeLessThan(55_500);
+  expect(catalogBytes).toBeLessThan(26_000);
   const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
   const entryFiles = new Set(
     [...html.matchAll(/(?:src|href)="([^"\s]+\.js)"/g)].map((match) => match[1]),

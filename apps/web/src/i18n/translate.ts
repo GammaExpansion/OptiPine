@@ -1,55 +1,50 @@
 import { errorText, message, plainText, type MessageValues, type Text } from '@pine/messages';
-import type { MessageId as AppMessageId } from './en.ts';
-import type { sheetEn } from './sheet-en.ts';
-
-export type Language = 'en' | 'zh';
-export type MessageId = AppMessageId | keyof typeof sheetEn;
-export type Catalog = Readonly<Partial<Record<MessageId, string>>>;
+import { createCatalogLoader } from './catalog-loader.ts';
+import type { Catalog, CatalogArea, Language, MessageId } from './types.ts';
+export type { Catalog, CatalogArea, Language, MessageId } from './types.ts';
 
 export function defaultLanguage(locale: string): Language {
   return /^zh(?:-|$)/i.test(locale) ? 'zh' : 'en';
 }
 
-/**
- * The catalogs `translate` can use. The app loads the active language's before its first render
- * and the other when the language first switches to it (`loadCatalog`), so the first screen
- * carries one language; tests and the dev pages register both at once (`catalogs.ts`).
- */
-const catalogs: Partial<Record<Language, Catalog>> = {};
-const loading: Partial<Record<Language, Promise<void>>> = {};
-const listeners = new Set<() => void>();
-
-export function registerCatalog(language: Language, catalog: Catalog): void {
-  catalogs[language] = catalog;
-  for (const listener of listeners) listener();
-}
-
-export function hasCatalog(language: Language): boolean {
-  return catalogs[language] !== undefined;
-}
-
-/** Call `listener` whenever a catalog becomes available; returns the unsubscribe. */
-export function onCatalog(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
-/** Make `language`'s catalog available, fetching its chunk the first time; a failure may retry. */
-export function loadCatalog(language: Language): Promise<void> {
-  if (hasCatalog(language)) return Promise.resolve();
-  loading[language] ??= (
-    language === 'zh'
-      ? import('./zh.ts').then((module) => module.zh)
-      : import('./en.ts').then((module) => module.en)
-  ).then(
-    (catalog) => registerCatalog(language, catalog),
-    (error: unknown) => {
-      delete loading[language];
-      throw error;
-    },
-  );
-  return loading[language];
-}
+const imports: Record<CatalogArea, Record<Language, () => Promise<Catalog>>> = {
+  core: {
+    en: () => import('./en.ts').then((m) => m.en),
+    zh: () => import('./zh.ts').then((m) => m.zh),
+  },
+  optimize: {
+    en: () => import('./optimize-en.ts').then((m) => m.optimizeEn),
+    zh: () => import('./optimize-zh.ts').then((m) => m.optimizeZh),
+  },
+  data: {
+    en: () => import('./data-en.ts').then((m) => m.dataEn),
+    zh: () => import('./data-zh.ts').then((m) => m.dataZh),
+  },
+  script: {
+    en: () => import('./script-en.ts').then((m) => m.scriptEn),
+    zh: () => import('./script-zh.ts').then((m) => m.scriptZh),
+  },
+  properties: {
+    en: () => import('./properties-en.ts').then((m) => m.propertiesEn),
+    zh: () => import('./properties-zh.ts').then((m) => m.propertiesZh),
+  },
+  sheet: {
+    en: () => import('./sheet-en.ts').then((m) => m.sheetEn),
+    zh: () => import('./sheet-zh.ts').then((m) => m.sheetZh),
+  },
+  licenses: {
+    en: () => import('./licenses-en.ts').then((m) => m.licensesEn),
+    zh: () => import('./licenses-zh.ts').then((m) => m.licensesZh),
+  },
+};
+const loader = createCatalogLoader((language, area) => imports[area][language]());
+export const registerCatalog = loader.register;
+export const hasCatalog = loader.has;
+export const onCatalog = loader.subscribe;
+export const catalogRevision = loader.revision;
+export const hasRequestedCatalogs = loader.ready;
+export const loadRequestedCatalogs = loader.loadRequested;
+export const loadCatalog = loader.load;
 
 /**
  * Literal source text stays literal; package messages and nested groups are translated
@@ -64,7 +59,7 @@ export function translate(text: Text, language: Language): string {
       .map((part) => translate(part, language))
       .join(translate(text.separator, language));
   }
-  const catalog = catalogs[language];
+  const catalog = loader.get(language);
   if (!catalog || !Object.hasOwn(catalog, text.id)) return plainText(text);
   const one = `${text.id}.one`;
   const id = text.values.count === 1 && Object.hasOwn(catalog, one) ? one : text.id;
