@@ -224,13 +224,34 @@ test('the fixed set takes each row fixed value; its mean loss is measured in eve
 });
 
 test('the selection is the picked window, else the last that ran a set', () => {
+  const month = 30 * 86_400;
   const row = (index: number, status: WindowResult['status']) =>
-    ({ plan: { index }, status, trialId: status === 'done' ? `t${index}` : null }) as WindowResult;
+    ({
+      plan: {
+        index,
+        inSampleStart: index * month,
+        inSampleEnd: (index + 2) * month,
+        outOfSampleStart: (index + 2) * month,
+        outOfSampleEnd: (index + 3) * month,
+      },
+      status,
+      trialId: status === 'done' ? `t${index}` : null,
+    }) as WindowResult;
   const rows = [row(0, 'done'), row(1, 'done'), row(2, 'flat')];
+  // The origin carries the window's ranges, for its preview to mark on the chart.
   assert.deepEqual(windowSelection(rows, null, 4), {
     window: rows[1],
     explicit: false,
-    origin: { kind: 'window', optimizationId: 4, trialId: 't1', window: 1 },
+    origin: {
+      kind: 'window',
+      optimizationId: 4,
+      trialId: 't1',
+      window: 1,
+      ranges: {
+        inSample: { start: month, end: 3 * month },
+        outOfSample: { start: 3 * month, end: 4 * month },
+      },
+    },
   });
   assert.deepEqual(windowSelection(rows, 2, 4), { window: rows[2], explicit: true, origin: null });
   assert.equal(windowSelection([row(0, 'waiting')], null, 4), null);

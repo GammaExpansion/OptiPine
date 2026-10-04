@@ -683,3 +683,57 @@ test('cancel stops a running preview; a new preview replaces the open one', asyn
   assert.equal(session.getState().preview?.run.status, 'cancelled');
   assert.equal(session.getState().run.status, 'done');
 });
+
+test('an opened script drops the previous script result, run state and preview', async () => {
+  const ready = await completedRun();
+  const { session } = ready;
+  const before = session.getState();
+  // An edit is the same script: its result stays, marked outdated (B9).
+  session.setSource(`${strategySource}\n// edited`);
+  await ready.answerAll();
+  assert.equal(session.getState().scriptId, before.scriptId);
+  assert.equal(session.getState().result, before.result);
+  assert.deepEqual(session.getState().outdated?.reasons, ['source']);
+  const previewing = session.preview(set, origin);
+  await ready.answerAll();
+  await previewing;
+  assert.notEqual(session.getState().preview, null);
+
+  const other = strategySource.replace('"Test strategy"', '"Other strategy"');
+  session.setSource(other, true);
+  await ready.answerAll();
+  const opened = session.getState();
+  assert.equal(opened.scriptId, before.scriptId + 1);
+  assert.equal(opened.result, null);
+  assert.equal(opened.outdated, null);
+  assert.equal(opened.preview, null);
+  assert.deepEqual(opened.run, { status: 'idle' });
+
+  // Opening the same text again is the same script, so its result stays.
+  const running = session.run();
+  await ready.answerAll();
+  await running;
+  const result = session.getState().result;
+  session.setSource(other, true);
+  assert.equal(session.getState().scriptId, opened.scriptId);
+  assert.equal(session.getState().result, result);
+});
+
+test('a failed run is not the state of the next opened script', async () => {
+  const { session, answerAll } = await readySession();
+  session.setSource(
+    strategySource.replace(
+      'plot(basis',
+      'if bar_index == 120\n    runtime.error("boom")\nplot(basis',
+    ),
+  );
+  await answerAll();
+  const running = session.run();
+  await answerAll();
+  await running;
+  assert.equal(session.getState().run.status, 'failed');
+  session.setSource(strategySource, true);
+  await answerAll();
+  assert.deepEqual(session.getState().run, { status: 'idle' });
+  assert.deepEqual(backtestIssues(session.getState()), []);
+});

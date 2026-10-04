@@ -102,3 +102,31 @@ test('cards preserve missing net values and validation None never invents OOS', 
   expect(card).not.toHaveTextContent('OOS');
   expect(card.querySelector('[data-profit]')).toBeNull();
 });
+
+test('cards write whole amounts, as the desktop table and the selection bar do (#14)', async () => {
+  await results();
+  const store = getOptimizationStore();
+  const views = optimization().views!;
+  const [first] = views.leaderboard.rows;
+  act(() =>
+    store.setState({
+      views: {
+        ...views,
+        leaderboard: {
+          ...views.leaderboard,
+          rows: [
+            {
+              ...first,
+              inSample: { ...first.inSample, netProfit: 25_412.82 },
+              outOfSample: { ...first.outOfSample!, netProfit: -1_147.8 },
+            },
+          ],
+        },
+      },
+    }),
+  );
+  renderInEnglish(<LeaderboardPanel />);
+  const card = screen.getByRole('button', { name: 'Select set #1' });
+  expect(card).toHaveTextContent('IS+25,413');
+  expect(card).toHaveTextContent('OOS−1,148');
+});

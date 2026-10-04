@@ -134,7 +134,8 @@ for (const language of ['en', 'zh'] as const) {
     });
     await expect(summary).toContainText('+7,600');
     await expect(table.locator('tr[data-selected]')).toContainText('W3');
-    await expect(selection).toContainText('-860');
+    // Losses take a true minus sign, as the leaderboard's do.
+    await expect(selection).toContainText('−860');
     await noOverflow(page);
     await page.screenshot({ path: info.outputPath(`W1-${language}.png`) });
     await page.evaluate(() => {

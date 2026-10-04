@@ -83,17 +83,29 @@ function createBacktestStore(services: AppServices) {
       readonly actions: typeof actions;
     }
   >()(() => ({ ...session.getState(), fileName: null, origin: null, actions }));
+  /** The script whose first result has arrived; see `showFirstResult`. */
+  let reported = -1;
+  /**
+   * The first result of a newly opened script lands on the Report when the dock shows the Pine
+   * code, where opening a script leaves it; after that the user's tab choice stands.
+   */
+  const showFirstResult = (state: BacktestState) => {
+    if (!state.result || reported === state.scriptId) return;
+    reported = state.scriptId;
+    if (uiStore.getState().dockTab === 'code') uiStore.getState().setDockTab('report');
+  };
   // Running, previewing or applying a set keeps the source, so only an edit marks the script.
   services.onDispose(
-    session.subscribe((state) =>
+    session.subscribe((state) => {
       store.setState(({ origin }) => {
         const edited = state.source !== opened;
         return {
           ...state,
           origin: origin && origin.edited !== edited ? { ...origin, edited } : origin,
         };
-      }),
-    ),
+      });
+      showFirstResult(state);
+    }),
   );
   services.onDispose(() => openVersion++);
   return store;

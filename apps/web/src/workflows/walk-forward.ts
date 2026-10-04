@@ -16,7 +16,7 @@ import {
   type WalkForwardResult,
 } from '@pine/optimizer';
 import type { OptimizationTrial } from '@pine/workers';
-import type { ParameterOrigin } from './inputs.ts';
+import type { ParameterOrigin, WindowRanges } from './inputs.ts';
 import {
   metricConstraint,
   objectiveMetric,
@@ -47,6 +47,14 @@ export interface WindowPlan {
   /** The final window's OOS range ends early with the data. */
   readonly partial: boolean;
   readonly gapBefore: boolean;
+}
+
+/** A planned window's ranges, as a window's preview marks them on the chart. */
+export function windowRanges(plan: WindowPlan): WindowRanges {
+  return {
+    inSample: { start: plan.inSampleStart, end: plan.inSampleEnd },
+    outOfSample: { start: plan.outOfSampleStart, end: plan.outOfSampleEnd },
+  };
 }
 
 export function windowPlan(plan: WalkForwardBounds): WindowPlan {
@@ -652,7 +660,13 @@ export function windowSelection(
     explicit,
     origin:
       row.status === 'done' && row.trialId
-        ? { kind: 'window', optimizationId, trialId: row.trialId, window: row.plan.index }
+        ? {
+            kind: 'window',
+            optimizationId,
+            trialId: row.trialId,
+            window: row.plan.index,
+            ranges: windowRanges(row.plan),
+          }
         : null,
   };
 }

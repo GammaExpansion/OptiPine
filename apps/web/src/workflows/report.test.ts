@@ -210,9 +210,10 @@ test('report CSV translates only headers, escapes fields and preserves percentag
     keyFigures: '关键,指标\n"汇总"',
   });
   assert.ok(csv.startsWith('"关键,指标\n""汇总""",,,\r\n指标,全部,多,空\r\n'));
-  assert.ok(csv.includes('Net profit,579.62,,\r\nNet profit,5.7962%,,\r\n'));
+  // The percent row is named apart from the amount, after the engine's "All %" column.
+  assert.ok(csv.includes('Net profit,579.62,,\r\nNet profit %,5.7962%,,\r\n'));
   assert.ok(
-    csv.includes('Max drawdown (intrabar),-123.45,,\r\nMax drawdown (intrabar),-1.23%,,\r\n'),
+    csv.includes('Max drawdown (intrabar),-123.45,,\r\nMax drawdown (intrabar) %,-1.23%,,\r\n'),
   );
   assert.ok(csv.includes('Gross loss,0,-5,-5\r\n'));
   assert.ok(csv.includes('Percent profitable,75%,,\r\n'));

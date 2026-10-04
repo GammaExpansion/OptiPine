@@ -1,5 +1,5 @@
-import type { RunInput, ScriptDescription } from '@pine/engine';
-import { restoreError, TextError, type Text } from '@pine/messages';
+import type { ParameterSet, RunInput, ScriptDescription } from '@pine/engine';
+import { errorText, isMessage, restoreError, TextError, type Text } from '@pine/messages';
 import type { TrialResult } from '@pine/optimizer';
 import { workerError, workerMessage } from './messages.ts';
 import type {
@@ -46,6 +46,7 @@ export class EngineWorkerClient {
   #nextRequestId = 1;
   #sourceRevision = 0;
   #disposed = false;
+  #prepared: { source: string; common: RunInput; revision: number } | null = null;
 
   /** `factory` creates the module Worker whose entry calls `serveEngineWorker`. */
   constructor(factory: EngineWorkerFactory) {
@@ -86,6 +87,34 @@ export class EngineWorkerClient {
     return this.#request<TrialResult>({ kind: 'run', source, input }, sourceRevision);
   }
 
+  /** Reuse an immutable common snapshot in this Worker; only parameter overrides travel again. */
+  reproduce(
+    source: string,
+    common: RunInput,
+    parameters: ParameterSet,
+    sourceRevision = this.#sourceRevision,
+  ): Promise<TrialResult> {
+    this.setSourceRevision(sourceRevision);
+    const previous = this.#prepared;
+    const same =
+      previous?.source === source &&
+      previous.common === common &&
+      previous.revision === sourceRevision;
+    const prepared = { source, common, revision: sourceRevision };
+    this.#prepared = prepared;
+    return this.#request<TrialResult>(
+      { kind: 'reproduce', source, common: same ? undefined : common, parameters },
+      sourceRevision,
+    ).catch((error) => {
+      if (this.#prepared === prepared) this.#prepared = null;
+      const text = errorText(error);
+      // A custom dispatcher may have lost its snapshot. Replay it once, as on a fresh Worker.
+      if (same && isMessage(text) && 'id' in text && text.id === 'invalidOptimizationDispatch')
+        return this.reproduce(source, common, parameters, sourceRevision);
+      throw error;
+    });
+  }
+
   /** Synchronous engine execution is interrupted by terminating its worker, never by a flag. */
   cancel(): void {
     if (this.#disposed) return;
@@ -102,7 +131,9 @@ export class EngineWorkerClient {
 
   #request<T extends ScriptDescription | TrialResult>(
     payload:
-      { kind: 'describe'; source: string } | { kind: 'run'; source: string; input: RunInput },
+      | { kind: 'describe'; source: string }
+      | { kind: 'run'; source: string; input: RunInput }
+      | { kind: 'reproduce'; source: string; common?: RunInput; parameters: ParameterSet },
     sourceRevision: number,
   ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
@@ -164,7 +195,10 @@ export class EngineWorkerClient {
       pending.reject(error);
     } else if (response.kind === 'described' && pending.kind === 'describe') {
       pending.resolve(response.description);
-    } else if (response.kind === 'ran' && pending.kind === 'run') {
+    } else if (
+      response.kind === 'ran' &&
+      (pending.kind === 'run' || pending.kind === 'reproduce')
+    ) {
       pending.resolve(response.result);
     } else {
       pending.reject(workerError('engineWorkerResponseMismatch'));
@@ -183,6 +217,7 @@ export class EngineWorkerClient {
   }
 
   #stopWorker(): void {
+    this.#prepared = null;
     ++this.#generation;
     if (!this.#worker) return;
     this.#worker.onmessage = null;

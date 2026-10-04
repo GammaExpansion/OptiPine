@@ -179,6 +179,11 @@ export interface AppliedSet {
 export interface BacktestState {
   readonly source: string;
   readonly sourceRevision: number;
+  /**
+   * Identifies the open script: it grows when a script is opened in place of the current one, and
+   * an edit keeps it. Whatever was computed with an older one belongs to another script.
+   */
+  readonly scriptId: number;
   readonly compile: CompileState;
   /**
    * The last successful compile: inputs and properties keep coming from it while a newer one
@@ -338,6 +343,7 @@ export class BacktestSession implements Observable<BacktestState> {
       derive({
         source: '',
         sourceRevision: client.sourceRevision,
+        scriptId: 0,
         compile: { status: 'empty' },
         description: null,
         inputs: [],
@@ -391,7 +397,8 @@ export class BacktestSession implements Observable<BacktestState> {
    * Replace the script and recompile it; a run in progress is discarded with the old source. An
    * edit keeps the values of inputs whose title and type survive, and the property overrides
    * (WEB.md 3.1). `opened` marks a script opened in place of the current one, which starts from
-   * its own defaults instead: nothing carries over from the previous script.
+   * its own defaults instead: nothing carries over from the previous script, neither its result,
+   * its last run's state nor an open preview of its parameters.
    */
   setSource(source: string, opened = false): void {
     const state = this.getState();
@@ -412,7 +419,16 @@ export class BacktestSession implements Observable<BacktestState> {
     this.#client.setSourceRevision(sourceRevision);
     this.#beforeApply = null;
     const fresh: Partial<BaseState> = opened
-      ? { description: null, inputs: [], scriptProperties: null, propertyOverrides: {} }
+      ? {
+          scriptId: state.scriptId + 1,
+          description: null,
+          inputs: [],
+          scriptProperties: null,
+          propertyOverrides: {},
+          run: { status: 'idle' },
+          result: null,
+          preview: null,
+        }
       : {};
     if (!source.trim()) {
       this.#update({
