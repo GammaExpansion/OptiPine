@@ -18,6 +18,7 @@ import {
   heatTokens,
   fitMap,
   mapGeometry,
+  verticalTitle,
 } from './geometry.ts';
 import styles from './canvas.module.css';
 import { markersByCell, type MapMarker } from './map-markers.ts';
@@ -252,15 +253,17 @@ export function HeatmapCanvas({
         ctx.textAlign = 'center';
         ctx.fillStyle = color('--secondary');
         if (map.yKey) {
-          ctx.save();
-          ctx.translate(14, layer.top + (layer.ys.length * cellPitch) / 2);
-          ctx.rotate(-Math.PI / 2);
-          ctx.fillText(
-            text(axisLabel(map.yKey, map.display?.yBinSize ?? 1)),
-            0,
-            0,
-            Math.max(70, layer.ys.length * cellPitch),
+          const title = text(axisLabel(map.yKey, map.display?.yBinSize ?? 1));
+          // A layered map's band starts at its rows, below the layer's caption.
+          const { centre, span } = verticalTitle(
+            ctx.measureText(title).width,
+            { top: layer.top, height: layer.ys.length * cellPitch },
+            { top: map.zKey ? layer.top : 2, bottom: bottom + 62 },
           );
+          ctx.save();
+          ctx.translate(14, centre);
+          ctx.rotate(-Math.PI / 2);
+          ctx.fillText(title, 0, 0, span);
           ctx.restore();
         }
         ctx.fillText(

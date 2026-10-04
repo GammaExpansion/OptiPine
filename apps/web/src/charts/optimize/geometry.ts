@@ -135,3 +135,22 @@ export function colorStep(cell: HeatmapCell): number | null {
     ? Math.max(0, Math.min(8, cell.rankBin))
     : null;
 }
+
+/**
+ * Where the vertical Y axis title goes: centred on the rows where it fits, otherwise as far along
+ * as the layer's band allows (`top` to `bottom`), so a title longer than the rows extends past them
+ * instead of being cut at the canvas edge (bug bash #33). `span` is the length it is drawn at:
+ * its own, unless even the band is shorter.
+ */
+export function verticalTitle(
+  length: number,
+  rows: { readonly top: number; readonly height: number },
+  band: { readonly top: number; readonly bottom: number },
+): { centre: number; span: number } {
+  const span = Math.min(length, band.bottom - band.top);
+  const centre = Math.min(
+    Math.max(rows.top + rows.height / 2, band.top + span / 2),
+    band.bottom - span / 2,
+  );
+  return { centre, span };
+}

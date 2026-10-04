@@ -8,6 +8,7 @@ import {
   heatTokens,
   fitMap,
   mapGeometry,
+  verticalTitle,
 } from './geometry.ts';
 import { curveGeometry } from './curve-geometry.ts';
 
@@ -157,4 +158,22 @@ it('curve scales include IS, OOS and the neighbourhood, handling flat and missin
   expect(geometry.indexAt(-100)).toBe(0);
   expect(geometry.indexAt(800)).toBe(1);
   expect(Number.isFinite(curveGeometry({ ...curve, points: [] }, 300, 210).y(0))).toBe(true);
+});
+
+describe('vertical axis title', () => {
+  it('centres on the rows, and runs past short rows within its band (bug bash #33)', () => {
+    const rows = { top: 8, height: 180 };
+    const band = { top: 2, bottom: 250 };
+    expect(verticalTitle(60, rows, band)).toEqual({ centre: 98, span: 60 });
+    // "Use trailing stop" over two 18 px rows: whole, from the top of the canvas down.
+    expect(verticalTitle(95, { top: 8, height: 36 }, { top: 2, bottom: 108 })).toEqual({
+      centre: 49.5,
+      span: 95,
+    });
+    // Longer than the whole band: drawn at the band's length, filling it.
+    expect(verticalTitle(140, { top: 8, height: 36 }, { top: 2, bottom: 108 })).toEqual({
+      centre: 55,
+      span: 106,
+    });
+  });
 });
