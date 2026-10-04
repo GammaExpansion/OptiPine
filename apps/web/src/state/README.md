@@ -36,7 +36,9 @@ bridge subscriptions and record provenance. Optimization snapshots never publish
   Store tests run in Vitest: this layer imports React and Vite's raw example sources. Node tests
   keep importing the framework-free workflows and catalogs directly.
 
-Page slots intentionally retain the scaffold's empty states. `shell/DialogsRoot.tsx` is the single
-mount point driven by `ui.openDialogs`; phase 2 adds the `dialogs/` components to its slot map.
-`registerFilePicker(handler)` in `shell/shortcuts.ts` connects Ctrl+O to the file UI and returns
-its unregister callback. Ctrl+Enter runs a ready Backtest page; editors and dialogs own their keys.
+`shell/DialogsRoot.tsx` is the single mount point driven by `ui.openDialogs`. It loads the script,
+replace-script, market data and date range dialogs, each in a chunk of its own on first use, and
+`Shell` adds the strategy properties and failed-combinations dialogs through its `slots`.
+`registerFilePicker(handler)` in `shell/shortcuts.ts` connects Ctrl+O to the script file picker
+(`dialogs/script/ScriptFilePicker.tsx`) and returns its unregister callback. Ctrl+Enter runs a
+ready Backtest page, or its preview; editors and dialogs own their keys.

@@ -9,7 +9,13 @@ import { Select } from '../../components/Select.tsx';
 import { TextInput } from '../../components/TextInput.tsx';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { type DatasetInput } from '../../workflows/backtest.ts';
-import { calendarFromJson, csvInput, inspectCsv, type CsvInspection } from './csv-import.ts';
+import {
+  calendarFromJson,
+  csvInput,
+  csvTimeframeWarning,
+  inspectCsv,
+  type CsvInspection,
+} from './csv-import.ts';
 import { defaultProfile, ProfileFields } from './ProfileFields.tsx';
 import { PreviewSummary } from './PreviewSummary.tsx';
 import styles from './DataDialog.module.css';
@@ -39,6 +45,10 @@ export function CsvPanel({ onReady }: { onReady: (value: CsvReady | null) => voi
   const validated = useMemo(
     () => csvInput(inspection.dataset, symbol, timeframe, type, profile, calendar),
     [inspection, symbol, timeframe, type, profile, calendar],
+  );
+  const timeframeWarning = useMemo(
+    () => csvTimeframeWarning(inspection.dataset, timeframe, profile.timezone),
+    [inspection.dataset, timeframe, profile.timezone],
   );
   useEffect(() => {
     onReady(
@@ -167,6 +177,11 @@ export function CsvPanel({ onReady }: { onReady: (value: CsvReady | null) => voi
             )}
           </FieldRow>
         </div>
+        {timeframeWarning && (
+          <Note tone="amber" role="status">
+            {text(timeframeWarning)}
+          </Note>
+        )}
         <FieldRow label={t('csv.type')}>
           <Select
             label={t('csv.type')}

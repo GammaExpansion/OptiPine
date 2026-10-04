@@ -879,6 +879,26 @@ test('axes follow the user, swapping when an input takes another axis (R4, R12)'
   );
 });
 
+test('the map colours around the objective break-even, best cells at the profit end (R4)', async () => {
+  const h = await harness();
+  await complete(h);
+  const view = () => (h.analysis.requests[0].input as { view: AnalysisRunView }).view;
+  const panel = () => h.session.getState().views!.map!.panel;
+  assert.deepEqual(panel().scale, { direction: 'maximize', breakEven: 0 });
+  h.session.setObjective('profitFactor');
+  assert.equal(view().breakEven, 1);
+  await h.analysis.answerAll();
+  assert.equal(panel().display?.breakEven, 1);
+  // A drawdown has no break-even, and the smallest one is the best.
+  h.session.setObjective('maxDrawdown');
+  assert.deepEqual([view().direction, view().breakEven], ['minimize', undefined]);
+  await h.analysis.answerAll();
+  const values = panel().cells.flatMap((cell) => (cell.value === null ? [] : [cell.value]));
+  const top = panel().cells.find((cell) => cell.rankBin === 8);
+  assert.equal(top?.value, Math.min(...values));
+  assert.equal(panel().display?.best, Math.min(...values));
+});
+
 test('walk-forward settings are planned and checked by the analysis job (O3)', async () => {
   const daily: MarketBar[] = syntheticBars(730).map((bar, index) => ({
     ...bar,

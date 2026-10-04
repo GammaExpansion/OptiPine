@@ -226,6 +226,9 @@ export const en = {
   'inputs.count': '{count} inputs, {changed} changed',
   'inputs.countOne': '1 input, 1 changed',
   'inputs.default': 'Default {value}',
+  'inputs.fromDefault': 'From {set}, default {value}',
+  'inputs.fromFailedDefault': 'From a failed set, default {value}',
+  'inputs.fromFixedDefault': 'From the fixed parameters, default {value}',
   'inputs.range': '{min} – {max}',
   'inputs.step': 'Step {step}',
   'inputs.min': 'Min {min}',
@@ -346,6 +349,7 @@ export const en = {
   'optimize.map.chooseAxis': '{axis} axis',
   'optimize.map.none': 'None',
   'optimize.map.max': 'Max',
+  'optimize.map.min': 'Min',
   'optimize.map.mean': 'Mean',
   'optimize.map.slice': '{title} slice',
   'optimize.map.axisTitle': '{title}',
@@ -362,7 +366,7 @@ export const en = {
   'optimize.map.keyboard':
     'Arrow keys inspect cells; Enter selects a set or opens bin detail. Escape clears the hover.',
   'optimize.map.canvas': 'Parameter heatmap',
-  'optimize.map.legend': 'Rank colours: minimum, zero, maximum',
+  'optimize.map.legend': 'Rank colours from the worst value to the best',
   'optimize.map.coveredValues': 'Values covered by the cell',
   'optimize.map.notSampled': 'Not sampled',
   'optimize.map.incomplete': 'Incomplete',
@@ -745,6 +749,8 @@ export const en = {
   feedTooManyBars: 'A fetch is limited to {count} bars. Choose a shorter range.',
   feedUpstreamDetail: 'The provider refused the request: {detail}',
   feedYahooInstrument: 'This Yahoo Finance instrument is not supported.',
+  feedYahooOhlc:
+    'Yahoo returned inconsistent OHLC for {symbol}, beyond the {percent}% correction limit. Affected days: {count}; latest: {date}. Choose a range that starts after {date}, or use another data source.',
   feedYahooRange: 'Yahoo Finance limits this timeframe to the last {days} days.',
   importCalendar: 'Trading calendar',
   importNotReady: 'Preview the data before using it.',
@@ -782,7 +788,7 @@ export const en = {
   'optimize.summary.scatter': 'IS vs OOS',
   'optimize.summary.distribution': 'Distribution',
   'optimize.summary.leading': 'Top 20 (current ranking)',
-  'optimize.summary.fullRange': 'Top 20 (full-range net profit)',
+  'optimize.summary.fullRange': 'Top 20 ({objective}, full range)',
   'optimize.summary.median': 'Median',
   'optimize.summary.best': '#1',
   'optimize.summary.unvalidated': 'Unvalidated',
@@ -835,7 +841,6 @@ export const en = {
   'optimize.leaderboard.best': 'Best reached: {value}',
   'optimize.leaderboard.remove': 'Remove',
   'optimize.leaderboard.removeFilter': 'Remove {condition}',
-  'optimize.leaderboard.condition': '{metric} {operator} {value}',
   'optimize.leaderboard.metric.netProfit': 'Net profit',
   'optimize.leaderboard.metric.annualizedReturn': 'Annualized return',
   'optimize.leaderboard.metric.profitFactor': 'Profit factor',
@@ -939,7 +944,9 @@ export const en = {
   'data.to': 'to',
   'data.limits': 'Up to 100,000 bars per fetch; only closed bars are loaded.',
   'data.yahooLimits':
-    'Yahoo history: 729 days for 1h and 1D; 59 days for shorter intraday timeframes.',
+    'Yahoo history: 730 days for 1h; 60 days for shorter intraday timeframes; full daily history.',
+  'data.calendarEstimated':
+    'Older daily session closes are estimated from Yahoo’s current regular hours. Historical early closes and changes to trading hours may differ.',
   'data.limited': 'This preset is shortened to the provider’s history limit.',
   'data.fetch': 'Fetch data',
   'data.use': 'Use this data',
@@ -949,6 +956,7 @@ export const en = {
   'data.fetching': 'Fetching {symbol} {timeframe}',
   'data.fetchingAbout': 'Fetching about {count} bars',
   'data.previewFor': 'Preview · {symbol}, {timeframe}',
+  'data.previewTimeframe': 'Preview · {timeframe}',
   'data.previewHint':
     'A preview appears here once a symbol and dates are selected and the data is fetched',
   'data.pricePreview': 'Closing prices in the selected range',
@@ -970,6 +978,8 @@ export const en = {
   'data.serverNote':
     'Market data is fetched by the server; scripts and backtests run only in your browser',
   'data.unadjusted': 'Prices use the provider’s OHLC; no additional adjustment is applied.',
+  'data.ohlcNormalized':
+    'Yahoo forex high/low expanded on {count} bars to include open/close (at most 0.05%). Open, close and volume are unchanged.',
   'data.estimated':
     'Yahoo does not publish trading rules: tick size is estimated from quote precision; point value and minimum order size default to 1. Verify before use.',
   'data.refusedBy': '{provider} refused the request',
@@ -1017,6 +1027,8 @@ export const en = {
   'csv.hint':
     'Drop a TradingView “Export chart data” CSV: time, open, high, low, close and Volume. Time must be Unix seconds; other columns are ignored.',
   'csv.timeframeHint': 'Pine units, e.g. 60 or 1D',
+  'csv.timeframeMismatch':
+    'Bars are most often {minutes} minutes apart; the selected timeframe is {timeframe}. Check the timeframe; session breaks or missing bars can change spacing.',
   'csv.type': 'Symbol type',
   'csv.type.crypto': 'Crypto',
   'csv.type.stock': 'Stock',

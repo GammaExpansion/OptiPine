@@ -12,6 +12,7 @@ export function Dialog({
   footer,
   open,
   onOpenChange,
+  onEscapeKeyDown,
   size = 'medium',
 }: {
   trigger?: ReactElement;
@@ -22,6 +23,7 @@ export function Dialog({
   footer?: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onEscapeKeyDown?: (event: KeyboardEvent) => void;
   size?: 'small' | 'medium' | 'large';
 }) {
   const descriptionId = useId();
@@ -32,6 +34,7 @@ export function Dialog({
       <Primitive.Portal>
         <Primitive.Overlay className={styles.overlay} />
         <Primitive.Content
+          onEscapeKeyDown={onEscapeKeyDown}
           className={`${styles.dialog} ${styles[size]}`}
           aria-describedby={description ? descriptionId : undefined}
           onOpenAutoFocus={() => {
