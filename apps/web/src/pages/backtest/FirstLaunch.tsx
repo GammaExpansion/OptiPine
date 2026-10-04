@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import { Button } from '../../components/Button.tsx';
 import { Icon } from '../../components/Icon.tsx';
 import { ProgressBar } from '../../components/ProgressBar.tsx';
@@ -9,8 +10,21 @@ import { useUiStore } from '../../state/ui.ts';
 import { confirmReplace, pickScriptFile, showPaste } from '../../dialogs/script/actions.ts';
 import styles from './FirstLaunch.module.css';
 
-export function FirstLaunch() {
+/** S1's steps. `onLeaveWithFocus` is told when they unmount while holding the focus. */
+export function FirstLaunch({ onLeaveWithFocus }: { onLeaveWithFocus?: () => void }) {
   const { t, text } = useI18n();
+  const section = useRef<HTMLElement>(null);
+  const leave = useRef(onLeaveWithFocus);
+  useLayoutEffect(() => {
+    leave.current = onLeaveWithFocus;
+  });
+  // A layout cleanup runs before React removes the section, while the focus is still inside.
+  useLayoutEffect(
+    () => () => {
+      if (section.current?.contains(document.activeElement)) leave.current?.();
+    },
+    [],
+  );
   const open = useUiStore((state) => state.setDialogOpen);
   const loadExample = useBacktestStore((state) => state.actions.loadExample);
   const readiness = useBacktestStore((state) => state.readiness);
@@ -77,7 +91,7 @@ export function FirstLaunch() {
     },
   ];
   return (
-    <section className={styles.chart} aria-label={t('backtest.start')}>
+    <section ref={section} className={styles.chart} aria-label={t('backtest.start')}>
       <div className={styles.start}>
         <h1>{t('backtest.start')}</h1>
         {steps.map((step, index) => (

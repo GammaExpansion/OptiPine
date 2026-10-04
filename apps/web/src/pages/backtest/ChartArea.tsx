@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useBacktestStore } from '../../state/backtest.ts';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
@@ -28,13 +28,26 @@ export function ChartArea() {
     })),
   );
   const view = useMemo(() => chartView(parts), [parts]);
+  // The first-launch steps leave once there are a script and data, often from their own Load
+  // example; the focus they held moves to the page's heading rather than falling to the body.
+  const heading = useRef<HTMLHeadingElement>(null);
+  const refocus = useRef(false);
+  useEffect(() => {
+    if (view.kind === 'firstLaunch' || !refocus.current) return;
+    refocus.current = false;
+    heading.current?.focus();
+  }, [view.kind]);
   return (
     <div className={styles.stack}>
-      {view.kind !== 'firstLaunch' && <h1 className={styles.pageTitle}>{t('shell.backtest')}</h1>}
+      {view.kind !== 'firstLaunch' && (
+        <h1 ref={heading} tabIndex={-1} className={styles.pageTitle}>
+          {t('shell.backtest')}
+        </h1>
+      )}
       <PreviewBanner />
       <div className={styles.body}>
         {view.kind === 'firstLaunch' ? (
-          <FirstLaunch />
+          <FirstLaunch onLeaveWithFocus={() => (refocus.current = true)} />
         ) : (
           <Suspense fallback={<div className={styles.area} />}>
             <ResultChart view={view} />

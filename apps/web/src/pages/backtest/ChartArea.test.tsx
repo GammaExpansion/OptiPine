@@ -38,6 +38,28 @@ beforeEach(() => {
   chart.props = null;
 });
 
+test('the focus on the first-launch steps moves to the page heading when they leave', async () => {
+  renderInEnglish(<ChartArea />);
+  const example = screen.getByRole('button', { name: /Load example/ });
+  example.focus();
+  fireEvent.click(example);
+  const heading = await screen.findByRole('heading', { name: 'Backtest', level: 1 });
+  await waitFor(() => expect(heading).toHaveFocus());
+});
+
+test('steps that leave without the focus leave it where it is', async () => {
+  renderInEnglish(
+    <>
+      <button type="button">Elsewhere</button>
+      <ChartArea />
+    </>,
+  );
+  screen.getByRole('button', { name: 'Elsewhere' }).focus();
+  await loadScript();
+  expect(await screen.findByRole('heading', { name: 'Backtest', level: 1 })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Elsewhere' })).toHaveFocus();
+});
+
 test.each(['script', 'data'] as const)(
   'the first-launch steps show until there are a script and data (%s first)',
   async (first) => {
