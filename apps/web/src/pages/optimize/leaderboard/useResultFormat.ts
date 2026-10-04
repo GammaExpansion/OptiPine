@@ -1,9 +1,16 @@
 import type { LiteralValue } from '@pine/engine';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
-import { formatNumber } from '../../../i18n/translate.ts';
 import type { FilterCondition, FilterMetricId } from '../../../workflows/optimize-ranking.ts';
 import { parameterText } from '../../../workflows/optimize-parameters.ts';
 import type { SearchRow } from '../../../workflows/optimize-setup.ts';
+
+// Financial formatting is always en-US (WEB.md 6). Reuse the formatters across the page's
+// cells: constructing Intl.NumberFormat for each value dominates a throttled live table render.
+const figures = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
+const signedFigures = new Intl.NumberFormat('en-US', {
+  maximumFractionDigits: 2,
+  signDisplay: 'exceptZero',
+});
 
 /** Presentation only: workflow values keep their original units and missing-value semantics. */
 export function useResultFormat(rows: readonly SearchRow[] = []) {
@@ -11,10 +18,7 @@ export function useResultFormat(rows: readonly SearchRow[] = []) {
   const number = (value: number | null | undefined, signed = false) =>
     value == null || Number.isNaN(value)
       ? t('common.unavailable')
-      : formatNumber(value, {
-          maximumFractionDigits: 2,
-          signDisplay: signed ? 'exceptZero' : 'auto',
-        });
+      : (signed ? signedFigures : figures).format(value);
   const parameter = (value: LiteralValue | undefined, title?: string) =>
     text(
       parameterText(

@@ -6,6 +6,7 @@ const files = globSync([
   'src/workflows/**/*.test.ts',
   'src/i18n/**/*.test.ts',
   'examples/**/*.test.ts',
+  'scripts/perf-*.test.ts',
 ]).sort();
 if (files.length) {
   const result = spawnSync(process.execPath, ['--test', ...files], { stdio: 'inherit' });

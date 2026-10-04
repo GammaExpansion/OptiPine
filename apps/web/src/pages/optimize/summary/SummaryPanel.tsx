@@ -1,5 +1,5 @@
 /** The summary chart: Top 20 equity, IS vs OOS and Distribution (R1, R2, R2b, R3). */
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ProgressBar } from '../../../components/ProgressBar.tsx';
 import { SegmentedControl } from '../../../components/SegmentedControl.tsx';
 import { Tag } from '../../../components/Tag.tsx';
@@ -29,6 +29,13 @@ export function SummaryPanel() {
     </span>
   );
   const failed = equity.curves.filter((curve) => curve.error);
+  // Progress publications do not change the analysis columns; preserve the canvas input then.
+  const equityChart = useMemo(() => ({ kind: 'equity' as const, equity }), [equity]);
+  const scatter = views?.scatter;
+  const scatterChart = useMemo(
+    () => (scatter ? { kind: 'scatter' as const, scatter } : null),
+    [scatter],
+  );
   return (
     <section className={styles.panel} aria-label={t('optimize.summary.title')}>
       <header className={styles.heading}>
@@ -111,7 +118,7 @@ export function SummaryPanel() {
         {view === 'equity' ? (
           <>
             {!live && equity.status === 'ready' && equity.curves.length > 0 && (
-              <SummaryCanvas chart={{ kind: 'equity', equity }} />
+              <SummaryCanvas chart={equityChart} />
             )}
             {(live || working || !equity.curves.length) && (
               <div className={styles.empty} role="status">
@@ -135,8 +142,8 @@ export function SummaryPanel() {
               </div>
             )}
           </>
-        ) : view === 'scatter' && views?.scatter ? (
-          <SummaryCanvas chart={{ kind: 'scatter', scatter: views.scatter }} />
+        ) : view === 'scatter' && scatterChart ? (
+          <SummaryCanvas chart={scatterChart} />
         ) : view === 'distribution' && views ? (
           <DistributionChart view={views.distribution} />
         ) : null}

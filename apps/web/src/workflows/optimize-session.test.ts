@@ -286,7 +286,14 @@ test('trials stream into a buffer; subscribers see a snapshot at most every 250 
   assert.equal(state.views?.leaderboard.total, 3);
   assert.equal(state.views?.pending, true);
   assert.equal(state.results, null);
-  // The snapshot taken meanwhile is computed next: only the three new trials travel.
+  // A queued snapshot waits until 250 ms after the previous reply, even when analysis was slow.
+  assert.deepEqual(h.analysis.kinds, []);
+  const distribution = state.views?.distribution;
+  h.timers.advance(249);
+  assert.deepEqual(h.analysis.kinds, []);
+  h.timers.advance(1);
+  assert.equal(h.session.getState().views?.distribution, distribution);
+  // Only the three new trials travel; progress did not rebuild the unchanged analysis views.
   assert.deepEqual(h.analysis.kinds, ['runAppend', 'runView']);
   assert.equal((h.analysis.requests[0].input as { trials: OptimizationTrial[] }).trials.length, 3);
   await h.analysis.answerAll();
@@ -324,7 +331,7 @@ test('trials stream into a buffer; subscribers see a snapshot at most every 250 
   await h.analysis.answerAll();
   await running;
   state = h.session.getState();
-  assert.deepEqual(state.run, { status: 'done', startedAt: 1_000, finishedAt: 1_750 });
+  assert.deepEqual(state.run, { status: 'done', startedAt: 1_000, finishedAt: 2_000 });
   assert.equal(state.views?.inProgress, false);
   assert.equal(state.views?.completed, 8);
   assert.equal(state.results?.mode, 'in-out');
@@ -361,6 +368,28 @@ test('IS and OOS are joined by trial id into rows the engine agrees with', async
   assert.equal(views?.scatter?.inSample.length, 8);
   assert.equal(views?.distribution.inSample.sets, 8);
   assert.equal(views?.unvalidated, false);
+});
+
+test('the OOS boundary discards the pending IS snapshot timer', async () => {
+  const h = await harness();
+  const { running } = await begin(h);
+  const inside = h.pool.active!;
+  emit(inside, 0, 8);
+  h.timers.advance(200);
+  inside.resolve();
+  await settle();
+  const outside = h.pool.active!;
+  assert.notEqual(outside, inside);
+  emit(outside, 0, 1);
+  const published = h.states.length;
+  h.timers.advance(50);
+  assert.equal(h.states.length, published);
+  h.timers.advance(199);
+  assert.equal(h.states.length, published);
+  h.timers.advance(1);
+  assert.ok(h.states.length > published);
+  h.session.cancel();
+  await running;
 });
 
 test('cancel stops every Worker at once and the previous results stay (3.1)', async () => {
