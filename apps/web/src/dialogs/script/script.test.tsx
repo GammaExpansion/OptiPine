@@ -12,7 +12,9 @@ import { HeaderData } from '../../shell/HeaderData.tsx';
 import { DialogsRoot } from '../../shell/DialogsRoot.tsx';
 import { installShortcuts } from '../../shell/shortcuts.ts';
 import { downloadScript, pasteStore, showPaste } from './actions.ts';
+import { preloadChunks } from '../../test/lazy-chunks.ts';
 
+preloadChunks('dialogs');
 let restore: () => void;
 beforeEach(() => {
   restore = replaceServices(() => fakeServices());
