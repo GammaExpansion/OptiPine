@@ -5,6 +5,7 @@ import { message } from '@pine/messages';
 import { getOptimizationStore } from '../../../../state/optimization.ts';
 import { getBacktestStore } from '../../../../state/backtest.ts';
 import { uiStore } from '../../../../state/ui.ts';
+import { setViewportWidth } from '../../../../test/viewport.ts';
 import { renderInEnglish, useOptimizeTestServices } from '../../test-support.tsx';
 import { FixedParameters } from '../FixedParameters.tsx';
 import { WfSelectionBar } from '../WfSelectionBar.tsx';
@@ -220,4 +221,25 @@ it('labels anchored IS and exposes analysis failures without hiding the retained
   expect(screen.getByText('IS (anchored)')).toBeInTheDocument();
   expect(screen.getByRole('alert')).toHaveTextContent('Window failed');
   expect(screen.getAllByText('+7,600')).toHaveLength(2);
+});
+
+it('lists the windows as cards on a phone, every figure in view, with the totals last (#10)', () => {
+  setViewportWidth(390);
+  const hook = installResultsFixture(resultsFixture('flat'));
+  panels();
+  const cards = screen.getByRole('region', { name: 'Walk-forward window results' });
+  expect(within(cards).queryByRole('table')).toBeNull();
+  expect(within(cards).getByRole('button', { name: 'Select W1' })).toHaveAccessibleDescription(
+    /IS\s*\+9,840\s*OOS\s*\+2,310\s*WFE\s*0\.94\s*Trades\s*41/,
+  );
+  expect(within(cards).getByRole('button', { name: 'Select W6' })).toHaveTextContent('Part');
+  expect(within(cards).getByRole('button', { name: 'Select W4' })).toHaveTextContent(
+    'No combination passes; window stays flat',
+  );
+  expect(within(cards).getByText('4 / 5 profitable, 1 flat')).toBeInTheDocument();
+  fireEvent.click(within(cards).getByRole('button', { name: 'Select W2' }));
+  expect(hook.calls.at(-1)).toEqual({ action: 'selectWindow', value: 1 });
+  fireEvent.click(within(cards).getByRole('button', { name: 'Adjust' }));
+  expect(hook.calls.at(-1)).toEqual({ action: 'selectWindow', value: 3 });
+  expect(screen.getByRole('combobox', { name: 'Ranking objective' })).toHaveFocus();
 });

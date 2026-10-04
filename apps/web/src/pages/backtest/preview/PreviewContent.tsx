@@ -11,7 +11,7 @@ import { searchedParameters } from '../../../workflows/optimize-parameters.ts';
 import { useBacktestStore } from '../../../state/backtest.ts';
 import type { AppliedSet } from '../../../workflows/backtest.ts';
 import { useResultFormat } from '../../optimize/leaderboard/useResultFormat.ts';
-import { windowLabel } from '../../optimize/walkforward/results/copy.ts';
+import { dateRange, windowLabel } from '../../optimize/walkforward/results/copy.ts';
 import { useParameterActions } from './useParameterActions.ts';
 import styles from './PreviewBanner.module.css';
 
@@ -95,6 +95,25 @@ export function PreviewContent() {
                 .join(t('preview.separator'))}
             </span>
             <span>{t('preview.unchanged')}</span>
+            {preview.origin.kind === 'window' && (
+              <span>
+                {t('preview.windowRanges', {
+                  window: text(windowLabel(preview.origin.window)),
+                  inSample: text(
+                    dateRange(
+                      preview.origin.ranges.inSample.start,
+                      preview.origin.ranges.inSample.end,
+                    ),
+                  ),
+                  outOfSample: text(
+                    dateRange(
+                      preview.origin.ranges.outOfSample.start,
+                      preview.origin.ranges.outOfSample.end,
+                    ),
+                  ),
+                })}
+              </span>
+            )}
           </div>
         </Banner>
       )}

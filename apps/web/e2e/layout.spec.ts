@@ -52,6 +52,8 @@ async function open(page: Page, language: 'en' | 'zh', state: State) {
     await page.waitForFunction(
       () => (window as unknown as HookWindow).backtestHooks.backtest().result !== null,
     );
+    // The first result opens the Report (#6); its tab loads before anything is measured or clicked.
+    await expect(page.getByText('Net profit', { exact: true }).first()).toBeVisible();
     return errors;
   }
   await page
@@ -234,6 +236,9 @@ test('a tablet opens the right panel as a drawer, and Escape or a press outside 
   await expect(toggle).toBeFocused();
   await toggle.click();
   await expect(drawer).toBeVisible();
+  // Radix listens for a press outside from a task queued as the drawer opens; a busy page can
+  // take the click first, so the click waits for a task queued after it.
+  await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
   await page.mouse.click(200, 300);
   await expect(drawer).toHaveCount(0);
   // The Optimize page's setup is the same panel.

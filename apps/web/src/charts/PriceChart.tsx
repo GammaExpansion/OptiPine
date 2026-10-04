@@ -12,6 +12,7 @@ import {
   type SeriesMarker,
 } from 'lightweight-charts';
 import type { MarketBar, PlotOutput } from '@pine/engine';
+import type { WindowRanges } from '../workflows/inputs.ts';
 import type { TradeRow } from '../workflows/trades.ts';
 import { useI18n } from '../i18n/I18nProvider.tsx';
 import { formatNumber } from '../i18n/translate.ts';
@@ -24,6 +25,7 @@ import {
   timeFormat,
   zoomChart,
 } from './runtime.ts';
+import { rangePrimitive, windowBands, windowView } from './rangePrimitive.ts';
 import { tradePrimitive } from './tradePrimitive.ts';
 import { plotPrimitive } from './plotPrimitive.ts';
 import { addPlotSeries } from './plotSeries.ts';
@@ -39,6 +41,8 @@ export interface PriceChartProps {
   dimMarkers?: boolean;
   mintick?: number;
   hoveredTrade?: TradeRow | null;
+  /** A previewed walk-forward window's ranges, marked on the chart and shown first (B16). */
+  windowRanges?: WindowRanges | null;
   className?: string;
 }
 export interface PriceChartHandle {
@@ -58,6 +62,7 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
     dimMarkers = false,
     mintick = 0.01,
     hoveredTrade = null,
+    windowRanges = null,
     className,
   },
   ref,
@@ -70,6 +75,7 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
     chart: IChartApi;
     candles: ISeriesApi<'Candlestick'>;
     overlay: ReturnType<typeof tradePrimitive>;
+    ranges: ReturnType<typeof rangePrimitive>;
     times: number[];
     cursor: number;
     showLegend: (index: number) => void;
@@ -82,6 +88,8 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
   selectedRef.current = selected;
   const dimRef = useRef(dimMarkers);
   dimRef.current = dimMarkers;
+  const rangesRef = useRef(windowRanges);
+  rangesRef.current = windowRanges;
   const number = (value: number) => formatNumber(value, { maximumFractionDigits: 2 });
   const price = priceFormat(mintick).formatter;
   const resetView = () => {
@@ -91,6 +99,15 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
         from: Math.max(-1, current.times.length - 150),
         to: current.times.length + 4,
       });
+  };
+  /** A previewed window's OOS range with its IS range before it, else the latest bars. */
+  const firstView = () => {
+    const current = runtime.current;
+    const bands = current && rangesRef.current && windowBands(current.times, rangesRef.current);
+    if (!bands) return resetView();
+    const scale = current.chart.timeScale();
+    const spacing = current.chart.options().timeScale.minBarSpacing;
+    scale.setVisibleLogicalRange(windowView(bands, scale.width() / spacing));
   };
   useImperativeHandle(ref, () => ({
     focusTrade(trade) {
@@ -133,7 +150,27 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
       },
     );
     candles.attachPrimitive(overlay.primitive);
-    runtime.current = { chart, candles, overlay, times: [], cursor: -1, showLegend: () => {} };
+    const ranges = rangePrimitive(chart, () => runtime.current?.times ?? [], {
+      inSample: theme.inSample,
+      outOfSample: theme.outOfSample,
+      split: theme.primary,
+      font: theme.font,
+      labels: {
+        inSample: t('optimize.leaderboard.in'),
+        outOfSample: t('optimize.leaderboard.out'),
+      },
+    });
+    candles.attachPrimitive(ranges.primitive);
+    ranges.setRanges(rangesRef.current);
+    runtime.current = {
+      chart,
+      candles,
+      overlay,
+      ranges,
+      times: [],
+      cursor: -1,
+      showLegend: () => {},
+    };
     return () => {
       runtime.current = null;
       releaseTimeLabels();
@@ -267,7 +304,7 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
     const resized = () => showLegend(current.cursor);
     chart.timeScale().subscribeSizeChange(resized);
     showLegend(bars.length - 1);
-    resetView();
+    firstView();
     return () => {
       // The owning effect may already have removed the chart (unmount, locale or timezone).
       if (runtime.current?.chart !== chart) return;
@@ -295,6 +332,12 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
   useEffect(() => {
     runtime.current?.overlay.select(selected);
   }, [selected]);
+
+  useEffect(() => {
+    runtime.current?.ranges.setRanges(windowRanges);
+    firstView();
+    // Only another window moves the view; the bars' own effect shows it with new data.
+  }, [windowRanges]);
 
   useEffect(() => {
     setFocused(null);

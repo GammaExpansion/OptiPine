@@ -6,7 +6,10 @@ import type { LeaderboardRow } from '../../../workflows/optimize-views.ts';
 import { useResultFormat } from './useResultFormat.ts';
 import styles from './Leaderboard.module.css';
 
-/** G4 cards use the same 13-set page as the desktop table, with every searched input visible. */
+/**
+ * G4 cards use the same 13-set page as the desktop table, with every searched input visible, and
+ * its whole amounts.
+ */
 export function LeaderboardCards({
   rows,
   searchRows,
@@ -54,7 +57,7 @@ export function LeaderboardCards({
                       row.inSample.netProfit == null ? undefined : row.inSample.netProfit >= 0
                     }
                   >
-                    {format.number(row.inSample.netProfit, true)}
+                    {format.number(row.inSample.netProfit, true, 0)}
                   </b>
                 </span>
                 {!unvalidated && (
@@ -67,7 +70,7 @@ export function LeaderboardCards({
                           : row.outOfSample.netProfit >= 0
                       }
                     >
-                      {format.number(row.outOfSample?.netProfit, true)}
+                      {format.number(row.outOfSample?.netProfit, true, 0)}
                     </b>
                   </span>
                 )}

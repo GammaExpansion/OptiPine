@@ -84,11 +84,12 @@ test('Ctrl+O uses the current registered picker and cleanup cannot remove a newe
   expect(picker).toHaveBeenCalledTimes(1);
   expect(old).not.toHaveBeenCalled();
   unregister();
-  expect(key('o').defaultPrevented).toBe(false);
+  // Without a picker the browser's Open File is still kept out.
+  expect(key('o').defaultPrevented).toBe(true);
 });
 
-test.each(['input', 'textarea', 'select', 'editable', 'textbox', 'combobox', 'dialog', 'menu'])(
-  '%s keeps its shortcut keys',
+test.each(['input', 'textarea', 'select', 'editable', 'textbox', 'combobox'])(
+  '%s keeps Ctrl+Enter, and Ctrl+O there opens the picker instead of the browser',
   async (kind) => {
     await ready();
     const element = document.createElement(
@@ -100,7 +101,24 @@ test.each(['input', 'textarea', 'select', 'editable', 'textbox', 'combobox', 'di
     const picker = vi.fn();
     const unregister = registerFilePicker(picker);
     expect(key('Enter', element).defaultPrevented).toBe(false);
-    expect(key('o', element).defaultPrevented).toBe(false);
+    expect(getBacktestStore().getState().run.status).toBe('idle');
+    expect(key('o', element).defaultPrevented).toBe(true);
+    expect(picker).toHaveBeenCalledTimes(1);
+    unregister();
+  },
+);
+
+test.each(['dialog', 'alertdialog', 'menu'])(
+  'a %s keeps its keys; Ctrl+O there opens nothing, the browser included',
+  async (kind) => {
+    await ready();
+    const element = document.createElement('div');
+    element.setAttribute('role', kind);
+    document.body.append(element);
+    const picker = vi.fn();
+    const unregister = registerFilePicker(picker);
+    expect(key('Enter', element).defaultPrevented).toBe(false);
+    expect(key('o', element).defaultPrevented).toBe(true);
     expect(getBacktestStore().getState().run.status).toBe('idle');
     expect(picker).not.toHaveBeenCalled();
     unregister();
@@ -111,12 +129,18 @@ test('Escape is untouched; open dialogs, composition, repeats and handled events
   const picker = vi.fn();
   const unregister = registerFilePicker(picker);
   expect(key('Escape', window, { ctrlKey: false }).defaultPrevented).toBe(false);
+  // An open dialog and a held key open no picker, but never let the browser open a file.
   uiStore.getState().setDialogOpen('marketData', true);
-  expect(key('o').defaultPrevented).toBe(false);
+  expect(key('o').defaultPrevented).toBe(true);
   uiStore.getState().setDialogOpen('marketData', false);
+  expect(key('o', window, { repeat: true }).defaultPrevented).toBe(true);
+  expect(picker).not.toHaveBeenCalled();
+  // Cmd + O is the same command on a Mac.
+  expect(key('o', window, { ctrlKey: false, metaKey: true }).defaultPrevented).toBe(true);
+  expect(picker).toHaveBeenCalledTimes(1);
+  picker.mockClear();
   for (const change of [
     { isComposing: true },
-    { repeat: true },
     { shiftKey: true },
     { altKey: true },
     { ctrlKey: false },

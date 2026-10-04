@@ -1016,3 +1016,43 @@ function expectedRanking(sets: readonly Record<string, unknown>[], input: RunInp
     )
     .map((trial) => trial.trialId);
 }
+
+test('another opened script drops the results and stops a run; an edit keeps them (R5)', async () => {
+  const h = await harness();
+  await complete(h);
+  await finishEquity(h);
+  h.session.select(h.session.getState().views!.leaderboard.rows[1].trialId);
+  // An edit of the same script keeps the results, outdated.
+  h.backtest.setSource(`${strategySource}\n// edited`);
+  await h.engine.answerAll();
+  assert.deepEqual(h.session.getState().outdated, { reasons: ['source'] });
+
+  const other = strategySource.replace('"Test strategy"', '"Other strategy"');
+  h.backtest.setSource(other, true);
+  await h.engine.answerAll();
+  // The results' run is released in the Worker, and a late view of it is dropped.
+  assert.deepEqual(h.analysis.kinds.slice(-1), ['runClose']);
+  await h.analysis.answerAll();
+  let state = h.session.getState();
+  assert.equal(state.results, null);
+  assert.equal(state.outdated, null);
+  assert.equal(state.views, null);
+  assert.equal(state.walkForward, null);
+  assert.equal(state.topEquity.status, 'idle');
+  assert.deepEqual(state.run, { status: 'idle' });
+  assert.equal(state.viewSettings.selectedTrialId, null);
+  assert.equal(state.runBlock.rerun, false);
+
+  // A run in progress belongs to the script it started with: it stops, and nothing replaces it.
+  const { running } = await begin(h);
+  emit(h.pool.active!, 0, 2);
+  h.backtest.setSource(strategySource, true);
+  await running;
+  await h.engine.answerAll();
+  await h.analysis.answerAll();
+  assert.equal(h.pool.cancels, 1);
+  state = h.session.getState();
+  assert.deepEqual(state.run, { status: 'idle' });
+  assert.equal(state.results, null);
+  assert.equal(state.views, null);
+});

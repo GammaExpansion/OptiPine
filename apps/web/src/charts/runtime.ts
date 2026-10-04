@@ -22,6 +22,8 @@ export function chartTheme(element: HTMLElement) {
     loss: token('loss'),
     primary: token('primary'),
     secondary: token('secondary'),
+    inSample: token('is'),
+    outOfSample: token('oos'),
     font: token('font-body'),
   };
 }
