@@ -60,8 +60,14 @@ export interface PlotDescriptor {
   isEquity: boolean;
 }
 
+/** The script's declaration call. */
+export type ScriptKind = 'strategy' | 'indicator' | 'library';
+const scriptKinds: readonly string[] = ['strategy', 'indicator', 'library'] satisfies ScriptKind[];
+
 export interface ScriptDescription {
   success: boolean;
+  /** `strategy()`, `indicator()` or `library()`; absent when the compile failed. */
+  kind?: ScriptKind;
   /** The literal `strategy()` title, when one is given. */
   title?: string;
   version?: 5 | 6;
@@ -150,6 +156,15 @@ export function describe(source: string): ScriptDescription {
   };
   if (!compilation.program) return description;
   description.version = compilation.program.version;
+  // A successful compile has exactly one declaration, a top-level call.
+  for (const statement of compilation.program.body as unknown[]) {
+    const call = node(node(statement)?.expression);
+    const name = call?.kind === 'call' ? qualifiedName(call.callee) : undefined;
+    if (name && scriptKinds.includes(name)) {
+      description.kind = name as ScriptKind;
+      break;
+    }
+  }
   function visit(value: unknown): void {
     if (Array.isArray(value)) {
       value.forEach(visit);

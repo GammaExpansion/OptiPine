@@ -41,10 +41,14 @@ export function shownResult(
 }
 
 /**
- * Whether the current script is an indicator, as its latest run of this source showed: an
- * indicator has no account, so the run reports no initial capital. Unknown before a run.
+ * Whether the current script is an indicator, which has no account: its compile says so from the
+ * declaration, before any run. Without a description, a run of this source that reported no
+ * initial capital does.
  */
-export function scriptIsIndicator(state: Pick<BacktestState, 'source' | 'result'>): boolean {
+export function scriptIsIndicator(
+  state: Pick<BacktestState, 'source' | 'result' | 'description'>,
+): boolean {
+  if (state.description?.kind) return state.description.kind === 'indicator';
   const { result } = state;
   return (
     result !== null && result.computedWith.source === state.source && result.initialCapital === null

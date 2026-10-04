@@ -94,8 +94,9 @@ retain their existing contracts.
 
 ### describe
 
-`describe(source)` returns a `ScriptDescription`: `success`, `diagnostics`, `version`, the literal
-`strategy()` `title` and `settings`, `computedSettings` (name → line) for arguments given as
+`describe(source)` returns a `ScriptDescription`: `success`, `diagnostics`, `version`, `kind`
+(`strategy`, `indicator` or `library`, from the declaration; absent when the compile fails), the
+literal `strategy()` `title` and `settings`, `computedSettings` (name → line) for arguments given as
 expressions, `plots` (`{ title, line, isEquity }`), and `inputs`. Each `InputDescriptor` has `id`,
 `title`, `type`, `defaultValue`, `min` / `max` / `step`, `options`, `group`, `tooltip` and `line`. An input
 that a caller cannot override is `fixed`, with a `reason` code: `computed-default`, `computed-title`

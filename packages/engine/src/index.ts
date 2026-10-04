@@ -11,6 +11,7 @@ export type {
   LiteralValue,
   PlotDescriptor,
   ScriptDescription,
+  ScriptKind,
 } from './describe.ts';
 export type { ParameterSet, SweepRun, SweepResult } from './optimizer.ts';
 export type { CompileResult, Program } from './compiler/index.ts';

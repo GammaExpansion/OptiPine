@@ -66,13 +66,14 @@ export function EquityCharts({
     const equity = createChart(eqHost, options);
     const drawdown = createChart(ddHost, options);
     charts.current = [equity, drawdown];
+    // The two charts are stacked: neither may paint a tick label cut by their shared edge.
     equity.applyOptions({
       timeScale: { visible: false, minBarSpacing: 0.001 },
-      rightPriceScale: { scaleMargins: { top: 0.16, bottom: 0.12 } },
+      rightPriceScale: { scaleMargins: { top: 0.16, bottom: 0.12 }, entireTextOnly: true },
     });
     drawdown.applyOptions({
       timeScale: { visible: false, minBarSpacing: 0.001 },
-      rightPriceScale: { scaleMargins: { top: 0.08, bottom: 0.04 } },
+      rightPriceScale: { scaleMargins: { top: 0.08, bottom: 0.04 }, entireTextOnly: true },
     });
     const eq = equity.addSeries(AreaSeries, {
       lineColor: theme.primary,
