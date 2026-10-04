@@ -1,7 +1,7 @@
 import type { InputDescriptor, LiteralValue } from '@pine/engine';
 import { message, type MessageValues, type Text } from '@pine/messages';
 import type { MessageId } from '../../../i18n/translate.ts';
-import type { InputField } from '../../../workflows/inputs.ts';
+import type { InputField, ParameterOrigin } from '../../../workflows/inputs.ts';
 import { timeframeLabel } from '../states/chart-view.ts';
 
 const text = (id: MessageId, values?: MessageValues) => message(id, values);
@@ -126,12 +126,41 @@ export function parseInputText(descriptor: InputDescriptor, raw: string): Litera
   return raw;
 }
 
-/** The caption beside a label: the default once changed, otherwise the range or step (B1, B14). */
+/**
+ * The default beside a value an applied set wrote (B17), naming the set as the optimization does:
+ * "From #1, default 20" or "From W3, default 20".
+ */
+function appliedDefault(origin: ParameterOrigin, value: Text): Text {
+  switch (origin.kind) {
+    case 'rank':
+      return text('inputs.fromDefault', {
+        set: text('optimize.leaderboard.set', { rank: origin.rank }),
+        value,
+      });
+    case 'window':
+      // W3 as the walk-forward table names it; its helper module would load Optimize code here.
+      return text('inputs.fromDefault', {
+        set: text('optimize.wfResults.windowLabel', { number: origin.window + 1 }),
+        value,
+      });
+    case 'failed':
+      return text('inputs.fromFailedDefault', { value });
+    case 'fixed':
+      return text('inputs.fromFixedDefault', { value });
+  }
+}
+
+/**
+ * The caption beside a label: once changed, the default, with the set it came from while an
+ * applied value stands (B17); otherwise the range or step (B1, B14).
+ */
 export function inputHint(field: InputField): Text | null {
   const { descriptor } = field;
   if (field.readOnly) return null;
-  if (field.changed)
-    return text('inputs.default', { value: inputValueText(descriptor, descriptor.defaultValue) });
+  if (field.changed) {
+    const value = inputValueText(descriptor, descriptor.defaultValue);
+    return field.origin ? appliedDefault(field.origin, value) : text('inputs.default', { value });
+  }
   const { min, max, step } = descriptor;
   const bound = (value: number) => inputEditText(descriptor, value);
   if (min !== undefined && max !== undefined)
