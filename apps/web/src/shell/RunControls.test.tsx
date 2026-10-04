@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { expect, test } from 'vitest';
 import { getBacktestStore, openScript } from '../state/backtest.ts';
 import { getMarketDataStore } from '../state/marketData.ts';
+import { getServices } from '../state/services.ts';
 import { testInput } from '../state/test-support.ts';
 import { uiStore } from '../state/ui.ts';
 import {
@@ -13,6 +14,7 @@ import {
 import { strategySource } from '../workflows/test-support.ts';
 import {
   loadOptimization,
+  loadWalkForward,
   optimization,
   runOptimization,
 } from '../pages/optimize/test-support.tsx';
@@ -68,7 +70,14 @@ test('the header marks an outdated result, a failed run and a failed compile', a
   await waitFor(() => expect(runButton()).toBeEnabled());
   await runBacktest();
   expect(screen.getByText('Run failed')).toBeInTheDocument();
+  // Compilation reports every independent error: without a declaration this script has two.
   act(() => getBacktestStore().getState().actions.setSource('//@version=6\nplot(missing)'));
+  await waitFor(() => expect(screen.getByText('2 compile errors')).toBeInTheDocument());
+  act(() =>
+    getBacktestStore()
+      .getState()
+      .actions.setSource('//@version=6\nindicator("One error")\nplot(missing)'),
+  );
   await waitFor(() => expect(screen.getByText('1 compile error')).toBeInTheDocument());
   expect(runButton()).toHaveAccessibleDescription('Fix the compile errors to run');
 });
@@ -102,9 +111,11 @@ test('on the Optimize page the header states the run, with Cancel and no main ac
 
 test('the header links failed combinations to their list and says when sets were sampled', async () => {
   await loadScript(`${strategySource}if length == 3 and bar_index == 40\n    runtime.error("x")\n`);
+  await act(() => getServices().loadOptimization());
   act(() => {
     uiStore.setState({ page: 'optimize' });
     optimization().actions.setRange('Length', { from: 2, to: 4, step: 1 });
+    optimization().actions.setSearched('Multiplier', false);
     optimization().actions.setSampling({ method: 'random', count: 5 });
   });
   renderInEnglish(<RunControls />);
@@ -112,4 +123,17 @@ test('the header links failed combinations to their list and says when sets were
   expect(facts()).toHaveTextContent('5 random in 0:00');
   fireEvent.click(screen.getByRole('button', { name: /\d failed/ }));
   expect(uiStore.getState().openDialogs).toEqual(['failedCombinations']);
+});
+
+test('a walk-forward run states its window, then the windows it took (W4, W1)', async () => {
+  await loadWalkForward();
+  act(() => uiStore.setState({ page: 'optimize' }));
+  renderInEnglish(<RunControls />);
+  let run!: Promise<void>;
+  act(() => {
+    run = optimization().actions.start();
+  });
+  expect(facts()).toHaveTextContent('Window 1 / 4');
+  await act(() => run);
+  expect(facts()).toHaveTextContent(/^4 windows in 0:00$/);
 });

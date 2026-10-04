@@ -2,9 +2,12 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 import type { OptimizationStoreState } from '../src/state/optimization.ts';
 import type { BacktestHooks } from './backtest-hooks.ts';
+import { waitForTopEquity, workerWaitTimeout } from './optimize-waits.ts';
 import { origins } from './ports.ts';
 
 test.use({ baseURL: origins.dev, viewport: { width: 390, height: 844 } });
+// Like the other real-Worker Optimize specs: a loaded machine or CI runner reproduces Top 20 slowly.
+test.describe.configure({ timeout: 120_000 });
 
 type PhoneWindow = Window & {
   backtestHooks: BacktestHooks;
@@ -97,6 +100,10 @@ for (const language of ['en', 'zh'] as const) {
     await page.waitForFunction(() => 'backtestHooks' in window);
     await page.evaluate(async (source) => {
       const path = '/src/state/optimization.ts';
+      const servicesPath = '/src/state/services.ts';
+      const services = (await import(servicesPath)) as typeof import('../src/state/services.ts');
+      // The optimization side loads on first need; the hooks below read it at once.
+      await services.getServices().loadOptimization();
       const module = (await import(path)) as typeof import('../src/state/optimization.ts');
       const target = window as unknown as PhoneWindow;
       target.phoneOptimization = () => module.getOptimizationStore().getState();
@@ -104,8 +111,11 @@ for (const language of ['en', 'zh'] as const) {
       target.backtestHooks.useSyntheticData(360);
     }, source);
     await expect
-      .poll(() =>
-        page.evaluate(() => (window as unknown as PhoneWindow).phoneOptimization().readiness.ok),
+      .poll(
+        () =>
+          page.evaluate(() => (window as unknown as PhoneWindow).phoneOptimization().readiness.ok),
+        // The script compiles in a Worker, which a loaded machine or CI runner delays.
+        { timeout: workerWaitTimeout },
       )
       .toBe(true);
     await page.evaluate(() => {
@@ -120,15 +130,7 @@ for (const language of ['en', 'zh'] as const) {
     await page.getByRole('button', { name: en ? 'Optimize' : '优化', exact: true }).click();
     await page.getByRole('tab', { name: en ? 'Settings' : '设置', exact: true }).click();
     await page.getByRole('button', { name: en ? 'Start' : '开始优化', exact: true }).click();
-    await expect
-      .poll(
-        () =>
-          page.evaluate(
-            () => (window as unknown as PhoneWindow).phoneOptimization().topEquity.status,
-          ),
-        { timeout: 30_000 },
-      )
-      .toBe('ready');
+    await waitForTopEquity(page, info);
     expect(workers.filter((url) => url.includes('engine.worker')).length).toBeGreaterThanOrEqual(2);
     expect(workers.some((url) => url.includes('analysis.worker'))).toBe(true);
     expect(
@@ -218,6 +220,8 @@ for (const language of ['en', 'zh'] as const) {
       path: otherPanelReport,
       contentType: 'application/json',
     });
+    // Settings' data range wraps its dates on a phone, so no tab clips its text any more.
+    for (const [name, clipped] of Object.entries(otherPanels)) expect(clipped, name).toEqual([]);
     await tabs.getByRole('tab', { name: en ? 'Leaderboard' : '排行', exact: true }).click();
     await expect(card).toHaveAttribute('aria-pressed', 'true');
     const original = await page.evaluate(() =>

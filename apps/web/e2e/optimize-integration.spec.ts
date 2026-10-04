@@ -6,15 +6,25 @@ import { translateId } from '../src/i18n/translate.ts';
 import type { BacktestStoreState } from '../src/state/backtest.ts';
 import type { OptimizationStoreState } from '../src/state/optimization.ts';
 import { origins } from './ports.ts';
+import { waitForTopEquity, workerWaitTimeout } from './optimize-waits.ts';
 
 test.use({ baseURL: origins.dev });
+const emulatedHardwareConcurrency = Number(process.env.E2E_HARDWARE_CONCURRENCY ?? 3);
+const cpuThrottleRate = Number(process.env.E2E_CPU_THROTTLE ?? 0);
+// Four searched inputs and more than 20 sets cover ranking, paging and reproduction on CI.
+const combinations = 48;
+const barCount = 1_200;
 type Hooks = Window & {
   optimization: () => OptimizationStoreState;
   backtest: () => BacktestStoreState;
 };
 
 const settled = (page: Page) =>
-  page.waitForFunction(() => !(window as unknown as Hooks).optimization().views?.pending);
+  page.waitForFunction(
+    () => !(window as unknown as Hooks).optimization().views?.pending,
+    undefined,
+    { timeout: workerWaitTimeout },
+  );
 const identity = (page: Page) =>
   page.evaluate(() => {
     const state = (window as unknown as Hooks).optimization();
@@ -64,7 +74,7 @@ for (const language of ['en', 'zh'] as const) {
     page.on('pageerror', (error) => errors.push(error.message));
     const dataset: FeedDataset = {
       input: {
-        bars: syntheticBars(2400),
+        bars: syntheticBars(barCount),
         timeframe: '60',
         syminfo: {
           ticker: 'BTCUSDT',
@@ -91,10 +101,19 @@ for (const language of ['en', 'zh'] as const) {
         await route.abort();
       } else await route.continue();
     });
-    await page.addInitScript((language) => {
-      localStorage.setItem('optipine.ui', JSON.stringify({ state: { language }, version: 1 }));
-      Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 3 });
-    }, language);
+    if (cpuThrottleRate > 0) {
+      const cdp = await page.context().newCDPSession(page);
+      await cdp.send('Emulation.setCPUThrottlingRate', { rate: cpuThrottleRate });
+    }
+    await page.addInitScript(
+      ({ language, hardwareConcurrency }) => {
+        localStorage.setItem('optipine.ui', JSON.stringify({ state: { language }, version: 1 }));
+        Object.defineProperty(navigator, 'hardwareConcurrency', {
+          get: () => hardwareConcurrency,
+        });
+      },
+      { language, hardwareConcurrency: emulatedHardwareConcurrency },
+    );
     await page.goto('/');
     await page.evaluate(async () => {
       const load = (path: string) => import(/* @vite-ignore */ path);
@@ -105,10 +124,13 @@ for (const language of ['en', 'zh'] as const) {
       hooks.backtest = () => getBacktestStore().getState();
       await loadExample('trend-breakout');
     });
+    expect(
+      await page.evaluate(() => (window as unknown as Hooks).backtest().dataset?.input.bars.length),
+    ).toBe(barCount);
     await page.getByRole('button', { name: t('shell.optimize'), exact: true }).click();
     const right = page.getByTestId('optimize-right');
     for (const [title, from, to] of [
-      ['Length', 18, 27],
+      ['Length', 18, 19],
       ['Multiplier', 1, 1.75],
     ] as const) {
       await right
@@ -132,19 +154,23 @@ for (const language of ['en', 'zh'] as const) {
           () => (window as unknown as Hooks).optimization().search.sampling?.combinations,
         ),
       )
-      .toBe(240);
+      .toBe(combinations);
     await right.getByRole('button', { name: t('optimize.start'), exact: true }).click();
-    await page.waitForFunction(() => {
-      const state = (window as unknown as Hooks).optimization();
-      return (
-        state.run.status === 'running' &&
-        state.views &&
-        state.views.completed >= 24 &&
-        state.views.leaderboard.rows.length > 0 &&
-        state.views.sensitivity.rows.length > 0 &&
-        state.views.map?.panel.cells.some((cell) => cell.value !== null)
-      );
-    });
+    await page.waitForFunction(
+      () => {
+        const state = (window as unknown as Hooks).optimization();
+        return (
+          state.run.status === 'running' &&
+          state.views &&
+          state.views.completed >= 3 &&
+          state.views.leaderboard.rows.length > 0 &&
+          state.views.sensitivity.rows.length > 0 &&
+          state.views.map?.panel.cells.some((cell) => cell.value !== null)
+        );
+      },
+      undefined,
+      { timeout: workerWaitTimeout },
+    );
     await expect(
       page.getByRole('img', { name: t('optimize.summary.distribution'), exact: true }),
     ).toBeVisible();
@@ -153,16 +179,19 @@ for (const language of ['en', 'zh'] as const) {
     ).toBeDisabled();
     await expect(page.locator('[data-sensitivity-row]')).toHaveCount(4);
     await page.screenshot({ path: info.outputPath(`O8-${language}.png`) });
+    // Live analysis can settle before OOS finishes; complete the run before Top 20 or set actions.
     await expect
-      .poll(
-        () => page.evaluate(() => (window as unknown as Hooks).optimization().topEquity.status),
-        { timeout: 60_000 },
-      )
-      .toBe('ready');
+      .poll(() => page.evaluate(() => (window as unknown as Hooks).optimization().run.status), {
+        timeout: workerWaitTimeout,
+      })
+      .toBe('done');
+    await waitForTopEquity(page, info);
     await settled(page);
     const originalRun = await identity(page);
     const board = page.getByTestId('optimize-leaderboard');
-    await expect(board).toContainText(t('optimize.leaderboard.pass', { passing: 240, total: 240 }));
+    await expect(board).toContainText(
+      t('optimize.leaderboard.pass', { passing: combinations, total: combinations }),
+    );
     await expect(board.getByRole('row')).toHaveCount(14);
     await expect(board.getByRole('cell', { name: '1.50', exact: true }).first()).toBeVisible();
     const parameters = page.getByRole('region', { name: t('optimize.selection.label') });
@@ -179,7 +208,9 @@ for (const language of ['en', 'zh'] as const) {
     const mapCanvas = page.getByTestId('parameter-map');
     await mapCanvas.focus();
     await mapCanvas.press('Home');
-    await mapCanvas.press('ArrowDown');
+    // Multiplier is the widest axis in this small grid; move from 1.00 to 1.50.
+    await mapCanvas.press('ArrowRight');
+    await mapCanvas.press('ArrowRight');
     await expect(page.getByRole('tooltip')).toContainText('1.50');
     await page.screenshot({ path: info.outputPath(`R6-${language}.png`) });
     await mapCanvas.press('Escape');
@@ -276,9 +307,7 @@ for (const language of ['en', 'zh'] as const) {
     );
     expect(scores).toEqual([...scores].sort((a, b) => a - b));
     await page.getByRole('radio', { name: t('optimize.summary.equity'), exact: true }).click();
-    await expect
-      .poll(() => page.evaluate(() => (window as unknown as Hooks).optimization().topEquity.status))
-      .toBe('ready');
+    await waitForTopEquity(page, info);
     expect(
       await page.evaluate(() => {
         const state = (window as unknown as Hooks).optimization();
@@ -291,7 +320,7 @@ for (const language of ['en', 'zh'] as const) {
     await popover
       .getByRole('spinbutton', { name: t('optimize.leaderboard.value'), exact: true })
       .fill('999999');
-    await expect(popover).toContainText(t('optimize.leaderboard.preview', { count: 240 }));
+    await expect(popover).toContainText(t('optimize.leaderboard.preview', { count: combinations }));
     await page.screenshot({ path: info.outputPath(`R10-${language}.png`) });
     await popover.getByRole('button', { name: t('optimize.leaderboard.add'), exact: true }).click();
     await settled(page);
@@ -313,13 +342,15 @@ for (const language of ['en', 'zh'] as const) {
       .getByRole('button', { name: t('optimize.leaderboard.remove'), exact: true })
       .click();
     await settled(page);
-    await expect(board).toContainText(t('optimize.leaderboard.pass', { passing: 240, total: 240 }));
+    await expect(board).toContainText(
+      t('optimize.leaderboard.pass', { passing: combinations, total: combinations }),
+    );
     expect(await identity(page)).toEqual(originalRun);
 
     // R5 has exactly one dimmed ancestor for every panel.
     await right
       .getByRole('spinbutton', { name: t('optimize.setup.toLabel', { title: 'Length' }) })
-      .fill('28');
+      .fill('20');
     await expect(page.locator('[data-results]')).toHaveAttribute('data-outdated');
     const dimCounts = await page
       .locator('[data-results] section[aria-label]')
@@ -336,7 +367,7 @@ for (const language of ['en', 'zh'] as const) {
     await page.screenshot({ path: info.outputPath(`R5-${language}.png`) });
     await right
       .getByRole('spinbutton', { name: t('optimize.setup.toLabel', { title: 'Length' }) })
-      .fill('27');
+      .fill('19');
     await expect(page.locator('[data-results]')).not.toHaveAttribute('data-outdated');
 
     const inputs = await page.evaluate(() =>
@@ -344,8 +375,12 @@ for (const language of ['en', 'zh'] as const) {
     );
     await page.getByRole('button', { name: t('optimize.selection.backtest'), exact: true }).click();
     await expect(page.getByText(t('preview.unchanged'))).toBeVisible();
+    // GitHub runners are several times slower than a dev machine; a 2-thread pool reproduces 20 sets serially.
     await expect
-      .poll(() => page.evaluate(() => (window as unknown as Hooks).backtest().preview?.run.status))
+      .poll(
+        () => page.evaluate(() => (window as unknown as Hooks).backtest().preview?.run.status),
+        { timeout: workerWaitTimeout },
+      )
       .toBe('done');
     await expect(page.getByTestId('price-chart')).toBeVisible();
     await expect(page.getByRole('table', { name: t('report.returns'), exact: true })).toBeVisible();
@@ -360,8 +395,11 @@ for (const language of ['en', 'zh'] as const) {
     ).toEqual(inputs);
     await page.getByRole('button', { name: t('preview.back'), exact: true }).click();
     await page.getByRole('button', { name: t('optimize.selection.apply'), exact: true }).click();
+    // GitHub runners are several times slower than a dev machine; a 2-thread pool reproduces 20 sets serially.
     await expect
-      .poll(() => page.evaluate(() => (window as unknown as Hooks).backtest().run.status))
+      .poll(() => page.evaluate(() => (window as unknown as Hooks).backtest().run.status), {
+        timeout: workerWaitTimeout,
+      })
       .toBe('done');
     await expect(page.getByRole('button', { name: t('preview.undo'), exact: true })).toBeVisible();
     await page.screenshot({ path: info.outputPath(`B17-${language}.png`) });

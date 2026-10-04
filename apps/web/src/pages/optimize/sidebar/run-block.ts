@@ -47,9 +47,9 @@ export function runBlockView(state: BlockState): RunBlockView {
   const { runBlock, readiness, run, results, outdated, validation } = state;
   const walkForward = validation.mode === 'walk-forward';
   const errors = readiness.reasons.find((reason) => reason.id === errorsId);
-  // Walk-forward's own reason is the plan's caption; Start's tooltip still gives it.
+  // A plan on its way is the windows caption; Start's tooltip still gives it.
   const blocking = readiness.reasons.filter(
-    (reason) => reason.id !== errorsId && reason.id !== 'optimize.walkForwardUnavailable',
+    (reason) => reason.id !== errorsId && reason.id !== 'optimize.wf.planning',
   );
   let caption: RunCaption;
   if (errors) caption = { kind: 'errors', reason: errors };
@@ -62,6 +62,9 @@ export function runBlockView(state: BlockState): RunBlockView {
         run.failure.error ??
         message('optimize.run.compileFailed', { line: run.failure.diagnostics[0]?.line ?? 0 }),
     };
+  else if (results && outdated?.reasons.length) caption = { kind: 'outdated' };
+  else if (results)
+    caption = { kind: 'lastRun', durationMs: results.durationMs, threads: results.workers };
   else if (walkForward)
     caption = {
       kind: 'windows',
@@ -69,9 +72,6 @@ export function runBlockView(state: BlockState): RunBlockView {
       combinations: runBlock.combinations ?? 0,
       estimatedMs: runBlock.estimatedMs,
     };
-  else if (results && outdated?.reasons.length) caption = { kind: 'outdated' };
-  else if (results)
-    caption = { kind: 'lastRun', durationMs: results.durationMs, threads: results.workers };
   else caption = { kind: 'estimate', estimatedMs: runBlock.estimatedMs, threads: runBlock.threads };
   return {
     count: walkForward ? runBlock.backtests : runBlock.combinations,

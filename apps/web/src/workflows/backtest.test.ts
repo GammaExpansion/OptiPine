@@ -124,6 +124,30 @@ test('a failed compile keeps the last inputs and marks unsupported features (B10
   );
 });
 
+test('a failed compile lists every error, and the requests it could not run (B10)', async () => {
+  const { session, answerAll } = await readySession();
+  session.setSource(
+    strategySource
+      .replace('ta.sma(src, length)', 'ta.sma(src, lenght)')
+      .replace('plot(basis', 'daily = request.security(syminfo.tickerid, "D", close)\nplot(basis')
+      .replace('ta.rsi(close, 14)', 'ta.rsi(close, lenght)'),
+  );
+  await answerAll();
+  assert.deepEqual(
+    backtestIssues(session.getState()).map((issue) => [
+      issue.category,
+      issue.line,
+      issue.column,
+      issue.text,
+    ]),
+    [
+      ['compileError', 6, 21, 'Undeclared identifier lenght.'],
+      ['unsupported', 11, 9, 'request.security() is not supported.'],
+      ['compileError', 13, 20, 'Undeclared identifier lenght.'],
+    ],
+  );
+});
+
 test('inputs keep their value when title and type survive a recompile', async () => {
   const { session, answerAll } = await readySession();
   session.setInput('Length', 12);

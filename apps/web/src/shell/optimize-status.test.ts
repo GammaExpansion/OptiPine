@@ -1,7 +1,13 @@
 import { expect, test } from 'vitest';
 import { translate } from '../i18n/translate.ts';
 import type { OptimizationState, RunProgress } from '../workflows/optimize-session.ts';
-import { clockText, estimateText, optimizeStatus, progressView } from './optimize-status.ts';
+import {
+  clockText,
+  estimateText,
+  optimizeStatus,
+  progressView,
+  windowCount,
+} from './optimize-status.ts';
 
 const progress = (change: Partial<RunProgress>): RunProgress => ({
   phase: 'in',
@@ -12,6 +18,7 @@ const progress = (change: Partial<RunProgress>): RunProgress => ({
   elapsedMs: 0,
   remainingMs: null,
   workers: 7,
+  window: null,
   ...change,
 });
 
@@ -21,6 +28,7 @@ test('progress counts the sets of the range running and the share of every backt
     done: 0,
     combinations: 2_214,
     percent: 0,
+    window: null,
   });
   expect(progressView(progress({ completed: 1_373 }))).toMatchObject({ done: 1_373, percent: 31 });
   expect(progressView(progress({ phase: 'out', completed: 3_587 }))).toMatchObject({
@@ -37,8 +45,20 @@ test('progress counts the sets of the range running and the share of every backt
   });
 });
 
+test('a walk-forward run counts the sets of the window running (W4)', () => {
+  const window = { index: 2, count: 6 };
+  expect(progressView(progress({ completed: 908, total: 2_214, window }))).toEqual({
+    phase: 'in',
+    done: 908,
+    combinations: 2_214,
+    percent: 41,
+    window,
+  });
+});
+
 const results = {
   combinations: 2_214,
+  windows: null,
   durationMs: 609_000,
   failures: [{}, {}],
   computedWith: { search: { sampling: { method: 'grid' } } },
@@ -85,7 +105,11 @@ test('the header puts a run first, then a failure, outdated results, a cancel, t
     durationMs: 609_000,
     failed: 2,
     random: false,
+    windows: null,
   });
+  expect(
+    optimizeStatus(state({ run: done, results: { ...results, windows: 6 }, outdated: null })),
+  ).toMatchObject({ kind: 'done', windows: 6 });
 });
 
 test('durations read as a clock, estimates rounded to what they deserve', () => {
@@ -97,4 +121,6 @@ test('durations read as a clock, estimates rounded to what they deserve', () => 
   expect(translate(estimateText(600_000), 'en')).toBe('~10 min');
   expect(translate(estimateText(7_500_000), 'en')).toBe('~2 h 5 min');
   expect(translate(estimateText(600_000), 'zh')).toBe('约 10 分钟');
+  expect(translate(windowCount(6), 'en')).toBe('6 windows');
+  expect(translate(windowCount(1), 'en')).toBe('1 window');
 });

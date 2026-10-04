@@ -70,6 +70,7 @@ test.each(['script', 'data'] as const)(
     );
     expect(chart.props!.bars).toHaveLength(120);
     expect(screen.queryByRole('heading', { name: 'Run backtest' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Backtest' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Reset zoom' })).not.toBeInTheDocument();
     await waitFor(() => expect(getBacktestStore().getState().readiness.ok).toBe(true));
     await runBacktest();

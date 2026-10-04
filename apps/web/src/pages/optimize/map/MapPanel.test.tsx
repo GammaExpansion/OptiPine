@@ -21,7 +21,7 @@ beforeEach(() => vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnV
 it('renders a real nine-set snapshot, switches surfaces and smoothing without running the pool', async () => {
   await loadOptimization();
   await runOptimization();
-  const start = vi.spyOn(getServices().optimization, 'start');
+  const start = vi.spyOn(getServices().optimization!.session, 'start');
   const result = optimization().results;
   renderInEnglish(
     <>

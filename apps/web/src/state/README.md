@@ -18,11 +18,19 @@ bridge subscriptions and record provenance. Optimization snapshots never publish
 - Loading an example opens its source immediately and accepts its successful data request. Missing
   service and provider refusals open the market data dialog for recovery. A subsequent script or
   market selection supersedes that acceptance. This does not start a backtest.
-- `getServices()` lazily owns the three sessions, the three Worker clients/pool and the feed client.
+- `getServices()` lazily owns the sessions, the Worker clients and pool and the feed client.
   `main.tsx` disposes them on page exit and hot replacement. Pages held in the back/forward cache
   retain their services. Store subscriptions share this lifetime, not a component's mount lifetime.
+- The optimization side (its session, the pool, the analysis client and the optimization
+  workflows) loads on first need: `services.loadOptimization()` imports `optimization-services.ts`
+  and creates it once, and `services.optimization` is null until then. The Optimize page renders
+  inside `useOptimizationLoaded()`, which starts the load, so `useOptimizationStore` always has a
+  session there. The shell reads `useOptimizationPresence` (loaded, has results), which stays false
+  until the side exists and never loads it, so the Backtest page's first screen carries none of it.
 - Tests call `replaceServices(() => createServices(options))` before mounting, inject Worker
-  factories, fetch, cache and clock, then unmount subscribers and call the returned cleanup.
+  factories, fetch, cache and clock, then unmount subscribers and call the returned cleanup. A test
+  that reads the optimization store awaits `getServices().loadOptimization()` first, as
+  `useOptimizeTestServices` and `loadOptimization` in `pages/optimize/test-support.tsx` do.
   Store tests run in Vitest: this layer imports React and Vite's raw example sources. Node tests
   keep importing the framework-free workflows and catalogs directly.
 

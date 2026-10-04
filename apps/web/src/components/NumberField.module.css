@@ -57,10 +57,13 @@
   height: 28px;
   font-size: 12.5px;
 }
-/* The enclosing field supplies the single amber focus border (G5). */
-.input:focus-visible,
-.step:focus-visible {
+/* The enclosing field marks input focus; the steppers also identify the active button. */
+.input:focus-visible {
   outline: none;
+}
+.step:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -3px;
 }
 .compact .input:only-child {
   text-align: left;

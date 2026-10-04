@@ -81,6 +81,7 @@ test('live snapshots are explicitly provisional; reproduction and errors remain 
           elapsedMs: 1,
           remainingMs: null,
           workers: 2,
+          window: null,
         },
       },
     }),

@@ -6,8 +6,13 @@ import { defaultLanguage, type Language } from '../i18n/translate.ts';
 export type Page = 'backtest' | 'optimize';
 /** The Backtest page's result tabs; `inputs` is the phone's tab for the right panel (G3). */
 export type DockTab = 'report' | 'equity' | 'trades' | 'inputs' | 'code' | 'issues';
-/** The Optimize page's tabs on a phone (G4); Settings holds the right panel. */
-export type OptimizeTab = 'leaderboard' | 'map' | 'sensitivity' | 'settings';
+/**
+ * The Optimize page's tabs on a phone (G4), under the summary: R1's Leaderboard, Parameter map and
+ * Sensitivity, or W1's Windows and Stability while walk-forward is on display; Settings holds the
+ * right panel.
+ */
+export type OptimizeTab =
+  'leaderboard' | 'map' | 'sensitivity' | 'windows' | 'stability' | 'settings';
 export type Dialog = 'script' | 'marketData' | 'dateRange' | 'properties' | 'failedCombinations';
 /** Pane sizes in pixels, kept per page; each page reads the fields of its own panes. */
 export interface PaneSizes {
@@ -20,6 +25,10 @@ export interface PaneSizes {
   leaderboard: number;
   /** Optimize: the parameter map above sensitivity. */
   map: number;
+  /** Optimize, walk-forward: the stitched equity above the windows (W1). */
+  wfSummary: number;
+  /** Optimize, walk-forward: the per-window table beside stability and the window map. */
+  wfTable: number;
 }
 export interface UiState {
   page: Page;
@@ -45,6 +54,8 @@ export const defaultPaneSizes: PaneSizes = {
   summary: 232,
   leaderboard: 624,
   map: 314,
+  wfSummary: 362,
+  wfTable: 640,
 };
 const paneNames = Object.keys(defaultPaneSizes) as (keyof PaneSizes)[];
 export const uiStorageKey = 'optipine.ui';

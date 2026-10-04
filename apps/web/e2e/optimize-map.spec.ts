@@ -1,10 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { OptimizationStoreState } from '../src/state/optimization.ts';
 import { origins } from './ports.ts';
+import { workerWaitTimeout } from './optimize-waits.ts';
 
 // The setup sidebar is an independent slot. Initialize its stores through Vite; every trial and
 // analysis still runs through the production Worker factories and real optimization pool.
 test.use({ baseURL: origins.dev });
+test.describe.configure({ timeout: 120_000 });
 type Hooks = Window & { mapState: () => OptimizationStoreState };
 const source = (dense: boolean) => `//@version=6
 strategy("Map test", initial_capital=1000000)
@@ -40,6 +42,8 @@ async function open(page: Page, dense = false, language: 'en' | 'zh' = 'en') {
   await page.evaluate(
     async ({ source, dense }) => {
       const load = (path: string) => import(/* @vite-ignore */ path);
+      const { getServices } = await load('/src/state/services.ts');
+      await getServices().loadOptimization();
       const { openScript } = await load('/src/state/backtest.ts');
       const { getMarketDataStore } = await load('/src/state/marketData.ts');
       const { getOptimizationStore } = await load('/src/state/optimization.ts');
@@ -68,7 +72,11 @@ async function open(page: Page, dense = false, language: 'en' | 'zh' = 'en') {
     },
     { source: source(dense), dense },
   );
-  await page.waitForFunction(() => (window as unknown as Hooks).mapState().readiness.ok);
+  await page.waitForFunction(
+    () => (window as unknown as Hooks).mapState().readiness.ok,
+    undefined,
+    { timeout: workerWaitTimeout },
+  );
   await page.evaluate(async (dense) => {
     const state = (window as unknown as Hooks).mapState;
     while (state().viewSettings.filters.length) state().actions.removeFilter(0);
@@ -79,16 +87,22 @@ async function open(page: Page, dense = false, language: 'en' | 'zh' = 'en') {
     }
     await state().actions.start();
   }, dense);
-  await page.waitForFunction(() => {
-    const state = (window as unknown as Hooks).mapState();
-    return state.run.status === 'done' && !state.views?.pending;
-  });
+  await page.waitForFunction(
+    () => {
+      const state = (window as unknown as Hooks).mapState();
+      return state.run.status === 'done' && !state.views?.pending;
+    },
+    undefined,
+    { timeout: workerWaitTimeout },
+  );
   await page.evaluate(() => document.fonts.ready);
   return errors;
 }
 
 const settled = (page: Page) =>
-  page.waitForFunction(() => !(window as unknown as Hooks).mapState().views?.pending);
+  page.waitForFunction(() => !(window as unknown as Hooks).mapState().views?.pending, undefined, {
+    timeout: workerWaitTimeout,
+  });
 const identity = (page: Page) =>
   page.evaluate(() => {
     const state = (window as unknown as Hooks).mapState();

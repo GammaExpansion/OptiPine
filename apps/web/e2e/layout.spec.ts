@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { en } from '../src/i18n/en.ts';
+import { zh } from '../src/i18n/zh.ts';
 import type { BacktestHooks } from './backtest-hooks.ts';
 import type { OptimizeHooks } from './optimize-hooks.ts';
 import { origins } from './ports.ts';
@@ -15,7 +17,7 @@ const sizes = [
   { name: 'tablet', width: 1024, height: 768 },
   { name: 'phone', width: 390, height: 844 },
 ] as const;
-const states = ['S1', 'B1', 'O1', 'R1'] as const;
+const states = ['S1', 'B1', 'O1', 'R1', 'W1'] as const;
 type State = (typeof states)[number];
 
 /** Collect the page's errors and open it in `language` at the app's first screen (S1) or the harness. */
@@ -55,9 +57,19 @@ async function open(page: Page, language: 'en' | 'zh', state: State) {
   await page
     .getByRole('button', { name: language === 'en' ? 'Optimize' : '优化', exact: true })
     .click();
+  // The page loads the optimization side as it opens; its hooks read it once O1 shows.
+  await expect(
+    page.getByRole('heading', {
+      name: language === 'en' ? 'No optimization has run yet' : '尚未运行优化',
+    }),
+  ).toBeVisible();
   if (state === 'R1')
     await page.evaluate(() =>
       (window as unknown as HookWindow).optimizeHooks.runOne('Length', 18, 22),
+    );
+  if (state === 'W1')
+    await page.evaluate(() =>
+      (window as unknown as HookWindow).optimizeHooks.runWalkForward('Length', 18, 22),
     );
   return errors;
 }
@@ -119,15 +131,36 @@ for (const language of ['en', 'zh'] as const)
         await page.goto('about:blank');
         const errors = await open(page, language, state);
         await page.evaluate(() => document.fonts.ready);
-        if (state === 'R1')
+        if (state === 'R1' || state === 'W1')
           await page.waitForFunction(
-            () => (window as unknown as HookWindow).optimizeHooks.state().run === 'done',
-            null,
+            (walkForward) => {
+              const run = (window as unknown as HookWindow).optimizeHooks.state();
+              return run.run === 'done' && (!walkForward || run.walkForwardSettled);
+            },
+            state === 'W1',
             { timeout: 60_000 },
           );
         await page.waitForTimeout(300);
         await page.screenshot({ path: info.outputPath(`${state}-${size.name}-${language}.png`) });
         expect(await page.evaluate(layoutProblems), state).toEqual([]);
+        // A phone shows W1's Windows and Stability one per tab under the stitched equity (G4).
+        if (state === 'W1' && size.name === 'phone')
+          for (const tab of ['windows', 'stability'] as const) {
+            const copy = language === 'en' ? en : zh;
+            await page.getByRole('tab', { name: copy[`layout.${tab}`], exact: true }).click();
+            await page.waitForTimeout(300);
+            await page.screenshot({ path: info.outputPath(`W1-${tab}-phone-${language}.png`) });
+            expect(await page.evaluate(layoutProblems), `W1 ${tab}`).toEqual([]);
+            // The stitched equity's view switch and the window's View backtest are touch targets.
+            for (const target of [
+              page.getByRole('radio', { name: copy['optimize.wfResults.stitched'], exact: true }),
+              page.getByRole('button', {
+                name: copy['optimize.wfResults.viewBacktest'],
+                exact: true,
+              }),
+            ])
+              expect((await target.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+          }
         expect(errors, state).toEqual([]);
       }
     });

@@ -149,29 +149,31 @@ test('S1 keeps results, dialogs, the script menu, Optimize and Chinese out of th
   await page.waitForLoadState('networkidle');
   const scripts = await Promise.all(requested);
   const lazy =
-    /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|ScriptMenuContent|OptimizePage|PreviewContent|PineEditor|RightDrawer|\/sheet-|\/zh-)/;
+    /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|ScriptMenuContent|OptimizePage|optimization-services|optimize-|PreviewContent|PineEditor|RightDrawer|\/sheet-|\/zh-)/;
   expect(scripts.map(({ file }) => file).filter((file) => lazy.test(file))).toEqual([]);
-  // Measured with the editor deferred until there is something to edit and the tablet and phone
-  // layouts: 523,229 bytes of code, without CodeMirror's 300,480, 519,022 of them in the entry,
-  // and the English catalog's 47,894. The code budgets leave about 6 KB, less than the script menu
-  // (14 KB) or the market data dialog (19 KB) would add if either loaded with the page again.
+  // Measured with the editor deferred until there is something to edit, the tablet and phone
+  // layouts, the optimization side, walk-forward included, loading when Optimize first opens, and
+  // the component sheet's copy in a catalog of its own: 487,658 bytes of code, without
+  // CodeMirror's, 483,451 of them in the entry, and the English catalog's 49,585. The code budgets
+  // leave about 6 KB, less than the script menu (14 KB) or the market data dialog (19 KB) would
+  // add if either loaded with the page again.
   const catalog = /\/en-[^/]*\.js$/;
   const sum = (files: typeof scripts) => files.reduce((total, script) => total + script.bytes, 0);
   const code = sum(scripts.filter(({ file }) => !catalog.test(file)));
   expect(code).toBeGreaterThan(0);
-  expect(code).toBeLessThan(529_500);
+  expect(code).toBeLessThan(493_500);
   // The catalog grows with the copy of every feature. It is checked on its own, about 6 KB over
   // its size, so new copy never pushes the code over its budget; a catalog that outgrows this
   // budget is a reason to look at what it carries, then to raise the budget.
   const catalogBytes = sum(scripts.filter(({ file }) => catalog.test(file)));
   expect(catalogBytes).toBeGreaterThan(0);
-  expect(catalogBytes).toBeLessThan(54_000);
+  expect(catalogBytes).toBeLessThan(55_500);
   const html = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
   const entryFiles = new Set(
     [...html.matchAll(/(?:src|href)="([^"\s]+\.js)"/g)].map((match) => match[1]),
   );
   const entryBytes = sum(scripts.filter(({ file }) => entryFiles.has(file)));
-  expect(entryBytes).toBeLessThan(525_000);
+  expect(entryBytes).toBeLessThan(489_500);
   await writeFile(
     info.outputPath('s1-bundle.json'),
     JSON.stringify({ scripts, entryBytes, code, catalogBytes }, null, 2),

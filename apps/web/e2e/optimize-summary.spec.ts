@@ -1,10 +1,12 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import type { OptimizationStoreState } from '../src/state/optimization.ts';
 import type { BacktestHooks } from './backtest-hooks.ts';
 import { origins } from './ports.ts';
+import { waitForTopEquity, workerWaitTimeout } from './optimize-waits.ts';
 
 // Small synthetic grids isolate result edge cases; the integrated example test uses setup UI.
 test.use({ baseURL: origins.dev });
+test.describe.configure({ timeout: 120_000 });
 type SummaryWindow = Window & {
   backtestHooks: BacktestHooks;
   summaryOptimization: () => OptimizationStoreState;
@@ -24,7 +26,13 @@ if length == 3 and bar_index == 4
     runtime.error("Stopped on purpose")
 `;
 
-async function open(page: Page, language: 'en' | 'zh' = 'en', script = source, none = false) {
+async function open(
+  page: Page,
+  info: TestInfo,
+  language: 'en' | 'zh' = 'en',
+  script = source,
+  none = false,
+) {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => {
@@ -47,6 +55,10 @@ async function open(page: Page, language: 'en' | 'zh' = 'en', script = source, n
   await page.evaluate(
     async ({ script, none }) => {
       const path = '/src/state/optimization.ts';
+      const servicesPath = '/src/state/services.ts';
+      const services = (await import(servicesPath)) as typeof import('../src/state/services.ts');
+      // The optimization side loads on first need; the hooks below read it at once.
+      await services.getServices().loadOptimization();
       const module = (await import(path)) as typeof import('../src/state/optimization.ts');
       const target = window as unknown as SummaryWindow;
       target.summaryOptimization = () => module.getOptimizationStore().getState();
@@ -64,25 +76,37 @@ async function open(page: Page, language: 'en' | 'zh' = 'en', script = source, n
     { script, none },
   );
   await expect
-    .poll(() =>
-      page.evaluate(() => (window as unknown as SummaryWindow).summaryOptimization().readiness.ok),
+    .poll(
+      () =>
+        page.evaluate(
+          () => (window as unknown as SummaryWindow).summaryOptimization().readiness.ok,
+        ),
+      // GitHub runners are several times slower than a dev machine; a 2-thread pool reproduces 20 sets serially.
+      { timeout: workerWaitTimeout },
     )
     .toBe(true);
+  // Every input starts searched around its value; these grids are Length by Quantity alone.
+  await page.evaluate(() => {
+    const { search, actions } = (window as unknown as SummaryWindow).summaryOptimization();
+    for (const row of search.rows)
+      if (row.draft?.searched && !['Length', 'Quantity'].includes(row.descriptor.title))
+        actions.setSearched(row.descriptor.title, false);
+  });
   await page
     .getByRole('button', { name: language === 'en' ? 'Optimize' : '优化', exact: true })
     .click();
   await page
     .getByRole('button', { name: language === 'en' ? 'Start' : '开始优化', exact: true })
     .click();
+  // A live analysis is not a completed run; Top 20 and preview/apply require finished results.
   await expect
     .poll(
       () =>
-        page.evaluate(
-          () => (window as unknown as SummaryWindow).summaryOptimization().topEquity.status,
-        ),
-      { timeout: 30_000 },
+        page.evaluate(() => (window as unknown as SummaryWindow).summaryOptimization().run.status),
+      { timeout: workerWaitTimeout },
     )
-    .toBe('ready');
+    .toBe('done');
+  await waitForTopEquity(page, info);
   await page.evaluate(() => document.fonts.ready);
   return errors;
 }
@@ -99,7 +123,7 @@ for (const language of ['en', 'zh'] as const) {
   test(`nine real Worker combinations, charts, filters, preview and apply (${language})`, async ({
     page,
   }, info) => {
-    const errors = await open(page, language);
+    const errors = await open(page, info, language);
     const en = language === 'en';
     await expect(page.getByText(en ? '9 / 9 pass' : '9 / 9 符合')).toBeVisible();
     await expect(
@@ -113,12 +137,15 @@ for (const language of ['en', 'zh'] as const) {
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('Enter');
+    // GitHub runners are several times slower than a dev machine; a 2-thread pool reproduces 20 sets serially.
     await expect
-      .poll(() =>
-        page.evaluate(
-          () =>
-            (window as unknown as SummaryWindow).summaryOptimization().views?.selection?.row.rank,
-        ),
+      .poll(
+        () =>
+          page.evaluate(
+            () =>
+              (window as unknown as SummaryWindow).summaryOptimization().views?.selection?.row.rank,
+          ),
+        { timeout: workerWaitTimeout },
       )
       .toBe(2);
     await page.screenshot({ path: info.outputPath(`R2-${language}.png`) });
@@ -199,7 +226,7 @@ for (const language of ['en', 'zh'] as const) {
   });
 
   test(`unvalidated full-range results (${language})`, async ({ page }, info) => {
-    const errors = await open(page, language, source, true);
+    const errors = await open(page, info, language, source, true);
     await expect(
       page.getByText(language === 'en' ? 'Unvalidated' : '未验证').first(),
     ).toBeVisible();
@@ -214,7 +241,7 @@ for (const language of ['en', 'zh'] as const) {
   test(`failed combinations export and preview diagnostics (${language})`, async ({
     page,
   }, info) => {
-    const errors = await open(page, language, failing);
+    const errors = await open(page, info, language, failing);
     const en = language === 'en';
     await page
       .getByRole('banner')

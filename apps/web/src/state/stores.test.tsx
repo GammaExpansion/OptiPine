@@ -4,7 +4,11 @@ import { exampleRequest } from '../workflows/market-data.ts';
 import { strategySource } from '../workflows/test-support.ts';
 import { getBacktestStore, loadExample, openScript, useBacktestStore } from './backtest.ts';
 import { getMarketDataStore, useMarketDataStore } from './marketData.ts';
-import { getOptimizationStore, useOptimizationStore } from './optimization.ts';
+import {
+  getOptimizationPresence,
+  getOptimizationStore,
+  useOptimizationStore,
+} from './optimization.ts';
 import { getServices, replaceServices } from './services.ts';
 import { fakeServices, testDataset, testInput, testNow } from './test-support.ts';
 import { uiStore } from './ui.ts';
@@ -61,6 +65,7 @@ test('unrelated changes and an optimization run do not re-render a Backtest sele
     renderSource();
     return useBacktestStore((state) => state.source);
   });
+  await act(() => getServices().loadOptimization());
   const optimization = renderHook(() => useOptimizationStore((state) => state.run.status));
   const actions = getOptimizationStore().getState().actions;
   act(() => {
@@ -149,7 +154,27 @@ test('a pending example cannot accept data after another script is opened', asyn
   }
 });
 
-test('disposal detaches store bridges from their sessions', () => {
+test('the optimization side loads on first need; the shell reads its presence meanwhile', async () => {
+  await ready();
+  const presence = getOptimizationPresence();
+  expect(getServices().optimization).toBeNull();
+  expect(() => getOptimizationStore()).toThrow();
+  expect(presence.getState()).toEqual({ loaded: false, hasResults: false });
+  const loading = getServices().loadOptimization();
+  expect(getServices().loadOptimization()).toBe(loading);
+  await act(() => loading);
+  expect(presence.getState()).toEqual({ loaded: true, hasResults: false });
+  const { actions } = getOptimizationStore().getState();
+  act(() => {
+    actions.setSearched('Length', false);
+    actions.setSearched('Multiplier', false);
+  });
+  await act(() => actions.start());
+  expect(presence.getState()).toEqual({ loaded: true, hasResults: true });
+});
+
+test('disposal detaches store bridges from their sessions', async () => {
+  await getServices().loadOptimization();
   const backtest = getBacktestStore();
   const optimization = getOptimizationStore();
   const market = getMarketDataStore();
@@ -159,7 +184,7 @@ test('disposal detaches store bridges from their sessions', () => {
   market.subscribe(listener);
   getServices().dispose();
   getServices().backtest.setInput('Length', 7);
-  getServices().optimization.setPage(3);
+  getServices().optimization!.session.setPage(3);
   getServices().marketData.cancel();
   expect(listener).not.toHaveBeenCalled();
 });

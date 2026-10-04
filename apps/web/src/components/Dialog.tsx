@@ -1,4 +1,4 @@
-import { useId, type ReactElement, type ReactNode } from 'react';
+import { useId, useRef, type ReactElement, type ReactNode } from 'react';
 import * as Primitive from '@radix-ui/react-dialog';
 import { IconButton } from './IconButton.tsx';
 import styles from './Dialog.module.css';
@@ -25,6 +25,7 @@ export function Dialog({
   size?: 'small' | 'medium' | 'large';
 }) {
   const descriptionId = useId();
+  const opener = useRef<HTMLElement | null>(null);
   return (
     <Primitive.Root open={open} onOpenChange={onOpenChange}>
       {trigger && <Primitive.Trigger asChild>{trigger}</Primitive.Trigger>}
@@ -33,6 +34,16 @@ export function Dialog({
         <Primitive.Content
           className={`${styles.dialog} ${styles[size]}`}
           aria-describedby={description ? descriptionId : undefined}
+          onOpenAutoFocus={() => {
+            opener.current = document.activeElement as HTMLElement | null;
+          }}
+          onCloseAutoFocus={(event) => {
+            // Store-driven dialogs have no Radix Trigger to restore focus to.
+            if (!trigger && opener.current?.isConnected) {
+              event.preventDefault();
+              opener.current.focus();
+            }
+          }}
         >
           <div className={styles.header}>
             <div>

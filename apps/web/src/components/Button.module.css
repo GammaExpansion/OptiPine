@@ -26,6 +26,11 @@
 .primary:hover:not(:disabled):not([aria-disabled='true']) {
   background: var(--primary-hover);
 }
+/* The global amber outline disappears on an amber primary action. */
+.primary:focus-visible {
+  outline-color: var(--primary-text);
+  outline-offset: -4px;
+}
 .toolbar {
   height: 30px;
   padding: 0 10px;

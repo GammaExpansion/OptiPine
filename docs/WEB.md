@@ -155,7 +155,12 @@ appear there and that single-set details live on the Backtest page.
   or drop, with the full list behind "N more" (O4). A row left with one value fixes that input. When
   the grid exceeds 20,000 combinations the search switches to random sampling, says so, and shows
   the sample count (default 2,000) and seed (O5). A range that cannot be searched is marked on its
-  row, and the run is blocked until it is fixed (O6).
+  row, and the run is blocked until it is fixed (O6). A new numeric row spans half to twice the
+  input's current value within its declared bounds, on its step through that value; a step that
+  would list more than 50 values there becomes 2, 5, 10… times itself. Zero and time inputs start
+  at their value. New rows are searched in declaration order while the grid stays within 20,000
+  combinations, so the first run is a whole grid; a row that would exceed it starts fixed with its
+  range filled in (O1). A row keeps its range once it is edited or a run has used it.
 - **Validation.** **None**, **IS / OOS** with the OOS share (default 30%), or **Walk-forward** with
   IS months, OOS months, step months, and an IS start that rolls forward or stays anchored
   (defaults 12, 3 and 3, rolling). With None, the panel warns that ranks only measure fit (O2).
@@ -252,8 +257,10 @@ The desktop reference is 1440 × 900. Every gap between panes is a drag handle; 
 pane size, double-clicking resets it, panes stop at a minimum, and sizes are remembered per page
 (G1). The right panel defaults to 336 px. From 768 to 1279 px wide the right panel becomes a drawer
 (G2). Below 768 px each page is a single column with tabs: Report, Equity, Trades, Inputs, Code and
-Issues on Backtest (G3); Summary, Leaderboard, Parameter map, Sensitivity and Settings on Optimize,
-with leaderboard rows as cards (G4). The component sheet is G5.
+Issues on Backtest (G3). On Optimize the summary stays above the tabs Leaderboard, Parameter map,
+Sensitivity and Settings, with leaderboard rows as cards, and the selected set's bar below them;
+walk-forward results keep the stitched equity above Windows, Stability and Settings, and the
+selected window's bar below (G4). The component sheet is G5.
 
 ## 3. Behavior
 

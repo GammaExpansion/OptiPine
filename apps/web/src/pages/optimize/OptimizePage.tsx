@@ -1,5 +1,5 @@
 /**
- * The Optimize page (WEB.md 2.4, 2.5), laid out as R1. Slot owners:
+ * The Optimize page (WEB.md 2.4–2.6), laid out as R1, or as W1 for walk-forward. Slot owners:
  *
  * - setup: this composition and its splits, `range/DataRangeBar` at the top of the main column
  *   with the walk-forward `range/WindowPlan` over the empty results, `states/` (the O1 empty
@@ -11,21 +11,27 @@
  *   the summary), `selection/SelectionBar` along the bottom of the main column, and
  *   `filters/ConditionPopover`, the body of R10's popover;
  * - map and sensitivity: `map/MapPanel` over `sensitivity/SensitivityPanel` (right, under the
- *   summary).
+ *   summary);
+ * - walk-forward (W1–W6), in place of all three while walk-forward results or a walk-forward run
+ *   are on display: `walkforward/WfSummary` at the top, `walkforward/WfTable` (left, under the
+ *   summary) over `walkforward/FixedParameters`, `walkforward/WfStability` (right: Stability and
+ *   Window map), and `walkforward/WfSelectionBar` along the bottom.
  *
  * The panels mount while there are results or a run fills them, and read the optimization store
  * themselves; none takes props. Dialog slots mount once at shell/DialogsRoot.
  *
- * Below 768 px `PhoneOptimize` (G4) keeps Summary above four tabs: Leaderboard (cards), Parameter
- * map, Sensitivity and Settings. Settings holds the data range over the right panel, and the
- * selection bar stays along the bottom. From 768 to 1279 px the right panel is a drawer (G2).
+ * Below 768 px `PhoneOptimize` (G4) keeps the summary above the tabs: R1's summary over
+ * Leaderboard (cards), Parameter map, Sensitivity and Settings, or W1's stitched equity over Windows
+ * (the table over the fixed parameters), Stability and Settings. Settings holds the data range over
+ * the right panel, and the selection bar stays along the bottom. From 768 to 1279 px the right
+ * panel is a drawer (G2) beside R1 or W1 as on a desktop.
  */
-import { useOptimizationStore } from '../../state/optimization.ts';
+import { useOptimizationLoaded, useOptimizationStore } from '../../state/optimization.ts';
 import { useLayout } from '../../shell/useLayout.ts';
 import { Workbench } from '../../shell/Workbench.tsx';
 import { LeaderboardPanel } from './leaderboard/LeaderboardPanel.tsx';
 import { MapPanel } from './map/MapPanel.tsx';
-import { resultsOutdated, showsResults } from './page-view.ts';
+import { resultsOutdated, showsResults, showsWalkForward } from './page-view.ts';
 import { DataRangeBar } from './range/DataRangeBar.tsx';
 import { WindowPlan } from './range/WindowPlan.tsx';
 import { SelectionBar } from './selection/SelectionBar.tsx';
@@ -35,12 +41,17 @@ import { OptimizeSidebar } from './sidebar/OptimizeSidebar.tsx';
 import { Split } from './Split.tsx';
 import { EmptyResults } from './states/EmptyResults.tsx';
 import { SummaryPanel } from './summary/SummaryPanel.tsx';
+import { FixedParameters } from './walkforward/FixedParameters.tsx';
+import { WfSelectionBar } from './walkforward/WfSelectionBar.tsx';
+import { WfStability } from './walkforward/WfStability.tsx';
+import { WfSummary } from './walkforward/WfSummary.tsx';
+import { WfTable } from './walkforward/WfTable.tsx';
 import styles from './OptimizePage.module.css';
 
-function Results() {
-  const outdated = useOptimizationStore(resultsOutdated);
+/** R1: the summary over the leaderboard, beside the map over sensitivity. */
+function ValidationResults() {
   return (
-    <div className={styles.results} data-results data-outdated={outdated || undefined}>
+    <>
       <div className={styles.fill}>
         <Split
           name="summary"
@@ -70,6 +81,49 @@ function Results() {
         />
       </div>
       <SelectionBar />
+    </>
+  );
+}
+
+/** W1: the stitched equity over the window table and fixed parameters, beside stability. */
+function WalkForwardResults() {
+  return (
+    <>
+      <div className={styles.fill}>
+        <Split
+          name="wfSummary"
+          stacked
+          minSize={160}
+          restMinSize={200}
+          first={<WfSummary />}
+          second={
+            <Split
+              name="wfTable"
+              stacked={false}
+              minSize={420}
+              restMinSize={320}
+              first={
+                <div className={styles.windows}>
+                  <WfTable />
+                  <FixedParameters />
+                </div>
+              }
+              second={<WfStability />}
+            />
+          }
+        />
+      </div>
+      <WfSelectionBar />
+    </>
+  );
+}
+
+function Results() {
+  const outdated = useOptimizationStore(resultsOutdated);
+  const walkForward = useOptimizationStore(showsWalkForward);
+  return (
+    <div className={styles.results} data-results data-outdated={outdated || undefined}>
+      {walkForward ? <WalkForwardResults /> : <ValidationResults />}
     </div>
   );
 }
@@ -91,8 +145,11 @@ function OptimizeMain() {
   );
 }
 
+/** Mounting the page loads the optimization side; its panels render once it exists. */
 export function OptimizePage() {
+  const loaded = useOptimizationLoaded();
   const layout = useLayout();
+  if (!loaded) return null;
   if (layout === 'phone') return <PhoneOptimize />;
   return <Workbench page="optimize" main={<OptimizeMain />} sidebar={<OptimizeSidebar />} />;
 }
