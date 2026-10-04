@@ -48,16 +48,14 @@ test('the focus on the first-launch steps moves to the page heading when they le
 });
 
 test('steps that leave without the focus leave it where it is', async () => {
-  renderInEnglish(
-    <>
-      <button type="button">Elsewhere</button>
-      <ChartArea />
-    </>,
-  );
-  screen.getByRole('button', { name: 'Elsewhere' }).focus();
+  const elsewhere = document.createElement('button');
+  document.body.append(elsewhere);
+  renderInEnglish(<ChartArea />);
+  elsewhere.focus();
   await loadScript();
   expect(await screen.findByRole('heading', { name: 'Backtest', level: 1 })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Elsewhere' })).toHaveFocus();
+  expect(elsewhere).toHaveFocus();
+  elsewhere.remove();
 });
 
 test.each(['script', 'data'] as const)(
