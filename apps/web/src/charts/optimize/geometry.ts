@@ -10,24 +10,54 @@ export const cellSize = 16;
 export const cellPitch = 18;
 /** The largest pitch a sparse map grows to while filling its panel. */
 export const maxCellPitch = 40;
+/**
+ * The smallest pitch a single-layer map shrinks to before it averages values, so a 14-value axis
+ * keeps its rows in a panel too short for 18 px ones.
+ */
+export const minCellPitch = 12;
 const gap = cellPitch - cellSize;
-const left = 64;
+/** The room left of the grid for the Y labels and title, unless the labels need more. */
+export const axisLeft = 64;
 const right = 16;
-const bottom = 66;
+/** Below the grid: the X labels and, under them, the X title. */
+export const axisBottom = 44;
 
-/** Reserve both axes and captions before fitting 16px squares with 2px gaps. Z layers scroll. */
-export function fitMap(map: Heatmap, width: number, height: number): Heatmap {
+const layerTop = (map: Heatmap) => (map.zKey ? 30 : 8);
+
+/** The Y labels end this far left of the grid, and the rotated title sits this far beyond them. */
+export const yLabelGap = 8;
+export const yTitleGap = 6;
+/** Wider labels, such as long option names, are squeezed to this width. */
+export const maxYLabelWidth = 120;
+
+/**
+ * The room left of the grid for Y labels `labelWidth` wide: the gap, the labels, the gap and the
+ * rotated title's line, never less than `axisLeft`, so the title never covers a label.
+ */
+export function yAxisLeft(labelWidth: number): number {
+  const labels = Math.ceil(Math.min(maxYLabelWidth, Math.max(0, labelWidth)));
+  return Math.max(axisLeft, yLabelGap + labels + yTitleGap + 18);
+}
+
+/**
+ * Average an axis's values only when its cells would fall below `minCellPitch` in the panel, or
+ * above 24 values; `left` is the room the Y labels take. Layered maps keep 18 px cells and scroll.
+ */
+export function fitMap(map: Heatmap, width: number, height: number, left = axisLeft): Heatmap {
   if (!map.yKey) return map;
   if (width <= 0 || height <= 0) return prepareHeatmap(map, true);
+  const pitch = map.zKey ? cellPitch : minCellPitch;
   return prepareHeatmap(map, {
-    x: Math.floor((width - left - right + 2) / cellPitch),
-    y: Math.floor((height - (map.zKey ? 30 : 8) - bottom) / cellPitch),
+    x: Math.floor((width - left - right + gap) / pitch),
+    y: Math.floor((height - layerTop(map) - axisBottom + gap) / pitch),
   });
 }
 
 export interface MapLayerGeometry {
   readonly z?: AnalysisValue;
   readonly top: number;
+  /** Where the grid's room starts, after the Y labels and title. */
+  readonly left: number;
   /** The distance from one cell to the next, its size plus the 2 px gap. */
   readonly pitch: number;
   readonly xs: readonly AnalysisValue[];
@@ -45,18 +75,20 @@ export interface MapGeometry {
 
 /**
  * The pitch a single-layer map draws at in a panel: as large as fills the panel's width or height,
- * whichever is tighter, from the dense map's 18 px up to `maxCellPitch`, so a few cells (a 4 × 3
- * grid) fill their panel instead of sitting small in its corner. Layered maps scroll and keep 18 px.
+ * whichever is tighter, from `minCellPitch` up to `maxCellPitch`, so a few cells (a 4 × 3 grid)
+ * fill their panel instead of sitting small in its corner, and many keep their rows. Layered maps
+ * scroll and keep 18 px.
  */
 function fittedPitch(
   columns: number,
   rows: number,
   panel: { readonly width: number; readonly height: number },
   top: number,
+  left: number,
 ): number {
   const across = Math.floor((panel.width - left - right + gap) / Math.max(1, columns));
-  const down = Math.floor((panel.height - top - bottom + gap) / Math.max(1, rows));
-  return Math.max(cellPitch, Math.min(maxCellPitch, across, down));
+  const down = Math.floor((panel.height - top - axisBottom + gap) / Math.max(1, rows));
+  return Math.max(minCellPitch, Math.min(maxCellPitch, across, down));
 }
 
 /**
@@ -66,6 +98,7 @@ function fittedPitch(
 export function mapGeometry(
   map: Heatmap,
   panel?: { readonly width: number; readonly height: number },
+  left = axisLeft,
 ): MapGeometry {
   const groups = map.layers?.length ? map.layers : [{ cells: map.cells, z: undefined }];
   let height = 0;
@@ -84,16 +117,17 @@ export function mapGeometry(
     const cells = new Map<number, HeatmapCell>();
     for (const cell of group.cells)
       cells.set(yIndex.get(cell.y)! * xs.length + xIndex.get(cell.x)!, cell);
-    const top = height + (map.zKey ? 30 : 8);
+    const top = height + layerTop(map);
     const pitch =
       panel && groups.length === 1 && map.yKey
-        ? fittedPitch(xs.length, ys.length, panel, top)
+        ? fittedPitch(xs.length, ys.length, panel, top, left)
         : cellPitch;
     width = Math.max(width, left + xs.length * pitch - gap + right);
-    height = top + ys.length * pitch + bottom;
+    height = top + ys.length * pitch + axisBottom;
     return {
       z: group.z,
       top,
+      left,
       pitch,
       xs,
       ys,
@@ -108,6 +142,7 @@ export function mapGeometry(
 /** A cell's square; the grid is centred in a canvas `width` wide, as R1 centres its map. */
 export function cellRect(layer: MapLayerGeometry, index: number, width: number) {
   const grid = layer.xs.length * layer.pitch - gap;
+  const { left } = layer;
   return {
     x:
       left +

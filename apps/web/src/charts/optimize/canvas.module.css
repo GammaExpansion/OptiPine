@@ -13,33 +13,16 @@
   flex: 1;
   min-height: 92px;
 }
-.filteredLegend,
-.filterStatus {
-  color: var(--caption);
-  font-size: 11px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  padding: 4px 16px;
-}
-.filteredLegend {
-  flex: none;
+.excluded {
+  display: inline-flex;
   align-items: center;
+  gap: 5px;
 }
-.filteredLegend i {
+.excluded i {
   width: 3px;
   height: 3px;
   background: var(--caption);
   outline: 1px solid var(--panel);
-}
-.filterStatus {
-  position: absolute;
-  top: 0;
-  left: 16px;
-  max-width: calc(100% - 32px);
-  background: var(--panel);
-  border: 1px solid var(--control-border);
-  pointer-events: none;
 }
 .viewport {
   position: relative;

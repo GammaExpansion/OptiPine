@@ -15,7 +15,9 @@ export function SensitivityPanel() {
   const { t, text } = useI18n();
   const view = useOptimizationStore((state) => state.views?.sensitivity);
   const searchRows = useOptimizationStore((state) => state.views?.searchRows);
-  const { parameter, number } = useResultFormat(searchRows);
+  const { parameter, objective: objectiveValue } = useResultFormat(searchRows);
+  const objective = useOptimizationStore((state) => state.viewSettings.objective);
+  const number = (value: number | null) => objectiveValue(value, objective);
   const map = useOptimizationStore((state) => state.views?.map);
   const curve = useOptimizationStore((state) => state.views?.curve);
   const bin = useBinInspection();
