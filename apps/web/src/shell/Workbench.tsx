@@ -48,6 +48,8 @@ function Panes({ page, main, sidebar }: WorkbenchProps) {
   const persist = (size: number) => setSizes(page, { right: size });
   return (
     <Group
+      role="main"
+      aria-label={t(page === 'backtest' ? 'shell.backtest' : 'shell.optimize')}
       orientation="horizontal"
       className={styles.workbench}
       elementRef={groupElement}
@@ -57,7 +59,7 @@ function Panes({ page, main, sidebar }: WorkbenchProps) {
       }}
     >
       <Panel id={`${page}-main`} minSize={600}>
-        <main className={styles.main}>{main}</main>
+        <div className={styles.main}>{main}</div>
       </Panel>
       <ResizeHandle
         axis="right"
