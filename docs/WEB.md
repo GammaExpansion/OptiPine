@@ -229,17 +229,21 @@ row is picked, is marked on the parameter map and shown in the selection bar bel
 
 **Parameter map.** X and Y are any searched inputs, with an optional Z that draws one layer per Z
 value (R4); choosing an input that is already on another axis swaps the two. The remaining inputs
-are slices that fix a value, take the maximum, or take the mean. **IS** / **OOS** switches the
-surface; **Smooth** replaces each cell with the mean of its ±1 step neighbours in every searched
-input.
+are slices that fix a value, take the best (**Max**, or **Min** for a minimized objective), or take
+the mean. **IS** / **OOS** switches the surface; **Smooth** replaces each cell with the mean of its
+±1 step neighbours in every searched input.
 
 - Cells are square with a 2 px gap: 16 px, or larger on a sparse single-layer map, which grows its
   cells up to 38 px to fill the panel. The input with more values runs horizontally until the axes
   are chosen. An axis with more values than fit the panel, or more than 24, averages adjacent
   values into one cell and labels the axis with ranges.
-- Colours come in nine steps assigned by rank, so one extreme set cannot flatten the rest, on a
-  ramp from loss to profit. The legend shows the minimum, zero and the maximum. Cells with no
-  sampled set are marked as not sampled.
+- Colours run from the worst cell to the best in the objective's direction, on a ramp from loss to
+  profit, and are assigned by rank, so one extreme set cannot flatten the rest. Where the objective
+  breaks even (zero for amounts, returns and ratios, one for profit factor), losing cells take the
+  three loss steps and winning cells the five profit steps, each ranked on its own side, and a
+  cell at break-even the neutral step between them; max drawdown has no break-even and spreads
+  over all nine. The legend shows the worst and best values at its ends and the break-even where
+  losing and winning cells meet. Cells with no sampled set are marked as not sampled.
 - The map counts every completed set, including those the filters exclude; a cell whose sets are
   all excluded carries a corner mark, and the legend explains it.
 - Hovering a cell lists the values it covers with their IS and OOS results and the mean, and the

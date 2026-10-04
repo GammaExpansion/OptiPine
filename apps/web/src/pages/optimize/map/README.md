@@ -25,10 +25,12 @@ checkout are still stubs; screenshots therefore have empty summary/leaderboard a
 placeholders. Synthetic results differ from the mock's fixed examples.
 
 The workflow assigns nine rank steps while the mock/tokens supply eight heat colors. The existing
-neutral divider color is inserted between the three loss colors and five profit colors. Numeric
-detail cells use compact amounts, with precise amounts in the value list. Input titles remain the
-script's own titles, so long titles wrap the controls instead of being shortened to the mock's
-handwritten aliases. Z layers scroll within the canvas viewport; pane sizes remain owned by Split.
+neutral divider color is inserted between the three loss colors and five profit colors, and marks
+the objective's break-even: losing cells take the loss colors and winning cells the profit colors
+(WEB.md 2.5). `LegendRamp` shows only the sides the cells fall on. Numeric detail cells use
+compact amounts, with precise amounts in the value list. Input titles remain the script's own
+titles, so long titles wrap the controls instead of being shortened to the mock's handwritten
+aliases. Z layers scroll within the canvas viewport; pane sizes remain owned by Split.
 
 The session only supplies bins capped at 24 values per axis. It has no action or analysis option
 for available pixel width. Narrow panes scroll horizontally instead of recomputing bins when fewer

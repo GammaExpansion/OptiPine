@@ -135,6 +135,7 @@ export function buildBinDetail(
     xKey: fullMap.xKey,
     yKey: fullMap.yKey,
     cells: layer.filter((cell) => includes(xValues, cell.x) && includes(yValues, cell.y)),
+    scale: fullMap.scale,
     display: fullMap.display,
   };
   return { selectedCell, localMap, mergedCells, mean, xValues, yValues, panelXRange, panelYRange };

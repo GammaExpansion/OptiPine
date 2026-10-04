@@ -17,6 +17,10 @@ export interface AnalysisOptions {
   /** Descriptive surfaces include completed sets even when ranking constraints exclude them. */
   includeExcluded?: boolean;
 }
+/**
+ * How a map reduces an input that is not an axis: one value, the best value in the objective's
+ * direction (`max`, the smallest when minimizing), or the mean.
+ */
 export interface Slice {
   mode: 'fixed' | 'max' | 'mean';
   value?: LiteralValue;
@@ -31,6 +35,16 @@ export interface HeatmapOptions extends AnalysisOptions {
   /** Selected/best parameters supply the default for a fixed slice. */
   parameters?: Readonly<Record<string, unknown>>;
   direction?: 'maximize' | 'minimize';
+  /**
+   * The objective's break-even, such as zero for an amount or one for a profit factor: colours
+   * split there into losing and winning cells. Absent for an objective without one.
+   */
+  breakEven?: number;
+}
+/** How a map's values become colours: by rank in `direction`, split at `breakEven` if given. */
+export interface HeatmapScale {
+  direction: 'maximize' | 'minimize';
+  breakEven?: number;
 }
 export interface HeatmapCell {
   x: AnalysisValue;
@@ -58,6 +72,7 @@ export interface Heatmap {
   zKey?: string;
   cells: HeatmapCell[];
   layers?: HeatmapLayer[];
+  scale?: HeatmapScale;
   display?: HeatmapDisplay;
 }
 const finite = (value: unknown): value is number =>
@@ -259,7 +274,9 @@ function aggregate(
   return {
     value: groups.length
       ? slice.mode === 'max'
-        ? Math.max(...groups.map((item) => item.value!))
+        ? (options.direction === 'minimize' ? Math.min : Math.max)(
+            ...groups.map((item) => item.value!),
+          )
         : mean(groups.map((item) => item.value!))
       : null,
     count: groups.reduce((total, item) => total + item.count, 0),
@@ -334,6 +351,10 @@ export function heatmap(
         }
       : {}),
     cells,
+    scale: {
+      direction: options.direction ?? 'maximize',
+      ...(finite(options.breakEven) ? { breakEven: options.breakEven } : {}),
+    },
   };
 }
 /** Each window contributes one surface, including its own neighbourhood and retuned slices. */

@@ -4,6 +4,11 @@ import { combinedExclusions } from './heatmap-exclusions.ts';
 export interface HeatmapDisplay {
   minimum: number | null;
   maximum: number | null;
+  /** The values at the ramp's loss and profit ends: the worst and best in the map's direction. */
+  worst: number | null;
+  best: number | null;
+  /** The break-even the colours split at, as the map's scale gives it; null without one. */
+  breakEven: number | null;
   median: number | null;
   xBinSize: number;
   yBinSize: number;
@@ -12,6 +17,28 @@ export interface HeatmapDisplay {
 }
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 const unique = (values: (AnalysisValue | undefined)[]) => [...new Set(values)];
+
+/** The ramp's colour steps: three for losing cells, the neutral break-even, five for winning. */
+const lossSteps = [0, 2] as const;
+const neutralStep = 3;
+const profitSteps = [4, 8] as const;
+
+/**
+ * Spread cells ordered worst first over the steps `from`–`to` by rank, so one extreme set cannot
+ * flatten the rest. A stable sort keeps tied cells in coordinate order, so each step's occupancy
+ * stays within one run of cells.
+ */
+function spread(cells: readonly HeatmapCell[], [from, to]: readonly [number, number]): void {
+  const steps = to - from + 1;
+  for (const [index, cell] of cells.entries())
+    cell.rankBin =
+      from +
+      (cells.length === 1
+        ? Math.floor((steps - 1) / 2)
+        : cells.length < steps
+          ? Math.round((index * (steps - 1)) / (cells.length - 1))
+          : Math.floor((index * steps) / cells.length));
+}
 
 /** Adjacent cells are averaged, never treating missing samples as zero. Limits default to 24. */
 export function prepareHeatmap(
@@ -61,17 +88,27 @@ export function prepareHeatmap(
     });
   }
   for (const cell of cells) delete cell.rankBin;
-  const ranked = cells
-    .filter((cell) => cell.value !== null && Number.isFinite(cell.value))
-    .sort((a, b) => a.value! - b.value!);
-  // Stable coordinate order breaks ties, keeping each bin's occupancy within one cell.
-  for (const [index, cell] of ranked.entries())
-    cell.rankBin =
-      ranked.length === 1
-        ? 4
-        : ranked.length < 9
-          ? Math.round((index * 8) / (ranked.length - 1))
-          : Math.floor((index * 9) / ranked.length);
+  const valued = cells.filter((cell) => cell.value !== null && Number.isFinite(cell.value));
+  const ranked = [...valued].sort((a, b) => a.value! - b.value!);
+  // Colours run from the worst cell to the best in the map's direction. With a break-even, losing
+  // cells take the loss steps and winning cells the profit steps, each ranked among themselves,
+  // so the legend's break-even falls where it is; without one, every cell shares the nine steps.
+  const minimize = map.scale?.direction === 'minimize';
+  const ordered = minimize ? [...valued].sort((a, b) => b.value! - a.value!) : ranked;
+  const breakEven = map.scale?.breakEven;
+  if (breakEven === undefined) spread(ordered, [lossSteps[0], profitSteps[1]]);
+  else {
+    const wins = (value: number) => (minimize ? value < breakEven : value > breakEven);
+    spread(
+      ordered.filter((cell) => cell.value !== breakEven && !wins(cell.value!)),
+      lossSteps,
+    );
+    for (const cell of ordered) if (cell.value === breakEven) cell.rankBin = neutralStep;
+    spread(
+      ordered.filter((cell) => wins(cell.value!)),
+      profitSteps,
+    );
+  }
   const mid = Math.floor(ranked.length / 2);
   const median = !ranked.length
     ? null
@@ -88,6 +125,9 @@ export function prepareHeatmap(
     display: {
       minimum: ranked[0]?.value ?? null,
       maximum: ranked.at(-1)?.value ?? null,
+      worst: ordered[0]?.value ?? null,
+      best: ordered.at(-1)?.value ?? null,
+      breakEven: breakEven ?? null,
       median,
       xBinSize: cells.reduce((size, cell) => Math.max(size, cell.xValues?.length ?? 1), 1),
       yBinSize: cells.reduce((size, cell) => Math.max(size, cell.yValues?.length ?? 1), 1),

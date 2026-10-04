@@ -1,7 +1,9 @@
+import { message } from '@pine/messages';
 import { expect, it } from 'vitest';
 import { translate } from '../../../i18n/translate.ts';
 import {
   axisLabel,
+  bestSlice,
   failedConstraintLabel,
   isBinnedCell,
   rangeLabel,
@@ -31,4 +33,12 @@ it('explains failed constraints using the translated chip names and units', () =
   expect(
     translate(failedConstraintLabel({ metric: 'custom', operator: '>=', value: 2 }), 'en'),
   ).toBe('custom ≥ 2');
+});
+
+it('the best-value slice reads Min when the objective is minimized (R4)', () => {
+  expect([bestSlice('maximize'), bestSlice('minimize')]).toEqual([
+    'optimize.map.max',
+    'optimize.map.min',
+  ]);
+  expect(translate(message(bestSlice('minimize')), 'zh')).toBe('取最小');
 });

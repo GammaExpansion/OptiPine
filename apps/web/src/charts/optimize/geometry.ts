@@ -168,6 +168,45 @@ export const heatTokens = [
   '--heat-8',
 ] as const;
 
+/** The neutral step between the three loss steps and the five profit steps. */
+export const neutralStep = 3;
+
+/** What a map's legend shows (R4): the ramp's ends, its steps and the break-even between them. */
+export interface LegendScale {
+  /** The worst and best values in the objective's direction, at the loss and profit ends. */
+  readonly worst: number | null;
+  readonly best: number | null;
+  /** The steps the cells can take, as indices into `heatTokens` in ramp order. */
+  readonly steps: readonly number[];
+  /** The break-even, labelled on the neutral step; null when the ramp does not reach it. */
+  readonly breakEven: number | null;
+}
+
+/**
+ * A map's legend: every step for an objective without a break-even; otherwise only the sides the
+ * cells fall on, so the break-even is labelled where losing and winning cells meet and nowhere
+ * when they are all on one side.
+ */
+export function legendScale(map: Heatmap): LegendScale {
+  const worst = map.display?.worst ?? null;
+  const best = map.display?.best ?? null;
+  const breakEven = map.display?.breakEven ?? null;
+  const used = new Set(map.cells.map(colorStep).filter((step) => step !== null));
+  const all = heatTokens.map((_, index) => index);
+  if (breakEven === null || !used.size) return { worst, best, steps: all, breakEven: null };
+  const loss = all.filter((step) => step < neutralStep);
+  const profit = all.filter((step) => step > neutralStep);
+  const losing = loss.some((step) => used.has(step));
+  const winning = profit.some((step) => used.has(step));
+  const even = used.has(neutralStep) || (losing && winning);
+  return {
+    worst,
+    best,
+    steps: [...(losing ? loss : []), ...(even ? [neutralStep] : []), ...(winning ? profit : [])],
+    breakEven: even ? breakEven : null,
+  };
+}
+
 export function colorStep(cell: HeatmapCell): number | null {
   return cell.value !== null && Number.isFinite(cell.value) && cell.rankBin !== undefined
     ? Math.max(0, Math.min(8, cell.rankBin))

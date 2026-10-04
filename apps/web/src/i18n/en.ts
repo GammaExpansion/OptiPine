@@ -349,6 +349,7 @@ export const en = {
   'optimize.map.chooseAxis': '{axis} axis',
   'optimize.map.none': 'None',
   'optimize.map.max': 'Max',
+  'optimize.map.min': 'Min',
   'optimize.map.mean': 'Mean',
   'optimize.map.slice': '{title} slice',
   'optimize.map.axisTitle': '{title}',
@@ -365,7 +366,7 @@ export const en = {
   'optimize.map.keyboard':
     'Arrow keys inspect cells; Enter selects a set or opens bin detail. Escape clears the hover.',
   'optimize.map.canvas': 'Parameter heatmap',
-  'optimize.map.legend': 'Rank colours: minimum, zero, maximum',
+  'optimize.map.legend': 'Rank colours from the worst value to the best',
   'optimize.map.coveredValues': 'Values covered by the cell',
   'optimize.map.notSampled': 'Not sampled',
   'optimize.map.incomplete': 'Incomplete',
