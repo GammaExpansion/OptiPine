@@ -157,8 +157,10 @@ export type ReportCsvHeaders = Readonly<
 
 /**
  * Four columns per section, in report order. Key-figure details get separate metric rows except
- * side breakdowns, which occupy Long/Short. Percentages carry %, loss magnitudes print negative,
- * and absent/nonfinite cells stay empty. Numeric precision follows the other workflow exports.
+ * side breakdowns, which occupy Long/Short; a figure's percent row is named after it with " %"
+ * ("Net profit %"), as the engine names that column, so no two rows share a name. Percentages
+ * carry %, loss magnitudes print negative, and absent/nonfinite cells stay empty. Numeric precision
+ * follows the other workflow exports.
  */
 export function reportCsv(report: StrategyReport, headers: ReportCsvHeaders): string {
   const lines: string[][] = [];
@@ -182,9 +184,10 @@ export function reportCsv(report: StrategyReport, headers: ReportCsvHeaders): st
     all: MetricValue | undefined,
     long?: MetricValue,
     short?: MetricValue,
+    suffix = '',
   ) => {
     lines.push([
-      id.slice(id.indexOf('/') + 1),
+      id.slice(id.indexOf('/') + 1) + suffix,
       cell(all, show, loss),
       cell(long, show, loss),
       cell(short, show, loss),
@@ -201,7 +204,8 @@ export function reportCsv(report: StrategyReport, headers: ReportCsvHeaders): st
       detail.kind === 'sides' ? detail.long : undefined,
       detail.kind === 'sides' ? detail.short : undefined,
     );
-    if (detail.kind === 'percent') row(figure.id, 'percent', figure.loss, detail.value);
+    if (detail.kind === 'percent')
+      row(figure.id, 'percent', figure.loss, detail.value, undefined, undefined, ' %');
     else if (detail.kind === 'metric') row(detail.id, 'value', false, detail.value);
     else if (detail.kind === 'wonLost') {
       row('Trades analysis/Total winners', 'value', false, detail.won);
