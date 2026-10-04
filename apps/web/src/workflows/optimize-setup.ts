@@ -319,7 +319,9 @@ function samplingOf(gridCombinations: number, settings: SamplingSettings): Sampl
  * Backtest page's values, which new rows centre on and inputs fixed without a value of their own
  * take. Rows without a draft start from their default and are searched in declaration order while
  * the grid stays within its limit, so a new script's first run is a whole grid (O5); a row that
- * would take it over starts fixed with its range ready to check.
+ * would take it over starts fixed with its range ready to check. Edited rows can take the grid
+ * past the limit and so fix rows left at their default, but shrinking the grid never searches a
+ * row that started fixed: only the user checks it.
  */
 export function searchSetup(
   descriptors: readonly InputDescriptor[],
@@ -328,12 +330,18 @@ export function searchSetup(
   settings: SamplingSettings,
 ): SearchSetup {
   let grid = 1;
+  /** The grid with every row at its default, which decides where new rows start fixed. */
+  let defaults = 1;
   const rows = descriptors.map((descriptor) => {
     const value = Object.hasOwn(current, descriptor.title) ? current[descriptor.title] : undefined;
     const draft = drafts.get(descriptor.title);
-    let row = searchRow(descriptor, draft, value);
+    const initial = searchRow(descriptor, undefined, value);
+    const startsSearched =
+      initial.status === 'searched' && defaults * initial.values.length <= gridLimit;
+    if (startsSearched) defaults *= initial.values.length;
+    let row = draft ? searchRow(descriptor, draft, value) : initial;
     if (row.status !== 'searched') return row;
-    if (!draft && grid * row.values.length > gridLimit)
+    if (!draft && (!startsSearched || grid * row.values.length > gridLimit))
       row = searchRow(descriptor, { ...row.draft!, searched: false }, value);
     else grid *= row.values.length;
     return row;

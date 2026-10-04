@@ -5,7 +5,9 @@ import { useBacktestStore } from '../state/backtest.ts';
 import { getServices } from '../state/services.ts';
 import { useUiStore } from '../state/ui.ts';
 import { DialogsRoot } from './DialogsRoot.tsx';
+import { installFileDrop } from './file-drop.ts';
 import { Header } from './Header.tsx';
+import { installLeaveGuard } from './leave-guard.ts';
 import { installShortcuts } from './shortcuts.ts';
 import styles from './Shell.module.css';
 
@@ -31,6 +33,8 @@ export function Shell({ canOptimize }: { canOptimize?: boolean }) {
     (state) => state.source.trim() !== '' && state.dataset !== null,
   );
   useEffect(() => installShortcuts(), []);
+  useEffect(() => installFileDrop(), []);
+  useEffect(() => installLeaveGuard(), []);
   return (
     <div className={styles.shell}>
       <Header canOptimize={canOptimize ?? hasWorkspace} />

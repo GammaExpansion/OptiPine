@@ -55,3 +55,19 @@
 .outOfSample {
   background: var(--oos);
 }
+/* A phone's Settings tab is too narrow for one line: the dates wrap, the track takes a row. */
+@media (max-width: 767px) {
+  .bar {
+    height: auto;
+    min-height: 44px;
+    flex-wrap: wrap;
+    row-gap: 6px;
+    padding: 8px 12px;
+  }
+  .legend {
+    flex-wrap: wrap;
+  }
+  .track {
+    flex-basis: 100%;
+  }
+}

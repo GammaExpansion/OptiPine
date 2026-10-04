@@ -137,3 +137,51 @@
   overflow: hidden;
   clip-path: inset(50%);
 }
+@media (max-width: 767px) {
+  .panel {
+    height: auto;
+  }
+  .heading {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 6px 10px;
+    padding: 6px 12px;
+  }
+  .legend {
+    gap: 4px 10px;
+    min-width: 0;
+  }
+  .legendItem {
+    white-space: normal;
+  }
+  .legendItem i {
+    flex: none;
+  }
+  .heading > [role='radiogroup'] {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: auto;
+    min-height: 44px;
+    margin: 0;
+  }
+  .heading [role='radio'] {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0 6px;
+    white-space: normal;
+  }
+  .body {
+    flex: none;
+    height: 150px;
+  }
+  .status {
+    flex-wrap: wrap;
+  }
+  .tooltip {
+    left: 12px;
+    right: 12px;
+    flex-wrap: wrap;
+    overflow-wrap: anywhere;
+  }
+}

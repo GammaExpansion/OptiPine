@@ -140,9 +140,11 @@ for (const language of ['en', 'zh'] as const) {
         .getByRole('spinbutton', { name: t('optimize.setup.toLabel', { title }) })
         .fill(String(to));
     }
-    await right
-      .getByRole('checkbox', { name: t('optimize.setup.searchInput', { title: 'Trail %' }) })
-      .click();
+    // Trail % started fixed (its 19 values would take the default grid past 20,000) and stays
+    // fixed though the narrower ranges would now leave room for it.
+    await expect(
+      right.getByRole('checkbox', { name: t('optimize.setup.searchInput', { title: 'Trail %' }) }),
+    ).not.toBeChecked();
     const filterGroup = right.getByRole('group', { name: t('optimize.setup.filters') });
     for (let index = 0; index < 2; index++)
       await filterGroup.locator('button[aria-label]').first().click();

@@ -175,6 +175,36 @@ test('inputs keep their value when title and type survive a recompile', async ()
   );
 });
 
+test('an opened script starts from its own defaults, not the previous script values', async () => {
+  const { session, answerAll } = await readySession();
+  session.setInput('Length', 12);
+  session.setProperty('initialCapital', 50_000);
+  const other = strategySource
+    .replace('"Test strategy", initial_capital=10000', '"Other strategy", initial_capital=20000')
+    .replace('input.int(5, "Length"', 'input.int(7, "Length"');
+  session.setSource(other, true);
+  assert.deepEqual(session.getState().inputs, []);
+  await answerAll();
+  const state = session.getState();
+  assert.deepEqual(
+    state.inputs.map((item) => [item.descriptor.title, item.value, item.changed]),
+    [
+      ['Length', 7, false],
+      ['Multiplier', 1, false],
+      ['Source', 'close', false],
+    ],
+  );
+  assert.deepEqual(state.propertyOverrides, {});
+  assert.equal(state.properties.find((field) => field.id === 'initialCapital')?.value, 20_000);
+  // Opening the same text again restores its defaults without recompiling.
+  session.setInput('Length', 9);
+  session.setProperty('initialCapital', 30_000);
+  session.setSource(other, true);
+  assert.equal(session.getState().compile.status, 'compiled');
+  assert.equal(session.getState().inputs[0].value, 7);
+  assert.deepEqual(session.getState().propertyOverrides, {});
+});
+
 test('the run action explains what is missing as message ids', async () => {
   const harness = engineHarness();
   const session = new BacktestSession(harness.client);

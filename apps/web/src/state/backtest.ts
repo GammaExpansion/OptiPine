@@ -50,11 +50,12 @@ function createBacktestStore(services: AppServices) {
     setPreviewAsCurrent: session.setPreviewAsCurrent.bind(session),
     applyParameters: session.applyParameters.bind(session),
     undoApply: session.undoApply.bind(session),
+    /** A script opened in place of the current one starts from its own inputs and properties. */
     openScript({ source, fileName, origin }: OpenScript) {
       openVersion++;
       opened = source;
       store.setState({ fileName, origin: { ...origin, edited: false } });
-      session.setSource(source);
+      session.setSource(source, true);
     },
     async loadExample(id: ExampleId) {
       const example = examples.find((item) => item.id === id)!;
