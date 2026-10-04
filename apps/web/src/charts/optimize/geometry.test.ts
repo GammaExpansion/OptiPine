@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { prepareHeatmap, type Heatmap } from '@pine/optimizer';
 import {
   cellAt,
+  cellPitch,
   cellRect,
   colorStep,
   containsSelection,
   heatTokens,
   fitMap,
   mapGeometry,
+  maxCellPitch,
   verticalTitle,
 } from './geometry.ts';
 import { curveGeometry } from './curve-geometry.ts';
@@ -175,5 +177,62 @@ describe('vertical axis title', () => {
       centre: 55,
       span: 106,
     });
+  });
+});
+
+describe('sparse maps', () => {
+  const small: Heatmap = prepareHeatmap(
+    {
+      xKey: 'Multiplier',
+      yKey: 'Length',
+      cells: Array.from({ length: 12 }, (_, index) => ({
+        x: index % 4,
+        y: Math.floor(index / 4),
+        value: index,
+        count: 1,
+      })),
+    },
+    true,
+  );
+
+  it('grow their cells to fill the panel, up to a limit, centred (polish backlog)', () => {
+    // 4 × 3 in a 440 × 230 panel: the rows decide, (230 - 8 - 66 + 2) / 3 = 52 → capped at 40.
+    const geometry = mapGeometry(small, { width: 440, height: 230 });
+    const layer = geometry.layers[0];
+    expect(layer.pitch).toBe(maxCellPitch);
+    const first = cellRect(layer, 0, 440);
+    expect(first).toEqual({
+      x: 64 + Math.floor((440 - 64 - 16 - (4 * 40 - 2)) / 2),
+      y: 8,
+      width: 38,
+      height: 38,
+    });
+    expect(cellAt(geometry, first.x + 37, first.y + 37, 440)?.value).toBe(small.cells[8].value);
+    expect(cellAt(geometry, first.x + 39, first.y + 10, 440)).toBeNull();
+    // A shorter panel: the pitch follows the rows, (130 - 8 - 66 + 2) / 3 = 19.
+    expect(mapGeometry(small, { width: 440, height: 130 }).layers[0].pitch).toBe(19);
+    // Without a panel, as for the bin detail, the dense pitch.
+    expect(mapGeometry(small).layers[0].pitch).toBe(cellPitch);
+  });
+
+  it('keep the dense pitch when layered, since layers scroll', () => {
+    const cells = [false, true].flatMap((z) =>
+      Array.from({ length: 4 }, (_, index) => ({
+        x: index % 2,
+        y: Math.floor(index / 2),
+        z,
+        value: index,
+        count: 1,
+      })),
+    );
+    const layered: Heatmap = {
+      xKey: 'Length',
+      yKey: 'Multiplier',
+      zKey: 'Stop',
+      cells,
+      layers: [false, true].map((z) => ({ z, cells: cells.filter((cell) => cell.z === z) })),
+    };
+    const geometry = mapGeometry(layered, { width: 600, height: 400 });
+    expect(geometry.layers.map((layer) => layer.pitch)).toEqual([cellPitch, cellPitch]);
   });
 });
