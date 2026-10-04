@@ -22,8 +22,8 @@ export const examples = [
     title: 'Trend Breakout',
     dataRequest,
     inputs: [
-      { title: 'Length', type: 'int', defaultValue: 20 },
-      { title: 'Multiplier', type: 'float', defaultValue: 2 },
+      { title: 'Length', type: 'int', defaultValue: 180 },
+      { title: 'Multiplier', type: 'float', defaultValue: 2.25 },
       { title: 'Source', type: 'source', defaultValue: 'close' },
       { title: 'Use trailing stop', type: 'bool', defaultValue: false },
       { title: 'Trail %', type: 'float', defaultValue: 3 },
@@ -39,7 +39,8 @@ export const examples = [
       { title: 'Oversold', type: 'float', defaultValue: 30 },
       { title: 'Source', type: 'source', defaultValue: 'close' },
       { title: 'Exit at midline', type: 'bool', defaultValue: true },
-      { title: 'Stop %', type: 'float', defaultValue: 3 },
+      { title: 'Stop %', type: 'float', defaultValue: 10 },
+      { title: 'Trend EMA length', type: 'int', defaultValue: 200 },
     ],
   },
   {
@@ -48,11 +49,11 @@ export const examples = [
     title: 'MA Cross',
     dataRequest,
     inputs: [
-      { title: 'Fast length', type: 'int', defaultValue: 50 },
-      { title: 'Slow length', type: 'int', defaultValue: 200 },
+      { title: 'Fast length', type: 'int', defaultValue: 80 },
+      { title: 'Slow length', type: 'int', defaultValue: 250 },
       { title: 'Average type', type: 'string', defaultValue: 'EMA' },
       { title: 'Require rising slow MA', type: 'bool', defaultValue: true },
-      { title: 'Stop %', type: 'float', defaultValue: 5 },
+      { title: 'Stop %', type: 'float', defaultValue: 3 },
     ],
   },
 ] as const satisfies readonly ExampleStrategy[];

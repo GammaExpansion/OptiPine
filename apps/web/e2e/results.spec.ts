@@ -372,7 +372,7 @@ for (const language of ['en', 'zh'] as const) {
     await expect(length.locator('..')).toHaveCSS('border-width', '1px');
     await expect(length.locator('..')).toHaveCSS('border-color', 'rgb(242, 163, 58)');
     const reset = page.getByRole('button', {
-      name: label('Reset to 20', '恢复为 20'),
+      name: label('Reset to 180', '恢复为 180'),
       exact: true,
     });
     await expect(reset).toBeVisible();
@@ -380,7 +380,7 @@ for (const language of ['en', 'zh'] as const) {
     await capture('B9-polish');
     await reset.click();
     await expect(chart).toHaveAttribute('data-markers-dimmed', 'false');
-    await expect(length).toHaveValue('20');
+    await expect(length).toHaveValue('180');
     await expect.poll(candlePixels).toBe(before);
 
     const release = await page.evaluateHandle(async () => {
@@ -443,7 +443,9 @@ for (const language of ['en', 'zh'] as const) {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     const result = await loadRecordedExample(page, language);
-    expect(result.trades).toBeGreaterThan(300);
+    expect(result.trades).toBeGreaterThanOrEqual(30);
+    expect(result.metrics['Performance/Net profit/All USDT']).toBeGreaterThan(0);
+    expect(result.metrics['Risk-adjusted performance/Profit factor/All USDT']).toBeGreaterThan(1);
     const label = (en: string, zh: string) => (language === 'en' ? en : zh);
     const hidden = await page.addStyleTag({
       content: `[data-testid="equity-charts"] { ${language === 'en' ? 'display:none' : 'width:0'} !important; }`,
