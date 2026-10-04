@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { SearchRow } from '../../workflows/optimize-setup.ts';
 import type { Heatmap, HeatmapCell } from '@pine/optimizer';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { formatNumber } from '../../i18n/translate.ts';
@@ -26,6 +27,7 @@ const noFrames: readonly HeatmapCell[] = [];
 export function HeatmapCanvas({
   map,
   selection,
+  searchRows,
   framed = noFrames,
   showValues = false,
   label,
@@ -33,6 +35,7 @@ export function HeatmapCanvas({
   onActivate,
 }: {
   map: Heatmap;
+  searchRows?: readonly SearchRow[];
   selection?: Readonly<Record<string, unknown>>;
   framed?: readonly HeatmapCell[];
   showValues?: boolean;
@@ -41,6 +44,11 @@ export function HeatmapCanvas({
   onActivate: (cell: HeatmapCell) => void;
 }) {
   const { t, text } = useI18n();
+  const rowFor = (title: string | undefined) =>
+    searchRows?.find((row) => row.descriptor.title === title);
+  const xRow = rowFor(map.xKey);
+  const yRow = rowFor(map.yKey);
+  const zRow = rowFor(map.zKey);
   const geometry = useMemo(() => mapGeometry(map), [map]);
   const viewport = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -81,7 +89,7 @@ export function HeatmapCanvas({
           ctx.textAlign = 'left';
           ctx.fillStyle = color('--secondary');
           ctx.fillText(
-            t('optimize.map.layer', { title: map.zKey, value: text(valueLabel(layer.z)) }),
+            t('optimize.map.layer', { title: map.zKey, value: text(valueLabel(layer.z, zRow)) }),
             16,
             layer.top - 14,
           );
@@ -130,14 +138,16 @@ export function HeatmapCanvas({
           1,
           Math.ceil(
             Math.max(
-              ...layer.columns.map((values) => ctx.measureText(text(rangeLabel(values))).width),
+              ...layer.columns.map(
+                (values) => ctx.measureText(text(rangeLabel(values, xRow))).width,
+              ),
               30,
             ) / cellPitch,
           ) + 1,
         );
         for (let index = 0; index < layer.columns.length; index += xStride) {
           ctx.fillText(
-            text(rangeLabel(layer.columns[index])),
+            text(rangeLabel(layer.columns[index], xRow)),
             origin.x + index * cellPitch + 8,
             bottom + 12,
           );
@@ -146,7 +156,7 @@ export function HeatmapCanvas({
         const yStride = layer.rows.some((values) => values.length > 1) ? 2 : 1;
         for (let index = 0; index < layer.rows.length; index += yStride) {
           ctx.fillText(
-            text(rangeLabel(layer.rows[index])),
+            text(rangeLabel(layer.rows[index], yRow)),
             origin.x - 8,
             layer.top + index * cellPitch + 8,
             44,
@@ -181,7 +191,7 @@ export function HeatmapCanvas({
       cancelAnimationFrame(frame);
       redraw.current = () => {};
     };
-  }, [geometry, map, selection, frames, showValues, t, text]);
+  }, [geometry, map, selection, frames, showValues, t, text, xRow, yRow, zRow]);
 
   const hover = (cell: HeatmapCell | null, left = 0, top = 0) => {
     if (active.current === cell) return;
@@ -189,8 +199,8 @@ export function HeatmapCanvas({
     setDescription(
       cell
         ? t('optimize.map.cell', {
-            x: text(rangeLabel(cell.xValues ?? [cell.x])),
-            y: text(rangeLabel(cell.yValues?.length ? cell.yValues : [cell.y])),
+            x: text(rangeLabel(cell.xValues ?? [cell.x], xRow)),
+            y: text(rangeLabel(cell.yValues?.length ? cell.yValues : [cell.y], yRow)),
             value: text(valueLabel(cell.value)),
           })
         : '',

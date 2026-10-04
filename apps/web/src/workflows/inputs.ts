@@ -1,19 +1,24 @@
 import type { InputDescriptor, InputFixedReason, LiteralValue } from '@pine/engine';
 import type { Message } from '@pine/messages';
 import { workflowMessage, type WorkflowMessageId } from './messages.ts';
+import type { SearchRow } from './optimize-setup.ts';
 
 /**
  * Where a parameter set written into the inputs came from (B17): a leaderboard row, with its rank
  * when it was picked, or a failed combination opened to read its diagnostics (R11).
  */
-export type ParameterOrigin =
+export type ParameterOrigin = (
   | {
       readonly kind: 'rank';
       readonly optimizationId: number;
       readonly trialId: string;
       readonly rank: number;
     }
-  | { readonly kind: 'failed'; readonly optimizationId: number; readonly trialId: string };
+  | { readonly kind: 'failed'; readonly optimizationId: number; readonly trialId: string }
+) & {
+  /** Keep preview labels tied to their run even after another optimization replaces its results. */
+  readonly searchRows?: readonly SearchRow[];
+};
 
 /** One script input in the right panel, in declaration order (B14). */
 export interface InputField {

@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
-import { en } from '../i18n/en.ts';
+import { catalogs } from '../i18n/catalogs.ts';
 import { Chip } from './Chip.tsx';
 import { ChipOverflow } from './ChipOverflow.tsx';
 import { DockTabs } from './DockTabs.tsx';
 import { PageTabs } from './PageTabs.tsx';
 import { SegmentedControl } from './SegmentedControl.tsx';
 import { Tabs } from './Tabs.tsx';
+
+const { en } = catalogs;
 
 const options = [
   { value: 'one', label: en['optimize.none'] },

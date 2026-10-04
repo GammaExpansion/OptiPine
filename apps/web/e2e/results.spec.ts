@@ -149,7 +149,7 @@ test('S1 keeps results, dialogs, the script menu, Optimize and Chinese out of th
   await page.waitForLoadState('networkidle');
   const scripts = await Promise.all(requested);
   const lazy =
-    /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|ScriptMenuContent|OptimizePage|PineEditor|RightDrawer|\/zh-)/;
+    /(?:ReportTab|TradesTab|EquityTab|ResultChart|ResultFrame|Charts\.|trades-|Dialog-|ScriptMenuContent|OptimizePage|PreviewContent|PineEditor|RightDrawer|\/sheet-|\/zh-)/;
   expect(scripts.map(({ file }) => file).filter((file) => lazy.test(file))).toEqual([]);
   // Measured with the editor deferred until there is something to edit and the tablet and phone
   // layouts: 523,229 bytes of code, without CodeMirror's 300,480, 519,022 of them in the entry,

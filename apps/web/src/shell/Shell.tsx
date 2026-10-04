@@ -12,6 +12,11 @@ import styles from './Shell.module.css';
 const OptimizePage = lazy(() =>
   import('../pages/optimize/OptimizePage.tsx').then((module) => ({ default: module.OptimizePage })),
 );
+const FailedCombinationsDialog = lazy(() =>
+  import('../pages/optimize/leaderboard/FailedCombinationsDialog.tsx').then((module) => ({
+    default: module.FailedCombinationsDialog,
+  })),
+);
 
 export function Shell({ canOptimize }: { canOptimize?: boolean }) {
   const page = useUiStore((state) => state.page);
@@ -30,7 +35,9 @@ export function Shell({ canOptimize }: { canOptimize?: boolean }) {
           <OptimizePage />
         </Suspense>
       )}
-      <DialogsRoot slots={{ properties: LazyPropertiesDialog }} />
+      <DialogsRoot
+        slots={{ properties: LazyPropertiesDialog, failedCombinations: FailedCombinationsDialog }}
+      />
     </div>
   );
 }

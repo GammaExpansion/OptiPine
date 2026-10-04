@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, expect, test, vi } from 'vitest';
-import { en } from '../i18n/en.ts';
+import { catalogs } from '../i18n/catalogs.ts';
 import { Button } from './Button.tsx';
 import { Combobox } from './Combobox.tsx';
 import { Dialog, DialogClose } from './Dialog.tsx';
@@ -10,6 +10,8 @@ import { DropdownMenu } from './DropdownMenu.tsx';
 import { Popover, PopoverClose } from './Popover.tsx';
 import { Select } from './Select.tsx';
 import { TextInput } from './TextInput.tsx';
+
+const { en } = catalogs;
 
 // These platform APIs have no jsdom layout implementation; browser tests cover positioning.
 beforeAll(() => {

@@ -105,6 +105,17 @@ async function complete(h: Harness) {
   return h.session.getState().results!;
 }
 
+/** Answer the held Top 20 reproductions, including the next batch of leading sets. */
+async function finishEquity(h: Harness): Promise<void> {
+  while (h.pool.reproductions.some((held) => !held.settled)) {
+    for (const held of h.pool.reproductions.filter((item) => !item.settled))
+      held.resolve(
+        runWithEquity(strategySource, { ...held.common, inputs: held.parameters.inputs }),
+      );
+    await settle();
+  }
+}
+
 const split = splitBars(dataset.bars, { mode: 'in-out', splitRatio: 0.7 });
 
 test('the setup follows the Backtest page and blocks the run with reasons (O1, O6)', async () => {
@@ -465,30 +476,21 @@ test('Top 20 equity reruns the leading sets over the whole range; a newer rankin
   let state = h.session.getState();
   assert.equal(state.topEquity.status, 'running');
   assert.equal(h.pool.reproductions.length, 3);
-  const ranked = state.views!.leaderboard.rows.map((row) => row.trialId);
   const first = h.pool.reproductions[0];
   assert.deepEqual(first.common.bars, dataset.bars);
   assert.deepEqual(first.parameters, { inputs: state.views!.leaderboard.rows[0].parameters });
 
-  // A filter that keeps fewer sets reorders the top: the running request is aborted.
+  // A changed ranking aborts reproduction before its replacement analysis is ready.
   const filter = { metric: 'netProfit' as const, operator: '>=' as const, value: -1e12 };
   h.session.addFilter(filter);
   h.session.setObjective('profitFactor');
+  assert.equal(first.signal?.aborted, true);
+  await settle();
+  assert.equal(h.session.getState().topEquity.status, 'running');
   await h.analysis.answerAll();
   const reordered = h.session.getState().views!.leaderboard.rows.map((row) => row.trialId);
-  const changed = reordered.join() !== ranked.join();
-  assert.equal(first.signal?.aborted, changed);
 
-  const finish = async () => {
-    while (h.pool.reproductions.some((held) => !held.settled)) {
-      for (const held of h.pool.reproductions.filter((item) => !item.settled))
-        held.resolve(
-          runWithEquity(strategySource, { ...held.common, inputs: held.parameters.inputs }),
-        );
-      await settle();
-    }
-  };
-  await finish();
+  await finishEquity(h);
   state = h.session.getState();
   assert.equal(state.topEquity.status, 'ready');
   assert.equal(state.topEquity.resultsId, results.id);
@@ -513,6 +515,101 @@ test('Top 20 equity reruns the leading sets over the whole range; a newer rankin
   await settle();
   assert.equal(h.pool.reproductions.length, count);
   assert.equal(h.session.getState().topEquity.status, 'ready');
+});
+
+test('diagnostics identify the current analysis and Top 20 requests', async () => {
+  const h = await harness();
+  await complete(h);
+  let diagnostics = h.session.getDiagnostics();
+  const state = h.session.getState();
+  assert.equal(diagnostics.topEquity.status, 'running');
+  assert.equal(diagnostics.topEquity.requestActive, true);
+  assert.equal(typeof diagnostics.topEquity.key, 'string');
+  assert.equal(typeof diagnostics.viewKey, 'string');
+  assert.equal(typeof diagnostics.analysisKey, 'string');
+  assert.equal(diagnostics.leaderboardFirstTrialId, state.views!.leaderboard.rows[0].trialId);
+  assert.equal(diagnostics.run.status, 'done');
+  assert.equal(diagnostics.lastAnalysisRequestAt, 1_000);
+  assert.equal(diagnostics.lastReproductionRequestAt, 1_000);
+  const requestKey = diagnostics.topEquity.key;
+
+  await finishEquity(h);
+  diagnostics = h.session.getDiagnostics();
+  assert.equal(diagnostics.topEquity.status, 'ready');
+  assert.equal(diagnostics.topEquity.requestActive, false);
+  assert.equal(diagnostics.topEquity.key, requestKey);
+});
+
+test('Top 20 ready always belongs to the current objective, direction and filters', async () => {
+  const h = await harness();
+  await complete(h);
+  await finishEquity(h);
+  const reproductions = h.pool.reproductions.length;
+  const changes = [
+    () => h.session.setObjective('profitFactor'),
+    () => h.session.setDirection('minimize'),
+    () => h.session.addFilter({ metric: 'netProfit', operator: '>=', value: -1e12 }),
+    () => h.session.removeFilter(0),
+    () => h.session.addFilter({ metric: 'netProfit', operator: '>=', value: 1e12 }),
+    () => h.session.removeFilter(0),
+  ];
+  for (const change of changes) {
+    assert.equal(h.session.getState().topEquity.status, 'ready');
+    const published = h.states.length;
+    change();
+    assert.equal(h.session.getState().topEquity.status, 'running');
+    assert.deepEqual(h.session.getState().topEquity.curves, []);
+    await settle();
+    assert.ok(h.states.slice(published).every((state) => state.topEquity.status === 'running'));
+    await h.analysis.answerAll();
+    const state = h.session.getState();
+    assert.equal(state.topEquity.status, 'ready');
+    assert.deepEqual(
+      state.topEquity.curves.map((curve) => curve.trialId),
+      state.views!.leaderboard.rows.map((row) => row.trialId),
+    );
+  }
+  assert.equal(h.pool.reproductions.length, reproductions);
+});
+
+test('Top 20 resumes a cached ranking when a pending ranking change is undone', async () => {
+  const h = await harness();
+  await complete(h);
+  await finishEquity(h);
+  const before = h.session.getState().topEquity;
+  const reproductions = h.pool.reproductions.length;
+  h.session.setObjective('profitFactor');
+  h.session.setObjective('netProfit');
+  assert.equal(h.session.getState().topEquity.status, 'running');
+  assert.deepEqual(h.analysis.kinds, ['runView']);
+  await h.analysis.answerAll();
+  assert.deepEqual(h.session.getState().topEquity, before);
+  assert.equal(h.pool.reproductions.length, reproductions);
+});
+
+test('Top 20 stays ready for map, selection, draft and unchanged ranking settings', async () => {
+  const h = await harness();
+  await complete(h);
+  await finishEquity(h);
+  const before = h.session.getState().topEquity;
+  const changes = [
+    () => h.session.setObjective('netProfit'),
+    () => h.session.setDirection('maximize'),
+    () => h.session.removeFilter(99),
+    () => h.session.setDraftFilter({ metric: 'netProfit', operator: '>=', value: 0 }),
+    () => h.session.setAxis('x', 'Source'),
+    () => h.session.setSlice('Length', { mode: 'mean' }),
+    () => h.session.setSmooth(true),
+    () => h.session.setSurface('out'),
+    () => h.session.select(before.curves[1].trialId),
+    () => h.session.setPage(1),
+  ];
+  for (const change of changes) {
+    change();
+    assert.equal(h.session.getState().topEquity, before);
+    await h.analysis.answerAll();
+    assert.equal(h.session.getState().topEquity, before);
+  }
 });
 
 test('failed combinations are not ranked and keep their error (R11)', async () => {
@@ -708,6 +805,23 @@ test('the selection gives the set to preview or apply on the Backtest page (3.3,
   await preview;
   const previewed = h.backtest.getState().preview!;
   assert.deepEqual({ ...previewed.result?.computedWith.inputs }, { ...second.parameters });
+});
+
+test('selecting a set reveals its page, including reselecting it after browsing away', async () => {
+  const h = await harness();
+  h.session.setRange('Length', { from: 3, to: 20 });
+  const results = await complete(h);
+  h.session.setPage(1);
+  const row = h.session.getState().views!.leaderboard.rows[0];
+  assert.equal(row.rank, 14);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    h.session.setPage(0);
+    h.session.select(row.trialId);
+    assert.equal(h.session.getState().views!.leaderboard.page, 1);
+    assert.equal(h.session.getState().views!.selection!.row.trialId, row.trialId);
+    await h.analysis.answerAll();
+  }
+  assert.equal(h.session.getState().results, results);
 });
 
 test('axes follow the user, swapping when an input takes another axis (R4, R12)', async () => {

@@ -6,6 +6,7 @@ import styles from './MapPanel.module.css';
 
 export function ObjectiveCurve() {
   const { t } = useI18n();
+  const rows = useOptimizationStore((state) => state.views?.searchRows);
   const curve = useOptimizationStore((state) => state.views?.curve);
   const selection = useOptimizationStore((state) => state.views?.selection);
   const validated = useOptimizationStore((state) => state.views?.mode === 'in-out');
@@ -42,6 +43,7 @@ export function ObjectiveCurve() {
       </div>
       <CurveCanvas
         curve={curve}
+        searchRow={rows?.find((row) => row.descriptor.title === curve.input)}
         active={active}
         onInspect={(index) => inspectCurve({ view: curve, index })}
         onSelect={(index) => {

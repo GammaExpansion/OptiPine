@@ -1,9 +1,10 @@
 import { errorText, message, plainText, type MessageValues, type Text } from '@pine/messages';
-import type { MessageId } from './en.ts';
+import type { MessageId as AppMessageId } from './en.ts';
+import type { sheetEn } from './sheet-en.ts';
 
 export type Language = 'en' | 'zh';
-export type { MessageId } from './en.ts';
-export type Catalog = Readonly<Record<MessageId, string>>;
+export type MessageId = AppMessageId | keyof typeof sheetEn;
+export type Catalog = Readonly<Partial<Record<MessageId, string>>>;
 
 export function defaultLanguage(locale: string): Language {
   return /^zh(?:-|$)/i.test(locale) ? 'zh' : 'en';
@@ -64,7 +65,7 @@ export function translate(text: Text, language: Language): string {
   }
   const catalog = catalogs[language];
   if (!catalog || !Object.hasOwn(catalog, text.id)) return plainText(text);
-  return catalog[text.id as MessageId].replace(/\{(\w+)\}/g, (placeholder, key: string) => {
+  return catalog[text.id as MessageId]!.replace(/\{(\w+)\}/g, (placeholder, key: string) => {
     if (!Object.hasOwn(text.values, key)) return placeholder;
     const value = text.values[key];
     return typeof value === 'number' ? formatNumber(value) : translate(value, language);

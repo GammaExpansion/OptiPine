@@ -32,6 +32,8 @@ export function MapPanel() {
     [],
   );
   const map = views?.map;
+  const rowFor = (title: string | null | undefined) =>
+    views?.searchRows.find((row) => row.descriptor.title === title);
   const hit = hover?.map === map?.panel ? hover?.hit : undefined;
   const hoveredValues = useMemo(
     () => (hit && views ? cellValues(views.summary, hit.cell) : null),
@@ -48,8 +50,8 @@ export function MapPanel() {
     t('optimize.map.cellTitle', {
       x: map?.x ?? '',
       y: map?.y ?? '',
-      xValue: text(rangeLabel(cell.xValues ?? [cell.x])),
-      yValue: text(rangeLabel(cell.yValues?.length ? cell.yValues : [cell.y])),
+      xValue: text(rangeLabel(cell.xValues ?? [cell.x], rowFor(map?.x))),
+      yValue: text(rangeLabel(cell.yValues?.length ? cell.yValues : [cell.y], rowFor(map?.y))),
     });
   return (
     <section
@@ -122,7 +124,7 @@ export function MapPanel() {
                   options={[
                     ...slice.values.map((value, index) => ({
                       value: `value:${index}`,
-                      label: text(valueLabel(value)),
+                      label: text(valueLabel(value, rowFor(slice.title))),
                     })),
                     { value: 'max', label: t('optimize.map.max') },
                     { value: 'mean', label: t('optimize.map.mean') },
@@ -151,6 +153,7 @@ export function MapPanel() {
             )}
             <HeatmapCanvas
               map={map.panel}
+              searchRows={views.searchRows}
               selection={views.selection?.row.parameters}
               label={t('optimize.map.canvas')}
               onHover={(hit) => {

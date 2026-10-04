@@ -1,5 +1,7 @@
 import { message } from '@pine/messages';
 import type { AnalysisValue, HeatmapCell } from '@pine/optimizer';
+import { parameterText } from '../../../workflows/optimize-parameters.ts';
+import type { SearchRow } from '../../../workflows/optimize-setup.ts';
 
 export function axisLabel(title: string, binSize: number) {
   return message(binSize > 1 ? 'optimize.map.binnedAxis' : 'optimize.map.axisTitle', {
@@ -8,7 +10,7 @@ export function axisLabel(title: string, binSize: number) {
   });
 }
 
-export function valueLabel(value: AnalysisValue | null | undefined) {
+export function valueLabel(value: AnalysisValue | null | undefined, row?: SearchRow) {
   return message(
     value === null || value === undefined
       ? 'optimize.map.na'
@@ -17,15 +19,15 @@ export function valueLabel(value: AnalysisValue | null | undefined) {
           ? 'optimize.map.on'
           : 'optimize.map.off'
         : 'optimize.map.value',
-    { value: value == null ? '' : typeof value === 'boolean' ? '' : value },
+    { value: row ? parameterText(value, row) : typeof value === 'boolean' ? '' : (value ?? '') },
   );
 }
 
-export function rangeLabel(values: readonly (AnalysisValue | undefined)[]) {
+export function rangeLabel(values: readonly (AnalysisValue | undefined)[], row?: SearchRow) {
   return message(values.length > 1 ? 'optimize.map.range' : 'optimize.map.value', {
-    from: valueLabel(values[0]),
-    to: valueLabel(values.at(-1)),
-    value: valueLabel(values[0]),
+    from: valueLabel(values[0], row),
+    to: valueLabel(values.at(-1), row),
+    value: valueLabel(values[0], row),
   });
 }
 

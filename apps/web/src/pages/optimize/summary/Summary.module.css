@@ -1,0 +1,139 @@
+.panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 5px 12px;
+  min-height: 32px;
+  flex-wrap: wrap;
+}
+.heading h2 {
+  margin: 0;
+  font-size: 13px;
+}
+.heading > :last-child {
+  margin-left: auto;
+}
+.legend {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  color: var(--secondary);
+  font-size: 12px;
+}
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.legendItem i {
+  width: 14px;
+  border-top: 1px solid var(--is);
+}
+.legendItem i[data-kind='median'] {
+  border-top: 1.5px dashed var(--text);
+}
+.legendItem i[data-kind='best'] {
+  border-color: var(--primary);
+  border-width: 2px;
+}
+.legendItem i[data-kind='profit'],
+.legendItem i[data-kind='loss'],
+.legendItem i[data-kind='page'] {
+  border: none;
+  height: 7px;
+  width: 7px;
+  border-radius: 50%;
+  background: var(--profit);
+}
+.legendItem i[data-kind='loss'] {
+  background: var(--loss);
+}
+.legendItem i[data-kind='page'] {
+  background: var(--text);
+}
+.body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+.plot {
+  height: 100%;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+.plot canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  font-family: var(--font-body);
+}
+.plot canvas:focus-visible {
+  outline: 1px solid var(--primary);
+  outline-offset: -2px;
+}
+.plot svg {
+  display: block;
+}
+.plot text {
+  fill: var(--caption);
+  font-size: 11px;
+}
+.tooltip {
+  position: absolute;
+  top: 20px;
+  right: 70px;
+  display: flex;
+  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--control-border);
+  padding: 6px 10px;
+  border-radius: 4px;
+  box-shadow: var(--shadow-menu);
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--primary);
+  font-size: 12px;
+  padding: 0 12px 4px;
+}
+.empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--caption);
+}
+.empty > div {
+  width: min(220px, 80%);
+}
+.error {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  color: var(--loss);
+  font-size: 12px;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}

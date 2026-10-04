@@ -17,6 +17,7 @@ test('a catalog loads on demand, once, and translation falls back until it has',
   assert.equal(notified, 1);
   assert.equal(translate(text, 'zh'), '优化');
   assert.equal(hasCatalog('en'), false);
+  assert.equal(translate(message('sheet.title'), 'zh'), 'sheet.title');
   await loadCatalog('zh');
   assert.equal(notified, 1);
 });
