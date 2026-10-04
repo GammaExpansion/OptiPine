@@ -71,7 +71,8 @@ it('scrolls a large hover list without mounting every value and keeps the full m
     <CellValuesTable values={values} x="Length" y="Multiplier" validated={false} />,
   );
   expect(screen.queryByText('OOS')).not.toBeInTheDocument();
-  expect(screen.getByText('+99.5')).toBeInTheDocument();
+  // Net profit, the default objective, reads in whole amounts as R1 writes them.
+  expect(screen.getByText('+100')).toBeInTheDocument();
   expect(screen.getByText('200 values; scroll for the rest')).toBeInTheDocument();
   const table = screen.getByRole('table');
   expect(within(table).getAllByRole('row').length).toBeLessThan(14);
@@ -165,9 +166,9 @@ it('says once, in the tooltip, what an excluded cell fails, with no box over the
   const legend = screen.getByLabelText('Rank colours from the worst value to the best');
   expect(within(legend).getByText('Excluded by filters')).toBeInTheDocument();
   expect(screen.getAllByText('Excluded by filters')).toHaveLength(2);
-  // Keyboard and screen reader users hear the same.
+  // Keyboard and screen reader users hear the same, with the value in the objective's format.
   const status = within(canvas.parentElement!.parentElement!).getByRole('status');
-  expect(status.textContent).toMatch(
-    /^2–3, ohlc4: .+\. Excluded by filters\. Trades ≥ 30\. Trades ≥ 100,000$/,
+  expect(status.textContent).toBe(
+    '2–3, ohlc4: +2,317. Excluded by filters. Trades ≥ 30. Trades ≥ 100,000',
   );
 });

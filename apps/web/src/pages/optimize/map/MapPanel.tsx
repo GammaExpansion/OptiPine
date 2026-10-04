@@ -16,6 +16,7 @@ import {
   rangeLabel,
   valueLabel,
 } from './map-labels.ts';
+import { useResultFormat } from '../leaderboard/useResultFormat.ts';
 import { CellValuesTable } from './CellValuesTable.tsx';
 import { ObjectiveCurve } from './ObjectiveCurve.tsx';
 import { inspectBin, resetInspection } from './inspection.ts';
@@ -26,6 +27,8 @@ export function MapPanel() {
   const { t, text } = useI18n();
   const views = useOptimizationStore((state) => state.views);
   const settings = useOptimizationStore((state) => state.viewSettings);
+  const format = useResultFormat(views?.searchRows);
+  const objectiveValue = (value: number | null) => format.objective(value, settings.objective);
   // The tooltip's height, measured once it renders, keeps it within the window.
   const [tooltipHeight, setTooltipHeight] = useState(320);
   const actions = useOptimizationStore((state) => state.actions);
@@ -165,6 +168,7 @@ export function MapPanel() {
                 else hoverTimer.current = setTimeout(() => setHover(null), 150);
               }}
               onActivate={choose}
+              formatValue={objectiveValue}
             />
             <div className={styles.legend} aria-label={t('optimize.map.legend')}>
               <span>{t(`optimize.map.objective.${settings.objective}`)}</span>
@@ -197,7 +201,7 @@ export function MapPanel() {
                 <strong>{cellTitle(hit.cell)}</strong>
                 {!map.map && isBinnedCell(hit.cell) ? (
                   <>
-                    <p>{t('optimize.map.liveMean', { value: text(valueLabel(hit.cell.value)) })}</p>
+                    <p>{t('optimize.map.liveMean', { value: objectiveValue(hit.cell.value) })}</p>
                     <p className={styles.note}>{t('optimize.map.liveDetail')}</p>
                   </>
                 ) : (

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { CellValues } from '../../../workflows/optimize-views.ts';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
-import { formatNumber } from '../../../i18n/translate.ts';
 import { useOptimizationStore } from '../../../state/optimization.ts';
+import { useResultFormat } from '../leaderboard/useResultFormat.ts';
 import { valueLabel } from './map-labels.ts';
 import styles from './MapPanel.module.css';
 
@@ -35,10 +35,9 @@ export function CellValuesTable({
   const visible = scroll ? shownRows + 2 : values.values.length;
   const from = Math.min(start, Math.max(0, values.values.length - visible));
   const showY = y && values.values.some((value) => value.y !== values.values[0]?.y);
-  const number = (value: number | null) =>
-    value === null
-      ? t('optimize.map.na')
-      : formatNumber(value, { maximumFractionDigits: 2, signDisplay: 'exceptZero' });
+  const objective = useOptimizationStore((state) => state.viewSettings.objective);
+  const format = useResultFormat(rows);
+  const number = (value: number | null) => format.objective(value, objective);
   return (
     <div className={styles.values}>
       <div

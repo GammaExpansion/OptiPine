@@ -177,7 +177,7 @@ it('says on its line, as the map tooltip does, what an excluded cell fails', asy
   const line = screen
     .getAllByRole('status')
     .find((element) => element.textContent?.includes('· IS'));
-  // The value, then the conditions, with no box over the map.
-  expect(line?.textContent).toMatch(/· IS .+\. Excluded by filters\. Trades ≥ 30$/);
+  // The value in the objective's format, then the conditions, with no box over the map.
+  expect(line?.textContent).toMatch(/· IS [+−]?[\d,]+\. Excluded by filters\. Trades ≥ 30$/);
   expect(screen.getByText('Excluded by filters')).toBeInTheDocument();
 });

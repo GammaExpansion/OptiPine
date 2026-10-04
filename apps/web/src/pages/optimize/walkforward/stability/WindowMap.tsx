@@ -8,6 +8,7 @@ import { Select } from '../../../../components/Select.tsx';
 import { useI18n } from '../../../../i18n/I18nProvider.tsx';
 import { useOptimizationStore } from '../../../../state/optimization.ts';
 import { bestSlice, failedConstraintLabel, rangeLabel, valueLabel } from '../../map/map-labels.ts';
+import { useResultFormat } from '../../leaderboard/useResultFormat.ts';
 import styles from './stability.module.css';
 
 /** The workflow supplies the selected window's IS map or the mean, already binned and ranked. */
@@ -16,6 +17,9 @@ export function WindowMap() {
   const view = useOptimizationStore((state) => state.walkForward);
   const actions = useOptimizationStore((state) => state.actions);
   const direction = useOptimizationStore((state) => state.viewSettings.direction);
+  const objective = useOptimizationStore((state) => state.viewSettings.objective);
+  const format = useResultFormat(view?.searchRows);
+  const objectiveValue = (value: number | null) => format.objective(value, objective);
   const [hover, setHover] = useState<{ map: Heatmap; hit: CellHover } | null>(null);
   const map = view?.map;
   // Parameter values read at the precision their input was searched with.
@@ -131,6 +135,7 @@ export function WindowMap() {
         keyboardDescription={t('optimize.wfStability.keyboard')}
         onHover={(hit) => setHover(hit ? { map: map.panel, hit } : null)}
         fitToPanel={false}
+        formatValue={objectiveValue}
         onActivate={(cell) => {
           const chosen = map.chosen.find((item) =>
             containsSelection(map.panel, cell, item.parameters),
@@ -176,7 +181,7 @@ export function WindowMap() {
               xValue: text(rangeLabel(hit.cell.xValues ?? [hit.cell.x], input(map.x))),
               y: map.y ?? '',
               yValue: map.y ? text(rangeLabel(hit.cell.yValues ?? [hit.cell.y], input(map.y))) : '',
-              value: text(valueLabel(hit.cell.value)),
+              value: objectiveValue(hit.cell.value),
             }),
             // This map has no tooltip, so its line says what excluded sets fail, as the R1
             // map's tooltip does.

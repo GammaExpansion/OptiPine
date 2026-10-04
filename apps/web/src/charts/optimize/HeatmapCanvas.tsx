@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { SearchRow } from '../../workflows/optimize-setup.ts';
 import type { Heatmap, HeatmapCell } from '@pine/optimizer';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
-import { formatNumber } from '../../i18n/translate.ts';
 import {
   axisLabel,
   failedConstraintLabel,
@@ -24,6 +23,7 @@ import {
   yTitleGap,
   axisBottom,
 } from './geometry.ts';
+import { legendValue } from './LegendRamp.tsx';
 import styles from './canvas.module.css';
 import { markersByCell, type MapMarker } from './map-markers.ts';
 
@@ -50,6 +50,7 @@ export function HeatmapCanvas({
   onHover,
   onActivate,
   fitToPanel = true,
+  formatValue,
 }: {
   map: Heatmap;
   searchRows?: readonly SearchRow[];
@@ -62,6 +63,8 @@ export function HeatmapCanvas({
   onHover: (hover: CellHover | null) => void;
   onActivate: (cell: HeatmapCell, map: Heatmap) => void;
   fitToPanel?: boolean;
+  /** A cell's value as the screen reader hears it: the objective's format where one is known. */
+  formatValue?: (value: number | null) => string;
 }) {
   const { t, text } = useI18n();
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -167,7 +170,7 @@ export function HeatmapCanvas({
             ctx.textAlign = 'center';
             ctx.font = `9px ${color('--font-body')}`;
             ctx.fillText(
-              formatNumber(cell.value!, { notation: 'compact', maximumFractionDigits: 0 }),
+              legendValue(cell.value!),
               rect.x + rect.width / 2,
               rect.y + rect.height / 2,
               rect.width - 2,
@@ -325,7 +328,7 @@ export function HeatmapCanvas({
             t('optimize.map.cell', {
               x: text(rangeLabel(cell.xValues ?? [cell.x], xRow)),
               y: text(rangeLabel(cell.yValues?.length ? cell.yValues : [cell.y], yRow)),
-              value: text(valueLabel(cell.value)),
+              value: formatValue ? formatValue(cell.value) : text(valueLabel(cell.value)),
             }),
             // What a tooltip shows beside the values, for keyboard and screen reader users.
             ...(cell.excludedCount

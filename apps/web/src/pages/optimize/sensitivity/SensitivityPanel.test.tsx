@@ -68,3 +68,15 @@ it('shows provisional sensitivity from live snapshots, with axis moves disabled 
   expect(screen.getAllByRole('img')).toHaveLength(2);
   for (const button of screen.getAllByRole('button')) expect(button).toBeDisabled();
 });
+
+it('describes each value in the objective format, not as raw floats', async () => {
+  await loadOptimization();
+  await runOptimization();
+  const { container } = renderInEnglish(<SensitivityPanel />);
+  const titles = [...container.querySelectorAll('svg title')].map((title) => title.textContent);
+  expect(titles.length).toBeGreaterThan(0);
+  // Net profit reads in whole amounts with a sign: "mean +2,317, spread +1,236–+3,330".
+  for (const title of titles)
+    for (const line of title!.split('\n'))
+      expect(line).toMatch(/: mean (—|[+−]?[\d,]+), spread (—|[+−]?[\d,]+)–(—|[+−]?[\d,]+)$/);
+});
