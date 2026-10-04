@@ -1,7 +1,7 @@
 ﻿import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { cleanup } from '@testing-library/react';
-import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { I18nProvider } from '../../i18n/I18nProvider.tsx';
 import { getBacktestStore, openScript } from '../../state/backtest.ts';
 import { replaceServices } from '../../state/services.ts';
@@ -16,10 +16,6 @@ import { preloadChunks } from '../../test/lazy-chunks.ts';
 
 preloadChunks('dialogs');
 let restore: () => void;
-// The dialogs load lazily on first use; loading them here keeps that time out of each test.
-beforeAll(async () => {
-  await Promise.all([import('./ScriptDialog.tsx'), import('./ReplaceScriptDialog.tsx')]);
-}, 30_000);
 beforeEach(() => {
   restore = replaceServices(() => fakeServices());
   pasteStore.setState({ source: '', clipboardFailed: false });

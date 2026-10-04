@@ -8,6 +8,7 @@ import { beforeAll } from 'vitest';
 const chunks = {
   dialogs: () => [
     import('../dialogs/script/ScriptDialog.tsx'),
+    import('../dialogs/script/ReplaceScriptDialog.tsx'),
     import('../dialogs/script/FileErrorDialog.tsx'),
     import('../dialogs/script/ScriptMenuContent.tsx'),
     import('../dialogs/marketData/MarketDataDialog.tsx'),
