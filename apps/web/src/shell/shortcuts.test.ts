@@ -1,10 +1,12 @@
-import { cleanup, fireEvent, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { createElement } from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { getBacktestStore, openScript } from '../state/backtest.ts';
 import { getMarketDataStore } from '../state/marketData.ts';
 import { replaceServices } from '../state/services.ts';
 import { fakeServices, testInput } from '../state/test-support.ts';
 import { uiStore } from '../state/ui.ts';
+import { DropdownMenu } from '../components/DropdownMenu.tsx';
 import { strategySource } from '../workflows/test-support.ts';
 import { installShortcuts, registerFilePicker } from './shortcuts.ts';
 
@@ -52,6 +54,26 @@ test('Ctrl+Enter runs only a ready Backtest page and does not repeat while runni
   await waitFor(() => expect(getBacktestStore().getState().run.status).toBe('done'));
 });
 
+test('Ctrl+Enter on a focused menu trigger runs the backtest instead of opening the menu', async () => {
+  await ready();
+  const onOpenChange = vi.fn();
+  // The script button keeps the focus after a menu item loads an example.
+  render(
+    createElement(DropdownMenu, {
+      label: 'Script menu',
+      trigger: createElement('button', { type: 'button' }, 'test.pine'),
+      entries: [],
+      onOpenChange,
+    }),
+  );
+  const trigger = screen.getByRole('button', { name: 'test.pine' });
+  trigger.focus();
+  expect(key('Enter', trigger).defaultPrevented).toBe(true);
+  expect(onOpenChange).not.toHaveBeenCalled();
+  expect(getBacktestStore().getState().run.status).toBe('running');
+  await waitFor(() => expect(getBacktestStore().getState().run.status).toBe('done'));
+});
+
 test('Ctrl+O uses the current registered picker and cleanup cannot remove a newer handler', () => {
   const old = vi.fn();
   const picker = vi.fn();
@@ -65,7 +87,7 @@ test('Ctrl+O uses the current registered picker and cleanup cannot remove a newe
   expect(key('o').defaultPrevented).toBe(false);
 });
 
-test.each(['input', 'textarea', 'select', 'editable', 'textbox', 'combobox', 'dialog'])(
+test.each(['input', 'textarea', 'select', 'editable', 'textbox', 'combobox', 'dialog', 'menu'])(
   '%s keeps its shortcut keys',
   async (kind) => {
     await ready();

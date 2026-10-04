@@ -75,6 +75,7 @@ function StatusText({ status }: { status: RunStatus }) {
       return (
         <span className={styles.status}>
           {t('run.facts', {
+            count: status.bars,
             bars: formatNumber(status.bars),
             seconds: seconds(status.durationMs),
           })}
@@ -111,7 +112,7 @@ function BacktestRunControls() {
   const reason = disabledReason((state.preview ?? state).readiness);
   return (
     <>
-      <div className={header.facts} aria-label={t('shell.facts')}>
+      <div className={header.facts} role="group" aria-label={t('shell.facts')}>
         <StatusText status={status} />
       </div>
       {status.kind === 'running' ? (
@@ -164,17 +165,23 @@ export function FailedLink({ count }: { count: number }) {
 
 function OptimizeStatusText({ status }: { status: OptimizeStatus }) {
   const { t, text } = useI18n();
+  // A phone's header row has room for the counts beside Cancel, not the sentence; the run block
+  // and the progress bar say the rest.
+  const short = useLayout() === 'phone';
   switch (status.kind) {
     case 'running':
       return (
         <span className={`${styles.status} ${styles.strong}`}>
           <Icon name="spinner" />
           {status.window
-            ? t('optimize.run.window', {
+            ? t(short ? 'optimize.run.windowShort' : 'optimize.run.window', {
                 index: status.window.index + 1,
                 count: status.window.count,
               })
-            : t('optimize.run.running', { done: status.done, total: status.combinations })}
+            : t(short ? 'optimize.run.counts' : 'optimize.run.running', {
+                done: status.done,
+                total: status.combinations,
+              })}
         </span>
       );
     case 'failed':
@@ -233,7 +240,7 @@ function OptimizeRunControls() {
   const status = optimizeStatus(state);
   return (
     <>
-      <div className={header.facts} aria-label={t('shell.facts')}>
+      <div className={header.facts} role="group" aria-label={t('shell.facts')}>
         <OptimizeStatusText status={status} />
       </div>
       {status.kind === 'running' && (

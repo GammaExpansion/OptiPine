@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { EditorView } from '@codemirror/view';
 import { expect, test } from 'vitest';
+import { ScriptFilePicker } from '../../../dialogs/script/ScriptFilePicker.tsx';
 import { getBacktestStore } from '../../../state/backtest.ts';
 import { getSelectionStore } from '../../../state/selection.ts';
 import { uiStore } from '../../../state/ui.ts';
@@ -60,7 +61,13 @@ test('focusing the empty editor hands the focus to CodeMirror as it loads', asyn
 });
 
 test('a .pine file dropped on the empty editor opens before CodeMirror loads', async () => {
-  renderInEnglish(<CodeTab />);
+  // The header's file picker reads dropped files, as it reads chosen ones.
+  renderInEnglish(
+    <>
+      <ScriptFilePicker />
+      <CodeTab />
+    </>,
+  );
   const empty = await screen.findByPlaceholderText(
     'Paste strategy code here, or drop a .pine file',
   );
@@ -126,9 +133,15 @@ test('Ctrl + Enter in the editor runs a ready backtest', async () => {
   await waitFor(() => expect(getBacktestStore().getState().run.status).toBe('done'));
 });
 
-test('dropping a .pine file opens it as the script; other files are ignored', async () => {
+test('dropping a .pine file opens it as the script; another file is explained', async () => {
   await loadScript();
-  await renderCodeTab();
+  renderInEnglish(
+    <>
+      <ScriptFilePicker />
+      <CodeTab />
+    </>,
+  );
+  await screen.findByRole('textbox', { name: 'Pine code editor' });
   // jsdom's File has no text(); the editor reads only the name and the text.
   const file = (name: string, text: string) => ({ name, text: async () => text }) as File;
   const drop = (dropped: File) =>
@@ -136,6 +149,11 @@ test('dropping a .pine file opens it as the script; other files are ignored', as
       dataTransfer: { files: [dropped], types: ['Files'] },
     });
   drop(file('notes.txt', 'not pine'));
+  expect(
+    await screen.findByText('Could not open the file. Choose a readable .pine file.'),
+  ).toBeVisible();
+  fireEvent.click(screen.getAllByRole('button', { name: 'Close' }).at(-1)!);
+  expect(getBacktestStore().getState().fileName).toBe('test.pine');
   drop(file('quiet.pine', quietSource));
   await waitFor(() =>
     expect(getBacktestStore().getState()).toMatchObject({

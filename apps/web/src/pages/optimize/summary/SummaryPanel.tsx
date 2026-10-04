@@ -5,13 +5,16 @@ import { SegmentedControl } from '../../../components/SegmentedControl.tsx';
 import { Tag } from '../../../components/Tag.tsx';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { useOptimizationStore } from '../../../state/optimization.ts';
+import { useLayout } from '../../../shell/useLayout.ts';
 import { DistributionChart } from './DistributionChart.tsx';
 import { SummaryCanvas } from './SummaryCanvas.tsx';
 import styles from './Summary.module.css';
 
 export function SummaryPanel() {
   const { t, text } = useI18n();
+  const phone = useLayout() === 'phone';
   const views = useOptimizationStore((state) => state.views);
+  const objective = useOptimizationStore((state) => state.viewSettings.objective);
   const equity = useOptimizationStore((state) => state.topEquity);
   const run = useOptimizationStore((state) => state.run);
   const error = useOptimizationStore((state) => state.analysisError);
@@ -44,7 +47,14 @@ export function SummaryPanel() {
           {view === 'equity' ? (
             <>
               {legend(
-                t(views?.unvalidated ? 'optimize.summary.fullRange' : 'optimize.summary.leading'),
+                phone
+                  ? t('optimize.summary.equity')
+                  : views?.unvalidated
+                    ? // R3 ranks by the objective over the full range; the legend names both.
+                      t('optimize.summary.fullRange', {
+                        objective: t(`optimize.map.objective.${objective}`),
+                      })
+                    : t('optimize.summary.leading'),
                 'equity',
               )}
               {legend(t('optimize.summary.median'), 'median')}

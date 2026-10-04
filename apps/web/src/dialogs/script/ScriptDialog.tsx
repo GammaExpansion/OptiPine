@@ -1,17 +1,17 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '../../components/Button.tsx';
 import { Dialog } from '../../components/Dialog.tsx';
 import { Note } from '../../components/Note.tsx';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
-import { openScript, useBacktestStore } from '../../state/backtest.ts';
+import { openScript } from '../../state/backtest.ts';
 import { useUiStore } from '../../state/ui.ts';
-import { pasteStore } from './actions.ts';
+import { pasteStore, replacingLosesEdits } from './actions.ts';
+import { DownloadButton, ReplaceNotice } from './ReplaceScriptDialog.tsx';
 import styles from './Script.module.css';
 
 export function ScriptDialog() {
   const { t } = useI18n();
   const close = useUiStore((state) => state.setDialogOpen);
-  const source = useBacktestStore((state) => state.source);
   const [draft, setDraft] = useState(pasteStore.getState().source);
   const [confirm, setConfirm] = useState(false);
   const replace = () => {
@@ -24,18 +24,18 @@ export function ScriptDialog() {
       onOpenChange={(value) => close('script', value)}
       title={t(confirm ? 'script.replaceTitle' : 'script.pasteTitle')}
       closeLabel={t('data.close')}
-      description={t(confirm ? 'script.replaceBody' : 'script.pasteHint')}
+      description={confirm ? undefined : t('script.pasteHint')}
       footer={
         <>
+          {confirm && <DownloadButton />}
           <Button onClick={() => (confirm ? setConfirm(false) : close('script', false))}>
             {t('data.cancel')}
           </Button>
           <Button
             variant="primary"
             disabled={!draft.trim()}
-            onClick={() =>
-              source.trim() && source !== draft && !confirm ? setConfirm(true) : replace()
-            }
+            // As for an example or a file, only edits made since the script opened need asking.
+            onClick={() => (!confirm && replacingLosesEdits() ? setConfirm(true) : replace())}
           >
             {t(confirm ? 'script.replace' : 'script.useCode')}
           </Button>
@@ -43,7 +43,7 @@ export function ScriptDialog() {
       }
     >
       {confirm ? (
-        <Note tone="amber">{t('script.downloadReminder')}</Note>
+        <ReplaceNotice />
       ) : (
         <div className={styles.stack}>
           {pasteStore.getState().clipboardFailed && <Note>{t('script.clipboardError')}</Note>}

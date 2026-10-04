@@ -1,3 +1,29 @@
+.heatmap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 112px;
+  min-width: 0;
+  position: relative;
+}
+.heatmap[data-detail] {
+  flex: none;
+}
+.heatmap > .viewport {
+  flex: 1;
+  min-height: 92px;
+}
+.excluded {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.excluded i {
+  width: 3px;
+  height: 3px;
+  background: var(--caption);
+  outline: 1px solid var(--panel);
+}
 .viewport {
   position: relative;
   overflow: auto;

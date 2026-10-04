@@ -76,7 +76,7 @@ test('presets select calendar spans and respect each provider limit (S3)', () =>
   assert.equal(yahooHourly.limited, true);
   const yahooMinutes = presetRange('1Y', 'yahoo', '15', now);
   assert.equal(yahooMinutes.limited, true);
-  assert.ok(yahooMinutes.to - yahooMinutes.from < 59 * 86_400);
+  assert.ok(yahooMinutes.to - yahooMinutes.from < 60 * 86_400);
   // Still inside Yahoo's history when validated an hour later.
   for (const [timeframe, range] of [
     ['60', yahooHourly],
@@ -98,6 +98,33 @@ test('the example request is BTCUSDT 1h for the two years ending this hour (4.7)
   });
   assert.equal(expectedBarCount(request, '60'), 17_520);
   assert.deepEqual(exampleRequest(now + 20 * 60_000), request);
+});
+
+test('Yahoo daily All, 2Y and old Custom ranges retain their full history', () => {
+  const all = presetRange('All', 'yahoo', '1D', now);
+  assert.deepEqual(all, { from: 0, to: seconds(2026, 10, 3, 14), limited: false });
+  const twoYears = presetRange('2Y', 'yahoo', '1D', now);
+  assert.equal(twoYears.from, seconds(2024, 10, 3, 14));
+  assert.equal(twoYears.limited, false);
+  const custom = customRange('1993-01-29', '2003-01-29', '1D', now);
+  assert.equal(custom.error, null);
+  for (const range of [all, twoYears, custom.range!]) {
+    assert.equal(
+      checkRequest({ feed: 'yahoo', symbol: 'SPY', timeframe: '1D', ...range }, now),
+      null,
+    );
+  }
+  for (const timeframe of ['5', '15', '30', '60']) {
+    const range = presetRange('All', 'yahoo', timeframe, now);
+    assert.equal(
+      checkRequest({ feed: 'yahoo', symbol: 'SPY', timeframe, ...range }, now + 3600000),
+      null,
+    );
+    assert.equal(
+      checkRequest({ feed: 'yahoo', symbol: 'SPY', timeframe, ...custom.range! }, now)?.id,
+      'feedYahooRange',
+    );
+  }
 });
 
 test('custom ranges take whole UTC days and estimate the bar count (S4, S10)', () => {
@@ -141,7 +168,7 @@ test('requests outside the provider limits are explained before fetching', () =>
       },
       now,
     ),
-    marketDataMessage('feedYahooRange', { days: 59 }),
+    marketDataMessage('feedYahooRange', { days: 60 }),
   );
   assert.deepEqual(
     checkRequest({ ...base, from: seconds(2026, 1, 1), to: seconds(2026, 1, 1) }, now),

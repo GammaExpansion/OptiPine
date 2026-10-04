@@ -175,6 +175,36 @@ test('inputs keep their value when title and type survive a recompile', async ()
   );
 });
 
+test('an opened script starts from its own defaults, not the previous script values', async () => {
+  const { session, answerAll } = await readySession();
+  session.setInput('Length', 12);
+  session.setProperty('initialCapital', 50_000);
+  const other = strategySource
+    .replace('"Test strategy", initial_capital=10000', '"Other strategy", initial_capital=20000')
+    .replace('input.int(5, "Length"', 'input.int(7, "Length"');
+  session.setSource(other, true);
+  assert.deepEqual(session.getState().inputs, []);
+  await answerAll();
+  const state = session.getState();
+  assert.deepEqual(
+    state.inputs.map((item) => [item.descriptor.title, item.value, item.changed]),
+    [
+      ['Length', 7, false],
+      ['Multiplier', 1, false],
+      ['Source', 'close', false],
+    ],
+  );
+  assert.deepEqual(state.propertyOverrides, {});
+  assert.equal(state.properties.find((field) => field.id === 'initialCapital')?.value, 20_000);
+  // Opening the same text again restores its defaults without recompiling.
+  session.setInput('Length', 9);
+  session.setProperty('initialCapital', 30_000);
+  session.setSource(other, true);
+  assert.equal(session.getState().compile.status, 'compiled');
+  assert.equal(session.getState().inputs[0].value, 7);
+  assert.deepEqual(session.getState().propertyOverrides, {});
+});
+
 test('the run action explains what is missing as message ids', async () => {
   const harness = engineHarness();
   const session = new BacktestSession(harness.client);
@@ -236,19 +266,31 @@ test('a run produces the complete result with what it was computed with', async 
   );
   assert.equal(result.computedWith.source, strategySource);
   assert.equal(result.computedWith.dataset, state.dataset);
-  assert.deepEqual(state.outdated, { reasons: [], inputs: [] });
+  assert.deepEqual(state.outdated, { reasons: [], inputs: [], properties: [] });
 });
 
-test('changes mark the result outdated, and the inputs it used can be restored (B9)', async () => {
+test('changes mark the result outdated, and the settings it used can be restored (B9)', async () => {
   const { session, answerAll } = await completedRun();
   session.setInput('Length', 8);
   assert.deepEqual(session.getState().outdated, {
     reasons: ['inputs'],
     inputs: [{ title: 'Length', computed: 5, current: 8 }],
+    properties: [],
   });
-  session.restoreResultInputs();
+  session.restoreResultSettings();
   assert.deepEqual(session.getState().outdated?.reasons, []);
 
+  // A property states what the result used: the script's own value until it was overridden.
+  session.setProperty('initialCapital', 20000);
+  session.setInput('Length', 8);
+  assert.deepEqual(session.getState().outdated, {
+    reasons: ['inputs', 'properties'],
+    inputs: [{ title: 'Length', computed: 5, current: 8 }],
+    properties: [{ id: 'initialCapital', computed: 10000, current: 20000 }],
+  });
+  session.restoreResultSettings();
+  assert.deepEqual(session.getState().outdated?.reasons, []);
+  assert.deepEqual(session.getState().propertyOverrides, {});
   session.setProperty('initialCapital', 20000);
   assert.deepEqual(session.getState().outdated?.reasons, ['properties']);
   session.resetProperties();
@@ -371,6 +413,11 @@ test('effects the run ignored are listed as issues with their line', async () =>
     ]),
     [['ignoredEffect', 13, 'alert is ignored during execution.']],
   );
+  // Other source text keeps the result, but not its warnings on lines of their own.
+  ready.session.setSource(strategySource.replace('plot(basis, "Basis", force_overlay=true)', ''));
+  await ready.answerAll();
+  assert.equal(ready.session.getState().result?.output.warnings?.length, 1);
+  assert.deepEqual(backtestIssues(ready.session.getState()), []);
 });
 
 test('cancel stops the Worker and keeps the previous result (B8)', async () => {
@@ -578,6 +625,26 @@ test('applying a set from the selection bar re-runs the backtest; an edit ends u
   assert.deepEqual(state.inputs[1].origin, origin);
   session.undoApply();
   assert.equal(session.getState().inputs[0].value, 11);
+});
+
+test('opening a script, the same one or another, drops where applied values came from (B17)', async () => {
+  const ready = await completedRun();
+  const { session } = ready;
+  const origins = () => session.getState().inputs.map((item) => item.origin);
+  const apply = async () => {
+    const applying = session.applyParameters(set, origin);
+    await ready.answerAll();
+    await applying;
+    assert.deepEqual(origins(), [origin, origin, origin]);
+  };
+  await apply();
+  session.setSource(session.getState().source, true);
+  assert.deepEqual(origins(), [null, null, null]);
+  await apply();
+  session.setSource(strategySource.replace('"Test strategy"', '"Other strategy"'), true);
+  await ready.answerAll();
+  assert.equal(session.getState().compile.status, 'compiled');
+  assert.deepEqual(origins(), [null, null, null]);
 });
 
 test('a failed combination opened as a preview shows its diagnostics in Issues (R11)', async () => {

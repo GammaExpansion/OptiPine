@@ -135,6 +135,21 @@ test('a new row spans half to twice the current value on its step; the grid stay
     kept.rows.map((row) => row.status),
     ['searched', 'searched', 'searched', 'searched', 'fixed'],
   );
+  // Unchecking rows shrinks the grid, but a row that started fixed stays fixed until checked.
+  const unchecked = searchSetup(
+    trend,
+    new Map([
+      ['Source', { ...rows[2].draft!, searched: false }],
+      ['Use trailing stop', { ...rows[3].draft!, searched: false }],
+    ]),
+    { ...trendValues, 'Trail %': 3 },
+    grid,
+  );
+  assert.deepEqual(
+    unchecked.rows.map((row) => row.status),
+    ['searched', 'searched', 'fixed', 'fixed', 'fixed'],
+  );
+  assert.equal(unchecked.sampling?.combinations, 31 * 13);
 });
 
 test('the default range follows the value, its bounds and its step', () => {
@@ -290,14 +305,23 @@ test('the search key follows what the run would search, not how it is written', 
   );
 });
 
-test('drafts survive a recompile while the input keeps its type and choices', () => {
+test('drafts survive a recompile while the input keeps its declaration', () => {
   const draft = range(12, 20, 2);
   const length = byTitle('Length');
-  assert.equal(keepSearchDraft(length, { descriptor: length, draft }), draft);
+  // An edit elsewhere in the script recompiles to the same declaration, on another line.
+  assert.equal(keepSearchDraft({ ...length, line: 9 }, { descriptor: length, draft }), draft);
   assert.equal(
     keepSearchDraft({ ...length, type: 'float' }, { descriptor: length, draft }),
     undefined,
   );
+  // Another script's Length, as an opened script declares it, starts from its own range (#22).
+  for (const other of [
+    { ...length, defaultValue: 10 },
+    { ...length, min: 2 },
+    { ...length, max: 100 },
+    { ...length, step: 2 },
+  ])
+    assert.equal(keepSearchDraft(other, { descriptor: length, draft }), undefined);
   const direction = byTitle('Direction');
   const kept: SearchDraft = { searched: true, values: { kind: 'list', values: ['Long'] } };
   assert.notEqual(

@@ -21,7 +21,7 @@ export function useBacktestTestServices() {
       openDialogs: [],
       paneSizes: { backtest: { ...defaultPaneSizes }, optimize: { ...defaultPaneSizes } },
       drawerOpen: false,
-      optimizeTab: 'summary',
+      optimizeTab: 'leaderboard',
     });
   });
   afterEach(() => {

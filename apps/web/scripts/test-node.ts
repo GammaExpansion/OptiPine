@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 
 // Expand in Node so missing directories and Windows shells behave like POSIX shells.
 const files = globSync([
+  'scripts/**/*.test.ts',
   'src/workflows/**/*.test.ts',
   'src/i18n/**/*.test.ts',
   'examples/**/*.test.ts',

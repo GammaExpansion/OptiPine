@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
 import type { Heatmap } from '@pine/optimizer';
 import { HeatmapCanvas, type CellHover } from '../../../../charts/optimize/HeatmapCanvas.tsx';
-import { containsSelection, heatTokens } from '../../../../charts/optimize/geometry.ts';
+import { containsSelection } from '../../../../charts/optimize/geometry.ts';
+import { ExcludedLegend, LegendRamp } from '../../../../charts/optimize/LegendRamp.tsx';
 import { SegmentedControl } from '../../../../components/SegmentedControl.tsx';
 import { Select } from '../../../../components/Select.tsx';
 import { useI18n } from '../../../../i18n/I18nProvider.tsx';
-import { formatNumber } from '../../../../i18n/translate.ts';
 import { useOptimizationStore } from '../../../../state/optimization.ts';
-import { rangeLabel, valueLabel } from '../../map/map-labels.ts';
+import { bestSlice, failedConstraintLabel, rangeLabel, valueLabel } from '../../map/map-labels.ts';
+import { useResultFormat } from '../../leaderboard/useResultFormat.ts';
 import styles from './stability.module.css';
 
 /** The workflow supplies the selected window's IS map or the mean, already binned and ranked. */
@@ -15,6 +16,10 @@ export function WindowMap() {
   const { t, text } = useI18n();
   const view = useOptimizationStore((state) => state.walkForward);
   const actions = useOptimizationStore((state) => state.actions);
+  const direction = useOptimizationStore((state) => state.viewSettings.direction);
+  const objective = useOptimizationStore((state) => state.viewSettings.objective);
+  const format = useResultFormat(view?.searchRows);
+  const objectiveValue = (value: number | null) => format.objective(value, objective);
   const [hover, setHover] = useState<{ map: Heatmap; hit: CellHover } | null>(null);
   const map = view?.map;
   // Parameter values read at the precision their input was searched with.
@@ -30,12 +35,8 @@ export function WindowMap() {
       })) ?? [],
     [map, selected, t],
   );
-  const hit = hover?.map === map?.panel ? hover?.hit : undefined;
+  const hit = hover?.hit;
   const axes = view?.stability?.rows.map((row) => row.title) ?? [];
-  const compact = (value: number | null | undefined) =>
-    value == null
-      ? text(valueLabel(null))
-      : formatNumber(value, { notation: 'compact', maximumFractionDigits: 1 });
   if (view?.error)
     return (
       <p className={styles.note} role="status">
@@ -110,7 +111,7 @@ export function WindowMap() {
                   value: `value:${index}`,
                   label: text(valueLabel(value, input(slice.title))),
                 })),
-                { value: 'max', label: t('optimize.map.max') },
+                { value: 'max', label: t(bestSlice(direction)) },
                 { value: 'mean', label: t('optimize.map.mean') },
               ]}
               onChange={(value) =>
@@ -133,6 +134,8 @@ export function WindowMap() {
         label={t('optimize.wfStability.canvas')}
         keyboardDescription={t('optimize.wfStability.keyboard')}
         onHover={(hit) => setHover(hit ? { map: map.panel, hit } : null)}
+        fitToPanel={false}
+        formatValue={objectiveValue}
         onActivate={(cell) => {
           const chosen = map.chosen.find((item) =>
             containsSelection(map.panel, cell, item.parameters),
@@ -140,6 +143,16 @@ export function WindowMap() {
           if (chosen) actions.selectWindow(chosen.window);
         }}
       />
+      {!hit && (
+        <p className={styles.inspection} role="status">
+          {t(
+            map.surface === 'mean'
+              ? 'optimize.wfStability.meanIs'
+              : 'optimize.wfStability.windowIs',
+            { count: view?.windows.length ?? 0, window: map.window + 1 },
+          )}
+        </p>
+      )}
       <div className={styles.legend} aria-label={t('optimize.map.legend')}>
         <span>
           {t(
@@ -149,15 +162,8 @@ export function WindowMap() {
             { count: view?.windows.length ?? 0, window: map.window + 1 },
           )}
         </span>
-        <span>{compact(map.panel.display?.minimum)}</span>
-        <div className={styles.ramp}>
-          {heatTokens.map((token, index) => (
-            <i key={token} style={{ background: `var(${token})` }}>
-              {index === 3 && <span>{formatNumber(0)}</span>}
-            </i>
-          ))}
-        </div>
-        <span>{compact(map.panel.display?.maximum)}</span>
+        <LegendRamp map={map.panel} className={styles.ramp} missing={text(valueLabel(null))} />
+        <ExcludedLegend map={map.panel} />
       </div>
       <p className={styles.note}>
         {t(
@@ -169,13 +175,25 @@ export function WindowMap() {
       </p>
       {hit && (
         <p className={styles.inspection} role="status">
-          {t('optimize.wfStability.cell', {
-            x: map.x,
-            xValue: text(rangeLabel(hit.cell.xValues ?? [hit.cell.x], input(map.x))),
-            y: map.y ?? '',
-            yValue: map.y ? text(rangeLabel(hit.cell.yValues ?? [hit.cell.y], input(map.y))) : '',
-            value: text(valueLabel(hit.cell.value)),
-          })}
+          {[
+            t('optimize.wfStability.cell', {
+              x: map.x,
+              xValue: text(rangeLabel(hit.cell.xValues ?? [hit.cell.x], input(map.x))),
+              y: map.y ?? '',
+              yValue: map.y ? text(rangeLabel(hit.cell.yValues ?? [hit.cell.y], input(map.y))) : '',
+              value: objectiveValue(hit.cell.value),
+            }),
+            // This map has no tooltip, so its line says what excluded sets fail, as the R1
+            // map's tooltip does.
+            ...(hit.cell.excludedCount
+              ? [
+                  t('optimize.summary.filtered'),
+                  ...(hit.cell.failedConstraints ?? []).map((constraint) =>
+                    text(failedConstraintLabel(constraint)),
+                  ),
+                ]
+              : []),
+          ].join(t('optimize.map.descriptionSeparator'))}
         </p>
       )}
     </div>

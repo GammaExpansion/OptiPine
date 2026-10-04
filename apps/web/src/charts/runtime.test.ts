@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { IChartApi } from 'lightweight-charts';
+import { TickMarkType, type IChartApi, type Time } from 'lightweight-charts';
 import { chartOptions, keepTimeLabelsInside, timeFormat, zoomChart } from './runtime.ts';
 
 describe('chart time and navigation', () => {
@@ -51,9 +51,22 @@ describe('chart time and navigation', () => {
   it('uses CSS tokens and retains the built-in TradingView attribution link', () => {
     const node = document.createElement('div');
     node.style.setProperty('--canvas', '#0e1013');
-    const options = chartOptions(node, 'Etc/UTC');
+    const options = chartOptions(node, 'Etc/UTC', 'en');
     expect(options.layout?.attributionLogo).toBe(true);
     expect(options.layout?.background).toMatchObject({ color: '#0e1013' });
+  });
+  it('names the day ticks in the page language (bug bash #31)', () => {
+    const node = document.createElement('div');
+    const day = (Date.UTC(2026, 8, 28) / 1000) as Time;
+    const ticks = (language: 'en' | 'zh') =>
+      chartOptions(node, 'Etc/UTC', language).timeScale.tickMarkFormatter(
+        day,
+        TickMarkType.DayOfMonth,
+        '',
+      );
+    expect(ticks('en')).toBe('Sep 28');
+    expect(ticks('zh')).toBe('9月28日');
+    expect(chartOptions(node, 'Etc/UTC', 'zh').localization?.locale).toBe('zh-CN');
   });
   it('zooms symmetrically and safely ignores an empty chart', () => {
     const setVisibleLogicalRange = vi.fn();

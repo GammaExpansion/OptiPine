@@ -149,3 +149,35 @@ it('keeps bands on their own windows when an intervening window stays flat', () 
   expect(lanes[2].querySelector('title')).toHaveTextContent('W3');
   expect(lanes[5].querySelector('circle')).not.toBeNull();
 });
+
+it('says on its line, as the map tooltip does, what an excluded cell fails', async () => {
+  const hook = installStabilityFixture();
+  const current = state().walkForward!;
+  const failed = { metric: 'Total trades', operator: '>=' as const, value: 30 };
+  const panel = current.map!.panel;
+  act(() =>
+    hook.publish({
+      ...current,
+      map: {
+        ...current.map!,
+        panel: {
+          ...panel,
+          cells: panel.cells.map((cell) => ({
+            ...cell,
+            excludedCount: cell.count,
+            failedConstraints: [failed],
+          })),
+        },
+      },
+    }),
+  );
+  renderInEnglish(<WfStability />);
+  await userEvent.setup().click(screen.getByRole('radio', { name: 'Window map' }));
+  fireEvent.keyDown(screen.getByTestId('parameter-map'), { key: 'Home' });
+  const line = screen
+    .getAllByRole('status')
+    .find((element) => element.textContent?.includes('· IS'));
+  // The value in the objective's format, then the conditions, with no box over the map.
+  expect(line?.textContent).toMatch(/· IS [+−]?[\d,]+\. Excluded by filters\. Trades ≥ 30$/);
+  expect(screen.getByText('Excluded by filters')).toBeInTheDocument();
+});

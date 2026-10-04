@@ -78,7 +78,10 @@ export function SymbolSearch({
         disabled={disabled}
         value={value}
         placeholder={t('data.searchSymbols')}
-        onFocus={() => setOpen(true)}
+        onFocus={(event) => {
+          event.currentTarget.select();
+          setOpen(true);
+        }}
         onBlur={() => setOpen(false)}
         onChange={(event) => {
           onChange(event.target.value.toUpperCase());

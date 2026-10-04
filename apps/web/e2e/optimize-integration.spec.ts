@@ -38,9 +38,9 @@ async function selectedFrame(page: Page) {
     const { mapGeometry, cellRect, containsSelection } = await import(/* @vite-ignore */ path);
     const views = (window as unknown as Hooks).optimization().views!;
     const map = views.map!.panel;
-    const geometry = mapGeometry(map);
     const canvas = element as HTMLCanvasElement;
     const host = canvas.parentElement!.parentElement!;
+    const geometry = mapGeometry(map, { width: host.clientWidth, height: host.clientHeight });
     for (const layer of geometry.layers) {
       for (const [index, cell] of layer.cells) {
         if (!containsSelection(map, cell, views.selection!.row.parameters)) continue;
@@ -129,9 +129,10 @@ for (const language of ['en', 'zh'] as const) {
     ).toBe(barCount);
     await page.getByRole('button', { name: t('shell.optimize'), exact: true }).click();
     const right = page.getByTestId('optimize-right');
-    for (const [title, from, to] of [
-      ['Length', 18, 19],
-      ['Multiplier', 1, 1.75],
+    // Fix the grid's spacing as well as its bounds; suggested steps depend on current inputs.
+    for (const [title, from, to, step] of [
+      ['Length', 18, 19, 1],
+      ['Multiplier', 1, 1.75, 0.25],
     ] as const) {
       await right
         .getByRole('spinbutton', { name: t('optimize.setup.fromLabel', { title }) })
@@ -139,14 +140,18 @@ for (const language of ['en', 'zh'] as const) {
       await right
         .getByRole('spinbutton', { name: t('optimize.setup.toLabel', { title }) })
         .fill(String(to));
+      await right
+        .getByRole('spinbutton', { name: t('optimize.setup.stepLabel', { title }) })
+        .fill(String(step));
     }
+    // Keep this a four-input search even if a future example starts with Trail % searched.
     await right
       .getByRole('checkbox', { name: t('optimize.setup.searchInput', { title: 'Trail %' }) })
-      .click();
+      .setChecked(false);
     const filterGroup = right.getByRole('group', { name: t('optimize.setup.filters') });
     for (let index = 0; index < 2; index++)
       await filterGroup.locator('button[aria-label]').first().click();
-    // Large default ranges select Random automatically. Explicitly choose the now-small grid.
+    // This test exercises the complete grid regardless of the initial sampling method.
     await right.getByRole('radio', { name: t('optimize.grid'), exact: true }).click();
     await expect
       .poll(() =>
@@ -229,14 +234,22 @@ for (const language of ['en', 'zh'] as const) {
       const path = '/src/charts/optimize/geometry.ts';
       const { mapGeometry, cellRect } = await import(/* @vite-ignore */ path);
       const state = (window as unknown as Hooks).optimization();
-      const geometry = mapGeometry(state.views!.map!.panel);
+      const host = element.parentElement!.parentElement!;
+      const geometry = mapGeometry(state.views!.map!.panel, {
+        width: host.clientWidth,
+        height: host.clientHeight,
+      });
       const visible = new Set(state.views!.leaderboard.rows.map((row) => row.trialId));
       for (const layer of geometry.layers)
         for (const [index, cell] of layer.cells) {
           if (!cell.trialId || cell.value === null) continue;
           const rect = cellRect(layer, index, Math.max(element.clientWidth, geometry.width));
-          if (!visible.has(cell.trialId) && rect.y + 16 < element.clientHeight)
-            return { x: rect.x + 8, y: rect.y + 8, trialId: cell.trialId };
+          if (!visible.has(cell.trialId) && rect.y + rect.height < element.clientHeight)
+            return {
+              x: rect.x + rect.width / 2,
+              y: rect.y + rect.height / 2,
+              trialId: cell.trialId,
+            };
         }
       throw new Error('No visible off-page cell');
     });
@@ -336,7 +349,13 @@ for (const language of ['en', 'zh'] as const) {
           selected: views.selection,
         };
       }),
-    ).toEqual({ rows: 0, map: 0, selected: null });
+    ).toMatchObject({ rows: 0, selected: null });
+    expect(
+      await page.evaluate(() => {
+        const views = (window as unknown as Hooks).optimization().views!;
+        return views.map!.panel.cells.some((cell) => cell.value !== null);
+      }),
+    ).toBe(true);
     await page.screenshot({ path: info.outputPath(`R9-${language}.png`) });
     await board
       .getByRole('button', { name: t('optimize.leaderboard.remove'), exact: true })

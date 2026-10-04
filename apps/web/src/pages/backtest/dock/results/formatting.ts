@@ -79,7 +79,9 @@ export const metricStyles: Readonly<Record<string, MetricStyle>> = {
     decimals: 0,
     bars: true,
   },
-  'Performance/Max contracts held': { label: 'report.maxContracts', decimals: 1 },
+  // The engine reports whole contracts, as TradingView does; a decimal would claim a precision
+  // the figure does not have (bug bash #34).
+  'Performance/Max contracts held': { label: 'report.maxContracts', decimals: 0 },
   'Risk-adjusted performance/Margin calls': { label: 'report.marginCalls', decimals: 0 },
 };
 
@@ -92,7 +94,7 @@ export function metricMessage(
   const style = metricStyles[id];
   const result = numberMessage(value, { ...style, loss, percent: show === 'percent' });
   return style?.bars && typeof value === 'number' && Number.isFinite(value)
-    ? message('report.bars', { value: result })
+    ? message('report.bars', { value: result, count: value })
     : result;
 }
 

@@ -133,13 +133,17 @@ for (const language of ['en', 'zh'] as const) {
       const path = '/src/charts/optimize/geometry.ts';
       const { mapGeometry, cellRect, containsSelection } = await import(/* @vite-ignore */ path);
       const map = (window as unknown as Hooks).wfState().walkForward!.map!;
-      const geometry = mapGeometry(map.panel);
+      const host = element.parentElement!.parentElement!;
+      const geometry = mapGeometry(map.panel, {
+        width: host.clientWidth,
+        height: host.clientHeight,
+      });
       const layer = geometry.layers[0];
       const [index] = [...layer.cells].find(([, cell]) =>
         containsSelection(map.panel, cell, map.chosen[0].parameters),
       )!;
       const rect = cellRect(layer, index, Math.max(geometry.width, element.clientWidth));
-      return { x: rect.x + 8, y: rect.y + 8 };
+      return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
     });
     await page.getByTestId('parameter-map').click({ position: point });
     expect(

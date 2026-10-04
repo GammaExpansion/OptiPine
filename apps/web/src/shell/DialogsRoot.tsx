@@ -5,6 +5,11 @@ import { useUiStore, type Dialog } from '../state/ui.ts';
 const ScriptDialog = lazy(() =>
   import('../dialogs/script/ScriptDialog.tsx').then((module) => ({ default: module.ScriptDialog })),
 );
+const ReplaceScriptDialog = lazy(() =>
+  import('../dialogs/script/ReplaceScriptDialog.tsx').then((module) => ({
+    default: module.ReplaceScriptDialog,
+  })),
+);
 const MarketDataDialog = lazy(() =>
   import('../dialogs/marketData/MarketDataDialog.tsx').then((module) => ({
     default: module.MarketDataDialog,
@@ -16,11 +21,12 @@ const DateRangeDialog = lazy(() =>
   })),
 );
 
-/** Phase 2 supplies dialogs/ components here; open state and mounting have one owner. */
+/** Every open dialog mounts here; `slots` adds the ones a page owns. Open state has one owner. */
 export function DialogsRoot({ slots = {} }: { slots?: Partial<Record<Dialog, ComponentType>> }) {
   const openDialogs = useUiStore((state) => state.openDialogs);
   const allSlots: Partial<Record<Dialog, ComponentType>> = {
     script: ScriptDialog,
+    replaceScript: ReplaceScriptDialog,
     marketData: MarketDataDialog,
     dateRange: DateRangeDialog,
     ...slots,

@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { openScript } from '../../state/backtest.ts';
 import { registerFilePicker } from '../../shell/shortcuts.ts';
-import { setScriptPicker } from './actions.ts';
+import { confirmReplace, setScriptPicker, setScriptReader } from './actions.ts';
 
 // Only a file that cannot be opened shows it, so it loads then.
 const FileErrorDialog = lazy(() =>
@@ -18,10 +18,13 @@ export function ScriptFilePicker() {
     const pick = () => input.current?.click();
     const unregister = registerFilePicker(pick);
     const release = setScriptPicker(pick);
+    // `read` keeps only refs and state setters, so the first render's copy stays current.
+    const releaseReader = setScriptReader((file) => void read(file));
     return () => {
       revision.current++;
       unregister();
       release();
+      releaseReader();
     };
   }, []);
   const read = async (file: File | undefined) => {
@@ -34,7 +37,7 @@ export function ScriptFilePicker() {
       }
       const source = await file.text();
       if (revision.current === version)
-        openScript({ source, fileName: file.name, origin: { kind: 'file' } });
+        confirmReplace(() => openScript({ source, fileName: file.name, origin: { kind: 'file' } }));
     } catch {
       if (revision.current === version) setFailed(true);
     }

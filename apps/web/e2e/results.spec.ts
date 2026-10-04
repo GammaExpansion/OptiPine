@@ -374,7 +374,7 @@ for (const language of ['en', 'zh'] as const) {
     await expect(length.locator('..')).toHaveCSS('border-width', '1px');
     await expect(length.locator('..')).toHaveCSS('border-color', 'rgb(242, 163, 58)');
     const reset = page.getByRole('button', {
-      name: label('Reset to 20', '恢复为 20'),
+      name: label('Reset to 180', '恢复为 180'),
       exact: true,
     });
     await expect(reset).toBeVisible();
@@ -382,7 +382,7 @@ for (const language of ['en', 'zh'] as const) {
     await capture('B9-polish');
     await reset.click();
     await expect(chart).toHaveAttribute('data-markers-dimmed', 'false');
-    await expect(length).toHaveValue('20');
+    await expect(length).toHaveValue('180');
     await expect.poll(candlePixels).toBe(before);
 
     const release = await page.evaluateHandle(async () => {
@@ -445,7 +445,9 @@ for (const language of ['en', 'zh'] as const) {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     const result = await loadRecordedExample(page, language);
-    expect(result.trades).toBeGreaterThan(300);
+    expect(result.trades).toBeGreaterThanOrEqual(30);
+    expect(result.metrics['Performance/Net profit/All USDT']).toBeGreaterThan(0);
+    expect(result.metrics['Risk-adjusted performance/Profit factor/All USDT']).toBeGreaterThan(1);
     const label = (en: string, zh: string) => (language === 'en' ? en : zh);
     const hidden = await page.addStyleTag({
       content: `[data-testid="equity-charts"] { ${language === 'en' ? 'display:none' : 'width:0'} !important; }`,
@@ -664,6 +666,10 @@ test('10,000 engine trades scroll with bounded DOM and short tasks', async ({ pa
 test('capture B1 B2 B5 B6 references in both languages with local fonts', async ({
   page,
 }, info) => {
+  // Sixteen artboards with both languages' fonts took just over 30 s on a 2-vCPU CI runner
+  // beside a real optimization; the page holding the app's fonts opens once for all of them.
+  test.setTimeout(90000);
+  await page.goto(app);
   for (const language of ['en', 'zh'] as const) {
     for (const board of ['Main', 'B2', 'B5', 'B6', 'B7', 'B8', 'B9', 'G5']) {
       const source = (
@@ -677,7 +683,6 @@ test('capture B1 B2 B5 B6 references in both languages with local fonts', async 
       )
         .replace(/<link[^>]+fonts\.googleapis\.com[^>]*>/g, '')
         .replace(/<script[^>]+support\.js[^>]*><\/script>/g, '');
-      await page.goto(app);
       await page.setContent(source);
       await page.addStyleTag({ url: '/src/styles/fonts.css?direct' });
       await page.evaluate(() => document.fonts.ready);

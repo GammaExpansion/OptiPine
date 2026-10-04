@@ -2,15 +2,21 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Heatmap, HeatmapCell } from '@pine/optimizer';
 import { HeatmapCanvas, type CellHover } from '../../../charts/optimize/HeatmapCanvas.tsx';
-import { heatTokens } from '../../../charts/optimize/geometry.ts';
+import { ExcludedLegend, LegendRamp } from '../../../charts/optimize/LegendRamp.tsx';
 import { Select } from '../../../components/Select.tsx';
 import { SegmentedControl } from '../../../components/SegmentedControl.tsx';
 import { ToggleSwitch } from '../../../components/ToggleSwitch.tsx';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
-import { formatNumber } from '../../../i18n/translate.ts';
 import { useOptimizationStore } from '../../../state/optimization.ts';
 import { cellValues } from '../../../workflows/optimize-views.ts';
-import { axisLabel, isBinnedCell, rangeLabel, valueLabel } from './map-labels.ts';
+import {
+  bestSlice,
+  failedConstraintLabel,
+  isBinnedCell,
+  rangeLabel,
+  valueLabel,
+} from './map-labels.ts';
+import { useResultFormat } from '../leaderboard/useResultFormat.ts';
 import { CellValuesTable } from './CellValuesTable.tsx';
 import { ObjectiveCurve } from './ObjectiveCurve.tsx';
 import { inspectBin, resetInspection } from './inspection.ts';
@@ -21,6 +27,10 @@ export function MapPanel() {
   const { t, text } = useI18n();
   const views = useOptimizationStore((state) => state.views);
   const settings = useOptimizationStore((state) => state.viewSettings);
+  const format = useResultFormat(views?.searchRows);
+  const objectiveValue = (value: number | null) => format.objective(value, settings.objective);
+  // The tooltip's height, measured once it renders, keeps it within the window.
+  const [tooltipHeight, setTooltipHeight] = useState(320);
   const actions = useOptimizationStore((state) => state.actions);
   const [hover, setHover] = useState<{ map: Heatmap; hit: CellHover } | null>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -32,17 +42,18 @@ export function MapPanel() {
     [],
   );
   const map = views?.map;
+  useEffect(() => setHover(null), [map]);
   const rowFor = (title: string | null | undefined) =>
     views?.searchRows.find((row) => row.descriptor.title === title);
-  const hit = hover?.map === map?.panel ? hover?.hit : undefined;
+  const hit = hover?.hit;
   const hoveredValues = useMemo(
     () => (hit && views ? cellValues(views.summary, hit.cell) : null),
     [views, hit],
   );
   const validated = views?.mode === 'in-out';
-  const choose = (cell: HeatmapCell) => {
+  const choose = (cell: HeatmapCell, panel: Heatmap) => {
     if (isBinnedCell(cell)) {
-      if (map?.map) inspectBin({ map: map.panel, cell });
+      if (map?.map) inspectBin({ map: map.panel, panel, cell });
     } else if (cell.trialId && cell.value !== null) actions.select(cell.trialId);
     setHover(null);
   };
@@ -126,7 +137,7 @@ export function MapPanel() {
                       value: `value:${index}`,
                       label: text(valueLabel(value, rowFor(slice.title))),
                     })),
-                    { value: 'max', label: t('optimize.map.max') },
+                    { value: 'max', label: t(bestSlice(settings.direction)) },
                     { value: 'mean', label: t('optimize.map.mean') },
                   ]}
                   onChange={(value) =>
@@ -146,11 +157,6 @@ export function MapPanel() {
             ))}
           </div>
           <div className={styles.body}>
-            {(map.panel.display?.yBinSize ?? 1) > 1 && (
-              <p className={styles.axisNote}>
-                {text(axisLabel(map.y ?? '', map.panel.display!.yBinSize))}
-              </p>
-            )}
             <HeatmapCanvas
               map={map.panel}
               searchRows={views.searchRows}
@@ -162,56 +168,40 @@ export function MapPanel() {
                 else hoverTimer.current = setTimeout(() => setHover(null), 150);
               }}
               onActivate={choose}
+              formatValue={objectiveValue}
             />
             <div className={styles.legend} aria-label={t('optimize.map.legend')}>
               <span>{t(`optimize.map.objective.${settings.objective}`)}</span>
-              <span>
-                {map.panel.display?.minimum == null
-                  ? t('optimize.map.na')
-                  : formatNumber(map.panel.display.minimum, {
-                      maximumFractionDigits: 1,
-                      notation: 'compact',
-                    })}
-              </span>
-              <div className={styles.ramp}>
-                {heatTokens.map((token, index) => (
-                  <i key={token} style={{ background: `var(${token})` }}>
-                    {index === 3 && <span>{formatNumber(0)}</span>}
-                  </i>
-                ))}
-              </div>
-              <span>
-                {map.panel.display?.maximum == null
-                  ? t('optimize.map.na')
-                  : formatNumber(map.panel.display.maximum, {
-                      maximumFractionDigits: 1,
-                      notation: 'compact',
-                    })}
-              </span>
+              <LegendRamp map={map.panel} className={styles.ramp} missing={t('optimize.map.na')} />
               {map.panel.cells.some((cell) => cell.value === null) && (
                 <span className={styles.missing}>
                   {t(views.inProgress ? 'optimize.map.incomplete' : 'optimize.map.notSampled')}
                 </span>
               )}
+              <ExcludedLegend map={map.panel} />
             </div>
           </div>
           {hit &&
             hoveredValues &&
             createPortal(
               <div
+                ref={(element) => {
+                  if (element && element.offsetHeight !== tooltipHeight)
+                    setTooltipHeight(element.offsetHeight);
+                }}
                 role="tooltip"
                 className={styles.hover}
                 onPointerEnter={() => clearTimeout(hoverTimer.current)}
                 onPointerLeave={() => setHover(null)}
                 style={{
                   left: Math.max(8, Math.min(hit.left - 140, window.innerWidth - 300)),
-                  top: Math.max(8, Math.min(hit.top + 18, window.innerHeight - 320)),
+                  top: Math.max(8, Math.min(hit.top + 18, window.innerHeight - tooltipHeight - 8)),
                 }}
               >
                 <strong>{cellTitle(hit.cell)}</strong>
                 {!map.map && isBinnedCell(hit.cell) ? (
                   <>
-                    <p>{t('optimize.map.liveMean', { value: text(valueLabel(hit.cell.value)) })}</p>
+                    <p>{t('optimize.map.liveMean', { value: objectiveValue(hit.cell.value) })}</p>
                     <p className={styles.note}>{t('optimize.map.liveDetail')}</p>
                   </>
                 ) : (
@@ -222,9 +212,21 @@ export function MapPanel() {
                     validated={validated}
                   />
                 )}
-                <span className={styles.note}>
-                  {t(isBinnedCell(hit.cell) ? 'optimize.map.openDetail' : 'optimize.map.selectSet')}
-                </span>
+                {!!hit.cell.excludedCount && (
+                  <div className={styles.note}>
+                    <span>{t('optimize.summary.filtered')}</span>
+                    {(hit.cell.failedConstraints ?? []).map((constraint, index) => (
+                      <div key={index}>{text(failedConstraintLabel(constraint))}</div>
+                    ))}
+                  </div>
+                )}
+                {(isBinnedCell(hit.cell) || hit.cell.trialId) && (
+                  <span className={styles.note}>
+                    {t(
+                      isBinnedCell(hit.cell) ? 'optimize.map.openDetail' : 'optimize.map.selectSet',
+                    )}
+                  </span>
+                )}
               </div>,
               document.body,
             )}

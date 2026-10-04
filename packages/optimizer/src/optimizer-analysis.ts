@@ -27,6 +27,8 @@ export interface OptimizerAnalysisInput {
   mode: 'none' | 'in-out' | 'walk-forward';
   objective: string;
   direction: 'maximize' | 'minimize';
+  /** The objective's break-even, which splits the maps' loss and profit colours (`HeatmapScale`). */
+  breakEven?: number;
   constraints: MetricConstraint[];
   /**
    * What ranks the sets: `in`, the objective's IS value (the default); `secondary`, the OOS value,
@@ -68,6 +70,7 @@ export function optimizerAnalysisInput(state: OptimizerAnalysisInput): Optimizer
     mode,
     objective,
     direction,
+    breakEven,
     constraints,
     rankBy,
     axes,
@@ -88,6 +91,7 @@ export function optimizerAnalysisInput(state: OptimizerAnalysisInput): Optimizer
     mode,
     objective,
     direction,
+    breakEven,
     constraints,
     rankBy,
     axes,
@@ -124,7 +128,8 @@ export function rankOptimizerTrials(
   const byNeighborhood =
     state.rankBy === 'neighborhood' || (state.resultMode ?? state.mode) === 'none';
   const values = byNeighborhood
-    ? (neighbors ?? neighborhoodValues(trials, (state.resultSpace ?? state.space)?.activeAxes))
+    ? (neighbors ??
+      neighborhoodValues(trials, (state.resultSpace ?? state.space)?.activeAxes, undefined, true))
     : undefined;
   const original = new Map(trials.map((trial) => [trial.trialId, trial]));
   return leaderboard(
@@ -140,7 +145,7 @@ export function rankOptimizerTrials(
 export function analyzeOptimizer(state: OptimizerAnalysisInput): OptimizerAnalysis {
   const trials = deriveOptimizerTrials(state),
     active = (state.resultSpace ?? state.space)?.activeAxes ?? [];
-  const preferred = defaultHeatmapAxes(trials, active);
+  const preferred = defaultHeatmapAxes(trials, active, { includeExcluded: true });
   const valid = (key?: string): key is string => !!key && active.some((axis) => axis.title === key);
   let x = valid(state.axes?.x) ? state.axes!.x : preferred[0];
   let y =
@@ -156,7 +161,7 @@ export function analyzeOptimizer(state: OptimizerAnalysisInput): OptimizerAnalys
     [x, y] = [y, x];
   const z =
     valid(state.axes?.z) && state.axes!.z !== x && state.axes!.z !== y ? state.axes!.z : undefined;
-  const neighbors = neighborhoodValues(trials, active),
+  const neighbors = neighborhoodValues(trials, active, undefined, true),
     ranked =
       state.rankBy === 'neighborhood'
         ? rankOptimizerTrials(state, trials, neighbors)
@@ -167,7 +172,7 @@ export function analyzeOptimizer(state: OptimizerAnalysisInput): OptimizerAnalys
   const sensitivity = buildSensitivitySummary(
     trials,
     active.map((axis) => axis.title),
-    { axes: active, neighborhood: state.neighborhood },
+    { axes: active, neighborhood: state.neighborhood, includeExcluded: true },
   );
   sensitivity.parameters.sort((a, b) => b.etaSquared - a.etaSquared);
   const draft = state.constraintDraft ?? { metric: 'Total trades', operator: '>=', value: 30 };
@@ -202,14 +207,20 @@ export function analyzeOptimizer(state: OptimizerAnalysisInput): OptimizerAnalys
     result.maps = surfaces.map((surface) => {
       const options = {
         axes: active,
+        includeExcluded: true,
+        constraints: state.constraints,
         zKey: z,
         slices: state.slices,
         sliceMode: state.sliceMode,
-        parameters: selected?.parameters,
+        // Fixed slices remain deterministic even when no ranked set can be selected (R9).
+        parameters:
+          selected?.parameters ??
+          Object.fromEntries(active.map((axis) => [axis.title, axis.values[0]])),
         neighborhood: state.neighborhood,
         value: (trial: TrialRecord) =>
           surface === 'out' ? trial.outOfSampleValue : trial.inSampleValue,
         direction: state.direction,
+        breakEven: state.breakEven,
       };
       const map =
         surface === 'mean'

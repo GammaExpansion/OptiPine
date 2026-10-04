@@ -64,3 +64,45 @@ test('workflow values and nested property names translate in both languages', ()
   assert.equal(translate(property, 'en'), 'Fix the value of Initial capital');
   assert.equal(translate(property, 'zh'), '请修正初始资金的值');
 });
+
+test('forex refusal translates its count and latest date with one actionable range in both languages', () => {
+  for (const count of [1, 11]) {
+    const error = message('feedYahooOhlc', {
+      symbol: 'EURUSD=X',
+      count,
+      date: '2022-12-26',
+      percent: 0.05,
+    });
+    assert.equal(
+      translate(error, 'en'),
+      `Yahoo returned inconsistent OHLC for EURUSD=X, beyond the 0.05% correction limit. Affected days: ${count}; latest: 2022-12-26. Choose a range that starts after 2022-12-26, or use another data source.`,
+    );
+    assert.equal(
+      translate(error, 'zh'),
+      `Yahoo 返回的 EURUSD=X 的 OHLC 存在不一致，超出 0.05% 的修正上限。受影响天数：${count}；最近日期：2022-12-26。请选择起始日期晚于 2022-12-26 的范围，或使用其他数据源。`,
+    );
+  }
+});
+
+test('a count of one reads the singular form, where the catalog has one (bug bash #28)', () => {
+  const facts = (count: number) =>
+    message('run.facts', { count, bars: String(count), seconds: '0.0' });
+  assert.equal(translate(facts(1), 'en'), '1 bar, 0.0 s');
+  assert.equal(translate(facts(2), 'en'), '2 bars, 0.0 s');
+  assert.equal(translate(facts(1), 'zh'), '1 根 K 线，用时 0.0 秒');
+  assert.equal(
+    translate(workflowMessage('optimize.fixErrors', { count: 1 }), 'en'),
+    'Fix the error above first',
+  );
+  assert.equal(
+    translate(workflowMessage('optimize.fixErrors', { count: 2 }), 'en'),
+    'Fix the 2 errors above first',
+  );
+  assert.equal(
+    translate(message('optimize.leaderboard.preview', { count: 1 }), 'en'),
+    'Would exclude 1 more set.',
+  );
+  assert.equal(translate(message('report.bars', { value: '1', count: 1 }), 'en'), '1 bar');
+  // An id without a singular form reads as usual for a count of one.
+  assert.equal(translate(message('optimize.leaderboard.more', { count: 1 }), 'en'), '+1');
+});

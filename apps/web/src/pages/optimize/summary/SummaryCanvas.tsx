@@ -5,7 +5,7 @@ import { getOptimizationStore } from '../../../state/optimization.ts';
 import type { TopEquity } from '../../../workflows/optimize-session.ts';
 import { leaderboardPageSize, type ScatterView } from '../../../workflows/optimize-views.ts';
 import { useResultFormat } from '../leaderboard/useResultFormat.ts';
-import { envelope, extent, nearestPoint, roundAxis, scale } from './plot-geometry.ts';
+import { envelope, extent, nearestPoint, roundAxis, scale, timeTicks } from './plot-geometry.ts';
 import { axisLabel } from './axis-label.ts';
 import { usePlotSize } from './usePlotSize.ts';
 import styles from './Summary.module.css';
@@ -97,9 +97,7 @@ export function SummaryCanvas({ chart }: { chart: Chart }) {
       );
     }
     context.textAlign = 'center';
-    const horizontalTicks =
-      xTicks ??
-      Array.from({ length: 5 }, (_, tick) => xBounds[0] + ((xBounds[1] - xBounds[0]) * tick) / 4);
+    const horizontalTicks = xTicks ?? timeTicks(xBounds, width - 72);
     for (const [tick, value] of horizontalTicks.entries()) {
       let label = axisLabel(value);
       if (chart.kind === 'equity') {
@@ -258,10 +256,10 @@ export function SummaryCanvas({ chart }: { chart: Chart }) {
               : t('optimize.summary.filtered')}
           </strong>
           <span>
-            {t('optimize.leaderboard.in')} {number(scatter.inSample[point], true)}
+            {t('optimize.leaderboard.in')} {number(scatter.inSample[point], true, 0)}
           </span>
           <span>
-            {t('optimize.leaderboard.out')} {number(scatter.outOfSample[point], true)}
+            {t('optimize.leaderboard.out')} {number(scatter.outOfSample[point], true, 0)}
           </span>
         </div>
       )}

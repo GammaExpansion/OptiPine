@@ -9,7 +9,9 @@ bridge subscriptions and record provenance. Optimization snapshots never publish
 - `openScript({ source, fileName, origin })` and `loadExample(id)` are shared exports from
   `backtest.ts`. A pasted script can use `fileName: null`. Origins are `{ kind: 'pasted' }`,
   `{ kind: 'file' }` or `{ kind: 'example', id }`. `actions.setSource` edits the current script
-  without changing its identity.
+  without changing its identity. The stored origin adds `edited`, true while the source differs
+  from the text that was opened; `confirmReplace` in `dialogs/script/actions.ts` asks before
+  replacing such a script.
 - Market `actions.fetch` and `retry` prepare a preview. `actions.accept()` installs the validated
   preview in Backtest and records `{ kind: 'provider', request }`. `actions.useCsv(input, fileName)`
   installs an input already validated by the CSV workflow, cancels pending provider work and records
@@ -34,7 +36,9 @@ bridge subscriptions and record provenance. Optimization snapshots never publish
   Store tests run in Vitest: this layer imports React and Vite's raw example sources. Node tests
   keep importing the framework-free workflows and catalogs directly.
 
-Page slots intentionally retain the scaffold's empty states. `shell/DialogsRoot.tsx` is the single
-mount point driven by `ui.openDialogs`; phase 2 adds the `dialogs/` components to its slot map.
-`registerFilePicker(handler)` in `shell/shortcuts.ts` connects Ctrl+O to the file UI and returns
-its unregister callback. Ctrl+Enter runs a ready Backtest page; editors and dialogs own their keys.
+`shell/DialogsRoot.tsx` is the single mount point driven by `ui.openDialogs`. It loads the script,
+replace-script, market data and date range dialogs, each in a chunk of its own on first use, and
+`Shell` adds the strategy properties and failed-combinations dialogs through its `slots`.
+`registerFilePicker(handler)` in `shell/shortcuts.ts` connects Ctrl+O to the script file picker
+(`dialogs/script/ScriptFilePicker.tsx`) and returns its unregister callback. Ctrl+Enter runs a
+ready Backtest page, or its preview; editors and dialogs own their keys.

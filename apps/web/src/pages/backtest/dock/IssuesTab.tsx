@@ -6,12 +6,7 @@ import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import type { MessageId } from '../../../i18n/translate.ts';
 import { useBacktestStore } from '../../../state/backtest.ts';
 import { useSelectionStore } from '../../../state/selection.ts';
-import {
-  backtestIssues,
-  type BacktestState,
-  type Issue,
-  type IssueCategory,
-} from '../../../workflows/backtest.ts';
+import { backtestIssues, type Issue, type IssueCategory } from '../../../workflows/backtest.ts';
 import { LazyPineEditor } from '../code/LazyPineEditor.tsx';
 import { useCodeAnnotations } from '../code/useCodeAnnotations.ts';
 import empty from './EmptyTab.module.css';
@@ -52,14 +47,15 @@ export function IssuesTab() {
   const { t, text } = useI18n();
   const parts = useBacktestStore(
     useShallow((state) => ({
+      source: state.source,
       compile: state.compile,
       run: state.run,
       result: state.result,
       preview: state.preview,
     })),
   );
-  const issues = useMemo(() => backtestIssues(parts as BacktestState), [parts]);
-  const source = useBacktestStore((state) => state.source);
+  const issues = useMemo(() => backtestIssues(parts), [parts]);
+  const source = parts.source;
   const revealCodeLine = useSelectionStore((state) => state.revealCodeLine);
   const annotations = useCodeAnnotations(false);
   const [pointed, setPointed] = useState(0);

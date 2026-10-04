@@ -2,17 +2,28 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { SearchRow } from '../../workflows/optimize-setup.ts';
 import type { Heatmap, HeatmapCell } from '@pine/optimizer';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
-import { formatNumber } from '../../i18n/translate.ts';
-import { axisLabel, rangeLabel, valueLabel } from '../../pages/optimize/map/map-labels.ts';
+import {
+  axisLabel,
+  failedConstraintLabel,
+  rangeLabel,
+  valueLabel,
+} from '../../pages/optimize/map/map-labels.ts';
 import {
   cellAt,
-  cellPitch,
   cellRect,
   colorStep,
   containsSelection,
   heatTokens,
+  fitMap,
   mapGeometry,
+  maxYLabelWidth,
+  verticalTitle,
+  yAxisLeft,
+  yLabelGap,
+  yTitleGap,
+  axisBottom,
 } from './geometry.ts';
+import { legendValue } from './LegendRamp.tsx';
 import styles from './canvas.module.css';
 import { markersByCell, type MapMarker } from './map-markers.ts';
 
@@ -20,6 +31,7 @@ export interface CellHover {
   readonly cell: HeatmapCell;
   readonly left: number;
   readonly top: number;
+  readonly map: Heatmap;
 }
 
 const noFrames: readonly HeatmapCell[] = [];
@@ -27,7 +39,7 @@ const noMarkers: readonly MapMarker[] = [];
 
 /** One viewport-sized canvas, including for many Z layers. Scrolling never allocates cell nodes. */
 export function HeatmapCanvas({
-  map,
+  map: sourceMap,
   selection,
   markers = noMarkers,
   searchRows,
@@ -37,6 +49,8 @@ export function HeatmapCanvas({
   keyboardDescription,
   onHover,
   onActivate,
+  fitToPanel = true,
+  formatValue,
 }: {
   map: Heatmap;
   searchRows?: readonly SearchRow[];
@@ -47,22 +61,57 @@ export function HeatmapCanvas({
   label: string;
   keyboardDescription?: string;
   onHover: (hover: CellHover | null) => void;
-  onActivate: (cell: HeatmapCell) => void;
+  onActivate: (cell: HeatmapCell, map: Heatmap) => void;
+  fitToPanel?: boolean;
+  /** A cell's value as the screen reader hears it: the objective's format where one is known. */
+  formatValue?: (value: number | null) => string;
 }) {
   const { t, text } = useI18n();
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  // The widest Y label, measured as it is drawn: the grid starts beyond it and the Y title.
+  const [yLabelWidth, setYLabelWidth] = useState(0);
+  const left = yAxisLeft(yLabelWidth);
+  const map = useMemo(
+    () =>
+      showValues || !fitToPanel ? sourceMap : fitMap(sourceMap, size.width, size.height, left),
+    [sourceMap, size, showValues, fitToPanel, left],
+  );
   const rowFor = (title: string | undefined) =>
     searchRows?.find((row) => row.descriptor.title === title);
   const xRow = rowFor(map.xKey);
   const yRow = rowFor(map.yKey);
   const zRow = rowFor(map.zKey);
-  const geometry = useMemo(() => mapGeometry(map), [map]);
+  // The fitted map fills its panel; the bin detail keeps the dense pitch.
+  const panel = showValues || !fitToPanel ? undefined : size;
+  const geometry = useMemo(() => mapGeometry(map, panel, left), [map, panel, left]);
   const viewport = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const active = useRef<HeatmapCell | null>(null);
   const redraw = useRef(() => {});
   const [description, setDescription] = useState('');
+  const hoverCallback = useRef(onHover);
+  hoverCallback.current = onHover;
   const frames = useMemo(() => new Set(framed), [framed]);
   const marked = useMemo(() => markersByCell(map, markers), [map, markers]);
+
+  useEffect(() => {
+    const host = viewport.current!;
+    const observer = new ResizeObserver(() => {
+      const width = host.clientWidth;
+      const height = host.clientHeight;
+      setSize((previous) =>
+        previous.width === width && previous.height === height ? previous : { width, height },
+      );
+    });
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    active.current = null;
+    setDescription('');
+    hoverCallback.current(null);
+  }, [map]);
 
   useEffect(() => {
     const element = canvas.current!;
@@ -88,9 +137,12 @@ export function HeatmapCanvas({
       const layoutWidth = Math.max(width, geometry.width);
       ctx.font = `11px ${color('--font-body')}`;
       ctx.textBaseline = 'middle';
+      let widest = 0;
       for (const layer of geometry.layers) {
-        const bottom = layer.top + layer.ys.length * cellPitch;
-        if (bottom + 50 < host.scrollTop || layer.top - 30 > host.scrollTop + height) continue;
+        const { pitch } = layer;
+        const bottom = layer.top + layer.ys.length * pitch;
+        if (bottom + axisBottom < host.scrollTop || layer.top - 30 > host.scrollTop + height)
+          continue;
         const origin = cellRect(layer, 0, layoutWidth);
         if (map.zKey) {
           ctx.textAlign = 'left';
@@ -103,29 +155,35 @@ export function HeatmapCanvas({
         }
         for (const [index, cell] of layer.cells) {
           const rect = cellRect(layer, index, layoutWidth);
-          if (rect.y + 16 < host.scrollTop || rect.y > host.scrollTop + height) continue;
+          if (rect.y + rect.height < host.scrollTop || rect.y > host.scrollTop + height) continue;
           const step = colorStep(cell);
           ctx.fillStyle = step === null ? color('--hover') : ramp[step];
           ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+          if (step !== null && cell.count > 0 && cell.excludedCount === cell.count) {
+            ctx.fillStyle = color('--panel');
+            ctx.fillRect(rect.x + rect.width - 6, rect.y + 1, 5, 5);
+            ctx.fillStyle = color('--caption');
+            ctx.fillRect(rect.x + rect.width - 5, rect.y + 2, 3, 3);
+          }
           if (showValues && step !== null) {
             ctx.fillStyle = color(step >= 7 ? '--canvas' : '--text');
             ctx.textAlign = 'center';
             ctx.font = `9px ${color('--font-body')}`;
             ctx.fillText(
-              formatNumber(cell.value!, { notation: 'compact', maximumFractionDigits: 0 }),
-              rect.x + 8,
-              rect.y + 8,
-              14,
+              legendValue(cell.value!),
+              rect.x + rect.width / 2,
+              rect.y + rect.height / 2,
+              rect.width - 2,
             );
             ctx.font = `11px ${color('--font-body')}`;
           }
           if (step === null) {
             ctx.strokeStyle = color('--control-border');
             ctx.lineWidth = 1;
-            ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, 15, 15);
+            ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.width - 1, rect.height - 1);
             ctx.beginPath();
-            ctx.moveTo(rect.x + 3, rect.y + 13);
-            ctx.lineTo(rect.x + 13, rect.y + 3);
+            ctx.moveTo(rect.x + 3, rect.y + rect.height - 3);
+            ctx.lineTo(rect.x + rect.width - 3, rect.y + 3);
             ctx.stroke();
           }
           if (
@@ -136,7 +194,7 @@ export function HeatmapCanvas({
             ctx.strokeStyle =
               frames.has(cell) || cell === active.current ? color('--text') : color('--primary');
             ctx.lineWidth = 2;
-            ctx.strokeRect(rect.x - 0.5, rect.y - 0.5, 17, 17);
+            ctx.strokeRect(rect.x - 0.5, rect.y - 0.5, rect.width + 1, rect.height + 1);
           }
         }
         // Draw annotations after the cells so a later cell cannot paint over a label.
@@ -145,8 +203,8 @@ export function HeatmapCanvas({
           const picks = marked.get(cell);
           if (!picks?.length) continue;
           const rect = cellRect(layer, index, layoutWidth);
-          const cx = rect.x + 8;
-          const cy = rect.y + 8;
+          const cx = rect.x + rect.width / 2;
+          const cy = rect.y + rect.height / 2;
           const label = picks.map((pick) => pick.label).join(', ');
           const labelWidth = ctx.measureText(label).width + 6;
           const x = Math.max(2, Math.min(cx + 12, layoutWidth - labelWidth - 2));
@@ -178,50 +236,61 @@ export function HeatmapCanvas({
         }
         ctx.fillStyle = color('--caption');
         ctx.textAlign = 'center';
-        const xStride = Math.max(
-          1,
-          Math.ceil(
-            Math.max(
-              ...layer.columns.map(
-                (values) => ctx.measureText(text(rangeLabel(values, xRow))).width,
-              ),
-              30,
-            ) / cellPitch,
-          ) + 1,
+        const labelWidth = Math.max(
+          ...layer.columns.map((values) => ctx.measureText(text(rangeLabel(values, xRow))).width),
+          30,
         );
+        // A cell wide enough for its label labels every column; dense cells skip some.
+        const xStride =
+          labelWidth + 6 <= pitch ? 1 : Math.max(1, Math.ceil(labelWidth / pitch) + 1);
         for (let index = 0; index < layer.columns.length; index += xStride) {
           ctx.fillText(
             text(rangeLabel(layer.columns[index], xRow)),
-            origin.x + index * cellPitch + 8,
+            origin.x + index * pitch + origin.width / 2,
             bottom + 12,
           );
         }
         ctx.textAlign = 'right';
-        const yStride = layer.rows.some((values) => values.length > 1) ? 2 : 1;
+        // Binned rows, and rows too close for a line of text each, label every other one.
+        const yStride = layer.rows.some((values) => values.length > 1) || pitch < 14 ? 2 : 1;
+        const yLabels = layer.rows.map((values) => text(rangeLabel(values, yRow)));
+        widest = Math.max(widest, ...yLabels.map((label) => ctx.measureText(label).width));
         for (let index = 0; index < layer.rows.length; index += yStride) {
           ctx.fillText(
-            text(rangeLabel(layer.rows[index], yRow)),
-            origin.x - 8,
-            layer.top + index * cellPitch + 8,
-            44,
+            yLabels[index],
+            origin.x - yLabelGap,
+            layer.top + index * pitch + origin.height / 2,
+            maxYLabelWidth,
           );
         }
         ctx.textAlign = 'center';
         ctx.fillStyle = color('--secondary');
         if (map.yKey) {
+          const title = text(axisLabel(map.yKey, map.display?.yBinSize ?? 1));
+          // A layered map's band starts at its rows, below the layer's caption.
+          const { centre, span } = verticalTitle(
+            ctx.measureText(title).width,
+            { top: layer.top, height: layer.ys.length * pitch },
+            { top: map.zKey ? layer.top : 2, bottom: bottom + axisBottom - 4 },
+          );
           ctx.save();
-          ctx.translate(14, layer.top + (layer.ys.length * cellPitch) / 2);
+          // Beyond the widest row label, so it never covers one; its line is about 12 px high.
+          ctx.translate(
+            origin.x - yLabelGap - Math.min(yLabelWidth, maxYLabelWidth) - yTitleGap - 6,
+            centre,
+          );
           ctx.rotate(-Math.PI / 2);
-          ctx.fillText(map.yKey, 0, 0, Math.max(70, layer.ys.length * cellPitch));
+          ctx.fillText(title, 0, 0, span);
           ctx.restore();
         }
         ctx.fillText(
           text(axisLabel(map.xKey, map.display?.xBinSize ?? 1)),
           layoutWidth / 2,
-          bottom + 34,
+          bottom + 30,
           layoutWidth - 20,
         );
       }
+      if (Math.ceil(widest) !== yLabelWidth) setYLabelWidth(Math.ceil(widest));
     };
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(draw);
@@ -235,120 +304,150 @@ export function HeatmapCanvas({
       cancelAnimationFrame(frame);
       redraw.current = () => {};
     };
-  }, [geometry, map, selection, frames, marked, showValues, t, text, xRow, yRow, zRow]);
+  }, [
+    geometry,
+    map,
+    selection,
+    frames,
+    marked,
+    showValues,
+    t,
+    text,
+    xRow,
+    yRow,
+    zRow,
+    yLabelWidth,
+  ]);
 
   const hover = (cell: HeatmapCell | null, left = 0, top = 0) => {
     if (active.current === cell) return;
     active.current = cell;
     setDescription(
       cell
-        ? t('optimize.map.cell', {
-            x: text(rangeLabel(cell.xValues ?? [cell.x], xRow)),
-            y: text(rangeLabel(cell.yValues?.length ? cell.yValues : [cell.y], yRow)),
-            value: text(valueLabel(cell.value)),
-          })
+        ? [
+            t('optimize.map.cell', {
+              x: text(rangeLabel(cell.xValues ?? [cell.x], xRow)),
+              y: text(rangeLabel(cell.yValues?.length ? cell.yValues : [cell.y], yRow)),
+              value: formatValue ? formatValue(cell.value) : text(valueLabel(cell.value)),
+            }),
+            // What a tooltip shows beside the values, for keyboard and screen reader users.
+            ...(cell.excludedCount
+              ? [
+                  t('optimize.summary.filtered'),
+                  ...(cell.failedConstraints ?? []).map((constraint) =>
+                    text(failedConstraintLabel(constraint)),
+                  ),
+                ]
+              : []),
+          ].join(t('optimize.map.descriptionSeparator'))
         : '',
     );
-    onHover(cell ? { cell, left, top } : null);
+    onHover(cell ? { cell, left, top, map } : null);
     redraw.current();
   };
 
   return (
-    <div
-      ref={viewport}
-      className={styles.viewport}
-      style={{ height: Math.min(geometry.height, 320), flex: '0 1 auto' }}
-      onScroll={() => {
-        hover(null);
-        redraw.current();
-      }}
-    >
+    <div className={styles.heatmap} data-detail={showValues || undefined}>
       <div
-        className={styles.spacer}
-        style={{ width: geometry.width, height: geometry.height, minWidth: '100%' }}
+        ref={viewport}
+        className={styles.viewport}
+        style={showValues ? { height: Math.min(geometry.height, 320), flex: 'none' } : undefined}
+        onScroll={() => {
+          hover(null);
+          redraw.current();
+        }}
       >
-        <canvas
-          ref={canvas}
-          className={styles.canvas}
-          tabIndex={0}
-          role="img"
-          aria-label={label}
-          aria-description={keyboardDescription ?? t('optimize.map.keyboard')}
-          data-testid="parameter-map"
-          onPointerMove={(event) => {
-            const rect = event.currentTarget.getBoundingClientRect();
-            const host = viewport.current!;
-            hover(
-              cellAt(
-                geometry,
-                event.clientX - rect.left + host.scrollLeft,
-                event.clientY - rect.top + host.scrollTop,
-                Math.max(host.clientWidth, geometry.width),
-              ),
-              event.clientX,
-              event.clientY,
-            );
-          }}
-          onPointerLeave={() => hover(null)}
-          onBlur={() => hover(null)}
-          onClick={() => {
-            if (active.current) onActivate(active.current);
-          }}
-          onKeyDown={(event) => {
-            if (event.key === 'Escape') {
-              hover(null);
-              return;
-            }
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              if (active.current) onActivate(active.current);
-              return;
-            }
-            if (
-              !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(
-                event.key,
+        <div
+          className={styles.spacer}
+          style={{ width: geometry.width, height: geometry.height, minWidth: '100%' }}
+        >
+          <canvas
+            ref={canvas}
+            className={styles.canvas}
+            tabIndex={0}
+            role="img"
+            aria-label={label}
+            aria-description={keyboardDescription ?? t('optimize.map.keyboard')}
+            data-testid="parameter-map"
+            data-columns={geometry.layers[0]?.xs.length}
+            data-rows={geometry.layers[0]?.ys.length}
+            data-map-height={geometry.height}
+            onPointerMove={(event) => {
+              const rect = event.currentTarget.getBoundingClientRect();
+              const host = viewport.current!;
+              hover(
+                cellAt(
+                  geometry,
+                  event.clientX - rect.left + host.scrollLeft,
+                  event.clientY - rect.top + host.scrollTop,
+                  Math.max(host.clientWidth, geometry.width),
+                ),
+                event.clientX,
+                event.clientY,
+              );
+            }}
+            onPointerLeave={() => hover(null)}
+            onBlur={() => hover(null)}
+            onClick={() => {
+              if (active.current) onActivate(active.current, map);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                hover(null);
+                return;
+              }
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                if (active.current) onActivate(active.current, map);
+                return;
+              }
+              if (
+                !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(
+                  event.key,
+                )
               )
-            )
-              return;
-            event.preventDefault();
-            const layer =
-              geometry.layers.find((item) => [...item.cells.values()].includes(active.current!)) ??
-              geometry.layers[0];
-            if (!layer) return;
-            const index = [...layer.cells].find(([, cell]) => cell === active.current)?.[0] ?? 0;
-            const delta =
-              {
-                ArrowLeft: -1,
-                ArrowRight: 1,
-                ArrowUp: -layer.xs.length,
-                ArrowDown: layer.xs.length,
-              }[event.key] ?? 0;
-            const next =
-              event.key === 'Home'
-                ? 0
-                : event.key === 'End'
-                  ? layer.cells.size - 1
-                  : active.current
-                    ? Math.max(0, Math.min(layer.cells.size - 1, index + delta))
-                    : 0;
-            const cell = layer.cells.get(next);
-            if (!cell) return;
-            const host = viewport.current!;
-            const rect = cellRect(layer, next, Math.max(host.clientWidth, geometry.width));
-            host.scrollTop = Math.max(0, rect.y - host.clientHeight / 2);
-            host.scrollLeft = Math.max(0, rect.x - host.clientWidth / 2);
-            const bounds = host.getBoundingClientRect();
-            hover(
-              cell,
-              bounds.left + rect.x - host.scrollLeft,
-              bounds.top + rect.y - host.scrollTop,
-            );
-          }}
-        />
+                return;
+              event.preventDefault();
+              const layer =
+                geometry.layers.find((item) =>
+                  [...item.cells.values()].includes(active.current!),
+                ) ?? geometry.layers[0];
+              if (!layer) return;
+              const index = [...layer.cells].find(([, cell]) => cell === active.current)?.[0] ?? 0;
+              const delta =
+                {
+                  ArrowLeft: -1,
+                  ArrowRight: 1,
+                  ArrowUp: -layer.xs.length,
+                  ArrowDown: layer.xs.length,
+                }[event.key] ?? 0;
+              const next =
+                event.key === 'Home'
+                  ? 0
+                  : event.key === 'End'
+                    ? layer.cells.size - 1
+                    : active.current
+                      ? Math.max(0, Math.min(layer.cells.size - 1, index + delta))
+                      : 0;
+              const cell = layer.cells.get(next);
+              if (!cell) return;
+              const host = viewport.current!;
+              const rect = cellRect(layer, next, Math.max(host.clientWidth, geometry.width));
+              host.scrollTop = Math.max(0, rect.y - host.clientHeight / 2);
+              host.scrollLeft = Math.max(0, rect.x - host.clientWidth / 2);
+              const bounds = host.getBoundingClientRect();
+              hover(
+                cell,
+                bounds.left + rect.x - host.scrollLeft,
+                bounds.top + rect.y - host.scrollTop,
+              );
+            }}
+          />
+        </div>
+        <span className={styles.srOnly} role="status">
+          {description}
+        </span>
       </div>
-      <span className={styles.srOnly} role="status">
-        {description}
-      </span>
     </div>
   );
 }

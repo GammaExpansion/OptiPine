@@ -5,6 +5,7 @@ import { getMarketDataStore } from '../state/marketData.ts';
 import { getServices } from '../state/services.ts';
 import { testInput } from '../state/test-support.ts';
 import { uiStore } from '../state/ui.ts';
+import { setViewportWidth } from '../test/viewport.ts';
 import {
   loadScript,
   renderInEnglish,
@@ -136,4 +137,31 @@ test('a walk-forward run states its window, then the windows it took (W4, W1)', 
   expect(facts()).toHaveTextContent('Window 1 / 4');
   await act(() => run);
   expect(facts()).toHaveTextContent(/^4 windows in 0:00$/);
+});
+
+// A phone's header row has room for the counts beside Cancel, not "Optimizing 3 / 403".
+test('a phone states the run as its counts', async () => {
+  setViewportWidth(390);
+  await loadOptimization();
+  act(() => uiStore.setState({ page: 'optimize' }));
+  renderInEnglish(<RunControls />);
+  let run!: Promise<void>;
+  act(() => {
+    run = optimization().actions.start();
+  });
+  expect(facts()).toHaveTextContent(/^0 \/ (0|9)$/);
+  await act(() => run);
+});
+
+test('a phone states a walk-forward run as its window count', async () => {
+  setViewportWidth(390);
+  await loadWalkForward();
+  act(() => uiStore.setState({ page: 'optimize' }));
+  renderInEnglish(<RunControls />);
+  let run!: Promise<void>;
+  act(() => {
+    run = optimization().actions.start();
+  });
+  expect(facts()).toHaveTextContent('W1 / 4');
+  await act(() => run);
 });

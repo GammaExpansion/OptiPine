@@ -1,0 +1,99 @@
+{
+  "chart": {
+    "result": [
+      {
+        "meta": {
+          "currency": "USD",
+          "symbol": "^GSPC",
+          "exchangeName": "SNP",
+          "fullExchangeName": "SNP",
+          "instrumentType": "INDEX",
+          "firstTradeDate": -1325583000,
+          "regularMarketTime": 1790974753,
+          "hasPrePostMarketData": false,
+          "gmtoffset": -14400,
+          "timezone": "EDT",
+          "exchangeTimezoneName": "America/New_York",
+          "regularMarketPrice": 7722.72,
+          "regularMarketChangePercent": 0.734,
+          "fulldayPrice": 7722.72,
+          "fulldayChange": 56.27,
+          "fulldayChangePercent": 0.734,
+          "fiftyTwoWeekHigh": 7816.7,
+          "fiftyTwoWeekLow": 6316.91,
+          "regularMarketDayHigh": 7754.67,
+          "regularMarketDayLow": 7700.51,
+          "regularMarketVolume": 3130028000,
+          "longName": "S&P 500",
+          "shortName": "S&P 500",
+          "chartPreviousClose": 7651.54,
+          "previousClose": 7666.45,
+          "scale": 3,
+          "priceHint": 2,
+          "currentTradingPeriod": {
+            "pre": {
+              "timezone": "EDT",
+              "start": 1790928000,
+              "end": 1790947800,
+              "gmtoffset": -14400
+            },
+            "regular": {
+              "timezone": "EDT",
+              "start": 1790947800,
+              "end": 1790971200,
+              "gmtoffset": -14400
+            },
+            "post": {
+              "timezone": "EDT",
+              "start": 1790971200,
+              "end": 1790985600,
+              "gmtoffset": -14400
+            }
+          },
+          "tradingPeriods": [
+            [
+              {
+                "timezone": "EDT",
+                "start": 1790775000,
+                "end": 1790798400,
+                "gmtoffset": -14400
+              }
+            ],
+            [
+              {
+                "timezone": "EDT",
+                "start": 1790861400,
+                "end": 1790884800,
+                "gmtoffset": -14400
+              }
+            ],
+            [
+              {
+                "timezone": "EDT",
+                "start": 1790947800,
+                "end": 1790971200,
+                "gmtoffset": -14400
+              }
+            ]
+          ],
+          "dataGranularity": "15m",
+          "range": "",
+          "validRanges": ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
+        },
+        "timestamp": [1790969400, 1790970300, 1790971200],
+        "indicators": {
+          "quote": [
+            {
+              "high": [7728.64990234375, 7728.58984375, 7722.72021484375],
+              "open": [7721.81005859375, 7724.9599609375, 7722.72021484375],
+              "volume": [110286000, 317824000, 0],
+              "close": [7724.93994140625, 7723.490234375, 7722.72021484375],
+              "low": [7721.81005859375, 7720.81982421875, 7722.72021484375]
+            }
+          ]
+        }
+      }
+    ],
+    "error": null
+  }
+}

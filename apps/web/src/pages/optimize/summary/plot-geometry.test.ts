@@ -1,5 +1,12 @@
 import { expect, test } from 'vitest';
-import { envelope, extent, nearestPoint, roundAxis, scale } from './plot-geometry.ts';
+import { envelope, extent, nearestPoint, roundAxis, scale, timeTicks } from './plot-geometry.ts';
+
+test('time ticks keep both endpoints and space phone dates without changing desktop density', () => {
+  expect(timeTicks([0, 360], 318)).toEqual([0, 180, 360]);
+  expect(timeTicks([0, 360], 968)).toEqual([0, 90, 180, 270, 360]);
+  expect(timeTicks([10, 30], 200)).toEqual([10, 30]);
+  expect(timeTicks([0, 1], 0)).toEqual([0, 1]);
+});
 
 test('round axes enclose data, label zero, and handle negative, fractional and empty ranges', () => {
   expect(roundAxis([-1177, 9805])).toEqual({

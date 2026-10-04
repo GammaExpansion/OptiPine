@@ -133,9 +133,13 @@ async function firstCell(page: Page) {
     const modulePath = '/src/charts/optimize/geometry.ts';
     const { mapGeometry, cellRect } = await import(/* @vite-ignore */ modulePath);
     const state = (window as unknown as Hooks).mapState();
-    const geometry = mapGeometry(state.views!.map!.panel);
+    const host = element.parentElement!.parentElement!;
+    const geometry = mapGeometry(state.views!.map!.panel, {
+      width: host.clientWidth,
+      height: host.clientHeight,
+    });
     const rect = cellRect(geometry.layers[0], 0, Math.max(element.clientWidth, geometry.width));
-    return { x: rect.x + 8, y: rect.y + 8 };
+    return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
   });
   await canvas.hover({ position: point });
   return { canvas, point };

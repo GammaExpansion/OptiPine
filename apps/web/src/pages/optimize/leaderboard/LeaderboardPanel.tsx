@@ -11,9 +11,11 @@ import { Tag } from '../../../components/Tag.tsx';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { useOptimizationStore } from '../../../state/optimization.ts';
 import { useUiStore } from '../../../state/ui.ts';
+import { useLayout } from '../../../shell/useLayout.ts';
 import type { LeaderboardRow } from '../../../workflows/optimize-views.ts';
 import { AddConditionTrigger } from '../filters/AddConditionTrigger.tsx';
 import { inputColumns } from './column-layout.ts';
+import { LeaderboardCards } from './LeaderboardCards.tsx';
 import { useResultFormat } from './useResultFormat.ts';
 import styles from './Leaderboard.module.css';
 
@@ -21,6 +23,7 @@ const noRows: LeaderboardRow[] = [];
 
 export function LeaderboardPanel() {
   const { t } = useI18n();
+  const phone = useLayout() === 'phone';
   const views = useOptimizationStore((state) => state.views);
   const format = useResultFormat(views?.searchRows);
   const settings = useOptimizationStore((state) => state.viewSettings);
@@ -38,11 +41,15 @@ export function LeaderboardPanel() {
     return () => observer.disconnect();
   }, []);
   const board = views?.leaderboard;
+  const body = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (body.current) body.current.scrollTop = 0;
+  }, [board?.page]);
   const columns = useMemo<ColumnDef<LeaderboardRow>[]>(() => {
     const layout = inputColumns(board?.columns ?? [], width, !views?.unvalidated);
-    const value = (amount: number | null, signed = false) => (
+    const value = (amount: number | null, signed: boolean, digits: number) => (
       <span data-profit={signed && amount != null ? amount >= 0 : undefined}>
-        {format.number(amount, signed)}
+        {format.number(amount, signed, digits)}
       </span>
     );
     return [
@@ -94,7 +101,7 @@ export function LeaderboardPanel() {
       {
         id: 'in',
         header: t(views?.unvalidated ? 'optimize.leaderboard.net' : 'optimize.leaderboard.in'),
-        cell: ({ row }) => value(row.original.inSample.netProfit, true),
+        cell: ({ row }) => value(row.original.inSample.netProfit, true, 0),
       },
       ...(!views?.unvalidated
         ? [
@@ -102,25 +109,24 @@ export function LeaderboardPanel() {
               id: 'out',
               header: t('optimize.leaderboard.out'),
               cell: ({ row }: { row: { original: LeaderboardRow } }) =>
-                value(row.original.outOfSample?.netProfit ?? null, true),
+                value(row.original.outOfSample?.netProfit ?? null, true, 0),
             },
           ]
         : []),
       {
         id: 'pf',
         header: t('optimize.leaderboard.pf'),
-        cell: ({ row }) => value(row.original.inSample.profitFactor),
+        cell: ({ row }) => value(row.original.inSample.profitFactor, false, 2),
       },
       {
         id: 'dd',
         header: t('optimize.leaderboard.dd'),
-        cell: ({ row }) =>
-          format.metricValue('maxDrawdown', row.original.inSample.maxDrawdownPercent),
+        cell: ({ row }) => format.drawdown(row.original.inSample.maxDrawdownPercent),
       },
       {
         id: 'trades',
         header: t('optimize.leaderboard.trades'),
-        cell: ({ row }) => value(row.original.inSample.trades),
+        cell: ({ row }) => value(row.original.inSample.trades, false, 0),
       },
     ];
   }, [board?.columns, width, views?.unvalidated, t, actions]);
@@ -170,7 +176,7 @@ export function LeaderboardPanel() {
           </Button>
         )}
       </div>
-      <div className={styles.body} aria-busy={views?.pending}>
+      <div ref={body} className={styles.body} aria-busy={views?.pending}>
         {board && board.passing === 0 ? (
           <div className={styles.empty}>
             <EmptyState title={t('optimize.leaderboard.empty')}>
@@ -201,6 +207,14 @@ export function LeaderboardPanel() {
               ))}
             </div>
           </div>
+        ) : phone ? (
+          <LeaderboardCards
+            rows={board?.rows ?? noRows}
+            searchRows={views?.searchRows ?? []}
+            selectedId={views?.selection?.row.trialId}
+            unvalidated={!!views?.unvalidated}
+            onSelect={actions.select}
+          />
         ) : (
           <Table
             variant="leaderboard"

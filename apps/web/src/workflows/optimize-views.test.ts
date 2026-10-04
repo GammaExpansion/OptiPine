@@ -6,6 +6,7 @@ import {
   constraintValue,
   enumerateGrid,
   generateSearchSpace,
+  prepareHeatmap,
   scoreMetric,
   splitBars,
   summarizeOptimizerAnalysis,
@@ -112,6 +113,47 @@ function analyze(
 
 const small = searchSpace([3, 10], ['close', 'hl2']);
 const inOut = analyze(small, 'in-out');
+
+test('R9 preserves sampled values, sensitivity and descriptive Top 20 without a selectable rank', () => {
+  const filters: FilterCondition[] = [{ metric: 'trades', operator: '>=', value: 1_000_000 }];
+  const filtered = analyze(small, 'in-out', {}, { filters });
+  const results = filtered.results();
+  assert.equal(leaderboardView(results, 0).passing, 0);
+  assert.equal(selectionOf(results, null, 1), null);
+  assert.equal(filterDiagnosis(results, filters)[0].passing, 0);
+  assert.notEqual(filterDiagnosis(results, filters)[0].best, null);
+  assert.deepEqual(sensitivityView(results), sensitivityView(inOut.results()));
+  assert.deepEqual(leadingSets(results, 20), []);
+  const view = mapView(results, 'in', {})!;
+  assert.ok(view.map!.cells.every((cell) => cell.value !== null));
+  assert.ok(view.map!.cells.every((cell) => !cell.trialId));
+  const panel = prepareHeatmap(view.map!, { x: 2, y: 1 });
+  const detail = binDetail(view, panel.cells[0], panel)!;
+  assert.ok(detail);
+  assert.deepEqual(detail.selectedCell.xValues, panel.cells[0].xValues);
+  assert.deepEqual(detail.selectedCell.yValues, panel.cells[0].yValues);
+  const values = cellValues(filtered.summary, panel.cells[0]);
+  assert.equal(values.values.length, 8);
+  assert.ok(values.values.every((value) => value.inSample !== null && value.outOfSample !== null));
+});
+
+test('a filtered single-input curve retains neighbourhood means but cannot select excluded sets', () => {
+  const space = searchSpace([3, 6], ['close']);
+  const baseline = curveView(analyze(space, 'in-out').results())!;
+  const filtered = curveView(
+    analyze(
+      space,
+      'in-out',
+      {},
+      { filters: [{ metric: 'trades', operator: '>=', value: 1_000_000 }] },
+    ).results(),
+  )!;
+  assert.deepEqual(
+    filtered.points.map((point) => point.neighbourhoodMean),
+    baseline.points.map((point) => point.neighbourhoodMean),
+  );
+  assert.ok(filtered.points.every((point) => point.trialId === null));
+});
 
 test('the summary request covers the figures and every filter metric once', () => {
   assert.deepEqual(
@@ -443,14 +485,24 @@ test('the median curve takes each bar from the curves that reach it', () => {
   );
 });
 
-test('the views of 20,000 sets read columns, not trials, and stay fast', () => {
+test('20,000-set views read columns and only fetch parameters for visible rows and selection', () => {
   const total = 20_000;
+  let identityReads = 0;
+  let parameterReads = 0;
   const column = (value: (position: number) => number) =>
     Float64Array.from({ length: total }, (_, index) => value(index));
   const trials = Array.from({ length: total }, (_, index) => ({
-    trialId: String(index),
-    parameters: { inputs: { Length: index % 200, Mult: Math.floor(index / 200) } },
-    metrics: {},
+    get trialId() {
+      identityReads++;
+      return String(index);
+    },
+    get parameters() {
+      parameterReads++;
+      return { inputs: { Length: index % 200, Mult: Math.floor(index / 200) } };
+    },
+    get metrics() {
+      return assert.fail('views must read summary columns, never trial metrics');
+    },
     tradeCount: 0,
     diagnostics: [],
   }));
@@ -476,17 +528,22 @@ test('the views of 20,000 sets read columns, not trials, and stay fast', () => {
     sensitivity: { parameters: [], sharedScale: null },
     removedConstraintRanks: new Int32Array(),
   };
-  const started = performance.now();
   const results = rankResults(summary, trials, 'in-out', 'netProfit', 'maximize', []);
   const page = leaderboardView(results, 3);
+  assert.ok(parameterReads <= page.rows.length);
+  assert.ok(identityReads <= page.rows.length);
+  const readsBeforeCharts = [identityReads, parameterReads];
   const scatter = scatterView(results, 3)!;
   const distribution = distributionView(results);
-  selectionOf(results, '19990', 1);
-  const elapsed = performance.now() - started;
+  assert.deepEqual([identityReads, parameterReads], readsBeforeCharts);
+  const selection = selectionOf(results, '19990', 1);
+  assert.equal(selection?.row.trialId, '19990');
+  assert.ok(parameterReads <= page.rows.length + 1);
+  // Selection may scan IDs once, but must never materialize all trials' parameters or metrics.
+  assert.ok(identityReads <= total + page.rows.length + 1);
   assert.equal(page.rows[0].rank, 40);
   assert.equal(page.rows[0].trialId, String(total - 40));
   assert.equal(scatter.inSample.length, total);
   assert.equal(distribution.inSample.sets, total);
   assert.equal(distribution.inSample.profitable, total - 5_001);
-  assert.ok(elapsed < 50, `views took ${elapsed.toFixed(1)} ms`);
 });

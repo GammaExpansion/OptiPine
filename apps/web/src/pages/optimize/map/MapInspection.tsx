@@ -2,9 +2,9 @@ import { useMemo } from 'react';
 import { HeatmapCanvas } from '../../../charts/optimize/HeatmapCanvas.tsx';
 import { IconButton } from '../../../components/IconButton.tsx';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
-import { formatNumber } from '../../../i18n/translate.ts';
 import { useOptimizationStore } from '../../../state/optimization.ts';
 import { binDetail, cellValues } from '../../../workflows/optimize-views.ts';
+import { useResultFormat } from '../leaderboard/useResultFormat.ts';
 import { CellValuesTable } from './CellValuesTable.tsx';
 import { inspectBin, useBinInspection, useCurveInspection } from './inspection.ts';
 import { rangeLabel, valueLabel } from './map-labels.ts';
@@ -15,12 +15,15 @@ export function BinInspection() {
   const { t, text } = useI18n();
   const views = useOptimizationStore((state) => state.views);
   const select = useOptimizationStore((state) => state.actions.select);
+  const objective = useOptimizationStore((state) => state.viewSettings.objective);
+  const format = useResultFormat(views?.searchRows);
   const opened = useBinInspection();
   const map = views?.map;
   const rowFor = (title: string | null) =>
     views?.searchRows.find((row) => row.descriptor.title === title);
   const detail = useMemo(
-    () => (map && opened?.map === map.panel ? binDetail(map, opened.cell) : undefined),
+    () =>
+      map && opened?.map === map.panel ? binDetail(map, opened.cell, opened.panel) : undefined,
     [map, opened],
   );
   const values = useMemo(
@@ -56,6 +59,7 @@ export function BinInspection() {
             framed={detail.mergedCells}
             selection={views?.selection?.row.parameters}
             label={t('optimize.map.detailCanvas')}
+            formatValue={(value) => format.objective(value, objective)}
             onHover={() => {}}
             onActivate={(cell) => {
               if (cell.trialId && cell.value !== null) select(cell.trialId);
@@ -65,7 +69,13 @@ export function BinInspection() {
             {t('optimize.map.detailHint', { count: detail.mergedCells.length })}
           </p>
         </div>
-        <CellValuesTable values={values} x={map.x} y={map.y} validated={views?.mode === 'in-out'} />
+        <CellValuesTable
+          values={values}
+          x={map.x}
+          y={map.y}
+          validated={views?.mode === 'in-out'}
+          scroll={false}
+        />
       </div>
     </section>
   );
@@ -79,6 +89,8 @@ export function CurveInspection() {
   const validated = useOptimizationStore((state) => state.views?.mode === 'in-out');
   const inspected = useCurveInspection();
   const rows = useOptimizationStore((state) => state.views?.searchRows);
+  const objective = useOptimizationStore((state) => state.viewSettings.objective);
+  const format = useResultFormat(rows);
   if (!curve) return null;
   const row = rows?.find((row) => row.descriptor.title === curve.input);
   const active =
@@ -86,8 +98,7 @@ export function CurveInspection() {
       ? inspected.index
       : curve.points.findIndex((point) => point.trialId === selection?.row.trialId);
   const point = curve.points[Math.max(0, active)];
-  const number = (value: number | null | undefined) =>
-    value == null ? t('optimize.map.na') : formatNumber(value, { maximumFractionDigits: 2 });
+  const number = (value: number | null | undefined) => format.objective(value, objective);
   return (
     <section className={styles.inspection} aria-label={t('optimize.map.curveValues')}>
       <div className={styles.detailHeading}>

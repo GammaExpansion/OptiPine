@@ -1,7 +1,8 @@
 import type { LiteralValue } from '@pine/engine';
 import type { HeatmapDisplay } from './heatmap-display.ts';
+import { combinedExclusions } from './heatmap-exclusions.ts';
 import { optimizerError } from './text.ts';
-import type { TrialRecord } from './validation.ts';
+import { constraintValue, type MetricConstraint, type TrialRecord } from './validation.ts';
 
 export type AnalysisValue = Exclude<LiteralValue, null>;
 export interface AnalysisAxis {
@@ -13,19 +14,37 @@ export interface AnalysisOptions {
   axes?: readonly AnalysisAxis[];
   value?: TrialValue;
   neighborhood?: boolean;
+  /** Descriptive surfaces include completed sets even when ranking constraints exclude them. */
+  includeExcluded?: boolean;
 }
+/**
+ * How a map reduces an input that is not an axis: one value, the best value in the objective's
+ * direction (`max`, the smallest when minimizing), or the mean.
+ */
 export interface Slice {
   mode: 'fixed' | 'max' | 'mean';
   value?: LiteralValue;
   pinned?: boolean;
 }
 export interface HeatmapOptions extends AnalysisOptions {
+  /** Conditions to explain on sampled cells; they never remove values from the surface. */
+  constraints?: readonly MetricConstraint[];
   zKey?: string;
   slices?: Readonly<Record<string, Slice>>;
   sliceMode?: Slice['mode'];
   /** Selected/best parameters supply the default for a fixed slice. */
   parameters?: Readonly<Record<string, unknown>>;
   direction?: 'maximize' | 'minimize';
+  /**
+   * The objective's break-even, such as zero for an amount or one for a profit factor: colours
+   * split there into losing and winning cells. Absent for an objective without one.
+   */
+  breakEven?: number;
+}
+/** How a map's values become colours: by rank in `direction`, split at `breakEven` if given. */
+export interface HeatmapScale {
+  direction: 'maximize' | 'minimize';
+  breakEven?: number;
 }
 export interface HeatmapCell {
   x: AnalysisValue;
@@ -33,6 +52,10 @@ export interface HeatmapCell {
   z?: AnalysisValue;
   value: number | null;
   count: number;
+  /** Sampled sets excluded from ranking, within this cell's slice and covered values. */
+  excludedCount?: number;
+  /** Conditions failed by at least one of this cell's excluded sets. */
+  failedConstraints?: MetricConstraint[];
   rankBin?: number;
   xValues?: AnalysisValue[];
   yValues?: AnalysisValue[];
@@ -49,6 +72,7 @@ export interface Heatmap {
   zKey?: string;
   cells: HeatmapCell[];
   layers?: HeatmapLayer[];
+  scale?: HeatmapScale;
   display?: HeatmapDisplay;
 }
 const finite = (value: unknown): value is number =>
@@ -95,17 +119,24 @@ function axesFor(trials: readonly TrialRecord[], axes?: readonly AnalysisAxis[])
       }));
 }
 const rawObjective: TrialValue = (trial) => trial.objectiveValue;
-function accepted(trials: readonly TrialRecord[], value: TrialValue): TrialRecord[] {
-  return trials.filter((trial) => trial.valid && !trial.excluded && finite(value(trial)));
+function accepted(
+  trials: readonly TrialRecord[],
+  value: TrialValue,
+  includeExcluded = false,
+): TrialRecord[] {
+  return trials.filter(
+    (trial) => trial.valid && (includeExcluded || !trial.excluded) && finite(value(trial)),
+  );
 }
 /** Average observed +/-1-step neighbours in every active dimension; absent trials are never zeroes. */
 export function neighborhoodValues(
   trials: readonly TrialRecord[],
   axes?: readonly AnalysisAxis[],
   value: TrialValue = rawObjective,
+  includeExcluded = false,
 ): Map<TrialRecord, number | null> {
   const dimensions = axesFor(trials, axes);
-  const valid = accepted(trials, value);
+  const valid = accepted(trials, value, includeExcluded);
   const keys = new ParameterKeys();
   // First occurrence wins, matching findIndex when an axis lists a value twice.
   const positions = dimensions.map((axis) => {
@@ -166,13 +197,17 @@ function evaluated(
 ): { trials: TrialRecord[]; value: TrialValue; axes: AnalysisAxis[] } {
   const axes = axesFor(trials, options.axes);
   const raw = options.value ?? rawObjective;
-  const smoothed = options.neighborhood ? neighborhoodValues(trials, axes, raw) : undefined;
+  const smoothed = options.neighborhood
+    ? neighborhoodValues(trials, axes, raw, options.includeExcluded)
+    : undefined;
   const value: TrialValue = smoothed ? (trial) => smoothed.get(trial) ?? null : raw;
-  return { trials: accepted(trials, value), value, axes };
+  return { trials: accepted(trials, value, options.includeExcluded), value, axes };
 }
 interface Aggregate {
   value: number | null;
   count: number;
+  excludedCount?: number;
+  failedConstraints?: MetricConstraint[];
 }
 function aggregate(
   trials: readonly TrialRecord[],
@@ -185,7 +220,29 @@ function aggregate(
 ): Aggregate {
   if (!trials.length) return { value: null, count: 0 };
   const axis = remaining[depth];
-  if (!axis) return { value: mean(trials.map((trial) => value(trial)!)), count: trials.length };
+  if (!axis) {
+    const excluded = trials.filter((trial) => trial.excluded);
+    return {
+      value: mean(trials.map((trial) => value(trial)!)),
+      count: trials.length,
+      ...(excluded.length
+        ? {
+            excludedCount: excluded.length,
+            failedConstraints: (options.constraints ?? []).filter((constraint) =>
+              excluded.some((trial) => {
+                const metric = constraintValue(trial, constraint.metric);
+                return (
+                  metric === null ||
+                  (constraint.operator === '>='
+                    ? metric < constraint.value
+                    : metric > constraint.value)
+                );
+              }),
+            ),
+          }
+        : {}),
+    };
+  }
   const slice = options.slices?.[axis.title] ?? { mode: options.sliceMode ?? 'fixed' };
   const hasValue = Object.prototype.hasOwnProperty.call(slice, 'value');
   if (slice.mode === 'fixed' || slice.pinned) {
@@ -217,10 +274,13 @@ function aggregate(
   return {
     value: groups.length
       ? slice.mode === 'max'
-        ? Math.max(...groups.map((item) => item.value!))
+        ? (options.direction === 'minimize' ? Math.min : Math.max)(
+            ...groups.map((item) => item.value!),
+          )
         : mean(groups.map((item) => item.value!))
       : null,
     count: groups.reduce((total, item) => total + item.count, 0),
+    ...combinedExclusions(groups),
   };
 }
 /** Remaining dimensions reduce in their declared axis order, with pinned chips always filtering first. */
@@ -291,6 +351,10 @@ export function heatmap(
         }
       : {}),
     cells,
+    scale: {
+      direction: options.direction ?? 'maximize',
+      ...(finite(options.breakEven) ? { breakEven: options.breakEven } : {}),
+    },
   };
 }
 /** Each window contributes one surface, including its own neighbourhood and retuned slices. */
@@ -314,6 +378,7 @@ export function meanWindowHeatmap(
       ...cell,
       value: contributions.length ? mean(contributions.map((item) => item!.value!)) : null,
       count: contributions.reduce((total, item) => total + item!.count, 0),
+      ...combinedExclusions(contributions.map((item) => item!)),
     };
   });
   return {
@@ -409,12 +474,13 @@ export function buildSensitivitySummary(
 export function defaultHeatmapAxes(
   trials: readonly TrialRecord[],
   axes: readonly AnalysisAxis[],
+  options: AnalysisOptions = {},
 ): string[] {
   return axes
     .map((axis, index) => ({
       title: axis.title,
       index,
-      eta: sensitivity(trials, axis.title, { axes })[0]?.etaSquared ?? 0,
+      eta: sensitivity(trials, axis.title, { ...options, axes })[0]?.etaSquared ?? 0,
     }))
     .sort((a, b) => b.eta - a.eta || a.index - b.index)
     .slice(0, 2)
