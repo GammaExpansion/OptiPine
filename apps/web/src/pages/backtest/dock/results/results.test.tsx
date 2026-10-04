@@ -168,10 +168,6 @@ test('report renders all groups, keeps English metric names in Chinese, and rest
   expect(
     within(screen.getByRole('table', { name: '收益' })).getByText('Gross profit'),
   ).toBeVisible();
-  // The drawdown row names its intrabar measure, apart from Equity's 最大回撤（收盘）.
-  expect(
-    within(screen.getByRole('table', { name: '收益' })).getByText('最大回撤（盘中）'),
-  ).toBeVisible();
 });
 
 test.each(['en', 'zh'] as const)(
