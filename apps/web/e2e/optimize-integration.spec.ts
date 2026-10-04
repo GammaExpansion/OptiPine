@@ -129,9 +129,10 @@ for (const language of ['en', 'zh'] as const) {
     ).toBe(barCount);
     await page.getByRole('button', { name: t('shell.optimize'), exact: true }).click();
     const right = page.getByTestId('optimize-right');
-    for (const [title, from, to] of [
-      ['Length', 18, 19],
-      ['Multiplier', 1, 1.75],
+    // Fix the grid's spacing as well as its bounds; suggested steps depend on current inputs.
+    for (const [title, from, to, step] of [
+      ['Length', 18, 19, 1],
+      ['Multiplier', 1, 1.75, 0.25],
     ] as const) {
       await right
         .getByRole('spinbutton', { name: t('optimize.setup.fromLabel', { title }) })
@@ -139,16 +140,18 @@ for (const language of ['en', 'zh'] as const) {
       await right
         .getByRole('spinbutton', { name: t('optimize.setup.toLabel', { title }) })
         .fill(String(to));
+      await right
+        .getByRole('spinbutton', { name: t('optimize.setup.stepLabel', { title }) })
+        .fill(String(step));
     }
-    // Trail % started fixed (its 19 values would take the default grid past 20,000) and stays
-    // fixed though the narrower ranges would now leave room for it.
-    await expect(
-      right.getByRole('checkbox', { name: t('optimize.setup.searchInput', { title: 'Trail %' }) }),
-    ).not.toBeChecked();
+    // Keep this a four-input search even if a future example starts with Trail % searched.
+    await right
+      .getByRole('checkbox', { name: t('optimize.setup.searchInput', { title: 'Trail %' }) })
+      .setChecked(false);
     const filterGroup = right.getByRole('group', { name: t('optimize.setup.filters') });
     for (let index = 0; index < 2; index++)
       await filterGroup.locator('button[aria-label]').first().click();
-    // Large default ranges select Random automatically. Explicitly choose the now-small grid.
+    // This test exercises the complete grid regardless of the initial sampling method.
     await right.getByRole('radio', { name: t('optimize.grid'), exact: true }).click();
     await expect
       .poll(() =>
