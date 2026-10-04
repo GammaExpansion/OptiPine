@@ -1,3 +1,46 @@
+.heatmap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 112px;
+  min-width: 0;
+  position: relative;
+}
+.heatmap[data-detail] {
+  flex: none;
+}
+.heatmap > .viewport {
+  flex: 1;
+  min-height: 92px;
+}
+.filteredLegend,
+.filterStatus {
+  color: var(--caption);
+  font-size: 11px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 4px 16px;
+}
+.filteredLegend {
+  flex: none;
+  align-items: center;
+}
+.filteredLegend i {
+  width: 3px;
+  height: 3px;
+  background: var(--caption);
+  outline: 1px solid var(--panel);
+}
+.filterStatus {
+  position: absolute;
+  top: 0;
+  left: 16px;
+  max-width: calc(100% - 32px);
+  background: var(--panel);
+  border: 1px solid var(--control-border);
+  pointer-events: none;
+}
 .viewport {
   position: relative;
   overflow: auto;

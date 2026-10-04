@@ -336,7 +336,13 @@ for (const language of ['en', 'zh'] as const) {
           selected: views.selection,
         };
       }),
-    ).toEqual({ rows: 0, map: 0, selected: null });
+    ).toMatchObject({ rows: 0, selected: null });
+    expect(
+      await page.evaluate(() => {
+        const views = (window as unknown as Hooks).optimization().views!;
+        return views.map!.panel.cells.some((cell) => cell.value !== null);
+      }),
+    ).toBe(true);
     await page.screenshot({ path: info.outputPath(`R9-${language}.png`) });
     await board
       .getByRole('button', { name: t('optimize.leaderboard.remove'), exact: true })

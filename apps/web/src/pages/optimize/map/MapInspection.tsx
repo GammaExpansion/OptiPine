@@ -20,7 +20,8 @@ export function BinInspection() {
   const rowFor = (title: string | null) =>
     views?.searchRows.find((row) => row.descriptor.title === title);
   const detail = useMemo(
-    () => (map && opened?.map === map.panel ? binDetail(map, opened.cell) : undefined),
+    () =>
+      map && opened?.map === map.panel ? binDetail(map, opened.cell, opened.panel) : undefined,
     [map, opened],
   );
   const values = useMemo(

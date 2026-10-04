@@ -1,6 +1,12 @@
 import { expect, it } from 'vitest';
 import { translate } from '../../../i18n/translate.ts';
-import { axisLabel, isBinnedCell, rangeLabel, valueLabel } from './map-labels.ts';
+import {
+  axisLabel,
+  failedConstraintLabel,
+  isBinnedCell,
+  rangeLabel,
+  valueLabel,
+} from './map-labels.ts';
 
 it('labels bins and irregular final bins in both languages', () => {
   expect(translate(axisLabel('Length', 2), 'en')).toBe('Length · 2 values per cell, averaged');
@@ -12,4 +18,17 @@ it('labels bins and irregular final bins in both languages', () => {
   expect(translate(valueLabel(null), 'zh')).toBe('—');
   expect(isBinnedCell({ x: 1, xValues: [1, 2], value: 3, count: 2 })).toBe(true);
   expect(isBinnedCell({ x: 1, xValues: [1], value: 3, count: 1 })).toBe(false);
+});
+
+it('explains failed constraints using the translated chip names and units', () => {
+  const label = failedConstraintLabel({
+    metric: 'Performance/Max drawdown (intrabar)/All %',
+    operator: '<=',
+    value: 15,
+  });
+  expect(translate(label, 'en')).toBe('Max DD ≤ 15%');
+  expect(translate(label, 'zh')).toBe('最大回撤 ≤ 15%');
+  expect(
+    translate(failedConstraintLabel({ metric: 'custom', operator: '>=', value: 2 }), 'en'),
+  ).toBe('custom ≥ 2');
 });
