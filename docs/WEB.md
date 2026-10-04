@@ -323,8 +323,10 @@ component sheet is G5.
 - Editing the source recompiles it in the background; inputs and properties are rebuilt from the
   new compile, keeping values for inputs whose title and type did not change. Opening another
   script starts it from its own defaults instead (2.1).
-- Nothing is saved (4.8), so reloading, going back or closing the tab while a backtest, a preview or
-  an optimization runs asks first.
+- Nothing is saved (4.8), so reloading, going back or closing the tab asks first while a backtest, a
+  preview or an optimization runs, while the script has edits since it was opened (or was typed
+  into the empty editor), and while there are optimization results. Ctrl + O opens the app's file
+  picker everywhere, in the code editor and fields too, never the browser's own Open File.
 
 ### 3.2 Live optimization
 
