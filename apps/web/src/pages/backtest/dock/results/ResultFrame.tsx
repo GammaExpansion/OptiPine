@@ -10,12 +10,18 @@ import { shownResult } from '../../states/chart-view.ts';
 import { EmptyResults } from './EmptyResults.tsx';
 import styles from './Results.module.css';
 
+/**
+ * A result tab's frame: the outdated banner over its content. `account` marks a tab about the
+ * strategy's account (Report, Equity), which an indicator's run does not have.
+ */
 export function ResultFrame({
   children,
   empty = false,
+  account = false,
 }: {
   children?: ReactNode;
   empty?: boolean;
+  account?: boolean;
 }) {
   const { t, text } = useI18n();
   const result = useBacktestStore(shownResult);
@@ -26,6 +32,8 @@ export function ResultFrame({
   const running = useBacktestStore(
     (state) => (state.preview?.run ?? state.run).status === 'running',
   );
+  if (account && result?.initialCapital === null)
+    return <EmptyResults message="backtest.indicatorResults" />;
   if (!result || empty) return <EmptyResults />;
   // What the result used, as the right panel and the properties dialog show it (B9): an input
   // with its step's decimals or on and off, a property in the dialog's wording.

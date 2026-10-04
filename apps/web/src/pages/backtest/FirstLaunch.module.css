@@ -49,6 +49,10 @@
   color: var(--secondary);
   font-size: 12.5px;
 }
+.progress {
+  margin-top: 4px;
+  max-width: 240px;
+}
 .actions {
   display: flex;
   gap: 8px;

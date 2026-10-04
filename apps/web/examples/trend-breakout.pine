@@ -6,8 +6,8 @@ strategy("Trend Breakout", overlay = true,
      commission_type = strategy.commission.percent,
      commission_value = 0.1)
 
-length   = input.int(20, "Length", minval = 5, maxval = 200)
-mult     = input.float(2.0, "Multiplier", minval = 0.25, maxval = 5.0, step = 0.25)
+length   = input.int(180, "Length", minval = 5, maxval = 200)
+mult     = input.float(2.25, "Multiplier", minval = 0.25, maxval = 5.0, step = 0.25)
 src      = input.source(close, "Source")
 trailing = input.bool(false, "Use trailing stop")
 trail    = input.float(3.0, "Trail %", minval = 0.25, maxval = 20.0, step = 0.25, group = "Risk")

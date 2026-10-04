@@ -14,7 +14,7 @@ export function EquityTab() {
   const result = useBacktestStore(displayedResult);
   const maximized = useUiStore((state) => state.paneSizes.backtest.chart === 0);
   const equity = result && equityFor(result);
-  if (!equity) return <ResultFrame empty />;
+  if (!equity) return <ResultFrame empty account />;
   const { input, summary } = equity;
   const dd = summary.maxDrawdown;
   const number = (
@@ -33,7 +33,7 @@ export function EquityTab() {
     </div>
   );
   return (
-    <ResultFrame>
+    <ResultFrame account>
       <EquityCharts
         className={styles.equity}
         input={input}

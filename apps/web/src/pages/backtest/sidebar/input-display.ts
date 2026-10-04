@@ -2,6 +2,7 @@ import type { InputDescriptor, LiteralValue } from '@pine/engine';
 import { message, type MessageValues, type Text } from '@pine/messages';
 import type { MessageId } from '../../../i18n/translate.ts';
 import type { InputField } from '../../../workflows/inputs.ts';
+import { timeframeLabel } from '../states/chart-view.ts';
 
 const text = (id: MessageId, values?: MessageValues) => message(id, values);
 
@@ -17,6 +18,27 @@ export const sourceSeries = [
   'hlcc4',
 ] as const;
 
+/**
+ * The timeframes an `input.timeframe` without options offers, as TradingView's list does: the
+ * chart's own (an empty string) and the usual ones from one minute to one month.
+ */
+export const timeframeChoices = [
+  '',
+  '1',
+  '3',
+  '5',
+  '15',
+  '30',
+  '45',
+  '60',
+  '120',
+  '180',
+  '240',
+  '1D',
+  '1W',
+  '1M',
+] as const;
+
 export type InputControl = 'number' | 'select' | 'toggle' | 'time' | 'text' | 'readOnly';
 
 // The workflow's numeric types, less `time`, which is edited as a UTC date and time.
@@ -26,7 +48,7 @@ const numberTypes = new Set(['int', 'float', 'number', 'price']);
 export function inputControl(field: InputField): InputControl {
   const { type, options } = field.descriptor;
   if (field.readOnly) return 'readOnly';
-  if (options || type === 'source') return 'select';
+  if (options || type === 'source' || type === 'timeframe') return 'select';
   if (type === 'bool' || type === 'boolean') return 'toggle';
   if (type === 'time') return 'time';
   return numberTypes.has(type) ? 'number' : 'text';
@@ -74,7 +96,10 @@ export function inputValueText(
 ): Text {
   if (value === undefined || value === null) return text('common.unavailable');
   if (typeof value === 'boolean') return text(value ? 'inputs.on' : 'inputs.off');
-  return descriptor ? inputEditText(descriptor, value) : String(value);
+  if (!descriptor) return String(value);
+  if (descriptor.type === 'timeframe' && typeof value === 'string')
+    return value === '' ? text('inputs.chartTimeframe') : timeframeLabel(value);
+  return inputEditText(descriptor, value);
 }
 
 const timePattern = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?$/;
@@ -124,9 +149,15 @@ export function inputError(field: InputField): Text | null {
   return field.error;
 }
 
-/** A select's values: the declared options, or the built-in series, keeping an unlisted value. */
+/**
+ * A select's values: the declared options, or the timeframes or built-in series an input of that
+ * type offers, keeping an unlisted value.
+ */
 export function selectValues(field: InputField): LiteralValue[] {
-  const values: LiteralValue[] = [...(field.descriptor.options ?? sourceSeries)];
+  const { options, type } = field.descriptor;
+  const values: LiteralValue[] = [
+    ...(options ?? (type === 'timeframe' ? timeframeChoices : sourceSeries)),
+  ];
   const current = field.value;
   if (current !== undefined && !values.some((value) => Object.is(value, current)))
     values.push(current);

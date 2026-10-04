@@ -18,7 +18,10 @@ const failing = trend.replace(
   'if longSignal',
   'if bar_index == 1202\n    runtime.error("trail_points must be greater than 0")\nif longSignal',
 );
-const quiet = trend.replace('mult     = input.float(2.0,', 'mult     = input.float(4.9,');
+// With 20 bars, 4.9 standard deviations cannot be crossed by a member of that same window.
+const quiet = trend
+  .replace(/input\.int\(\d+, "Length"/, 'input.int(20, "Length"')
+  .replace(/input\.float\([\d.]+, "Multiplier"/, 'input.float(4.9, "Multiplier"');
 
 type HookWindow = Window & { backtestHooks: BacktestHooks };
 
@@ -70,12 +73,12 @@ test('an edited input marks the result outdated until the next run (B9)', async 
   const length = page.getByRole('spinbutton', { name: 'Length' });
   await length.fill('28');
   await expect(facts(page)).toHaveText('Results outdated');
-  await expect(page.getByText('Default 20')).toBeVisible();
+  await expect(page.getByText('Default 180')).toBeVisible();
   await page.screenshot({ path: info.outputPath('B9-en.png') });
   await run(page).click();
   await expect(facts(page)).toHaveText(/^20,488 bars/);
   expect((await state(page)).outdated).toEqual([]);
-  await expect(page.getByText('Default 20')).toBeVisible();
+  await expect(page.getByText('Default 180')).toBeVisible();
   expect(errors).toEqual([]);
 });
 

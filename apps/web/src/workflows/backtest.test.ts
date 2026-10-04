@@ -413,6 +413,11 @@ test('effects the run ignored are listed as issues with their line', async () =>
     ]),
     [['ignoredEffect', 13, 'alert is ignored during execution.']],
   );
+  // Other source text keeps the result, but not its warnings on lines of their own.
+  ready.session.setSource(strategySource.replace('plot(basis, "Basis", force_overlay=true)', ''));
+  await ready.answerAll();
+  assert.equal(ready.session.getState().result?.output.warnings?.length, 1);
+  assert.deepEqual(backtestIssues(ready.session.getState()), []);
 });
 
 test('cancel stops the Worker and keeps the previous result (B8)', async () => {
