@@ -21,8 +21,6 @@ const metric = (metrics: RunResult['metrics'], key: string): number | null => {
 const net = (metrics: RunResult['metrics']) => metric(metrics, 'Performance/Net profit/All USD');
 const trades = (metrics: RunResult['metrics']) =>
   metric(metrics, 'Trades analysis/Total trades/All USD');
-const cagr = (metrics: RunResult['metrics']) =>
-  metric(metrics, 'Performance/Annualized return (CAGR)/All %');
 
 /** Independent anchored calendar slices and engine outputs: the expected walk-forward. */
 async function anchoredWindowReference() {
@@ -73,8 +71,16 @@ async function anchoredWindowReference() {
     inCapital +=
       inResult.equity.at(-1)! - metric(inResult.metrics, 'Performance/Initial capital/All USD')!;
     inSeconds += inside.at(-1)!.time - inside[0].time;
-    const inCagr = cagr(best.metrics),
-      outCagr = cagr(outResult.metrics);
+    const inCagr =
+        ((inResult.equity.at(-1)! / initial) **
+          ((365 * 86400) / (inside.at(-1)!.time - inside[0].time)) -
+          1) *
+        100,
+      outCagr =
+        ((outsideAccount.equity.at(-1)! / initial) **
+          ((365 * 86400) / (outside.at(-1)!.time - outside[0].time)) -
+          1) *
+        100;
     const end = Math.min(plannedEnd, bars.at(-1)!.time + 3600);
     return {
       index,
@@ -90,8 +96,10 @@ async function anchoredWindowReference() {
       parameters: best.inputs,
       trialId: best.trialId,
       trials,
-      inNet: best.score,
-      outNet: net(outResult.metrics),
+      inScore: best.score,
+      outScore: net(outResult.metrics),
+      inNet: inResult.equity.at(-1)! - initial,
+      outNet: outsideAccount.equity.at(-1)! - initial,
       inTrades: trades(best.metrics),
       outTrades: trades(outResult.metrics),
       inCagr,
@@ -117,7 +125,8 @@ async function anchoredWindowReference() {
     outNet: sum('outNet'),
     inTrades: sum('inTrades'),
     outTrades: sum('outTrades'),
-    winningWindows: windows.filter((window) => window.outNet !== null && window.outNet > 0).length,
+    winningWindows: windows.filter((window) => window.outScore !== null && window.outScore > 0)
+      .length,
     wfe: inCagr > 0 ? outCagr / inCagr : null,
     endCapital: capital,
   };
@@ -126,14 +135,14 @@ async function anchoredWindowReference() {
     const bands = windows.map((window) => {
       const profiles = values.map((value) => {
         const objective = window.trials.find((trial) => trial.inputs[parameter] === value)!.score;
-        const shortfall = Math.max(0, window.inNet - objective) / Math.abs(window.inNet);
+        const shortfall = Math.max(0, window.inScore - objective) / Math.abs(window.inScore);
         return { value, objective, shortfall };
       });
       return {
         parameter,
         window: window.index,
         chosen: window.parameters[parameter],
-        best: window.inNet,
+        best: window.inScore,
         values: profiles
           .filter((profile) => profile.shortfall <= tolerance)
           .map((profile) => profile.value),

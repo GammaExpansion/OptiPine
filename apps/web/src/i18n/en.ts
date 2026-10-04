@@ -1054,6 +1054,12 @@ export const en = {
   'optimize.wfResults.stitched': 'Stitched',
   'optimize.wfResults.view': 'Window view',
   'optimize.wfResults.wfe': 'WFE',
+  'optimize.wfResults.markedToMarket':
+    "Equity change at each window's last bar, including open P&L without an unexecuted exit fee",
+  'optimize.wfResults.wfeHint':
+    'Annualized OOS equity change divided by annualized IS equity change; unavailable when IS return is not positive',
+  'optimize.wfResults.profitableHint':
+    'Windows with positive reported OOS net profit, excluding open P&L',
   'optimize.wfResults.is': 'IS',
   'optimize.wfResults.oos': 'OOS',
   'optimize.wfResults.profitableWindows': 'Profitable windows',

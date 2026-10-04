@@ -37,16 +37,16 @@ export function WfSelectionBar() {
           : t(`optimize.wfResults.status.${window.status}`)}
       </span>
       <div className={styles.selectionFigures}>
-        <span>
+        <span title={t('optimize.wfResults.markedToMarket')}>
           {t('optimize.wfResults.is')} <b>{text(figure(window.inSample?.netProfit, 0, true))}</b>
         </span>
-        <span>
+        <span title={t('optimize.wfResults.markedToMarket')}>
           {t('optimize.wfResults.oos')}{' '}
           <b data-tone={(window.outOfSample?.netProfit ?? 0) < 0 ? 'loss' : 'profit'}>
             {text(figure(window.outOfSample?.netProfit, 0, true))}
           </b>
         </span>
-        <span>
+        <span title={t('optimize.wfResults.wfeHint')}>
           {t('optimize.wfResults.wfe')}{' '}
           <b data-tone={(window.wfe ?? 0) < 0 ? 'loss' : undefined}>
             {text(figure(window.wfe, 2))}

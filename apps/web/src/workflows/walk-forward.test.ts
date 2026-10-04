@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { consecutiveLossesMetric, type TrialRecord } from '@pine/optimizer';
+import {
+  consecutiveLossesMetric,
+  finalizeWalkForward,
+  planWalkForwardWindows,
+  type TrialRecord,
+} from '@pine/optimizer';
 import type { OptimizationTrial } from '@pine/workers';
 import { syntheticBars } from './test-support.ts';
 import {
@@ -13,6 +18,9 @@ import {
   selectionMetrics,
   selectionRecords,
   windowSelection,
+  windowPlan,
+  windowResults,
+  walkForwardTotals,
   type SelectionSettings,
   type StabilityRow,
   type WindowResult,
@@ -27,6 +35,60 @@ const settings: SelectionSettings = {
   ],
   smooth: false,
 };
+
+test('display amounts include open P&L while profitable-window counts retain reported net profit', () => {
+  const bars = [
+    Date.UTC(2024, 0, 1),
+    Date.UTC(2024, 0, 31),
+    Date.UTC(2024, 1, 1),
+    Date.UTC(2024, 1, 28),
+  ].map((time) => ({ time: time / 1000, open: 100, high: 100, low: 100, close: 100, volume: 1 }));
+  const config = { inSampleLength: 1, outOfSampleLength: 1, step: 1 };
+  const [plan] = planWalkForwardWindows(bars, config);
+  const result = (end: number) => ({
+    plots: [],
+    trades: [],
+    diagnostics: [],
+    equity: [1000, end],
+    metrics: {
+      'Performance/Initial capital/All USD': 1000,
+      'Performance/Net profit/All USD': 50,
+    },
+  });
+  const inside = result(1100),
+    outside = result(950);
+  const finalized = finalizeWalkForward(
+    [{ ...plan, trials: [], inSampleResult: inside, outOfSampleResult: outside }],
+    config,
+  );
+  const rows = windowResults(
+    [
+      {
+        plan: windowPlan(plan),
+        running: false,
+        trials: [],
+        choice: {
+          key: 'net',
+          records: [],
+          trialId: 'chosen',
+          parameters: {},
+          inSample: inside,
+          outOfSample: outside,
+          error: null,
+        },
+      },
+    ],
+    finalized,
+  );
+  const totals = walkForwardTotals(rows, finalized);
+  assert.equal(rows[0].inSample?.netProfit, 100);
+  assert.equal(rows[0].outOfSample?.netProfit, -50);
+  assert.ok(rows[0].wfe! < 0);
+  assert.equal(totals.outOfSampleNet, -50);
+  assert.equal(totals.wfe, rows[0].wfe);
+  assert.equal(totals.profitable, 1);
+  assert.equal(rows[0].outOfSampleEquity.at(-1), 1000 + totals.outOfSampleNet!);
+});
 
 test('the selection reads the objective and filter metrics, smoothed by the neighbourhood', () => {
   assert.deepEqual(selectionMetrics(settings), [

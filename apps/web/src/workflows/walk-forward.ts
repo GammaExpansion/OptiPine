@@ -281,8 +281,9 @@ export function windowExecution(
 
 /** A window's chosen set on one of its ranges (W1). */
 export interface WindowFigures {
+  /** Equity change at the last bar, including open P&L; no hypothetical exit fee. */
   readonly netProfit: number | null;
-  /** Annualized return (CAGR) in percent; WFE is the OOS one over the IS one. */
+  /** Annualized equity change in percent; WFE is the OOS one over the positive IS one. */
   readonly annualizedReturn: number | null;
   readonly trades: number | null;
 }
@@ -328,11 +329,11 @@ export interface WalkForwardTotals {
   readonly completed: number;
   /** Windows that ran a set on their OOS range. */
   readonly traded: number;
-  /** Traded windows with a positive OOS net profit. */
+  /** Traded windows with positive reported OOS net profit, excluding open P&L. */
   readonly profitable: number;
   readonly flat: number;
   readonly failed: number;
-  /** Sums over the traded windows; null before one is done. */
+  /** Summed equity changes over the traded windows; null before one is done. */
   readonly inSampleNet: number | null;
   readonly outOfSampleNet: number | null;
   readonly outOfSampleTrades: number | null;
@@ -509,7 +510,7 @@ export function walkForwardTotals(
     windows: rows.length,
     completed,
     traded,
-    profitable: rows.filter((row) => (row.outOfSample?.netProfit ?? 0) > 0).length,
+    profitable: totals?.winningWindows ?? 0,
     flat: count('flat'),
     failed: count('failed'),
     inSampleNet: totals?.inSampleNet ?? null,
