@@ -25,6 +25,11 @@ path for the package middleware. All fonts are local assets. No scripts or resul
 provider selection, and the feed client caches datasets in IndexedDB for five minutes. Pane sizes
 are pixels, scoped by page; double-clicking a separator resets its pane. Dock selection and open
 dialogs are session state.
+The market-data dialog loads `state/marketDataDialog.ts` with its own chunk. Its actions own the
+remembered selection's existing plain JSON format and bridge `workflows/symbol-search.ts`, which
+debounces queries for 180 ms, aborts superseded searches and ignores late replies. The shared
+market-data store still owns dataset preview and acceptance; only acceptance from the dialog saves
+its provider selection.
 Desktop minimum sizes are 600 px for the main column, 280 px for the right panel, 240 px for the
 chart and 160 px for the dock. The right panel folds to a 32 px edge; the dock folds to its 36 px
 tab bar. These minimums and the edge width are choices where the design gives no numbers.

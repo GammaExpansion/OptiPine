@@ -6,7 +6,7 @@ import { Note } from '../../components/Note.tsx';
 import { SegmentedControl } from '../../components/SegmentedControl.tsx';
 import { Tabs } from '../../components/Tabs.tsx';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
-import { getServices } from '../../state/services.ts';
+import { useMarketDataDialogStore } from '../../state/marketDataDialog.ts';
 import { getMarketDataStore, useMarketDataStore } from '../../state/marketData.ts';
 import { useUiStore } from '../../state/ui.ts';
 import { feedDensity } from '../../workflows/market-data.ts';
@@ -14,13 +14,7 @@ import { CsvPanel, type CsvReady } from './CsvPanel.tsx';
 import { ProviderPreview } from './ProviderPreview.tsx';
 import { RangeFields } from './RangeFields.tsx';
 import { SymbolSearch } from './SymbolSearch.tsx';
-import {
-  restoreSelection,
-  selectionFrom,
-  selectionKey,
-  selectionRequest,
-  type Selection,
-} from './selection.ts';
+import { selectionRequest, type Selection } from '../../workflows/market-selection.ts';
 import { timeframeIds } from './timeframes.ts';
 import styles from './DataDialog.module.css';
 
@@ -31,16 +25,10 @@ export function MarketDataDialog() {
   const service = useMarketDataStore((state) => state.service);
   const origin = useMarketDataStore((state) => state.origin);
   const actions = useMarketDataStore((state) => state.actions);
-  const [now] = useState(getServices().now);
-  const [selection, setSelection] = useState<Selection>(() => {
-    if ('request' in current) return selectionFrom(current.request, now);
-    if (origin?.kind === 'provider') return selectionFrom(origin.request, now);
-    try {
-      return restoreSelection(localStorage.getItem(selectionKey), now);
-    } catch {
-      return restoreSelection(null, now);
-    }
-  });
+  const dialogActions = useMarketDataDialogStore((state) => state.actions);
+  const [initial] = useState(dialogActions.initialSelection);
+  const { now } = initial;
+  const [selection, setSelection] = useState(initial.selection);
   const [tab, setTab] = useState(() =>
     origin?.kind === 'csv' && current.status === 'idle'
       ? 'csv'
@@ -92,13 +80,8 @@ export function MarketDataDialog() {
       if (!csv) return;
       actions.useCsv(csv.input, csv.fileName);
     } else {
-      const accepted = actions.accept();
+      const accepted = dialogActions.accept(selection);
       if (!accepted) return;
-      try {
-        localStorage.setItem(selectionKey, JSON.stringify(selection));
-      } catch {
-        /* Storage is optional. */
-      }
     }
     close('marketData', false);
   };

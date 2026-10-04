@@ -9,7 +9,7 @@ import { useUiStore } from '../../state/ui.ts';
 import { getServices } from '../../state/services.ts';
 import { datasetDensity, expectedBarCount } from '../../workflows/market-data.ts';
 import { RangeFields } from '../marketData/RangeFields.tsx';
-import { selectionFrom, selectionRequest } from '../marketData/selection.ts';
+import { selectionFrom, selectionRequest } from '../../workflows/market-selection.ts';
 import styles from '../marketData/DataDialog.module.css';
 
 export function DateRangeDialog() {
