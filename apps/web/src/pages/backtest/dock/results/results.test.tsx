@@ -155,6 +155,10 @@ test('report renders all groups, keeps English metric names in Chinese, and rest
   expect(
     within(screen.getByRole('table', { name: 'Returns' })).getByText('Net profit'),
   ).toBeVisible();
+  // TradingView's intrabar drawdown, named apart from the Equity tab's bar-close one.
+  expect(
+    within(screen.getByRole('table', { name: 'Returns' })).getByText('Max drawdown (intrabar)'),
+  ).toBeVisible();
   act(() => getBacktestStore().getState().actions.setInput('Length', 7));
   expect(screen.getByRole('status')).toHaveTextContent('Current results use Length 5.');
   expect(document.querySelector('[data-dimmed="true"]')).toBeTruthy();
@@ -245,7 +249,8 @@ test('equity facts accompany the workflow charts', async () => {
   for (const label of [
     'Ending equity',
     'Annualized return',
-    'Max drawdown',
+    // Bar-close equity, unlike the report's intrabar figure from the engine.
+    'Max drawdown (bar close)',
     'Drawdown duration',
     'Return / max drawdown',
     'Winning / losing days',
