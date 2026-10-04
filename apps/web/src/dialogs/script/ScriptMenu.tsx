@@ -1,8 +1,10 @@
-import { lazy, startTransition, Suspense, useState } from 'react';
+import { startTransition, Suspense, useState } from 'react';
+import { useI18n } from '../../i18n/I18nProvider.tsx';
+import { lazyWithCatalog } from '../../i18n/lazyWithCatalog.tsx';
 import { ScriptButton } from './ScriptButton.tsx';
 
 const load = () => import('./ScriptMenuContent.tsx');
-const ScriptMenuContent = lazy(() =>
+const ScriptMenuContent = lazyWithCatalog('script', () =>
   load().then((module) => ({ default: module.ScriptMenuContent })),
 );
 
@@ -12,12 +14,13 @@ const ScriptMenuContent = lazy(() =>
  * when it is first activated, opening at once. Until then the plain button stays in place.
  */
 export function ScriptMenu() {
+  const { language } = useI18n();
   const [requested, setRequested] = useState(false);
   const request = () => startTransition(() => setRequested(true));
   const button = (
     <ScriptButton
-      onPointerEnter={() => void load()}
-      onFocus={() => void load()}
+      onPointerEnter={() => void ScriptMenuContent.preload(language)}
+      onFocus={() => void ScriptMenuContent.preload(language)}
       onClick={request}
       onKeyDown={(event) => {
         if (event.key !== 'ArrowDown') return;

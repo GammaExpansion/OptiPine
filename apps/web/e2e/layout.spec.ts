@@ -1,10 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { en } from '../src/i18n/en.ts';
-import { zh } from '../src/i18n/zh.ts';
+import { catalogs } from '../src/i18n/catalogs.ts';
 import type { BacktestHooks } from './backtest-hooks.ts';
 import type { OptimizeHooks } from './optimize-hooks.ts';
 import { origins } from './ports.ts';
+
+const { en, zh } = catalogs;
 
 test.use({ baseURL: origins.preview });
 

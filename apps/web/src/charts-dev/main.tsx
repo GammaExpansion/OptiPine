@@ -2,9 +2,9 @@ import { StrictMode, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { EngineWorkerClient } from '@pine/workers';
 import type { EquityRunResult, MarketBar } from '@pine/engine';
-import '../i18n/catalogs.ts';
-import { I18nProvider, useI18n } from '../i18n/I18nProvider.tsx';
-import { useUiStore } from '../state/ui.ts';
+import { loadCatalog } from '../i18n/translate.ts';
+import { I18nProvider, loadActiveCatalog, useI18n } from '../i18n/I18nProvider.tsx';
+import { uiStore, useUiStore } from '../state/ui.ts';
 import { createEngineWorker } from '../workers/factories.ts';
 import { equitySummary, type EquityInput, type EquitySummary } from '../workflows/equity.ts';
 import { tradeRows, type TradeRow } from '../workflows/trades.ts';
@@ -216,6 +216,8 @@ function ChartWorkbench() {
   );
 }
 
+await loadActiveCatalog();
+await loadCatalog(uiStore.getState().language, 'sheet');
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <I18nProvider>

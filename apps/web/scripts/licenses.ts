@@ -109,13 +109,13 @@ export function collectLicenseAssets(appDirectory = webRoot): Record<string, str
   );
   assets['licenses/THIRD_PARTY_NOTICES.txt'] = [
     'OptiPine — third-party notices',
-    `${licensesEn.charts}\n${licensesEn.chartNotice}`,
-    licensesEn.tslib,
-    `${licensesEn.fonts}\n${licensesEn.barlow}: ${licensesEn.barlowCredit}\n${licensesEn.noto}: ${licensesEn.notoCredit}\n${licensesEn.source}: ${licensesEn.sourceCredit}`,
-    licensesEn.independent,
+    `${licensesEn['licenses.charts']}\n${licensesEn['licenses.chartNotice']}`,
+    licensesEn['licenses.tslib'],
+    `${licensesEn['licenses.fonts']}\n${licensesEn['licenses.barlow']}: ${licensesEn['licenses.barlowCredit']}\n${licensesEn['licenses.noto']}: ${licensesEn['licenses.notoCredit']}\n${licensesEn['licenses.source']}: ${licensesEn['licenses.sourceCredit']}`,
+    licensesEn['licenses.independent'],
     'Installed production dependencies (including transitive dependencies and installed peers):\n' +
       packages.map(({ name, version }) => `${name}@${version}`).join('\n'),
-    `${licensesEn.app}\n\n${appLicense}`,
+    `${licensesEn['licenses.app']}\n\n${appLicense}`,
     ...packages.map(({ text }) => text),
   ].join('\n\n' + '='.repeat(72) + '\n\n');
   return assets;

@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
+import { lazyWithCatalog } from '../i18n/lazyWithCatalog.tsx';
 import { LazyPropertiesDialog } from '../dialogs/properties/LazyPropertiesDialog.tsx';
 import { BacktestPage } from '../pages/backtest/BacktestPage.tsx';
 import { useBacktestStore } from '../state/backtest.ts';
@@ -13,14 +14,14 @@ import styles from './Shell.module.css';
 
 // Every session starts on Backtest, so the Optimize page loads when it is first opened, with the
 // optimization side's session and Workers alongside it rather than after it mounts.
-const OptimizePage = lazy(() => {
+const OptimizePage = lazyWithCatalog('optimize', () => {
   void getServices().loadOptimization();
   return import('../pages/optimize/OptimizePage.tsx').then((module) => ({
     default: module.OptimizePage,
   }));
 });
 // It opens from optimization results only, so the optimization side has loaded by then.
-const FailedCombinationsDialog = lazy(() =>
+const FailedCombinationsDialog = lazyWithCatalog('optimize', () =>
   import('../pages/optimize/leaderboard/FailedCombinationsDialog.tsx').then((module) => ({
     default: module.FailedCombinationsDialog,
   })),
