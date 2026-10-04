@@ -29,17 +29,20 @@ export type ChartView =
 
 /**
  * The result the page shows: the open preview's while there is one (B16), and none after a failed
- * compile, which it no longer matches (B10). A failed run keeps the previous result (WEB.md 3.1).
+ * compile, which it no longer matches (B10). A failed run keeps the previous result of the same
+ * source (WEB.md 3.1), but not another script's: B11 then shows no results at all.
  */
 export function shownResult(
-  state: Pick<BacktestState, 'compile' | 'result' | 'preview'>,
+  state: Pick<BacktestState, 'source' | 'compile' | 'run' | 'result' | 'preview'>,
 ): BacktestResult | null {
-  return state.compile.status === 'failed' ? null : (state.preview ?? state).result;
+  if (state.compile.status === 'failed') return null;
+  const { run, result } = state.preview ?? state;
+  return run.status === 'failed' && result?.computedWith.source !== state.source ? null : result;
 }
 
 /** The count beside the Trades tab: the shown result's closed trades (B1); null without one. */
 export function closedTradeCount(
-  state: Pick<BacktestState, 'compile' | 'result' | 'preview'>,
+  state: Pick<BacktestState, 'source' | 'compile' | 'run' | 'result' | 'preview'>,
 ): number | null {
   const trades = shownResult(state)?.output.trades;
   return trades ? trades.filter((trade) => trade.exitBar !== null).length : null;
