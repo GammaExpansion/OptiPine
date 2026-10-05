@@ -182,7 +182,7 @@ ${profile('品种档案', '由数据源提供，可修改', ['0.01', '1', '0.000
     }
   } else if (tab === 1) {
     left = `${ff('品种', inp('<span style="font-weight: 600">AAPL</span>', { icon: I.search(14), sub: 'Apple Inc.，NASDAQ' }))}
-${ff('周期', seg(['5m', '15m', '1h', '1D', '1W'], 3, { label: '周期', style: 'align-self: flex-start' }), '日内周期仅支持最近 730 天。')}
+${ff('周期', seg(['5m', '15m', '30m', '1h', '1D'], 4, { label: '周期', style: 'align-self: flex-start' }), 'Yahoo 历史范围：1小时为 730 天；较短日内周期为 60 天；日线可获取全部历史。')}
 ${rangeBlock(2, '2023-05-05', '2025-05-02')}
 <span class="t3" style="font-size: 12px">价格采用数据源 OHLC，不另行复权。</span>`;
     right = `${previewHead('AAPL，1D', '已获取')}
