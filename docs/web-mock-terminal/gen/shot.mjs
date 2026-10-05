@@ -22,6 +22,7 @@ const chrome =
     '/usr/bin/google-chrome',
     '/usr/bin/chromium',
   ].find(fs.existsSync);
+if (!chrome) throw new Error('Chrome, Edge or Chromium is required; set CHROME to its executable.');
 
 const server = http.createServer((req, res) => {
   const p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
@@ -44,16 +45,21 @@ const server = http.createServer((req, res) => {
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
   fs.createReadStream(f).pipe(res);
 });
-await new Promise((r) => server.listen(5397, '127.0.0.1', r));
+await new Promise((resolve, reject) => {
+  server.once('error', reject);
+  server.listen(Number(process.env.SHOT_PORT ?? 5397), '127.0.0.1', resolve);
+});
+const origin = `http://127.0.0.1:${server.address().port}`;
 
 const args = process.argv.slice(2);
 const shoot = (url, w, h, out, scale = 1) =>
-  new Promise((resolve) => {
+  new Promise((resolve, reject) => {
     const p = spawn(
       chrome,
       [
         '--headless=new',
         '--disable-gpu',
+        ...(process.env.CHROME_NO_SANDBOX === '1' ? ['--no-sandbox'] : []),
         '--hide-scrollbars',
         `--force-device-scale-factor=${scale}`,
         `--window-size=${w},${h}`,
@@ -62,49 +68,59 @@ const shoot = (url, w, h, out, scale = 1) =>
         `--screenshot=${out}`,
         url,
       ],
-      { stdio: 'ignore' },
+      { stdio: ['ignore', 'ignore', 'pipe'], timeout: 60_000 },
     );
-    p.on('exit', (c) => {
+    let errors = '';
+    p.stderr.on('data', (data) => {
+      errors = (errors + data).slice(-8000);
+    });
+    p.once('error', reject);
+    p.on('close', (c) => {
       fs.rmSync(path.join(shots, '_profile_' + path.basename(out, '.png')), {
         recursive: true,
         force: true,
+        maxRetries: 5,
       });
-      resolve(c);
+      if (c === 0 && fs.existsSync(out)) resolve();
+      else reject(new Error(`Could not render ${url} (exit ${c}): ${errors}`));
     });
   });
 const size = (b) =>
   index.boards[`${b}.dc.html`] ?? index.boards[`${b.replace(/-en$/, '')}.dc.html`];
-if (args.length >= 5 && !isNaN(+args[1])) {
-  const [b, x, y, w, h, s = 1] = args;
-  const out = path.join(shots, `${b}-${x}-${y}.png`);
-  await shoot(
-    `http://127.0.0.1:5397/_zoom?b=${b}&x=${x}&y=${y}&bw=${size(b).w}&bh=${size(b).h}`,
-    +w,
-    +h,
-    out,
-    +s,
-  );
-  console.log(out);
-} else {
-  const names =
-    args[0] === '--all' ? Object.keys(index.boards).map((f) => f.replace('.dc.html', '')) : args;
-  const scale = +process.env.SCALE || 1;
-  const queue = [...names];
-  await Promise.all(
-    Array.from({ length: 6 }, async () => {
-      while (queue.length) {
-        const b = queue.shift();
-        const { w, h } = size(b);
-        await shoot(
-          `http://127.0.0.1:5397/${b}.dc.html`,
-          w,
-          h,
-          path.join(shots, `${b}.png`),
-          scale,
-        );
-      }
-    }),
-  );
-  console.log('shot', names.length);
+try {
+  if (args.length >= 5 && !isNaN(+args[1])) {
+    const [b, x, y, w, h, s = 1] = args;
+    const out = path.join(shots, `${b}-${x}-${y}.png`);
+    await shoot(
+      `${origin}/_zoom?b=${b}&x=${x}&y=${y}&bw=${size(b).w}&bh=${size(b).h}`,
+      +w,
+      +h,
+      out,
+      +s,
+    );
+    console.log(out);
+  } else {
+    const names =
+      args[0] === '--all' ? Object.keys(index.boards).map((f) => f.replace('.dc.html', '')) : args;
+    const scale = +process.env.SCALE || 1;
+    const queue = [...names];
+    const results = await Promise.allSettled(
+      Array.from({ length: 6 }, async () => {
+        while (queue.length) {
+          const b = queue.shift();
+          const { w, h } = size(b);
+          await shoot(`${origin}/${b}.dc.html`, w, h, path.join(shots, `${b}.png`), scale);
+        }
+      }),
+    );
+    const failures = results.filter((result) => result.status === 'rejected');
+    if (failures.length)
+      throw new AggregateError(
+        failures.map((result) => result.reason),
+        'Rendering failed',
+      );
+    console.log('shot', names.length);
+  }
+} finally {
+  server.close();
 }
-server.close();

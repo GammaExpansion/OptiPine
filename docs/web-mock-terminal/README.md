@@ -67,9 +67,15 @@ node docs/web-mock-terminal/gen/check.mjs
 
 `shot.mjs` renders boards (or `--all`, or a crop with `<board> x y w h`) with headless Chrome, Edge
 or Chromium into the system temp folder; set `CHROME` to the executable if none is found.
+Set `SHOT_PORT` to change the local server's port (5397 by default, or 0 for a free port).
 `check.mjs` lists elements whose text overflows its box in an English board but not in the Chinese
 one; `ABS=1` lists every overflow in both languages and `STRESS=0.05` widens letter spacing to find
 labels with no room to spare.
+
+Run `npm run screenshots` from the repository root to render the six README images into
+`docs/screenshots/`. `gen/readme-shots.mjs` selects Main-en, B5-en, R1-en, W1-en, G3-en and Main,
+uses their full sizes at 1×, and losslessly compresses the PNGs. See the
+[image mapping and regeneration notes](../screenshots/README.md).
 
 The design canvas renders boards through its own runtime, which parses them differently from a
 plain page: it drops `<colgroup>`, for one, which is why the build moves column widths onto the
@@ -78,22 +84,23 @@ canvas and pass its path as `RUNTIME` to either script.
 
 ## Generator layout
 
-| File         | Content                                                                        |
-| ------------ | ------------------------------------------------------------------------------ |
-| `data.mjs`   | Seeded bars, trades, trials, equity and walk-forward windows                   |
-| `charts.mjs` | Base chart primitives: equity, scatter, heatmap, stability strips              |
-| `x.mjs`      | Candles, square heatmaps and binning, walk-forward charts, Pine source         |
-| `ui.mjs`     | Design tokens, CSS, icons, header, tabs, the page wrapper                      |
-| `panels.mjs` | Chart areas, dock panels (report, trades, code), leaderboard, map, asides      |
-| `equity.mjs` | The Equity dock tab                                                            |
-| `agg.mjs`    | Aggregate views of the Optimize page: range bar, summary charts, selection bar |
-| `over.mjs`   | Dialogs, menus, popovers, toasts, binned cell detail, one-parameter curve      |
-| `sheet.mjs`  | G5 component sheet                                                             |
-| `boards.mjs` | One entry per artboard, by canvas row                                          |
-| `en.mjs`     | English copy table                                                             |
-| `build.mjs`  | Writes the boards and `canvas.json`                                            |
-| `shot.mjs`   | Renders boards to PNG                                                          |
-| `check.mjs`  | Text-overflow check                                                            |
+| File               | Content                                                                        |
+| ------------------ | ------------------------------------------------------------------------------ |
+| `data.mjs`         | Seeded bars, trades, trials, equity and walk-forward windows                   |
+| `charts.mjs`       | Base chart primitives: equity, scatter, heatmap, stability strips              |
+| `x.mjs`            | Candles, square heatmaps and binning, walk-forward charts, Pine source         |
+| `ui.mjs`           | Design tokens, CSS, icons, header, tabs, the page wrapper                      |
+| `panels.mjs`       | Chart areas, dock panels (report, trades, code), leaderboard, map, asides      |
+| `equity.mjs`       | The Equity dock tab                                                            |
+| `agg.mjs`          | Aggregate views of the Optimize page: range bar, summary charts, selection bar |
+| `over.mjs`         | Dialogs, menus, popovers, toasts, binned cell detail, one-parameter curve      |
+| `sheet.mjs`        | G5 component sheet                                                             |
+| `boards.mjs`       | One entry per artboard, by canvas row                                          |
+| `en.mjs`           | English copy table                                                             |
+| `build.mjs`        | Writes the boards and `canvas.json`                                            |
+| `shot.mjs`         | Renders boards to PNG                                                          |
+| `readme-shots.mjs` | Renders and losslessly compresses the six README images                        |
+| `check.mjs`        | Text-overflow check                                                            |
 
 Some panel functions are left from directions the canvas no longer shows (an equity strip under
 the chart, a candles / equity switch) and are not referenced by `boards.mjs`.

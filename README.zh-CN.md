@@ -11,7 +11,7 @@
 
 </div>
 
-[![Trend Breakout 在 BTCUSDT 上的图表、成交标记与回测报告](docs/screenshots/backtest-zh.png)](docs/screenshots/backtest-zh.png)
+[![设计稿：Trend Breakout，Length 20，BTCUSDT，2023-01-02 至 2025-05-04](docs/screenshots/backtest-zh.png)](docs/screenshots/backtest-zh.png)
 
 > **当前状态。** 引擎、优化器和浏览器应用均可在本地运行，应用已支持 walk-forward（滚动优化）。
 
@@ -45,13 +45,15 @@ OptiPine 直接运行你的 Pine 源码。提供一个 v5 或 v6 策略和行情
 
 ## 看看界面
 
+这些图片由应用所遵循的[设计稿](docs/web-mock-terminal)渲染而成。
+
 [![优化汇总、排行、参数图与敏感度](docs/screenshots/optimize.png)](docs/screenshots/optimize.png)
 
-40 组参数的网格搜索展示领先的权益曲线、样本内 / 样本外结果和完整参数图，选中的参数可直接预览或应用。
+2,214 组参数的网格搜索展示领先的权益曲线、样本内 / 样本外结果和参数图，选中的参数可预览或应用。
 
 [![滚动优化的拼接权益、窗口结果与参数稳定性](docs/screenshots/walk-forward.png)](docs/screenshots/walk-forward.png)
 
-三个滚动窗口展示拼接的样本外权益、各窗口选定的参数，以及参数在窗口之间的稳定性。
+六个滚动窗口展示拼接的样本外权益、各窗口选定的参数，以及参数在窗口之间的稳定性。
 
 [![权益、回撤、每日盈亏与月度收益](docs/screenshots/equity.png)](docs/screenshots/equity.png)
 
@@ -64,12 +66,11 @@ OptiPine 直接运行你的 Pine 源码。提供一个 v5 或 v6 策略和行情
         <img src="docs/screenshots/phone.png" width="234" alt="手机上的回测图表与报告" />
       </a>
     </td>
-    <td>手机上，回测页将图表放在报告与输入等页签上方；优化页则将汇总图放在结果与设置页签上方。</td>
+    <td>手机回测页将图表放在报告、权益、成交、参数、代码和问题页签上方。</td>
   </tr>
 </table>
 
-截图来自录制的 BTCUSDT 行情，回测使用示例的默认参数；
-[重新生成截图](docs/screenshots/README.md)无需获取实时行情。
+可从设计稿[重新生成图片](docs/screenshots/README.md)。
 
 ## 运行应用
 
