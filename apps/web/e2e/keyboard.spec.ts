@@ -39,6 +39,9 @@ for (const language of ['en', 'zh'] as const)
         const example = page.getByRole('button', { name: copy['backtest.loadExample'] });
         await tabTo(page, example, stops);
         await page.keyboard.press('Enter');
+        await expect(
+          page.getByRole('tab', { name: copy['dock.report'], exact: true }),
+        ).toHaveAttribute('aria-selected', 'true');
         const run = page.getByRole('banner').getByRole('button', {
           name: new RegExp(`^${copy[phone ? 'shell.run' : 'shell.runBacktest']}`),
         });
@@ -52,13 +55,13 @@ for (const language of ['en', 'zh'] as const)
           }),
         ).toBe(false);
         await page.screenshot({ path: info.outputPath('run-focus.png') });
-        await page.keyboard.press('Enter');
 
         const code = page.getByRole('tab', {
           name: copy[phone ? 'dock.codeShort' : 'dock.code'],
           exact: true,
         });
-        await tabTo(page, code, stops);
+        // The automatic result has selected Report, which is now the tab strip's Tab stop.
+        await tabTo(page, page.getByRole('tab', { name: copy['dock.report'], exact: true }), stops);
         await page.keyboard.press('Home');
         await expect(
           page.getByRole('tab', { name: copy['dock.report'], exact: true }),

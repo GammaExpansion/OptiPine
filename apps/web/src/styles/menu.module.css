@@ -10,6 +10,10 @@
   min-width: 180px;
   max-width: calc(100vw - 16px);
 }
+/* Menus, selects and popovers manage focus here; their items and controls show the rings. */
+.menu:focus-visible {
+  outline: none;
+}
 .item {
   min-height: 30px;
   display: flex;

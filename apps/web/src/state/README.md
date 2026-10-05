@@ -17,9 +17,12 @@ bridge subscriptions and record provenance. Optimization snapshots never publish
   installs an input already validated by the CSV workflow, cancels pending provider work and records
   `{ kind: 'csv', fileName }`. Consumers should use these actions rather than calling the session's
   `setDataset` directly, so provenance follows the accepted dataset.
-- Loading an example opens its source immediately and accepts its successful data request. Missing
-  service and provider refusals open the market data dialog for recovery. A subsequent script or
-  market selection supersedes that acceptance. This does not start a backtest.
+- Loading an example opens its source, waits for compilation and its successful data request,
+  accepts the data and calls the same `actions.run()` as the Run button. A failed compile cannot
+  run. Missing service and provider refusals open the market data dialog for recovery. A subsequent
+  script edit, opened script, market selection or disposal supersedes the pending load. Opening a
+  different script cancels its old work; reopening the same example while a backtest or optimization
+  is still active does not start or queue another run.
 - `getServices()` lazily owns the sessions, the Worker clients and pool and the feed client.
   `main.tsx` disposes them on page exit and hot replacement. Pages held in the back/forward cache
   retain their services. Store subscriptions share this lifetime, not a component's mount lifetime.

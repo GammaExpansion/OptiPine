@@ -172,6 +172,8 @@ const pineTheme = EditorView.theme(
       fontSize: '12.5px',
     },
     '&:focus-within': { outline: '2px solid var(--primary)', outlineOffset: '-2px' },
+    // Both keyboard stops share the editor frame's focus indicator.
+    '.cm-scroller:focus-visible, .cm-content:focus-visible': { outline: 'none' },
     '.cm-scroller': { fontFamily: 'var(--font-code)', lineHeight: '19px' },
     '.cm-content': { padding: '10px 0', caretColor: 'var(--text)' },
     '.cm-line': { padding: '0' },

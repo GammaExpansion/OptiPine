@@ -116,7 +116,7 @@ test('on a tablet W1 keeps its splits, with the right panel left to the drawer (
 
 // A layout test: one small IS / OOS run supplies R1, and the walk-forward fixture W1, so no
 // walk-forward runs on Workers here (the walk-forward tests above and the e2e do that).
-test('on a phone W1 keeps its stitched equity above Windows, Stability and Settings (G4)', async () => {
+test('on a phone Per window opens above the tabs and both summary views survive tab changes (G4)', async () => {
   const user = userEvent.setup();
   // The charts draw on canvases, which jsdom does not provide; their tests cover the drawing.
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
@@ -150,7 +150,18 @@ test('on a phone W1 keeps its stitched equity above Windows, Stability and Setti
   ).toEqual(['Windows', 'Stability', 'Settings']);
   expect(tabs().getByRole('tab', { name: 'Windows' })).toHaveAttribute('aria-selected', 'true');
   expect(separators()).toEqual([]);
-  const summary = screen.getByRole('region', { name: 'Stitched OOS equity' });
+  const summary = screen.getByRole('region', { name: 'Windows and equity' });
+  expect(within(summary).getByRole('radio', { name: 'Per window' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  expect(
+    within(summary).getByRole('img', { name: '6 windows with IS and OOS equity' }),
+  ).toBeVisible();
+  await user.click(within(summary).getByRole('radio', { name: 'Stitched' }));
+  expect(
+    within(summary).getByRole('img', { name: '6 windows and stitched OOS equity' }),
+  ).toBeVisible();
   expect(screen.getByRole('heading', { level: 1, name: 'Optimize' })).toBeInTheDocument();
   const table = screen.getByRole('region', { name: 'Walk-forward window results' });
   expect(table).toBeVisible();
@@ -163,6 +174,14 @@ test('on a phone W1 keeps its stitched equity above Windows, Stability and Setti
   expect(screen.getByRole('region', { name: 'Optimization run' })).toBeVisible();
   // The summary stays mounted above whichever tab is open.
   expect(screen.getByRole('region', { name: 'Stitched OOS equity' })).toBe(summary);
+  expect(within(summary).getByRole('radio', { name: 'Stitched' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await user.click(within(summary).getByRole('radio', { name: 'Per window' }));
+  expect(
+    within(summary).getByRole('img', { name: '6 windows with IS and OOS equity' }),
+  ).toBeVisible();
   // Back on R1's results, the Stability tab shows the parameter map under R1's summary.
   act(() => uiStore.getState().setOptimizeTab('stability'));
   act(() => fixture.restore());
@@ -176,6 +195,6 @@ test('on a phone W1 keeps its stitched equity above Windows, Stability and Setti
     ['Sensitivity', 'false'],
     ['Settings', 'false'],
   ]);
-  expect(screen.queryByRole('region', { name: 'Stitched OOS equity' })).toBeNull();
+  expect(screen.queryByRole('region', { name: 'Windows and equity' })).toBeNull();
   expect(screen.getByRole('region', { name: 'Selected parameter set' })).toBeVisible();
 });

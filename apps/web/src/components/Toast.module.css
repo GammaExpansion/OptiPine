@@ -43,6 +43,10 @@
   width: max-content;
   max-width: calc(100vw - 32px);
 }
+/* The F8 target only routes focus into the notifications; each toast keeps its own ring. */
+.viewport:focus-visible {
+  outline: none;
+}
 .entry {
   list-style: none;
 }

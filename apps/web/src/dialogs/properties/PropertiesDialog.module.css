@@ -10,6 +10,9 @@
   flex-direction: column;
   background: var(--panel);
   border-left: 1px solid var(--divider);
+}
+/* Focus management can focus the container; only its controls should show a ring. */
+.panel:focus-visible {
   outline: none;
 }
 .header {

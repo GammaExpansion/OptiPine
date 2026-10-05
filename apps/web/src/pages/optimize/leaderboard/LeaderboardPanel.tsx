@@ -7,7 +7,6 @@ import { EmptyState } from '../../../components/EmptyState.tsx';
 import { IconButton } from '../../../components/IconButton.tsx';
 import { Popover } from '../../../components/Popover.tsx';
 import { Table } from '../../../components/Table.tsx';
-import { Tag } from '../../../components/Tag.tsx';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { useOptimizationStore } from '../../../state/optimization.ts';
 import { useUiStore } from '../../../state/ui.ts';
@@ -174,7 +173,6 @@ export function LeaderboardPanel({
           })}
         </span>
         <div className={styles.filters}>
-          {views?.unvalidated && <Tag tone="amber">{t('optimize.summary.unvalidated')}</Tag>}
           {settings.filters.map((filter, index) => (
             <Chip
               key={index}
