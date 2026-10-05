@@ -20,6 +20,10 @@
   flex-direction: column;
   overflow: hidden;
 }
+/* Radix may focus this container as a fallback; the controls own the focus indicators. */
+.dialog:focus-visible {
+  outline: none;
+}
 .small {
   width: min(440px, calc(100vw - 32px));
 }
