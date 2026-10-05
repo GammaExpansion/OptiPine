@@ -110,6 +110,9 @@ for (const language of ['en', 'zh'] as const)
       await page.goto('/');
       const example = page.getByRole('button', { name: copy['backtest.loadExample'] });
       await expect(example).toBeVisible();
+      await expect(
+        page.getByRole('banner').getByRole('button', { name: copy['shell.licenses'], exact: true }),
+      ).toMatchAriaSnapshot(`- button "${copy['shell.licenses']}"`);
       const facts = page.getByRole('banner').getByRole('group', { name: copy['shell.facts'] });
       if (size.name === 'desktop') {
         await expect(facts).toMatchAriaSnapshot(`

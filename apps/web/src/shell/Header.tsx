@@ -14,7 +14,7 @@ import styles from './Header.module.css';
 /**
  * The top bar (G5). A tablet keeps one row without the brand name, facts and date range, and
  * gains the right panel's toggle (G2); a phone splits it into the page switch with Run, then the
- * script, data and language (G3, G4).
+ * script, data and language (G3, G4). About shares the phone's top row so data stays readable.
  */
 export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
   const { t, language } = useI18n();
@@ -45,6 +45,15 @@ export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
       ]}
     />
   );
+  const about = (
+    <IconButton
+      className={styles.about}
+      icon="info"
+      label={t('shell.licenses')}
+      aria-haspopup="dialog"
+      onClick={() => setDialogOpen('licenses', true)}
+    />
+  );
   const languages = (
     <div className={styles.preferences}>
       <SegmentedControl
@@ -57,14 +66,7 @@ export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
           { value: 'en', label: t('shell.english') },
         ]}
       />
-      <button
-        type="button"
-        className={styles.licenses}
-        aria-haspopup="dialog"
-        onClick={() => setDialogOpen('licenses', true)}
-      >
-        {t('shell.licenses')}
-      </button>
+      {layout !== 'phone' && about}
     </div>
   );
   if (layout === 'phone')
@@ -75,6 +77,7 @@ export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
           <div className={styles.pageSwitch}>{pages}</div>
           <div className={styles.spacer} />
           <RunControls />
+          {about}
         </div>
         <div className={`${styles.row} ${styles.data}`}>
           <HeaderData layout={layout} />

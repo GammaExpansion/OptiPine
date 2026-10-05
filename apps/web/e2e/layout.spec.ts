@@ -190,6 +190,31 @@ for (const language of ['en', 'zh'] as const)
             { timeout: 60_000 },
           );
         await page.waitForTimeout(300);
+        const copy = catalogs[language];
+        const header = page.getByRole('banner');
+        const about = header.getByRole('button', { name: copy['shell.licenses'], exact: true });
+        await expect(about).toBeVisible();
+        const button = (await about.boundingBox())!;
+        const languages = (await header
+          .getByRole('radiogroup', { name: copy['shell.language'] })
+          .boundingBox())!;
+        // About stays centred in its row, with room for the language switch (G3, G4).
+        const rowControl =
+          size.name === 'phone' ? (await header.getByRole('navigation').boundingBox())! : languages;
+        if (size.name === 'phone') {
+          expect(button.y + button.height).toBeLessThanOrEqual(languages.y);
+          expect(button.width).toBe(44);
+        } else expect(button.x).toBeGreaterThanOrEqual(languages.x + languages.width + 4);
+        expect(button.x + button.width).toBeLessThanOrEqual(size.width);
+        expect(
+          Math.abs(button.y + button.height / 2 - rowControl.y - rowControl.height / 2),
+        ).toBeLessThan(1);
+        expect((await header.boundingBox())!.height).toBe(size.name === 'phone' ? 101 : 48);
+        expect(button.height).toBe(size.name === 'phone' ? 44 : 28);
+        if (state === 'B1' || state === 'R1')
+          await header.screenshot({
+            path: info.outputPath(`header-${state}-${size.name}-${language}.png`),
+          });
         await page.screenshot({ path: info.outputPath(`${state}-${size.name}-${language}.png`) });
         expect(await page.evaluate(layoutProblems), state).toEqual([]);
         // On a phone the legend wraps before the chart's tools rather than under them (#30).

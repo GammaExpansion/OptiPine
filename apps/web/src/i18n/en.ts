@@ -1,6 +1,6 @@
 /** Shell, Backtest, first launch and shared copy. */
 export const en = {
-  'shell.licenses': 'Licenses',
+  'shell.licenses': 'About & licenses',
   'backtest.noScript': 'Open a script first',
   'backtest.noData': 'Select market data first',
   'backtest.compiling': 'Compiling the script',

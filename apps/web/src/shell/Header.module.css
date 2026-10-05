@@ -81,7 +81,7 @@
   height: 52px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   padding: 0 12px;
   min-width: 0;
 }
@@ -107,9 +107,18 @@
   min-width: 0;
   overflow: hidden;
 }
+/* About shares this fixed-height row; long run facts may use its two text lines. */
+.phone .facts > span {
+  white-space: normal;
+}
 .phone .run {
   height: 44px;
   padding: 0 14px;
+}
+/* Keep a full touch target out of the phone's crowded data and language row. */
+.phone .about {
+  width: 44px;
+  height: 44px;
 }
 .phone[data-page='backtest'] .facts {
   display: none;
@@ -124,7 +133,7 @@
 }
 .pageSwitch button {
   height: 36px;
-  padding: 0 16px;
+  padding: 0 10px;
   border-radius: 4px;
   font-size: 13px;
 }
@@ -166,18 +175,7 @@
 }
 .preferences {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  align-items: center;
+  gap: 4px;
   flex: none;
-}
-.header .preferences button.licenses {
-  height: 18px;
-  padding: 0 6px;
-  color: var(--secondary);
-  font-size: 11px;
-  text-align: center;
-  border-radius: var(--radius);
-}
-.licenses:hover {
-  background: var(--hover);
 }

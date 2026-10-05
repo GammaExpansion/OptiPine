@@ -92,7 +92,7 @@ test('keeps CSV local and disables server-only providers with the demo note', as
 test('resolves license assets below the Pages base', async ({ page, request }) => {
   await installDemoMarketFixtures(page);
   await page.goto('/OptiPine/');
-  await page.getByRole('button', { name: 'Licenses' }).click();
+  await page.getByRole('button', { name: 'About & licenses' }).click();
   const href = await page
     .getByRole('dialog')
     .getByRole('link', { name: 'Read the MIT License' })

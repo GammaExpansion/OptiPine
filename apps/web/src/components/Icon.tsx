@@ -119,6 +119,13 @@ const paths = {
       <path d="M10 2.5v11" />
     </>
   ),
+  info: (
+    <>
+      <circle cx="8" cy="8" r="6" />
+      <path d="M8 7v4" />
+      <circle cx="8" cy="4.5" r="0.75" fill="currentColor" stroke="none" />
+    </>
+  ),
   logo: (
     <g stroke="none">
       <rect x="1.5" y="7" width="3.5" height="9" rx="1" fill="var(--primary)" />
