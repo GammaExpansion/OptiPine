@@ -156,9 +156,10 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
     const box = page.getByRole('checkbox', { name: `Search ${title}`, exact: true });
     if ((await box.getAttribute('aria-checked')) === 'true') await box.click();
   }
-  // Remove the default ranking filters for the baseline, using the workflow's own actions.
+  // The flat-window threshold below uses the best IS profit, without filters or smoothing.
   await page.evaluate(() => {
     const hooks = window as unknown as Hooks;
+    hooks.wf().actions.setSmooth(false);
     while (hooks.wf().viewSettings.filters.length) hooks.wf().actions.removeFilter(0);
   });
   expect(

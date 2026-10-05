@@ -29,9 +29,10 @@ export const optimizeHooks = {
       })(),
     };
   },
-  /** Search `title` from `from` to `to` with every other input fixed, and run it to its end. */
+  /** Search `title` from `from` to `to` with every other input fixed, and run IS / OOS to its end. */
   async runOne(title: string, from: number, to: number) {
     searchOne(title, from, to);
+    getOptimizationStore().getState().actions.setValidation({ mode: 'in-out' });
     await getOptimizationStore().getState().actions.start();
   },
   /**

@@ -123,7 +123,7 @@ export function Validation() {
           label={t('optimize.validation')}
           value={mode}
           onChange={(value) =>
-            setValidation({ mode: modes.find((item) => item === value) ?? 'in-out' })
+            setValidation({ mode: modes.find((item) => item === value) ?? 'none' })
           }
           options={[
             { value: 'none', label: t('optimize.none') },

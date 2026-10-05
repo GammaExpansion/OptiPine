@@ -71,7 +71,7 @@ async function open(
       const { actions } = target.summaryOptimization();
       actions.removeFilter(1);
       actions.removeFilter(0);
-      if (none) actions.setValidation({ mode: 'none' });
+      actions.setValidation({ mode: none ? 'none' : 'in-out' });
     },
     { script, none },
   );

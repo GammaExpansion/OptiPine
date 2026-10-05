@@ -24,6 +24,7 @@ test('recorded BTC: IS profit ranks the highest Top 20 curve at the split', asyn
   await page.goto('/');
   await page.getByRole('button', { name: /Load example/ }).click();
   await page.getByRole('button', { name: 'Optimize', exact: true }).click();
+  await page.getByRole('radio', { name: 'IS / OOS', exact: true }).click();
   await expect(page.getByRole('button', { name: /^By IS profit/ })).toBeVisible();
   await page.evaluate(async () => {
     const path = '/src/state/optimization.ts';

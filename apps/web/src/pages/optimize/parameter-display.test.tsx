@@ -31,6 +31,7 @@ for (const language of ['en', 'zh'] as const) {
     act(() => {
       uiStore.getState().setLanguage(language);
       const { actions } = optimization();
+      actions.setValidation({ mode: 'in-out' });
       // Inspect the full grid for this precision test, independent of the initial page capacity.
       actions.setPageSize(100);
       actions.setRange('Length', { from: 2, to: 3, step: 1 });

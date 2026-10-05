@@ -53,6 +53,7 @@ export const optimizeEn = {
   'optimize.map.all': 'Full range',
   'optimize.map.smooth': 'Smooth',
   'optimize.map.smoothHint': 'Smooth: mean of ±1 step neighbours',
+  'optimize.map.smoothedMetric': '{metric} · smoothed',
   'optimize.map.x': 'X',
   'optimize.map.y': 'Y',
   'optimize.map.z': 'Z',

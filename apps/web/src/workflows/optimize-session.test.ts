@@ -54,6 +54,9 @@ async function harness(source = strategySource, threads = 3) {
     now: () => timers.now,
     timers,
   });
+  // These lifecycle tests compare both validation ranges and raw map values to engine results.
+  session.setValidation({ mode: 'in-out' });
+  session.setSmooth(false);
   session.setRange('Length', { from: 3, to: 6 });
   session.setValueKept('Source', 'ohlc4', false);
   session.setSearched('Multiplier', false);
@@ -169,6 +172,12 @@ test('the setup follows the Backtest page and blocks the run with reasons (O1, O
   const empty = new OptimizationSession(backtest, new FakePool(), new FakeAnalysis(), {
     threads: 7,
   });
+  assert.equal(empty.getState().validation.mode, 'none');
+  assert.equal(empty.getState().viewSettings.smooth, true);
+  assert.deepEqual(empty.getState().viewSettings.filters, [
+    { metric: 'trades', operator: '>=', value: 5 },
+    { metric: 'maxDrawdown', operator: '<=', value: 35 },
+  ]);
   assert.deepEqual(empty.getState().readiness.reasons, [
     workflowMessage('backtest.noScript'),
     workflowMessage('backtest.noData'),
@@ -1031,6 +1040,7 @@ test('a real run on the Worker pool ranks what the engine computes, and cancel e
   const session = new OptimizationSession(backtest, workers.pool, workers.analysis, {
     threads: 2,
   });
+  session.setValidation({ mode: 'in-out' });
   session.setRange('Length', { from: 3, to: 6 });
   session.setValueKept('Source', 'ohlc4', false);
   session.setSearched('Multiplier', false);

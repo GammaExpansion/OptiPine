@@ -52,6 +52,8 @@ async function harness(walkForward: { anchored?: boolean } = {}) {
     now: () => timers.now,
     timers,
   });
+  // Selection assertions compare raw IS net profit, independently of map smoothing defaults.
+  session.setSmooth(false);
   session.setRange('Length', { from: 3, to: 6 });
   session.setValueKept('Source', 'ohlc4', false);
   session.setSearched('Multiplier', false);
@@ -591,6 +593,7 @@ test('a real walk-forward run on the Worker pool reruns each chosen set as the s
   const session = new OptimizationSession(backtest, workers.pool, workers.analysis, {
     threads: 2,
   });
+  session.setSmooth(false);
   session.setRange('Length', { from: 3, to: 5 });
   session.setValueKept('Source', 'ohlc4', false);
   session.setSearched('Multiplier', false);

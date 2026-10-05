@@ -206,14 +206,15 @@ live on the Backtest page; for walk-forward it first draws the planned windows.
   while the grid stays within 20,000 combinations, so the first run is a whole grid; a row that
   would exceed it starts fixed with its range filled in (O1). A row keeps its range once it is
   edited or a run has used it, for as long as the input's declaration stays the same.
-- **Validation.** **None**, **IS / OOS** (the default) with the OOS share (default 30%), or
+- **Validation.** **None** (the default), **IS / OOS** with the OOS share (default 30%), or
   **Walk-forward** with IS months, OOS months, step months, and an IS start that rolls forward or
   stays anchored (defaults 12, 3 and 3, rolling). With None, the panel warns that ranks only
   measure fit (O2).
 - **Ranking and filters.** The objective and direction (O7), grouped as Returns (profit,
   annualized return, profit factor, average P&L), Risk (max drawdown, Sharpe ratio, Sortino ratio)
-  and Robustness (neighbourhood mean, ±1 step); then filter chips such as Trades ≥ 30 and Max DD ≤
-  15%, and **+ Condition**. For walk-forward this section is **Per-window selection and filters**.
+  and Robustness (neighbourhood mean, ±1 step); then filter chips defaulting to Trades ≥ 5 and
+  Max DD ≤ 35%, and **+ Condition**. For walk-forward this section is **Per-window selection and
+  filters**.
 - **Properties.** A summary with **Edit**, the same properties as on the Backtest page.
 - **Run block**, pinned to the bottom: the number of combinations (or backtests, for walk-forward)
   over one line: before a first run the estimated duration and thread count (for walk-forward,
@@ -263,8 +264,11 @@ row is picked, is marked on the parameter map and shown in the selection bar bel
 **Parameter map.** X and Y are any searched inputs, with an optional Z that draws one layer per Z
 value (R4); choosing an input that is already on another axis swaps the two. The remaining inputs
 are slices that fix a value, take the best (**Max**, or **Min** for a minimized objective), or take
-the mean. **IS** / **OOS** switches the surface; **Smooth** replaces each cell with the mean of its
-±1 step neighbours in every searched input.
+the mean. **IS** / **OOS** switches the surface; **Smooth**, on by default, replaces each cell
+with the mean of its ±1 step neighbours in every searched input. For the profit objective, each
+neighbour contributes its marked-to-market range profit before averaging. The legend, hover
+tooltip and bin detail identify smoothed values; with validation None, values are labelled
+**Full range**.
 
 - Cells are square with a 2 px gap: 16 px on a layered map, which scrolls; a single-layer map
   sizes them to fill its panel, from 10 px, so a 14-value axis keeps its rows at 1440 × 900, up to

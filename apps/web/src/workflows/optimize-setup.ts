@@ -425,7 +425,7 @@ export interface ValidationSettings {
 }
 
 export const defaultValidation: ValidationSettings = {
-  mode: 'in-out',
+  mode: 'none',
   outOfSamplePercent: 30,
   walkForward: { inSampleMonths: 12, outOfSampleMonths: 3, stepMonths: 3, anchored: false },
 };

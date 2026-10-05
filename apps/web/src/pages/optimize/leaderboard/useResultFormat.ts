@@ -50,7 +50,7 @@ export function useResultFormat(rows: readonly SearchRow[] = []) {
   const condition = (filter: FilterCondition) => text(filterLabel(filter));
   /**
    * A value of the ranking objective, as the map, its tooltip and sensitivity show it: "+31,642"
-   * for net profit, "1.71" for a profit factor, "12.40%" for a drawdown.
+   * for profit, "1.71" for a profit factor, "12.40%" for a drawdown.
    */
   const objective = (value: number | null | undefined, id: ObjectiveId) => {
     const { digits, percent, signed } = objectiveFormat(id);

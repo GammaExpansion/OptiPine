@@ -34,6 +34,7 @@ export async function loadOptimization() {
   await waitFor(() => expect(getBacktestStore().getState().compile.status).toBe('compiled'));
   await act(() => getServices().loadOptimization());
   act(() => {
+    optimization().actions.setValidation({ mode: 'in-out' });
     optimization().actions.setRange('Length', { from: 2, to: 4, step: 1 });
     optimization().actions.setSearched('Multiplier', false);
   });
