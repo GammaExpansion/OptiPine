@@ -69,8 +69,6 @@ Six rolling windows place each selected set's dashed IS equity and solid OOS equ
 timeline. The window table lists selected parameters, IS / OOS results, WFE and trades; the
 stability panel compares near-optimal parameter ranges across windows.
 
-[Regenerate the images](docs/screenshots/README.md) from the mock boards.
-
 ## Running the app
 
 The [online demo](https://gammaexpansion.github.io/OptiPine/) needs no install; it loads Binance

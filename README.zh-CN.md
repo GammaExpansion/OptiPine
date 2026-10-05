@@ -61,8 +61,6 @@ Length × Multiplier 参数图及影响度。选中的参数组可在回测页�
 六个滚动窗口在同一时间轴上逐窗展示所选参数组的样本内权益（虚线）与样本外权益（实线）。
 窗口表列出所选参数、样本内外结果、WFE 和交易数；参数稳定性面板对比各窗口的近优参数范围。
 
-可从设计稿[重新生成图片](docs/screenshots/README.md)。
-
 ## 运行应用
 
 [在线演示](https://gammaexpansion.github.io/OptiPine/)无需安装，支持 Binance 现货数据和 CSV 文件。
