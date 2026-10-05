@@ -47,6 +47,15 @@ test('preview leaves inputs and result intact, Back restores Optimize, Apply and
   await user.click(screen.getByRole('button', { name: 'View backtest' }));
   await waitFor(() => expect(backtest().preview?.run.status).toBe('done'));
   expect(await screen.findByText('Current inputs are unchanged.')).toBeVisible();
+  const profits = backtest().preview!.origin;
+  expect(profits.kind).toBe('rank');
+  expect(profits.kind === 'rank' && profits.profits).toEqual({
+    inSample: optimization().views!.selection!.row.inSample.netProfit,
+    outOfSample: optimization().views!.selection!.row.outOfSample!.netProfit,
+  });
+  expect(
+    screen.getByTitle('Closed and open P&L at the end of the range (marked to market)'),
+  ).toHaveTextContent(/IS profit.*OOS profit/);
   expect(backtest().inputs).toBe(beforeInputs);
   expect(backtest().result).toBe(beforeResult);
   await user.click(screen.getByRole('button', { name: 'Back to optimization' }));

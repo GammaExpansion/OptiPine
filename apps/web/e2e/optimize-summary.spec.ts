@@ -161,7 +161,7 @@ for (const language of ['en', 'zh'] as const) {
     await add.click();
     let popover = page.getByRole('dialog', { name: en ? 'Add condition' : '添加条件' });
     await popover.getByRole('combobox', { name: en ? 'Metric' : '指标' }).click();
-    await page.getByRole('option', { name: en ? 'Net profit' : '净利润', exact: true }).click();
+    await page.getByRole('option', { name: en ? 'Profit' : '盈亏', exact: true }).click();
     await popover
       .getByRole('spinbutton', { name: en ? 'Value' : '值', exact: true })
       .fill('-100000');
@@ -170,7 +170,7 @@ for (const language of ['en', 'zh'] as const) {
     await popover.getByRole('button', { name: en ? 'Add' : '添加', exact: true }).click();
     await page
       .getByTestId('optimize-leaderboard')
-      .getByRole('button', { name: en ? /Remove Net profit/ : /移除 净利润/ })
+      .getByRole('button', { name: en ? /Remove Profit/ : /移除 盈亏/ })
       .click();
     await expect(page.getByText(en ? '9 / 9 pass' : '9 / 9 符合')).toBeVisible();
     await add.click();

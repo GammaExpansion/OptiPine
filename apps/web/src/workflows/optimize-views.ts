@@ -252,7 +252,16 @@ export function selectionOf(
   return {
     row,
     explicit: row.trialId === trialId,
-    origin: { kind: 'rank', optimizationId, trialId: row.trialId, rank },
+    origin: {
+      kind: 'rank',
+      optimizationId,
+      trialId: row.trialId,
+      rank,
+      profits: {
+        inSample: row.inSample.netProfit,
+        ...(row.outOfSample ? { outOfSample: row.outOfSample.netProfit } : {}),
+      },
+    },
   };
 }
 

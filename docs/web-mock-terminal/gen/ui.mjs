@@ -161,6 +161,7 @@ export const I = {
     ),
   panel: (s = 15) =>
     sv(s, '<rect x="2" y="2.5" width="12" height="11" rx="1.5"/><path d="M10 2.5v11"/>', 1.4),
+  info: (s = 15) => sv(s, '<circle cx="8" cy="8" r="6.25"/><path d="M8 7.25v4M8 4.75v.01"/>', 1.5),
   logo: () =>
     '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="1.5" y="7" width="3.5" height="9" rx="1" fill="#f2a33a"/><rect x="7.25" y="2" width="3.5" height="14" rx="1" fill="#f2a33a"/><rect x="13" y="9.5" width="3.5" height="6.5" rx="1" fill="#7a5a26"/></svg>',
 };
@@ -226,6 +227,7 @@ ${range}
 <div style="flex: 1"></div>
 ${right}
 <div class="seg" role="group" aria-label="语言"><button${lang === 0 ? ' class="on"' : ''}>中</button><button${lang === 1 ? ' class="on"' : ''}>EN</button></div>
+<button class="iconbtn" aria-label="关于与许可证" title="关于与许可证">${I.info()}</button>
 </header>`;
 }
 export const status = (html) =>

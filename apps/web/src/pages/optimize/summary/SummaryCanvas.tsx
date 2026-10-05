@@ -129,7 +129,8 @@ export function SummaryCanvas({ chart }: { chart: Chart }) {
     if (chart.kind === 'equity') {
       const { equity } = chart;
       if (equity.splitIndex !== null) {
-        const split = x(equity.splitIndex);
+        // Equity is sampled at bar close: mark the last IS sample whose profit was ranked.
+        const split = x(Math.max(0, equity.splitIndex - 1));
         context.fillStyle = color('--is');
         context.globalAlpha = 0.05;
         context.fillRect(8, 0, split - 8, height - 28);
@@ -155,7 +156,11 @@ export function SummaryCanvas({ chart }: { chart: Chart }) {
         context.strokeStyle = stroke;
         context.lineWidth = thickness;
         context.setLineDash(dash);
-        envelope(values, width).forEach((point, index) => {
+        envelope(
+          values,
+          width,
+          equity.splitIndex === null ? undefined : equity.splitIndex - 1,
+        ).forEach((point, index) => {
           if (index === 0) context.moveTo(x(point.index), y(point.value));
           else context.lineTo(x(point.index), y(point.value));
         });

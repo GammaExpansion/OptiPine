@@ -132,7 +132,7 @@ test('validation switches between None, IS / OOS and walk-forward (O1–O3)', as
   expect(screen.getByText('40%')).toBeVisible();
   await user.click(screen.getByRole('radio', { name: 'None' }));
   expect(screen.getByText(/ranks only measure fit/)).toBeVisible();
-  expect(screen.getByRole('button', { name: /^By Net profit ?, max/ })).toBeVisible();
+  expect(screen.getByRole('button', { name: /^By Profit ?, max/ })).toBeVisible();
   await user.click(screen.getByRole('radio', { name: 'Walk-forward' }));
   expect(screen.getByRole('heading', { name: 'Per-window selection and filters' })).toBeVisible();
   fireEvent.change(screen.getByRole('spinbutton', { name: 'Out-of-sample months' }), {
@@ -157,9 +157,9 @@ test('the objective menu ranks by a grouped objective and direction; chips remov
   const user = userEvent.setup();
   await loadOptimization();
   renderInEnglish(<OptimizeSidebar />);
-  await user.click(screen.getByRole('button', { name: /^By IS net profit ?, max/ }));
+  await user.click(screen.getByRole('button', { name: /^By IS profit ?, max/ }));
   const menu = screen.getByRole('dialog', { name: 'Ranking objective' });
-  expect(within(menu).getByRole('radio', { name: 'IS net profit' })).toHaveFocus();
+  expect(within(menu).getByRole('radio', { name: 'IS profit' })).toHaveFocus();
   expect(within(menu).getByRole('group', { name: 'Risk' })).toBeVisible();
   await user.keyboard('{ArrowDown}');
   expect(within(menu).getByRole('radio', { name: 'Annualized return' })).toHaveFocus();
@@ -212,7 +212,11 @@ test('run setup rests while objective, direction and filters stay usable (O8, WE
     expect(element.closest('[inert]')).not.toBeNull();
     expect(element.closest('[inert]')).toHaveAttribute('data-running', 'true');
   }
-  const objective = screen.getByRole('button', { name: /^By IS net profit ?, max/ });
+  const objective = screen.getByRole('button', { name: /^By IS profit ?, max/ });
+  expect(objective).toHaveAttribute(
+    'title',
+    'Closed and open P&L at the end of the range (marked to market)',
+  );
   expect(objective.closest('[inert]')).toBeNull();
   await user.click(objective);
   const menu = screen.getByRole('dialog', { name: 'Ranking objective' });

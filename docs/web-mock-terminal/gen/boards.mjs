@@ -761,6 +761,7 @@ ${pageNav(0)}
 ${seg(['15m', '1h', '4h', '1D'], 1, { label: '周期' })}
 <div style="flex: 1"></div>
 ${runBtn({ kbd: false })}
+<button class="iconbtn" aria-label="关于与许可证" title="关于与许可证">${I.info()}</button>
 <button class="iconbtn on" style="width: 32px; height: 32px; background: #1b1f24" aria-label="参数面板" aria-pressed="true">${I.panel()}</button>
 </header>`;
   const tablet = `<div style="width: 1024px; height: 768px; display: flex; flex-direction: column; background: #0e1013; color: #e8eaed; overflow: hidden; position: relative">
@@ -786,6 +787,7 @@ ${I.logo()}
 ${seg(['回测', '优化'], page, { label: '页面', style: 'height: 36px', each: 'padding: 0 16px; font-size: 13px' })}
 <div style="flex: 1"></div>
 ${action}
+<button class="iconbtn" style="width: 44px; height: 44px; margin-right: -8px" aria-label="关于与许可证" title="关于与许可证">${I.info(17)}</button>
 </header>
 <div style="height: 48px; flex: none; display: flex; align-items: center; gap: 4px; padding: 0 6px; border-bottom: 1px solid #23272d; white-space: nowrap">
 <button class="tb" style="height: 44px; min-width: 0; padding: 0 6px"><span style="overflow: hidden; text-overflow: ellipsis; max-width: 128px">trend_breakout.pine</span>${dot('#3fbf8a')}</button>
@@ -820,7 +822,7 @@ ${phoneHead(0, `<button class="primary" style="height: 44px; padding: 0 14px">${
 ${ptab(['报告', '权益', '成交 <span class="cnt">143</span>', '参数', '代码', '问题'], 0)}
 <section class="num" style="flex: 1; min-height: 0; background: #14171b; overflow: hidden">
 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
-${tile('净利润', '+18,420.35', '+18.42%', 'up')}${tile('最大回撤', '−7,812.10', '−7.81%')}${tile('盈利因子', '1.62', '多 1.67  空 1.57')}${tile('胜率', '47.55%', '68 胜  75 负')}${tile('交易', '143', '多 78  空 65')}${tile('夏普比率', '1.21', '索提诺 1.87')}
+${tile('净利润', '+18,420.35', '+18.42%', 'up')}${tile('最大回撤（盘中）', '−7,812.10', '−7.81%')}${tile('盈利因子', '1.62', '多 1.67  空 1.57')}${tile('胜率', '47.55%', '68 胜  75 负')}${tile('交易', '143', '多 78  空 65')}${tile('夏普比率', '1.21', '索提诺 1.87')}
 </div>
 <div style="padding: 12px 14px 0"><table><thead><tr><th style="color: #e8eaed; font-weight: 600; font-size: 12.5px">收益</th><th>全部</th><th>多头</th><th>空头</th></tr></thead><tbody><tr><td>净利润</td><td class="up">+18,420.35</td><td class="up">+11,230.10</td><td class="up">+7,190.25</td></tr><tr><td>毛利润</td><td>47,930.60</td><td>28,110.40</td><td>19,820.20</td></tr><tr><td>毛亏损</td><td>−29,510.25</td><td>−16,880.30</td><td>−12,629.95</td></tr></tbody></table></div>
 </section>

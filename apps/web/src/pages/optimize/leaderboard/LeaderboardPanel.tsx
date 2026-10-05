@@ -120,14 +120,20 @@ export function LeaderboardPanel({
         : []),
       {
         id: 'in',
-        header: t(views?.unvalidated ? 'optimize.leaderboard.net' : 'optimize.leaderboard.in'),
+        header: () => (
+          <span title={t('optimize.profit.help')}>
+            {t(views?.unvalidated ? 'optimize.leaderboard.net' : 'optimize.profit.is')}
+          </span>
+        ),
         cell: ({ row }) => value(row.original.inSample.netProfit, true, 0),
       },
       ...(!views?.unvalidated
         ? [
             {
               id: 'out',
-              header: t('optimize.leaderboard.out'),
+              header: () => (
+                <span title={t('optimize.profit.help')}>{t('optimize.profit.oos')}</span>
+              ),
               cell: ({ row }: { row: { original: LeaderboardRow } }) =>
                 value(row.original.outOfSample?.netProfit ?? null, true, 0),
             },

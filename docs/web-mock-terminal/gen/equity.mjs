@@ -60,7 +60,7 @@ export function dockEquity() {
     `<rect x="${f1(X0(a))}" y="${eY0 - 6}" width="${f1(X0(b) - X0(a))}" height="${dY1 - eY0 + 6}" fill="rgba(240,106,93,0.06)"/>`,
   );
   out.push(
-    `<text x="${f1((X0(a) + X0(b)) / 2)}" y="${eY1 - 6}" fill="#f58a7f" font-size="11" text-anchor="middle">最大回撤 −7.81%</text>`,
+    `<text x="${f1((X0(a) + X0(b)) / 2)}" y="${eY1 - 6}" fill="#f58a7f" font-size="11" text-anchor="middle">最大回撤（收盘）−7.81%</text>`,
   );
   for (const v of [100000, 110000])
     out.push(
@@ -150,7 +150,7 @@ ${seg(['金额', '百分比'], 0, { cls: 'sm', label: '纵轴单位' })}
 <button class="iconbtn" aria-label="重置缩放">${I.fit()}</button>
 </div>
 <div class="num" style="height: 50px; flex: none; display: flex; align-items: center; border-top: 1px solid #1f2328; border-bottom: 1px solid #1f2328">
-${fact('期末权益', '118,420', '+18.42%', 'up')}${fact('年化收益', '+7.49%', '2.34 年')}${fact('最大回撤', '−7,812', `${day(a)} 起`, 'dn')}${fact('回撤持续', `${D.LAST - a} 天`, '尚未创新高', 'am')}${fact('收益 / 最大回撤', '2.36', '')}${fact('盈利日 / 亏损日', `${posDays} / ${negDays}`, '')}${fact('最佳 / 最差单日', `<span class="up">${sfmt(Math.round(pnl[iBest]))}</span> / <span class="dn">${sfmt(Math.round(pnl[iWorst]))}</span>`, '')}
+${fact('期末权益', '118,420', '+18.42%', 'up')}${fact('年化收益', '+7.49%', '2.34 年')}${fact('最大回撤（收盘）', '−7,812', `${day(a)} 起`, 'dn')}${fact('回撤持续', `${D.LAST - a} 天`, '尚未创新高', 'am')}${fact('收益 / 最大回撤', '2.36', '')}${fact('盈利日 / 亏损日', `${posDays} / ${negDays}`, '')}${fact('最佳 / 最差单日', `<span class="up">${sfmt(Math.round(pnl[iBest]))}</span> / <span class="dn">${sfmt(Math.round(pnl[iWorst]))}</span>`, '')}
 </div>
 <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display: block; flex: none" role="img" aria-label="权益、回撤与每日盈亏日历，共用时间轴">${out.join('')}</svg>
 </section>`;

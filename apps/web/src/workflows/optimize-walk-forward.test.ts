@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { runWithEquity, type RunInput } from '@pine/engine';
-import { optimizerMessage, scoreMetric } from '@pine/optimizer';
+import { metricValue, optimizerMessage, scoreMetric } from '@pine/optimizer';
 import type { AnalysisJobs, OptimizationTrial } from '@pine/workers';
 import { BacktestSession, type DatasetInput } from './backtest.ts';
 import { workflowMessage } from './messages.ts';
@@ -185,7 +185,8 @@ test('each window optimizes its IS range, chooses a set and runs it on the OOS r
     const inside = reproduce(inSample);
     assert.equal(row.inSample?.netProfit, inside.equity.at(-1)! - 10_000);
     assert.equal(row.outOfSample?.netProfit, oos.equity.at(-1)! - 10_000);
-    profitable += Number(scoreMetric(oos.metrics, 'Net profit')! > 0);
+    // This count keeps its closed-trade definition; window amounts and ranking are marked.
+    profitable += Number(metricValue(oos.metrics, 'Net profit')! > 0);
     assert.equal(row.outOfSample?.trades, scoreMetric(oos.metrics, 'Total trades'));
     assert.equal(row.outOfSampleEquity.length, row.plan.outOfSampleBars);
     assert.equal(row.inSampleEquity.length, row.plan.inSampleBars);

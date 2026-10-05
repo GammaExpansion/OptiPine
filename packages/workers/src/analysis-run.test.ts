@@ -79,6 +79,37 @@ const view: AnalysisRunView = {
 };
 const request = { metrics: ['Net profit', 'Total trades'], fullMaps: true };
 
+test('streamed range metrics mark profit once across ranking, filters and summary columns', () => {
+  const groups = [inside.slice(0, 2), outside.slice(0, 2)].map((group) =>
+    group.map((trial, index) => ({
+      ...trial,
+      metrics: {
+        'Performance/Net profit/All USD': index === 0 ? 97 : 7,
+        'Performance/Open PnL/All USD': index === 0 ? -200 : 200,
+        'Performance/Initial capital/All USD': 1000,
+      },
+    })),
+  );
+  const runs = new AnalysisRuns();
+  runs.open(1);
+  // OOS can arrive first; both the waiting and live-record paths retain the open mark.
+  runs.append(1, 1, groups[1].slice(0, 1));
+  runs.append(1, 0, groups[0]);
+  runs.append(1, 1, groups[1].slice(1));
+  const profitView: AnalysisRunView = {
+    ...view,
+    rankBy: 'in',
+    constraintDraft: undefined,
+    constraints: [{ metric: 'Net profit', operator: '>=', value: 100 }],
+  };
+  const summary = runs.view(1, profitView, request);
+  assert.deepEqual([...summary.ranked], [1]);
+  assert.deepEqual([...summary.columns.inSampleValue], [-103, 207]);
+  assert.deepEqual([...summary.columns.metrics['Net profit'].outOfSample], [-103, 207]);
+  assert.deepEqual(runs.view(1, profitView, request), summary);
+  assert.equal(groups[0][0].metrics['Performance/Net profit/All USD'], 97);
+});
+
 function local() {
   const workers: LocalAnalysisWorker[] = [];
   const client = new AnalysisWorkerClient(() => {

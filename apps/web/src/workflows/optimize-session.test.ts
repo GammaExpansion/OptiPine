@@ -908,6 +908,7 @@ test('the selection gives the set to preview or apply on the Backtest page (3.3,
     optimizationId: results.id,
     trialId: second.trialId,
     rank: 2,
+    profits: { inSample: second.inSample.netProfit, outOfSample: second.outOfSample!.netProfit },
   });
   const preview = h.backtest.preview(selection.row.parameters, selection.origin);
   await h.engine.answerAll();
@@ -1045,7 +1046,7 @@ test('a real run on the Worker pool ranks what the engine computes, and cancel e
   session.setSearched('Multiplier', false);
   session.removeFilter(0);
   session.removeFilter(0);
-  session.addFilter({ metric: 'netProfit', operator: '>=', value: 10_000 });
+  session.addFilter({ metric: 'netProfit', operator: '>=', value: 11_000 });
   await session.start();
   const state = session.getState();
   assert.equal(state.run.status, 'done');
@@ -1069,6 +1070,11 @@ test('a real run on the Worker pool ranks what the engine computes, and cancel e
     top.curves[0].equity,
     runWithEquity(strategySource, { ...dataset, inputs: rows[0].parameters }).equity,
   );
+  const splitAt = top.splitIndex! - 1;
+  for (const [index, curve] of top.curves.entries()) {
+    assert.ok(Math.abs(curve.equity![splitAt] - 10_000 - rows[index].inSample.netProfit!) < 1e-6);
+    assert.ok(curve.equity![splitAt] <= top.curves[0].equity![splitAt]);
+  }
 
   session.setRange('Length', { from: 3, to: 12 });
   const running = session.start();
@@ -1083,7 +1089,7 @@ test('a real run on the Worker pool ranks what the engine computes, and cancel e
 });
 
 /**
- * Trial ids as the run should rank them: sets with an IS net profit of at least 10,000, by IS net
+ * Trial ids as the run should rank them: sets with an IS profit of at least 11,000, by IS
  * profit, ties by trial id.
  */
 function expectedRanking(sets: readonly Record<string, unknown>[], input: RunInput): string[] {
@@ -1093,7 +1099,7 @@ function expectedRanking(sets: readonly Record<string, unknown>[], input: RunInp
     sets.map((inputs) => ({ inputs })),
   );
   return trials
-    .filter((trial) => scoreMetric(trial.metrics, 'Net profit')! >= 10_000)
+    .filter((trial) => scoreMetric(trial.metrics, 'Net profit')! >= 11_000)
     .sort(
       (a, b) =>
         scoreMetric(b.metrics, 'Net profit')! - scoreMetric(a.metrics, 'Net profit')! ||

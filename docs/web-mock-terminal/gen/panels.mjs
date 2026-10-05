@@ -377,7 +377,7 @@ const REP = {
   def: {
     tiles: [
       ['净利润', '+18,420.35', '+18.42%', 'up'],
-      ['最大回撤', '−7,812.10', '−7.81%'],
+      ['最大回撤（盘中）', '−7,812.10', '−7.81%'],
       ['盈利因子', '1.62', '多 1.67  空 1.57'],
       ['胜率', '47.55%', '68 胜  75 负'],
       ['交易', '143', '多 78  空 65'],
@@ -390,7 +390,7 @@ const REP = {
       ['手续费', '2,164.80', '1,180.60', '984.20'],
       ['买入持有', '+471.20%', '—', '—'],
       ['最大增长', '+24,910.00', '—', '—'],
-      ['最大回撤', '−7,812.10', '—', '—'],
+      ['最大回撤（盘中）', '−7,812.10', '—', '—'],
       ['未平仓', '−352.60', '−352.60', '—'],
     ],
     b: [
@@ -417,7 +417,7 @@ const REP = {
   top: {
     tiles: [
       ['净利润', '+34,540.00', '+34.54%', 'up'],
-      ['最大回撤', '−7,950.40', '−7.50%'],
+      ['最大回撤（盘中）', '−7,950.40', '−7.50%'],
       ['盈利因子', '1.34', '多 1.39  空 1.28'],
       ['胜率', '48.35%', '44 胜  47 负'],
       ['交易', '91', '多 49  空 42'],
@@ -430,7 +430,7 @@ const REP = {
       ['手续费', '2,480.15', '1,335.40', '1,144.75'],
       ['买入持有', '+471.20%', '—', '—'],
       ['最大增长', '+36,880.00', '—', '—'],
-      ['最大回撤', '−7,950.40', '—', '—'],
+      ['最大回撤（盘中）', '−7,950.40', '—', '—'],
       ['未平仓', '−352.60', '−352.60', '—'],
     ],
     b: [
@@ -870,8 +870,21 @@ ${cs.map((c, k) => `<span class="t2" style="text-align: left">${Lm[k]}</span><sp
 <span class="t3" style="font-size: 12px">点击查看格内明细</span>
 </div>`;
   }
+  // A cell whose sets the leaderboard filters all exclude keeps its colour and carries a corner
+  // mark; the legend explains it.
+  const filtered = !none && !many && !live;
+  let marks = '';
+  if (filtered)
+    for (let b = 0; b < LAX.nb; b++)
+      D.Ms.forEach((M, j) => {
+        if (!LAX.members(b).every((L) => D.excluded(D.cell(L, M)))) return;
+        const right = hm.cx(b) + pitch - 2,
+          top = hm.cy(j);
+        marks += `<rect x="${f1(right - 6)}" y="${f1(top + 1)}" width="5" height="5" fill="#0e1013"/><rect x="${f1(right - 5)}" y="${f1(top + 2)}" width="3" height="3" fill="#c9ced4"/>`;
+      });
   const heat =
     hm.svg +
+    marks +
     `<text x="256" y="${gh + 40}" fill="#aab1b9" font-size="11.5" text-anchor="middle">Length<tspan fill="#7f8790"> · 每格 ${LAX.n} 个值取平均</tspan></text><text x="${mx - 40}" y="${gh / 2 + 6}" fill="#aab1b9" font-size="11.5" text-anchor="middle" transform="rotate(-90 ${mx - 40} ${gh / 2 + 6})">Multiplier</text>`;
   const axisRow = many
     ? `<div class="num" style="flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 2px 16px 8px; font-size: 12.5px; white-space: nowrap">
@@ -902,6 +915,7 @@ ${heat}
 <div style="display: flex; align-items: center; gap: 2px">
 ${legendRamp(lo, hi, bins)}
 </div>
+${marks ? '<span class="t3" style="display: flex; align-items: center; gap: 5px"><svg width="7" height="7" viewBox="0 0 7 7" aria-hidden="true"><rect width="7" height="7" fill="#0e1013" stroke="#2f353c"/><rect x="2" y="2" width="3" height="3" fill="#c9ced4"/></svg>已被条件排除</span>' : ''}
 ${many ? '<span class="t3" style="margin-left: auto; display: flex; align-items: center; gap: 5px"><span style="width: 10px; height: 10px; background: #181b20; border: 1px solid #2f353c"></span>未采样</span>' : ''}
 ${live ? '<span class="t3" style="margin-left: auto; display: flex; align-items: center; gap: 5px"><span style="width: 10px; height: 10px; background: #181b20; border: 1px solid #2f353c"></span>未完成</span>' : ''}
 </div>
