@@ -99,7 +99,7 @@ test('cards preserve missing net values and validation None never invents OOS', 
   );
   renderInEnglish(<LeaderboardPanel />);
   const card = screen.getByRole('button', { name: 'Select set #1' });
-  expect(card).toHaveTextContent('Net profit—');
+  expect(card).toHaveTextContent('Profit—');
   expect(card).not.toHaveTextContent('OOS');
   expect(card.querySelector('[data-profit]')).toBeNull();
 });
@@ -128,6 +128,6 @@ test('cards write whole amounts, as the desktop table and the selection bar do (
   );
   renderInEnglish(<LeaderboardPanel />);
   const card = screen.getByRole('button', { name: 'Select set #1' });
-  expect(card).toHaveTextContent('IS+25,413');
-  expect(card).toHaveTextContent('OOS−1,148');
+  expect(card).toHaveTextContent('IS profit+25,413');
+  expect(card).toHaveTextContent('OOS profit−1,148');
 });

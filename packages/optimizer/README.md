@@ -46,6 +46,21 @@ const best = leaderboard(summary.trials, { limit: 10 });
 | Metrics         | `metricRows` groups engine report keys into All / Long / Short rows in report order; `metricValue(metrics, name, scope, percent)`; `tradeStatistics` (longest losing streak).                                                                                                                                                                                                           |
 | Errors          | `optimizerMessageIds`, `optimizerMessage`, `optimizerError`, `isOptimizerError`, `SearchSpaceError`.                                                                                                                                                                                                                                                                                    |
 
+## Range profit
+
+Optimization scoring (`scoreMetric`, `optimizeParameters`, `viewTrials` and analysis summaries)
+marks account-wide Net profit to market: closed Net profit plus Open P&L at the range's last bar,
+including paid entry fees but no hypothetical exit commission. Both the report name and exact
+`Performance/Net profit/All` currency / percentage keys use this rule; percentages use initial
+capital, not the engine's Open P&L percentage denominator. `rangeProfit(metrics, percent?)`
+exposes the calculation without collecting equity per trial. This agrees with walk-forward's
+ending-equity-minus-initial-capital amounts.
+
+Original metrics are never modified. `metricValue` and `metricRows` still expose TradingView's
+closed-trade report, and other objectives and side-specific metrics retain their definitions.
+Compact selection records may already contain scored profit; without an Open P&L field they
+are not marked a second time.
+
 ## Errors and text
 
 Errors carry a stable `code` from `optimizerMessageIds` and its `values`, for example

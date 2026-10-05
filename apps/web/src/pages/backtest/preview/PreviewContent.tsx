@@ -43,7 +43,7 @@ export function PreviewContent() {
   const resultRows = useOptimizationStore((state) => state.results?.computedWith.search.rows);
   const preview = useBacktestStore((state) => state.preview);
   const rows = preview?.origin.searchRows ?? resultRows;
-  const { parameter } = useResultFormat(rows);
+  const { parameter, number } = useResultFormat(rows);
   const applied = useBacktestStore((state) => state.applied);
   const run = useBacktestStore((state) => state.run.status);
   const actions = useBacktestStore((state) => state.actions);
@@ -95,6 +95,22 @@ export function PreviewContent() {
                 .join(t('preview.separator'))}
             </span>
             <span>{t('preview.unchanged')}</span>
+            {preview.origin.kind === 'rank' && preview.origin.profits && (
+              <span title={t('optimize.profit.help')}>
+                {t(
+                  preview.origin.profits.outOfSample === undefined
+                    ? 'optimize.leaderboard.net'
+                    : 'optimize.profit.is',
+                )}{' '}
+                {number(preview.origin.profits.inSample, true, 0)}
+                {preview.origin.profits.outOfSample !== undefined && (
+                  <>
+                    {t('preview.separator')}
+                    {t('optimize.profit.oos')} {number(preview.origin.profits.outOfSample, true, 0)}
+                  </>
+                )}
+              </span>
+            )}
             {preview.origin.kind === 'window' && (
               <span>
                 {t('preview.windowRanges', {

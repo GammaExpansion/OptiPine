@@ -70,6 +70,15 @@ test('pixel envelopes retain spikes, chronological order and the last bar', () =
   expect(envelope([], 0)).toEqual([]);
 });
 
+test('downsampling keeps the exact ranked IS-end equity even between bucket extrema', () => {
+  const values = [100, 90, 150, 110, 100, 200, 50, 120];
+  expect(envelope(values, 2)).not.toContainEqual({ index: 3, value: 110 });
+  const points = envelope(values, 2, 3);
+  expect(points).toContainEqual({ index: 3, value: 110 });
+  expect(points.map((point) => point.index)).toEqual([1, 2, 3, 5, 6, 7]);
+  expect(envelope(values, 2, 2).filter((point) => point.index === 2)).toHaveLength(1);
+});
+
 test('scatter hit testing chooses the nearest dot and ignores empty space', () => {
   const points = [
     { x: 10, y: 12 },

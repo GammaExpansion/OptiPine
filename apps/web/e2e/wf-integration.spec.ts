@@ -347,8 +347,8 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
   await page.getByRole('button', { name: 'Optimize', exact: true }).click();
 
   // R10's shared popover is a stub; exercise W5 through the real filter action. Just above the
-  // weakest window's best IS net profit, that window has no set left and the others keep theirs.
-  // Ranking still uses reported net profit; displayed window amounts now include open P&L.
+  // weakest window's best IS profit, that window has no set left and the others keep theirs.
+  // Ranking and displayed window amounts both include open P&L.
   const source = await readFile(
     new URL('../examples/trend-breakout.pine', import.meta.url),
     'utf8',
@@ -362,7 +362,10 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
           inputs: { ...parameters },
         });
         expect(result.diagnostics).toEqual([]);
-        return Number(result.metrics['Performance/Net profit/All USD']);
+        return (
+          Number(result.metrics['Performance/Net profit/All USD']) +
+          Number(result.metrics['Performance/Open PnL/All USD'])
+        );
       }),
     ) + 1;
   await page.evaluate(

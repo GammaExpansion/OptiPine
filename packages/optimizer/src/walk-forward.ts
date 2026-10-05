@@ -254,9 +254,7 @@ const readMetric = (
 function readObjective(result: TrialResult | undefined, config: WalkForwardConfig): number | null {
   if (!result) return null;
   const selected = objective(config);
-  return selected.scope !== undefined || selected.percent !== undefined
-    ? metricValue(result.metrics, selected.name, selected.scope ?? 'All', selected.percent ?? false)
-    : scoreMetric(result.metrics, selected.name);
+  return scoreMetric(result.metrics, selected.name, selected.scope, selected.percent);
 }
 const sum = (values: readonly (number | null)[]): number | null =>
   !values.length || values.some((value) => value === null)

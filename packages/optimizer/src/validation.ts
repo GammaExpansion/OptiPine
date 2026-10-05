@@ -1,5 +1,6 @@
 import type { MarketBar, RunResult } from '@pine/engine';
 import { metricValue } from './metrics.ts';
+import { rangeProfit } from './range-profit.ts';
 import { errorText, type Text } from '@pine/messages';
 import { optimizerError } from './text.ts';
 import { stableTrialId } from './search-space.ts';
@@ -89,11 +90,11 @@ export function optimizeParameters(
   const total = parameterSets.length;
   const value = (r?: TrialResult) =>
     r
-      ? metricValue(
+      ? scoreMetric(
           r.metrics,
           config.objective.name,
-          config.objective.scope ?? 'All',
-          config.objective.percent ?? false,
+          config.objective.scope,
+          config.objective.percent,
         )
       : null;
   for (let i = 0; i < parameterSets.length; i++) {
@@ -186,8 +187,35 @@ export function constraintValue(trial: TrialRecord, metric: string): number | nu
         metric,
       );
 }
-/** Accept a report name or an exact metric key, so currency and percentage stay distinct. */
-export function scoreMetric(metrics: RunResult['metrics'], metric: string): number | null {
+/**
+ * Optimization scoring accepts report names or exact keys. Account-wide Net profit (amount or
+ * percent) is marked to market; metricValue and the original report remain closed-trade values.
+ * Side-specific metrics and all other objectives keep their engine definitions.
+ */
+export function scoreMetric(
+  metrics: RunResult['metrics'],
+  metric: string,
+  scope?: 'All' | 'Long' | 'Short',
+  percent?: boolean,
+): number | null {
+  if (
+    (scope ?? 'All') === 'All' &&
+    (metric === 'Net profit' || /^Performance\/Net profit\/All(?: .*)?$/.test(metric))
+  ) {
+    if (metric !== 'Net profit' && !Object.hasOwn(metrics, metric)) return null;
+    // Window selection can send only a previously scored percentage column.
+    if (
+      Object.hasOwn(metrics, metric) &&
+      metric.endsWith('/All %') &&
+      metricValue(metrics, 'Net profit') === null
+    )
+      return typeof metrics[metric] === 'number' && Number.isFinite(metrics[metric])
+        ? metrics[metric]
+        : null;
+    return rangeProfit(metrics, percent ?? metric.endsWith('/All %'));
+  }
+  if (scope !== undefined || percent !== undefined)
+    return metricValue(metrics, metric, scope ?? 'All', percent ?? false);
   const direct = metrics[metric];
   if (typeof direct === 'number') return Number.isFinite(direct) ? direct : null;
   return metricValue(metrics, metric) ?? metricValue(metrics, metric, 'All', true);

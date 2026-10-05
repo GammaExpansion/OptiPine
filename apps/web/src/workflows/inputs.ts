@@ -21,6 +21,11 @@ export type ParameterOrigin = (
       readonly optimizationId: number;
       readonly trialId: string;
       readonly rank: number;
+      /** Range profits at selection time; the full-range preview report stays closed-trade based. */
+      readonly profits?: {
+        readonly inSample: number | null;
+        readonly outOfSample?: number | null;
+      };
     }
   | { readonly kind: 'failed'; readonly optimizationId: number; readonly trialId: string }
   | {

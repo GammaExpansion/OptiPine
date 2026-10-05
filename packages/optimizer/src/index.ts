@@ -1,6 +1,7 @@
 export * from './text.ts';
 export * from './trial-id.ts';
 export * from './metrics.ts';
+export * from './range-profit.ts';
 export * from './trade-statistics.ts';
 export * from './search-space.ts';
 export * from './validation.ts';
