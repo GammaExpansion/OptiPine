@@ -23,8 +23,29 @@ import {
   type ObjectiveId,
 } from './optimize-ranking.ts';
 
-/** Rows per leaderboard page (R1, WEB.md 3.4). */
-export const leaderboardPageSize = 13;
+/** Initial capacity until the rendered leaderboard supplies its available height. */
+export const defaultLeaderboardPageSize = 10;
+export const minLeaderboardPageSize = 5;
+export const maxLeaderboardPageSize = 100;
+
+export function normalizeLeaderboardPageSize(pageSize: number): number {
+  return Math.max(minLeaderboardPageSize, Math.min(maxLeaderboardPageSize, Math.floor(pageSize)));
+}
+
+/**
+ * Whole rows that fit in a leaderboard body. The caller measures the actual row, so desktop table
+ * headers and phone card padding can use their own geometry. A partial row is never shown.
+ */
+export function leaderboardRowsPerPage(availableHeight: number, rowHeight: number): number {
+  if (!Number.isFinite(availableHeight) || !Number.isFinite(rowHeight) || rowHeight <= 0)
+    return defaultLeaderboardPageSize;
+  return normalizeLeaderboardPageSize(availableHeight / rowHeight);
+}
+
+/** The page containing a 1-based rank for the current page size. */
+export function leaderboardPageForRank(rank: number, pageSize: number): number {
+  return Math.max(0, Math.floor((rank - 1) / pageSize));
+}
 /** Sets the Top 20 equity view reruns (R1). */
 export const topEquityCount = 20;
 
@@ -162,28 +183,35 @@ export interface LeaderboardView {
   readonly rows: readonly LeaderboardRow[];
 }
 
-export function pageCount(passing: number): number {
-  return Math.max(1, Math.ceil(passing / leaderboardPageSize));
+export function pageCount(passing: number, pageSize = defaultLeaderboardPageSize): number {
+  return Math.max(1, Math.ceil(passing / pageSize));
 }
 
 /** The page shown: `page` kept within the pages there are. */
-function pageOf(results: RankedResults, page: number): number {
-  return Math.min(Math.max(0, Math.floor(page)), pageCount(results.summary.ranked.length) - 1);
+function pageOf(results: RankedResults, page: number, pageSize: number): number {
+  return Math.min(
+    Math.max(0, Math.floor(page)),
+    pageCount(results.summary.ranked.length, pageSize) - 1,
+  );
 }
 
-export function leaderboardView(results: RankedResults, page: number): LeaderboardView {
+export function leaderboardView(
+  results: RankedResults,
+  page: number,
+  pageSize = defaultLeaderboardPageSize,
+): LeaderboardView {
   const passing = results.summary.ranked.length;
-  const at = pageOf(results, page);
+  const at = pageOf(results, page, pageSize);
   const { x, y, z } = results.summary.axes;
   const searched = results.axes.map((axis) => axis.title);
   const first = [x, y, z].filter((title): title is string => !!title && searched.includes(title));
-  const start = at * leaderboardPageSize;
+  const start = at * pageSize;
   const rows: LeaderboardRow[] = [];
-  for (let rank = start + 1; rank <= Math.min(passing, start + leaderboardPageSize); rank++)
+  for (let rank = start + 1; rank <= Math.min(passing, start + pageSize); rank++)
     rows.push(leaderboardRow(results, rank));
   return {
     page: at,
-    pageCount: pageCount(passing),
+    pageCount: pageCount(passing, pageSize),
     passing,
     total: results.summary.total,
     columns: [...first, ...searched.filter((title) => !first.includes(title))],
@@ -248,7 +276,11 @@ export interface ScatterView {
   readonly pageRanks: readonly [number, number] | null;
 }
 
-export function scatterView(results: RankedResults, page: number): ScatterView | null {
+export function scatterView(
+  results: RankedResults,
+  page: number,
+  pageSize = defaultLeaderboardPageSize,
+): ScatterView | null {
   if (results.mode === 'none') return null;
   const { total, columns } = results.summary;
   const net = columns.metrics[reportMetrics.netProfit];
@@ -265,12 +297,12 @@ export function scatterView(results: RankedResults, page: number): ScatterView |
     rank[points++] = results.rankOf[position];
   }
   const passing = results.summary.ranked.length;
-  const start = pageOf(results, page) * leaderboardPageSize + 1;
+  const start = pageOf(results, page, pageSize) * pageSize + 1;
   return {
     inSample: inSample.subarray(0, points),
     outOfSample: outOfSample.subarray(0, points),
     rank: rank.subarray(0, points),
-    pageRanks: passing ? [start, Math.min(passing, start + leaderboardPageSize - 1)] : null,
+    pageRanks: passing ? [start, Math.min(passing, start + pageSize - 1)] : null,
   };
 }
 
@@ -401,13 +433,14 @@ export function draftPreview(
   results: RankedResults,
   draft: FilterCondition,
   page: number,
+  pageSize = defaultLeaderboardPageSize,
 ): DraftPreview {
-  const start = pageOf(results, page) * leaderboardPageSize;
+  const start = pageOf(results, page, pageSize) * pageSize;
   return {
     filter: draft,
     excluded: results.summary.removedConstraintRanks.length,
     pageRanks: [...results.summary.removedConstraintRanks]
-      .filter((index) => index >= start && index < start + leaderboardPageSize)
+      .filter((index) => index >= start && index < start + pageSize)
       .map((index) => index + 1),
   };
 }

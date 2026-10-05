@@ -26,6 +26,7 @@
  * the right panel, and the selection bar stays along the bottom. From 768 to 1279 px the right
  * panel is a drawer (G2) beside R1 or W1 as on a desktop.
  */
+import { useState } from 'react';
 import { useOptimizationLoaded, useOptimizationStore } from '../../state/optimization.ts';
 import { useLayout } from '../../shell/useLayout.ts';
 import { Workbench } from '../../shell/Workbench.tsx';
@@ -50,6 +51,8 @@ import styles from './OptimizePage.module.css';
 
 /** R1: the summary over the leaderboard, beside the map over sensitivity. */
 function ValidationResults() {
+  // Reserve five complete rows, including the measured heading, footer and table header.
+  const [minimumResultsHeight, setMinimumResultsHeight] = useState(300);
   return (
     <>
       <div className={styles.fill}>
@@ -57,7 +60,7 @@ function ValidationResults() {
           name="summary"
           stacked
           minSize={160}
-          restMinSize={200}
+          restMinSize={minimumResultsHeight}
           first={<SummaryPanel />}
           second={
             <Split
@@ -65,7 +68,7 @@ function ValidationResults() {
               stacked={false}
               minSize={320}
               restMinSize={320}
-              first={<LeaderboardPanel />}
+              first={<LeaderboardPanel onMinimumHeight={setMinimumResultsHeight} />}
               second={
                 <Split
                   name="map"

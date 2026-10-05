@@ -7,8 +7,8 @@ import { useResultFormat } from './useResultFormat.ts';
 import styles from './Leaderboard.module.css';
 
 /**
- * G4 cards use the same 13-set page as the desktop table, with every searched input visible, and
- * its whole amounts.
+ * G4 cards use the capacity measured for their body, with every searched input visible and the
+ * same whole amounts as the desktop table.
  */
 export function LeaderboardCards({
   rows,

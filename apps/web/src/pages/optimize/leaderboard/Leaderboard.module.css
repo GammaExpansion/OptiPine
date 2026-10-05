@@ -11,6 +11,7 @@
   flex-wrap: wrap;
 }
 .panel > .heading {
+  flex: none;
   padding: 10px 12px;
   min-height: 44px;
 }
@@ -21,6 +22,7 @@
 .heading span,
 .field > span,
 .footer {
+  flex: none;
   color: var(--caption);
   font-size: 12px;
 }
@@ -204,8 +206,8 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  min-height: 52px;
-  padding: 10px 12px;
+  min-height: var(--leaderboard-card-height, 44px);
+  padding: 6px 12px;
   border-bottom: 1px solid var(--divider);
   text-align: left;
   font-variant-numeric: tabular-nums;

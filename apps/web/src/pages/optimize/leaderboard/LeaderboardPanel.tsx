@@ -17,18 +17,24 @@ import { AddConditionTrigger } from '../filters/AddConditionTrigger.tsx';
 import { inputColumns } from './column-layout.ts';
 import { LeaderboardCards } from './LeaderboardCards.tsx';
 import { useResultFormat } from './useResultFormat.ts';
+import { usePageCapacity } from './usePageCapacity.ts';
 import styles from './Leaderboard.module.css';
 
 const noRows: LeaderboardRow[] = [];
 
-export function LeaderboardPanel() {
-  const { t } = useI18n();
+export function LeaderboardPanel({
+  onMinimumHeight,
+}: {
+  onMinimumHeight?: (height: number) => void;
+}) {
+  const { t, language } = useI18n();
   const phone = useLayout() === 'phone';
   const views = useOptimizationStore((state) => state.views);
   const format = useResultFormat(views?.searchRows);
   const settings = useOptimizationStore((state) => state.viewSettings);
   const actions = useOptimizationStore((state) => state.actions);
   const failures = useOptimizationStore((state) => state.results?.failures.length ?? 0);
+  const resultsId = useOptimizationStore((state) => state.results?.id);
   const running = useOptimizationStore((state) => state.run.status === 'running');
   const setDialogOpen = useUiStore((state) => state.setDialogOpen);
   const container = useRef<HTMLElement>(null);
@@ -42,9 +48,17 @@ export function LeaderboardPanel() {
   }, []);
   const board = views?.leaderboard;
   const body = useRef<HTMLDivElement>(null);
+  usePageCapacity(
+    body,
+    phone,
+    board?.rows ?? noRows,
+    JSON.stringify([language, resultsId, views?.unvalidated, board?.columns]),
+    actions.setPageSize,
+    onMinimumHeight,
+  );
   useEffect(() => {
     if (body.current) body.current.scrollTop = 0;
-  }, [board?.page]);
+  }, [board?.page, settings.pageSize]);
   // Every view, a selection's included, brings an equal but new `board.columns`. Column definitions
   // rebuilt from it would be new cell components to the table, which would remount every cell and
   // take the focus from the selected row's button; so they follow the titles' content instead.
@@ -189,7 +203,12 @@ export function LeaderboardPanel() {
           </Button>
         )}
       </div>
-      <div ref={body} className={styles.body} aria-busy={views?.pending}>
+      <div
+        ref={body}
+        className={styles.body}
+        aria-busy={views?.pending}
+        data-testid="leaderboard-body"
+      >
         {board && board.passing === 0 ? (
           <div className={styles.empty}>
             <EmptyState title={t('optimize.leaderboard.empty')}>

@@ -197,7 +197,10 @@ for (const language of ['en', 'zh'] as const) {
     await expect(board).toContainText(
       t('optimize.leaderboard.pass', { passing: combinations, total: combinations }),
     );
-    await expect(board.getByRole('row')).toHaveCount(14);
+    const pageSize = await page.evaluate(
+      () => (window as unknown as Hooks).optimization().viewSettings.pageSize,
+    );
+    await expect(board.getByRole('row')).toHaveCount(pageSize + 1);
     await expect(board.getByRole('cell', { name: '1.50', exact: true }).first()).toBeVisible();
     const parameters = page.getByRole('region', { name: t('optimize.selection.label') });
     await expect(parameters).toContainText(/Length18Multiplier1\.50Source/);
@@ -259,7 +262,7 @@ for (const language of ['en', 'zh'] as const) {
       () => (window as unknown as Hooks).optimization().views!.selection!.row,
     );
     expect(mapSelection.trialId).toBe(mapPoint.trialId);
-    expect(mapSelection.rank).toBeGreaterThan(13);
+    expect(mapSelection.rank).toBeGreaterThan(pageSize);
     await expect(selection).toContainText(`#${mapSelection.rank}`);
     await expect(board.locator('tr[data-selected]')).toHaveCount(1);
 

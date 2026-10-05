@@ -119,6 +119,50 @@ async function finishEquity(h: Harness): Promise<void> {
 
 const split = splitBars(dataset.bars, { mode: 'in-out', splitRatio: 0.7 });
 
+test('capacity changes preserve the leading or selected rank with one view and no reruns', async () => {
+  const h = await harness();
+  h.session.setRange('Length', { from: 3, to: 20, step: 1 });
+  h.session.setPageSize(8);
+  const results = await complete(h);
+  await finishEquity(h);
+  assert.equal(h.session.getState().views!.leaderboard.rows.length, 8);
+  h.session.setPage(2);
+  const first = h.session.getState().views!.leaderboard.rows[0];
+  assert.equal(first.rank, 17);
+  const topEquity = h.session.getState().topEquity;
+  const reproductions = h.pool.reproductions.length;
+  h.session.setPageSize(6);
+  await settle();
+  assert.deepEqual(h.analysis.kinds, ['runView']);
+  await h.analysis.answerAll();
+  let board = h.session.getState().views!.leaderboard;
+  assert.equal(board.page, 2);
+  assert.ok(board.rows.some((row) => row.trialId === first.trialId));
+  h.session.select(first.trialId);
+  await h.analysis.answerAll();
+  h.session.setPage(0);
+  h.session.setPageSize(5);
+  await settle();
+  assert.deepEqual(h.analysis.kinds, ['runView']);
+  await h.analysis.answerAll();
+  board = h.session.getState().views!.leaderboard;
+  assert.equal(board.page, 3);
+  assert.ok(board.rows.some((row) => row.trialId === first.trialId));
+  assert.equal(h.session.getState().results, results);
+  assert.equal(h.session.getState().topEquity, topEquity);
+  assert.equal(h.pool.reproductions.length, reproductions);
+  h.session.setPageSize(5.9);
+  h.session.setPageSize(Number.NaN);
+  assert.deepEqual(h.analysis.kinds, []);
+  h.session.setPageSize(200);
+  await h.analysis.answerAll();
+  assert.equal(h.session.getState().viewSettings.pageSize, 100);
+  h.session.setPageSize(0);
+  await h.analysis.answerAll();
+  assert.equal(h.session.getState().viewSettings.pageSize, 5);
+  h.session.dispose();
+});
+
 test('the setup follows the Backtest page and blocks the run with reasons (O1, O6)', async () => {
   const engine = engineHarness();
   const backtest = new BacktestSession(engine.client);
@@ -870,7 +914,7 @@ test('selecting a set reveals its page, including reselecting it after browsing 
   const results = await complete(h);
   h.session.setPage(1);
   const row = h.session.getState().views!.leaderboard.rows[0];
-  assert.equal(row.rank, 14);
+  assert.equal(row.rank, 11);
   for (let attempt = 0; attempt < 2; attempt++) {
     h.session.setPage(0);
     h.session.select(row.trialId);

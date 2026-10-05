@@ -72,7 +72,7 @@ test('invalid drafts cannot be added; presets work before any results and cancel
   expect(optimization().viewSettings.draft).toBeNull();
 });
 
-test('13-row pages select the correct set; changing filters clamps pagination', async () => {
+test('measured pages select the correct set; changing filters clamps pagination', async () => {
   await loadOptimization();
   act(() => {
     optimization().actions.removeFilter(1);
@@ -83,24 +83,24 @@ test('13-row pages select the correct set; changing filters clamps pagination', 
   const user = userEvent.setup();
   renderInEnglish(<LeaderboardPanel />);
   expect(screen.getByRole('table')).toBeVisible();
-  expect(screen.getAllByRole('button', { name: /Select set/ })).toHaveLength(13);
+  expect(screen.getAllByRole('button', { name: /Select set/ })).toHaveLength(10);
   await user.click(screen.getByRole('button', { name: 'Next page' }));
-  expect(screen.getAllByRole('button', { name: /Select set/ })).toHaveLength(5);
+  expect(screen.getAllByRole('button', { name: /Select set/ })).toHaveLength(8);
   const offPage = optimization().views!.leaderboard.rows[0].trialId;
   await user.click(screen.getByRole('button', { name: 'Previous page' }));
   // The map uses the same select action, including picks outside the visible page.
   act(() => optimization().actions.select(offPage));
-  await waitFor(() => expect(optimization().views?.selection?.row.rank).toBe(14));
-  expect(screen.getByRole('button', { name: 'Select set #14' }).closest('tr')).toHaveAttribute(
+  await waitFor(() => expect(optimization().views?.selection?.row.rank).toBe(11));
+  expect(screen.getByRole('button', { name: 'Select set #11' }).closest('tr')).toHaveAttribute(
     'data-selected',
     'true',
   );
   await user.click(screen.getByRole('button', { name: 'Previous page' }));
   expect(screen.getByRole('button', { name: 'Select set #1' })).toBeVisible();
-  expect(optimization().views?.selection?.row.rank).toBe(14);
+  expect(optimization().views?.selection?.row.rank).toBe(11);
   // Clicking the same map cell again must reveal it after browsing away, too.
   act(() => optimization().actions.select(offPage));
-  expect(screen.getByRole('button', { name: 'Select set #14' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Select set #11' })).toBeVisible();
   act(() => optimization().actions.addFilter({ metric: 'trades', operator: '>=', value: 10000 }));
   await waitFor(() => expect(optimization().views?.leaderboard.passing).toBe(0));
   expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled();

@@ -250,8 +250,12 @@ With validation None, sets are ranked by the objective over the full range, IS v
 available, and the results are marked unvalidated (R3). During a run IS vs OOS and Distribution
 fill in as trials finish; Top 20 equity follows when the run ends, as it reruns the 20 sets (O8).
 
-**Leaderboard.** Sets in ranking order, 13 per page, with how many pass the filters. Every searched
-input is a column while the width allows; the axis inputs come first and the rest collapse into
+**Leaderboard.** Sets in ranking order, with whole rows per page measured from the available body
+height after the heading, footer and table header, clamped to 5–100. The pane's minimum height
+reserves five rows. Resize updates settle after 150 ms and keep the selected set on screen, or the
+previous leading set if none was explicitly selected. The footer shows the current rank range,
+page count and how many pass the filters. Every searched input is a column while the width allows;
+the axis inputs come first and the rest collapse into
 "+N" (R4). Then IS and OOS profit, profit factor, drawdown and trades. The header repeats the filters
 with **+ Condition** and links to the failed combinations (R11). The selected set, #1 until another
 row is picked, is marked on the parameter map and shown in the selection bar below (3.3).
@@ -355,7 +359,9 @@ Issues on Backtest (G3). On Optimize the summary stays above the tabs Leaderboar
 Sensitivity and Settings once there are results, with leaderboard rows as cards, and the selected
 set's bar below them; Settings also holds the data range. Walk-forward results keep the stitched
 equity above Windows, Stability and Settings, and the selected window's bar below (G4). The
-component sheet is G5.
+component sheet is G5. The phone leaderboard measures card height separately from desktop rows;
+cards share the tallest measured height at that width so paging stays stable. Switching layouts
+recomputes capacity and preserves the selected or leading set, just like resizing R1.
 
 ## 3. Behavior
 
@@ -399,17 +405,17 @@ names the set, with **Undo**, which puts back the inputs and result from before.
 
 ### 3.4 Limits
 
-| Limit                       | Value                                      | Source                            |
-| --------------------------- | ------------------------------------------ | --------------------------------- |
-| Bars per fetch              | 100,000                                    | `@pine/market-data`               |
-| Feed cache                  | 5 minutes, last 4 datasets                 | `@pine/market-data`               |
-| Grid before random sampling | 20,000 combinations                        | This design (O5)                  |
-| Random sample count         | 2,000 by default                           | This design (O5)                  |
-| Values per searched input   | 100,000                                    | `@pine/optimizer`                 |
-| Leaderboard page            | 13 rows                                    | This design (R1)                  |
-| Map binning                 | above 24 values per axis, or more than fit | This design and `@pine/optimizer` |
-| Parameter map               | 1,000,000 cells                            | `@pine/optimizer`                 |
-| Engine steps                | 2,000,000 per bar                          | `@pine/engine`                    |
+| Limit                       | Value                                       | Source                            |
+| --------------------------- | ------------------------------------------- | --------------------------------- |
+| Bars per fetch              | 100,000                                     | `@pine/market-data`               |
+| Feed cache                  | 5 minutes, last 4 datasets                  | `@pine/market-data`               |
+| Grid before random sampling | 20,000 combinations                         | This design (O5)                  |
+| Random sample count         | 2,000 by default                            | This design (O5)                  |
+| Values per searched input   | 100,000                                     | `@pine/optimizer`                 |
+| Leaderboard page            | 5–100 whole rows, fitted to the body height | This design (R1 / G4)             |
+| Map binning                 | above 24 values per axis, or more than fit  | This design and `@pine/optimizer` |
+| Parameter map               | 1,000,000 cells                             | `@pine/optimizer`                 |
+| Engine steps                | 2,000,000 per bar                           | `@pine/engine`                    |
 
 ## 4. Architecture
 
@@ -636,8 +642,10 @@ for any `zh-*` locale, otherwise English) and remembers the choice.
   entries; components hold no copy, and a test fails on user-facing text outside the catalogs.
 - Package errors arrive as message ids with values. A test checks that both catalogs cover
   `optimizerMessageIds`, `marketDataMessageIds`, `workerMessageIds` and the workflows' own ids.
-- Report metrics use TradingView's English names in both languages. Strategy properties are
-  translated like the rest of the interface, as on the Chinese B13.
+- Report and optimization metrics are translated in the Chinese interface, following the Chinese
+  mock. Strategy properties are translated like the rest of the interface, as on the Chinese B13.
+  Report and trades CSV exports keep TradingView's English column and metric names in both
+  languages, with stable English filenames.
 - Pine source, symbols, the script's own input names and numbers are never translated; numbers
   are formatted the same way in both languages.
 - English copy prefers short forms where space is tight, as the mock does: IS / OOS, combos,
