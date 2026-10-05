@@ -248,3 +248,15 @@ test('download uses the exact file name and source blob', () => {
   vi.runAllTimers();
   expect(revoke).toHaveBeenCalledWith('blob:script');
 });
+
+test('script menu facts show one input and one plot after compiling', async () => {
+  openScript({
+    source: `${source}\nlength = input.int(20, "Length")`,
+    fileName: 'local.pine',
+    origin: { kind: 'file' },
+  });
+  mount();
+  await waitFor(() => expect(getBacktestStore().getState().compile.status).toBe('compiled'));
+  await userEvent.setup().click(screen.getByRole('button', { name: /local.pine/ }));
+  expect(await screen.findByText(/Pine v6, 1 input, 1 plot, compiled in/)).toBeVisible();
+});

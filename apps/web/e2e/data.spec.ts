@@ -296,7 +296,7 @@ test('native file picker, Ctrl+O, paste confirmation and download', async ({ pag
   const script = page.getByRole('button', { name: /local.pine/ });
   await expect(script).toBeVisible();
   await script.click();
-  await expect(page.getByText(/Pine v6, 0 inputs, 1 plots, compiled in/)).toBeVisible();
+  await expect(page.getByText(/Pine v6, 0 inputs, 1 plot, compiled in/)).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('S2-en.png') });
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('menuitem', { name: 'Download .pine' }).click();

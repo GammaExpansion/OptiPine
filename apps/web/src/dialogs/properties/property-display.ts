@@ -56,7 +56,7 @@ export function valueText<K extends PropertyId>(id: K, value: PropertyValues[K])
 function limitText(value: number): Text {
   if (value === 0) return text('properties.limit.touch');
   return value === 1
-    ? text('properties.limit.one')
+    ? text('properties.limit.single')
     : text('properties.limit.many', { count: formatNumber(value) });
 }
 

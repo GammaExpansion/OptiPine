@@ -28,8 +28,8 @@ export function ScriptMenuContent() {
         compile.status === 'compiled'
           ? t('script.facts', {
               version: compile.description.version ?? 6,
-              inputs: compile.description.inputs.length,
-              plots: compile.description.plots.length,
+              inputs: t('script.inputs', { count: compile.description.inputs.length }),
+              plots: t('script.plots', { count: compile.description.plots.length }),
               duration: Math.round(compile.durationMs),
             })
           : t(`script.${compile.status}`),

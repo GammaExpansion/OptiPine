@@ -10,12 +10,22 @@ import { sheetEn } from './sheet-en.ts';
 import { sheetZh } from './sheet-zh.ts';
 import { translate, type Language } from './translate.ts';
 
+const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((x) => x[1]).sort();
+
 test('catalogs have identical keys and placeholders', () => {
   assert.deepEqual(Object.keys(catalogs.en).sort(), Object.keys(catalogs.zh).sort());
-  const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((x) => x[1]).sort();
   for (const id of Object.keys(catalogs.en) as (keyof typeof catalogs.en)[]) {
     assert.deepEqual(placeholders(catalogs.en[id]), placeholders(catalogs.zh[id]), id);
     assert.ok(catalogs.en[id].trim() && catalogs.zh[id].trim(), id);
+  }
+});
+
+test('every English singular form has a base with the same placeholders', () => {
+  for (const [id, singular] of Object.entries(catalogs.en)) {
+    if (!id.endsWith('.one')) continue;
+    const base = id.slice(0, -4) as keyof typeof catalogs.en;
+    assert.ok(Object.hasOwn(catalogs.en, base), id);
+    assert.deepEqual(placeholders(singular), placeholders(catalogs.en[base]), id);
   }
 });
 
@@ -224,7 +234,7 @@ test('a count of one reads the singular form, where the catalog has one (bug bas
   assert.equal(translate(facts(1), 'zh'), '1 根 K 线，用时 0.0 秒');
   assert.equal(
     translate(workflowMessage('optimize.fixErrors', { count: 1 }), 'en'),
-    'Fix the error above first',
+    'Fix the 1 error above first',
   );
   assert.equal(
     translate(workflowMessage('optimize.fixErrors', { count: 2 }), 'en'),
@@ -237,4 +247,76 @@ test('a count of one reads the singular form, where the catalog has one (bug bas
   assert.equal(translate(message('report.bars', { value: '1', count: 1 }), 'en'), '1 bar');
   // An id without a singular form reads as usual for a count of one.
   assert.equal(translate(message('optimize.leaderboard.more', { count: 1 }), 'en'), '+1');
+});
+
+test('summary, data and duration counts use singular only for numeric one', () => {
+  for (const count of [0, 1, 2, 1000]) {
+    const shown = count.toLocaleString('en-US');
+    const plural = count === 1 ? '' : 's';
+    assert.equal(
+      translate(message('optimize.summary.histogram', { count, width: 1000 }), 'en'),
+      `${shown} set${plural} · bin width 1,000`,
+    );
+    assert.equal(
+      translate(message('optimize.summary.points', { count }), 'en'),
+      `One dot per set · ${shown} set${plural}`,
+    );
+    assert.equal(
+      translate(message('data.fetchingAbout', { count }), 'en'),
+      `Fetching about ${shown} bar${plural}`,
+    );
+    assert.equal(translate(message('csv.rows', { count }), 'en'), `${shown} row${plural}`);
+    assert.equal(translate(message('csv.errors', { count }), 'en'), `${shown} error${plural}`);
+    assert.equal(
+      translate(message('equity.days', { count, value: shown }), 'en'),
+      `${shown} day${plural}`,
+    );
+    assert.equal(
+      translate(message('equity.years', { count, value: `${shown}.00` }), 'en'),
+      `${shown}.00 year${plural}`,
+    );
+  }
+  assert.equal(
+    translate(message('optimize.summary.histogram', { count: 1, width: 1000 }), 'zh'),
+    '1 组 · 每格 1,000',
+  );
+});
+
+test('progress agrees with the total and leaderboard agreement with the passing count', () => {
+  for (const total of [1, 6]) {
+    const values = { count: total, done: 1, total };
+    assert.equal(
+      translate(message('optimize.wfResults.completed', values), 'en'),
+      `1 / ${total} window${total === 1 ? '' : 's'} done`,
+    );
+    assert.equal(
+      translate(message('optimize.run.progressCount', values), 'en'),
+      `1 / ${total} combo${total === 1 ? '' : 's'}`,
+    );
+    assert.equal(
+      translate(message('optimize.leaderboard.pass', { count: 1, passing: 1, total }), 'en'),
+      `1 / ${total} passes`,
+    );
+  }
+});
+
+test('script facts pluralize inputs and plots independently', () => {
+  for (const inputs of [0, 1, 2]) {
+    for (const plots of [0, 1, 2]) {
+      const facts = message('script.facts', {
+        version: 6,
+        inputs: message('script.inputs', { count: inputs }),
+        plots: message('script.plots', { count: plots }),
+        duration: 4,
+      });
+      assert.equal(
+        translate(facts, 'en'),
+        `Pine v6, ${inputs} input${inputs === 1 ? '' : 's'}, ${plots} plot${plots === 1 ? '' : 's'}, compiled in 4 ms`,
+      );
+      assert.equal(
+        translate(facts, 'zh'),
+        `Pine v6，${inputs} 个输入，${plots} 条 plot，编译 4 ms`,
+      );
+    }
+  }
 });

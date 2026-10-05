@@ -185,7 +185,7 @@ function Sampling() {
           invalid={!!sampling?.error}
           onChange={(count) => setSampling({ count })}
         />
-        <span className={styles.caption}>{t('optimize.combos')}</span>
+        <span className={styles.caption}>{t('optimize.combos', { count: settings.count })}</span>
         <span className={`${styles.secondary} ${styles.seedLabel}`}>
           {t('optimize.setup.seed')}
         </span>
