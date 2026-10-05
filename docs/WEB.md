@@ -158,6 +158,15 @@ market data dialog as a preview to accept.
 OHLC and plot values under the cursor. Plots that are not drawn over the price chart go in a pane
 under it (B7); each plot's placement comes from the engine (`PlotOutput.overlay`, section 7).
 
+The first view shows the latest 150 bars. Re-running on the same dataset and opened script keeps
+the visible time range, automatic or manual price scale, and plot-pane sizes, throughout the run
+and after its result arrives. Input/property changes and source edits do not reset the view; an
+accepted dataset (symbol, timeframe, date range or uploaded file) or a different opened script
+starts with the default view. Adding or removing plots preserves the surviving panes' view.
+**Reset zoom** and Home/End restore the default time range and automatic price scale. A window
+preview (B16) first shows its OOS range with its IS range before it; closing a preview restores
+the main backtest's view when it still uses the same data.
+
 **Dock** under the chart, with five tabs:
 
 - **Report** (B1): a row of key figures (net profit, max drawdown, profit factor, win rate, trades,
@@ -185,6 +194,10 @@ strategy properties.
 
 Opening a script shows its Pine code. When the first run of a newly opened script succeeds, a dock
 still on Pine code moves to Report; after that the dock stays on the tab the user picks.
+Re-runs on the same data also keep Equity's time zoom and amount/percent choice, and the Trades
+scroll position (clamped when fewer rows remain). A new dataset or opened script resets them:
+Equity shows the full range in amount, and Trades starts at the top. Equity's **Reset zoom** / Home
+restores the full time range. A new result clears trade hover and focus without moving the chart.
 
 **Right panel.** **Inputs** in declaration order with **Reset**: a number field with stepper and
 range, a select (declared options, a source, or for `input.timeframe` the chart's timeframe and the

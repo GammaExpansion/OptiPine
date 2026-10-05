@@ -8,6 +8,7 @@ import { useBacktestStore } from '../../state/backtest.ts';
 import { tradeRows, type TradeRow } from '../../workflows/trades.ts';
 import { ChartNoteCard } from './states/ChartNoteCard.tsx';
 import { timeframeLabel, tradeContext, type ChartView } from './states/chart-view.ts';
+import { backtestViewMemory } from './states/view-memory.ts';
 import styles from './ChartArea.module.css';
 
 // Stable empties: the chart reloads its series whenever these arrays change.
@@ -21,6 +22,7 @@ const noTrades: readonly TradeRow[] = [];
 export function ResultChart({ view }: { view: Extract<ChartView, { kind: 'chart' }> }) {
   const { t } = useI18n();
   const chart = useRef<PriceChartHandle>(null);
+  const viewMemory = useBacktestStore(backtestViewMemory);
   const [markers, setMarkers] = useState(true);
   const dimMarkers = useBacktestStore(
     (state) =>
@@ -55,6 +57,7 @@ export function ResultChart({ view }: { view: Extract<ChartView, { kind: 'chart'
     <div className={styles.area}>
       <PriceChart
         ref={chart}
+        view={viewMemory?.price}
         bars={input.bars}
         plots={result?.output.plots ?? noPlots}
         trades={markers ? trades : noTrades}

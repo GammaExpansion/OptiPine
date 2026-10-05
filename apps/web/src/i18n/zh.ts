@@ -50,7 +50,7 @@ export const zh = {
   'charts.plotValue': '{title}  {value}',
   'charts.na': '—',
   'charts.priceKeyboard':
-    '{symbol} 价格图 · {timezone}。方向键查看 K 线；+/− 缩放；Home 显示全部；End 显示近期；Escape 清除成交定位。',
+    '{symbol} 价格图 · {timezone}。方向键查看 K 线；+/− 缩放；Home/End 重置缩放；Escape 清除成交定位。',
   'charts.tradeTitle': '#{number} · {side}',
   'charts.pnl': '{value} · {percent}%',
   'charts.entry': '入场 {time} · {price}',

@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Icon } from '../../../../components/Icon.tsx';
@@ -12,13 +12,22 @@ const rowHeight = 30;
 const widths = [44, 48, 136, 86, 136, 86, 74, 96, 76, 96, 52, 36];
 
 /** Only visible rows mount. Roving focus stays on the grid as rows recycle during scrolling. */
-export function TradeTable({ rows }: { rows: readonly TradeRow[] }) {
+export function TradeTable({
+  rows,
+  view,
+  filterKey = '',
+}: {
+  rows: readonly TradeRow[];
+  view?: { scrollTop: number };
+  filterKey?: string;
+}) {
   const { t, text } = useI18n();
   const hoverTrade = useSelectionStore((state) => state.hoverTrade);
   const focusTrade = useSelectionStore((state) => state.focusTrade);
   const focused = useSelectionStore((state) => state.focusedTrade?.trade);
   const [selected, setSelected] = useState<number | null>(null);
   const scroll = useRef<HTMLDivElement>(null);
+  const previousFilter = useRef(filterKey);
   const id = useId();
   const columns = useMemo<ColumnDef<TradeRow>[]>(
     () => [
@@ -98,6 +107,7 @@ export function TradeTable({ rows }: { rows: readonly TradeRow[] }) {
     overscan: 8,
     scrollMargin: rowHeight,
     scrollPaddingStart: rowHeight,
+    initialOffset: view?.scrollTop ?? 0,
   });
   const items = virtual.getVirtualItems();
   const selectedIndex = useMemo(
@@ -110,9 +120,15 @@ export function TradeTable({ rows }: { rows: readonly TradeRow[] }) {
   useEffect(() => {
     setSelected(null);
     hoverTrade(null);
-    if (scroll.current) scroll.current.scrollTop = 0;
     return () => hoverTrade(null);
   }, [rows, hoverTrade]);
+  useLayoutEffect(() => {
+    const element = scroll.current!;
+    const top = previousFilter.current === filterKey ? (view?.scrollTop ?? 0) : 0;
+    previousFilter.current = filterKey;
+    element.scrollTop = Math.min(top, Math.max(0, element.scrollHeight - element.clientHeight));
+    if (view) view.scrollTop = element.scrollTop;
+  }, [rows, view, filterKey]);
   return (
     <div
       ref={scroll}
@@ -124,7 +140,10 @@ export function TradeTable({ rows }: { rows: readonly TradeRow[] }) {
       aria-colcount={columns.length}
       aria-activedescendant={visibleActive ? `${id}-${active}` : undefined}
       onMouseLeave={() => hoverTrade(null)}
-      onScroll={() => hoverTrade(null)}
+      onScroll={() => {
+        if (view) view.scrollTop = scroll.current!.scrollTop;
+        hoverTrade(null);
+      }}
       onKeyDown={(event) => {
         if (event.key === 'Enter' && active !== undefined) {
           event.preventDefault();

@@ -1,4 +1,12 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   CandlestickSeries,
   createChart,
@@ -29,6 +37,7 @@ import { rangePrimitive, windowBands, windowView } from './rangePrimitive.ts';
 import { tradePrimitive } from './tradePrimitive.ts';
 import { plotPrimitive } from './plotPrimitive.ts';
 import { addPlotSeries } from './plotSeries.ts';
+import { restorePriceView, savePriceView, type PriceView } from './view-state.ts';
 import styles from './Charts.module.css';
 
 export interface PriceChartProps {
@@ -43,6 +52,7 @@ export interface PriceChartProps {
   hoveredTrade?: TradeRow | null;
   /** A previewed walk-forward window's ranges, marked on the chart and shown first (B16). */
   windowRanges?: WindowRanges | null;
+  view?: PriceView;
   className?: string;
 }
 export interface PriceChartHandle {
@@ -63,11 +73,14 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
     mintick = 0.01,
     hoveredTrade = null,
     windowRanges = null,
+    view: savedView,
     className,
   },
   ref,
 ) {
   const { t, text, language } = useI18n();
+  const localView = useMemo<PriceView>(() => ({}), [bars, symbol, timeframe, windowRanges]);
+  const view = savedView ?? localView;
   const host = useRef<HTMLDivElement>(null);
   const legend = useRef<HTMLDivElement>(null);
   const paneLegend = useRef<HTMLDivElement>(null);
@@ -81,6 +94,7 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
     showLegend: (index: number) => void;
     markers?: ISeriesMarkersPluginApi<Time>;
     tradeMarkers?: SeriesMarker<Time>[];
+    view?: PriceView;
   } | null>(null);
   const [focused, setFocused] = useState<TradeRow | null>(null);
   const selected = hoveredTrade ?? focused;
@@ -103,6 +117,11 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
   /** A previewed window's OOS range with its IS range before it, else the latest bars. */
   const firstView = () => {
     const current = runtime.current;
+    current?.chart
+      .panes()
+      .forEach((_, index) =>
+        current.chart.priceScale('right', index).applyOptions({ autoScale: true }),
+      );
     const bands = current && rangesRef.current && windowBands(current.times, rangesRef.current);
     if (!bands) return resetView();
     const scale = current.chart.timeScale();
@@ -119,10 +138,10 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
       }
       host.current?.focus({ preventScroll: true });
     },
-    resetView,
+    resetView: firstView,
   }));
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = host.current!;
     const theme = chartTheme(element);
     const options = chartOptions(element, timezone, language);
@@ -172,15 +191,17 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
       showLegend: () => {},
     };
     return () => {
+      if (runtime.current?.view) savePriceView(chart, runtime.current.view);
       runtime.current = null;
       releaseTimeLabels();
       chart.remove();
     };
   }, [timezone, mintick, t, language]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const current = runtime.current!;
     const { chart, candles, overlay } = current;
+    current.view = view;
     const theme = chartTheme(host.current!);
     const times = bars.map((bar) => bar.time);
     current.times = times;
@@ -241,8 +262,6 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
       })),
     );
     plugins.push(current.markers);
-    chart.panes()[0].setStretchFactor(3);
-    chart.panes()[1]?.setStretchFactor(1);
     overlay.setData(trades, times.at(-1) ?? 0);
     overlay.select(selectedRef.current);
     overlay.setDimmed(dimRef.current);
@@ -304,10 +323,12 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
     const resized = () => showLegend(current.cursor);
     chart.timeScale().subscribeSizeChange(resized);
     showLegend(bars.length - 1);
-    firstView();
+    current.ranges.setRanges(windowRanges);
+    if (!restorePriceView(chart, view)) firstView();
     return () => {
       // The owning effect may already have removed the chart (unmount, locale or timezone).
       if (runtime.current?.chart !== chart) return;
+      savePriceView(chart, view);
       chart.unsubscribeCrosshairMove(crosshair);
       chart.timeScale().unsubscribeSizeChange(resized);
       plugins.forEach((plugin) => plugin.detach());
@@ -316,7 +337,7 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
       legend.current?.replaceChildren();
       paneLegend.current?.replaceChildren();
     };
-  }, [bars, plots, trades, symbol, timeframe, timezone, mintick, t, text]);
+  }, [bars, plots, trades, symbol, timeframe, timezone, mintick, t, text, view, windowRanges]);
 
   useEffect(() => {
     const current = runtime.current;
@@ -332,12 +353,6 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
   useEffect(() => {
     runtime.current?.overlay.select(selected);
   }, [selected]);
-
-  useEffect(() => {
-    runtime.current?.ranges.setRanges(windowRanges);
-    firstView();
-    // Only another window moves the view; the bars' own effect shows it with new data.
-  }, [windowRanges]);
 
   useEffect(() => {
     setFocused(null);
@@ -366,8 +381,7 @@ export const PriceChart = forwardRef<PriceChartHandle, PriceChartProps>(function
             current.chart.clearCrosshairPosition();
           } else if (event.key === '+' || event.key === '=') zoomChart(current.chart, 0.8);
           else if (event.key === '-') zoomChart(current.chart, 1.25);
-          else if (event.key === 'Home') current.chart.timeScale().fitContent();
-          else if (event.key === 'End') resetView();
+          else if (event.key === 'Home' || event.key === 'End') firstView();
           else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
             const index = Math.max(
               0,

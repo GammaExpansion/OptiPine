@@ -562,8 +562,11 @@ for (const language of ['en', 'zh'] as const) {
     await expect.poll(async () => (await projection()).week).toBeCloseTo(zoom.week, 4);
     await expect.poll(async () => (await projection()).first).toBeCloseTo(zoom.first, 3);
     await runReady(page);
-    await expect.poll(async () => (await projection()).week).toBeCloseTo(full.week, 4);
-    await expect(months).toHaveCount(24);
+    await expect.poll(async () => (await projection()).week).toBeCloseTo(zoom.week, 4);
+    await expect.poll(async () => (await projection()).first).toBeCloseTo(zoom.first, 3);
+    await expect(
+      charts.getByRole('button', { name: /^(Percent|百分比)$/, exact: true }),
+    ).toHaveAttribute('aria-pressed', 'true');
     await equityPane.press('+');
     await expect.poll(async () => (await projection()).week).toBeGreaterThan(full.week * 1.2);
     await charts.getByRole('button', { name: /^(Reset zoom|重置缩放)$/ }).click();
