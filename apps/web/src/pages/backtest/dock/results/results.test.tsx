@@ -17,6 +17,7 @@ import { TradesTab } from '../TradesTab.tsx';
 import { DockActionsHost } from '../DockActions.tsx';
 import { PropertiesSummary } from '../../sidebar/PropertiesSummary.tsx';
 import { displayedResult, equityFor, reportFor, tradesFor } from './model.ts';
+import { TradeTable } from './TradeTable.tsx';
 
 vi.mock('../../../../charts/EquityCharts.tsx', () => ({
   EquityCharts: ({ afterToolbar }: { afterToolbar?: ReactNode }) => (
@@ -388,4 +389,33 @@ test('side and P&L filters apply without running again and leave source rows unc
       String(losses.rows.length + 1),
     );
   else expect(screen.getByText('No trades match the filters')).toBeVisible();
+});
+
+test('trade scroll survives new rows, clamps shorter results and resets for a new dataset', async () => {
+  const result = await run();
+  const row = tradesFor(result)[0];
+  const rows = Array.from({ length: 100 }, (_, index) => ({ ...row, number: 100 - index }));
+  const view = { scrollTop: 0 };
+  vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(300);
+  vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    return Number(this.getAttribute('aria-rowcount')) * 30;
+  });
+  const content = (count: number, memory = view) => (
+    <I18nProvider>
+      <TradeTable rows={rows.slice(0, count)} view={memory} />
+    </I18nProvider>
+  );
+  const mounted = render(content(100));
+  const grid = screen.getByRole('grid');
+  fireEvent.scroll(grid, { target: { scrollTop: 900 } });
+  mounted.rerender(content(80));
+  expect(screen.getByRole('grid')).toBe(grid);
+  expect(grid.scrollTop).toBe(900);
+  mounted.rerender(content(10));
+  expect(grid.scrollTop).toBe(30);
+  expect(view.scrollTop).toBe(30);
+  mounted.rerender(content(100, { scrollTop: 0 }));
+  expect(grid.scrollTop).toBe(0);
 });

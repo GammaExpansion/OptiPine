@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import {
   AreaSeries,
   LineStyle,
@@ -22,6 +22,7 @@ import { MonthlyReturns } from './MonthlyReturns.tsx';
 import type { CalendarHandle } from './svg.ts';
 import { drawdownTickLabels, priceFormat } from './formatting.ts';
 import { pointLabelPrimitive } from './pointLabelPrimitive.ts';
+import type { EquityView } from './view-state.ts';
 import styles from './Charts.module.css';
 
 export interface EquityChartsProps {
@@ -32,10 +33,11 @@ export interface EquityChartsProps {
   /** Page-owned facts, placed below the toolbar and above the flexible chart stack. */
   afterToolbar?: ReactNode;
   className?: string;
+  view?: EquityView;
 }
 
-// A tab can unmount while another dock tab is active. Retain only a user's view, by result.
-const userRanges = new WeakMap<EquityInput, LogicalRange>();
+// Standalone charts retain their input's view; Backtest supplies its dataset-owned view instead.
+const userViews = new WeakMap<EquityInput, EquityView>();
 
 /** The workflow owns all financial calculations; this component only projects its output. */
 export function EquityCharts({
@@ -44,9 +46,18 @@ export function EquityCharts({
   showAttribution = true,
   afterToolbar,
   className,
+  view: savedView,
 }: EquityChartsProps) {
   const { t, language } = useI18n();
-  const [unit, setUnit] = useState<'amount' | 'percent'>('amount');
+  let localView = userViews.get(input);
+  if (!localView) userViews.set(input, (localView = {}));
+  const viewState = savedView ?? localView;
+  const [, renderUnit] = useState(0);
+  const unit = viewState.unit ?? 'amount';
+  const setUnit = (value: 'amount' | 'percent') => {
+    viewState.unit = value;
+    renderUnit((version) => version + 1);
+  };
   const equityHost = useRef<HTMLDivElement>(null);
   const drawdownHost = useRef<HTMLDivElement>(null);
   const shade = useRef<HTMLDivElement>(null);
@@ -55,7 +66,7 @@ export function EquityCharts({
   const charts = useRef<IChartApi[]>([]);
   const resetView = useRef(() => {});
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const eqHost = equityHost.current!;
     const ddHost = drawdownHost.current!;
     const theme = chartTheme(eqHost);
@@ -157,7 +168,7 @@ export function EquityCharts({
     }
     const axis = dateAxis(localDates(input.times, input.timezone));
     const fullRange = { from: 0 as Logical, to: Math.max(1, input.times.length - 1) as Logical };
-    let view = userRanges.get(input) ?? fullRange;
+    let view = viewState.range ?? fullRange;
     let activeChart: IChartApi | null = null;
     let frame = 0;
     const render = () => {
@@ -190,7 +201,7 @@ export function EquityCharts({
       // range update from the other pane must never overwrite it with an intermediate range.
       if (range && source === activeChart) {
         view = range;
-        userRanges.set(input, range);
+        viewState.range = range;
         target.timeScale().setVisibleLogicalRange(range);
       }
       schedule();
@@ -220,16 +231,17 @@ export function EquityCharts({
       schedule();
     };
     resetView.current = () => {
-      userRanges.delete(input);
+      delete viewState.range;
       view = fullRange;
       applyView();
     };
     const sizeCharts = () => {
       if (!eqHost.clientWidth || !eqHost.clientHeight || !ddHost.clientHeight) return;
-      activeChart = null;
+      // Queue the retained range before resize forces a paint, including on a new result.
+      // Painting first briefly exposes the library's default latest-bars view.
+      applyView();
       equity.resize(eqHost.clientWidth, eqHost.clientHeight, true);
       drawdown.resize(ddHost.clientWidth, ddHost.clientHeight, true);
-      applyView();
     };
     const resize = new ResizeObserver(sizeCharts);
     resize.observe(eqHost);
@@ -273,7 +285,7 @@ export function EquityCharts({
       equity.remove();
       drawdown.remove();
     };
-  }, [input, summary, unit, t, language]);
+  }, [input, summary, unit, t, language, viewState]);
 
   useEffect(() => {
     // Ownership can change without reloading series or losing the visible range.

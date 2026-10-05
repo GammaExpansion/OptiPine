@@ -50,7 +50,7 @@ export const en = {
   'charts.plotValue': '{title}  {value}',
   'charts.na': '—',
   'charts.priceKeyboard':
-    '{symbol} price chart · {timezone}. Arrow keys inspect bars; +/− zoom; Home fits all; End shows recent bars; Escape clears the focused trade.',
+    '{symbol} price chart · {timezone}. Arrow keys inspect bars; +/− zoom; Home/End reset zoom; Escape clears the focused trade.',
   'charts.tradeTitle': '#{number} · {side}',
   'charts.pnl': '{value} · {percent}%',
   'charts.entry': 'Entry {time} · {price}',

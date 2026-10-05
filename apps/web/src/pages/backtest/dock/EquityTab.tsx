@@ -7,11 +7,13 @@ import { useUiStore } from '../../../state/ui.ts';
 import { displayedResult, equityFor } from './results/model.ts';
 import { numberMessage, profitTone } from './results/formatting.ts';
 import { ResultFrame } from './results/ResultFrame.tsx';
+import { backtestViewMemory } from '../states/view-memory.ts';
 import styles from './results/Results.module.css';
 
 export function EquityTab() {
   const { t, text } = useI18n();
   const result = useBacktestStore(displayedResult);
+  const view = useBacktestStore(backtestViewMemory);
   const maximized = useUiStore((state) => state.paneSizes.backtest.chart === 0);
   const equity = result && equityFor(result);
   if (!equity) return <ResultFrame empty account />;
@@ -37,6 +39,7 @@ export function EquityTab() {
       <EquityCharts
         className={styles.equity}
         input={input}
+        view={view?.equity}
         summary={summary}
         showAttribution={maximized}
         afterToolbar={

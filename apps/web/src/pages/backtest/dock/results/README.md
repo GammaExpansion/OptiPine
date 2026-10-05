@@ -19,7 +19,8 @@ Retained figures also dim during a run (B8).
 Trades uses TanStack Table 8 and TanStack Virtual 3. Thirty-pixel rows, eight overscan rows on each
 side and a sticky header bound the mounted DOM. The grid owns keyboard focus: arrows select,
 Home/End jump, Enter focuses the selected trade. Hover, leave, scroll, filtering and unmount update
-the shared selection store. A new row collection clears the local selection and scroll position.
+the shared selection store. A new row collection clears the local selection. Re-runs on the same
+dataset and opened script retain scroll, clamped to the new rows; filters and new data reset it.
 Side and P&L filters call `filterTrades`; export downloads the filtered list using `tradesCsv`,
 stable English headers and sides, and a UTF-8 BOM for spreadsheet applications. Prices/P&L use two
 decimals, quantities four, matching B2. CSV retains workflow precision.
@@ -49,7 +50,8 @@ Differences and remaining integration points:
   order. Flexible equity/drawdown panes fill the remaining height without vertical scrolling at
   1440 × 900. The full range is applied after measuring both panes, including initially hidden or
   zero-width mounts. Resize fits the full range until the user changes it; then it preserves that
-  view through resize, units, language and tab switches. A new result fits again. Equity enables
+  view through resize, units, language, tab switches and re-runs on the same data and opened script.
+  New data or a different opened script fits again and restores amount units. Equity enables
   attribution when maximized; the integrated PriceChart supplies it otherwise. The shared dock
   still owns maximize/restore; the chart toolbar's corner control resets zoom.
 - `workflows/report.ts` now exports `reportCsv(report, headers)`. `ReportCsvHeaders` supplies the

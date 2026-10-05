@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useState } from 'react';
 import { IconButton } from '../../../components/IconButton.tsx';
 import { Select } from '../../../components/Select.tsx';
 import { SegmentedControl } from '../../../components/SegmentedControl.tsx';
@@ -15,6 +15,7 @@ import { ResultFrame } from './results/ResultFrame.tsx';
 import { TradeTable } from './results/TradeTable.tsx';
 import { downloadCsv, tradeExport } from './results/export.ts';
 import { DockActions } from './DockActions.tsx';
+import { backtestViewMemory } from '../states/view-memory.ts';
 import styles from './results/Results.module.css';
 
 const noRows: readonly TradeRow[] = [];
@@ -22,10 +23,14 @@ const noRows: readonly TradeRow[] = [];
 export function TradesTab() {
   const { t } = useI18n();
   const result = useBacktestStore(displayedResult);
+  const view = useBacktestStore(backtestViewMemory);
   const [side, setSide] = useState<SideFilter>('all');
   const [pnl, setPnl] = useState<PnlFilter>('all');
   const rows = result ? tradesFor(result) : noRows;
   const list = useMemo(() => filterTrades(rows, { side, pnl }), [rows, side, pnl]);
+  useLayoutEffect(() => {
+    if (!list.rows.length && view) view.trades.scrollTop = 0;
+  }, [list, view]);
   return (
     <ResultFrame>
       <DockActions>
@@ -61,7 +66,7 @@ export function TradesTab() {
         </span>
       </div>
       {list.rows.length ? (
-        <TradeTable rows={list.rows} key={`${result?.finishedAt}-${side}-${pnl}`} />
+        <TradeTable rows={list.rows} view={view?.trades} filterKey={`${side}-${pnl}`} />
       ) : (
         <div className={styles.empty}>
           <strong>{t(rows.length ? 'trades.noMatches' : 'trades.empty')}</strong>
