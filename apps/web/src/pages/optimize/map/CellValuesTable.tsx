@@ -36,10 +36,12 @@ export function CellValuesTable({
   const from = Math.min(start, Math.max(0, values.values.length - visible));
   const showY = y && values.values.some((value) => value.y !== values.values[0]?.y);
   const objective = useOptimizationStore((state) => state.viewSettings.objective);
+  const smooth = useOptimizationStore((state) => state.viewSettings.smooth);
   const format = useResultFormat(rows);
   const number = (value: number | null) => format.objective(value, objective);
   return (
     <div className={styles.values}>
+      {smooth && <p className={styles.note}>{t('optimize.map.neighbourhood')}</p>}
       <div
         className={scroll ? styles.valueScroll : undefined}
         onScroll={(event) =>

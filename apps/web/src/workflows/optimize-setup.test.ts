@@ -337,19 +337,19 @@ test('drafts survive a recompile while the input keeps its declaration', () => {
 test('the data range splits as splitBars does, or explains why it cannot', () => {
   const bars = syntheticBars(100);
   const split = splitBars(bars, { mode: 'in-out', splitRatio: 0.7 });
-  assert.deepEqual(dataRange(bars, defaultValidation), {
+  assert.deepEqual(dataRange(bars, { ...defaultValidation, mode: 'in-out' }), {
     all: { start: bars[0].time, end: bars[99].time, bars: 100 },
     inSample: { start: bars[0].time, end: split.inSample.at(-1)!.time, bars: 70 },
     outOfSample: { start: split.outOfSample[0].time, end: bars[99].time, bars: 30 },
     error: null,
   });
-  assert.deepEqual(dataRange(bars, { ...defaultValidation, mode: 'none' }).inSample, null);
+  assert.deepEqual(dataRange(bars, defaultValidation).inSample, null);
   assert.deepEqual(
-    dataRange(bars, { ...defaultValidation, outOfSamplePercent: 100 }).error,
+    dataRange(bars, { ...defaultValidation, mode: 'in-out', outOfSamplePercent: 100 }).error,
     optimizerMessage('splitRatioRange'),
   );
   assert.deepEqual(
-    dataRange(bars.slice(0, 1), defaultValidation).error,
+    dataRange(bars.slice(0, 1), { ...defaultValidation, mode: 'in-out' }).error,
     optimizerMessage('splitNeedsBars'),
   );
 });
@@ -363,7 +363,7 @@ test('the duration estimate spreads the measured cost over the threads', () => {
 test('without data only an invalid share is an error', () => {
   assert.equal(dataRange([], defaultValidation).error, null);
   assert.deepEqual(
-    dataRange([], { ...defaultValidation, outOfSamplePercent: 0 }).error,
+    dataRange([], { ...defaultValidation, mode: 'in-out', outOfSamplePercent: 0 }).error,
     optimizerMessage('splitRatioRange'),
   );
 });

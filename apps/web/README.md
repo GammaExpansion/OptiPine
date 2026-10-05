@@ -5,6 +5,10 @@ framework-free workflows (`src/workflows/`), Zustand stores (`src/state/`) and t
 Workers, in English and Chinese, from desktop to phone widths. `Shell` opens Optimize once there
 are a script and data; its `canOptimize` prop overrides that for the test harness.
 
+Optimize starts with validation **None** (unvalidated, full range), **Smooth** on (the mean of
+±1-step neighbours), and filters **Trades ≥ 5** and **Max DD ≤ 35%**. Users can change each setting;
+IS / OOS and walk-forward are explicit validation choices.
+
 From the repository root, after installing dependencies and building packages:
 
 ```sh

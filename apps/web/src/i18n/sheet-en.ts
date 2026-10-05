@@ -65,7 +65,7 @@ export const sheetEn = {
   'sheet.ohlc4': 'ohlc4',
   'sheet.hlcc4': 'hlcc4',
   'sheet.chips': 'Chips',
-  'sheet.tradesFilter': 'Trades ≥ 30',
+  'sheet.tradesFilter': 'Trades ≥ 5',
   'sheet.badFilter': 'PF ≥ 2.5',
   'sheet.remove': 'Remove {label}',
   'sheet.badges': 'Badges',

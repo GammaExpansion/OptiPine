@@ -38,7 +38,7 @@ async function results(none = false) {
     actions.setRange('Multiplier', { from: 1.5, to: 2, step: 0.25 });
     actions.setSearched('Fixed', false);
     actions.setPageSize(6);
-    if (none) actions.setValidation({ mode: 'none' });
+    actions.setValidation({ mode: none ? 'none' : 'in-out' });
   });
   await runOptimization();
 }

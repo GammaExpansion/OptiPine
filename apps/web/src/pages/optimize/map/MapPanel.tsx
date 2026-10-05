@@ -171,7 +171,13 @@ export function MapPanel() {
               formatValue={objectiveValue}
             />
             <div className={styles.legend} aria-label={t('optimize.map.legend')}>
-              <span>{t(`optimize.map.objective.${settings.objective}`)}</span>
+              <span>
+                {settings.smooth
+                  ? t('optimize.map.smoothedMetric', {
+                      metric: t(`optimize.map.objective.${settings.objective}`),
+                    })
+                  : t(`optimize.map.objective.${settings.objective}`)}
+              </span>
               <LegendRamp map={map.panel} className={styles.ramp} missing={t('optimize.map.na')} />
               {map.panel.cells.some((cell) => cell.value === null) && (
                 <span className={styles.missing}>

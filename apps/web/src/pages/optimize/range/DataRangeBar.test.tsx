@@ -18,6 +18,7 @@ test('the bar shows the IS and OOS ranges, or all of the data for None (O1, O2)'
   const view = renderInEnglish(<DataRangeBar />);
   reads(view.container, 'Data range', 'No market data selected');
   await loadScript();
+  act(() => optimization().actions.setValidation({ mode: 'in-out' }));
   reads(
     view.container,
     'Data range',

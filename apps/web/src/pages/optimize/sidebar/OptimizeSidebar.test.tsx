@@ -4,6 +4,7 @@ import { expect, test, vi } from 'vitest';
 import { WorkerCancelledError } from '@pine/workers';
 import { getServices } from '../../../state/services.ts';
 import { uiStore } from '../../../state/ui.ts';
+import { loadScript } from '../../backtest/states/test-support.tsx';
 import {
   loadOptimization,
   optimization,
@@ -119,8 +120,11 @@ test('random sampling takes a sample count and a seed (O5)', async () => {
 
 test('validation switches between None, IS / OOS and walk-forward (O1–O3)', async () => {
   const user = userEvent.setup();
-  await loadOptimization();
+  await loadScript();
   renderInEnglish(<OptimizeSidebar />);
+  expect(screen.getByRole('radio', { name: 'None' })).toBeChecked();
+  expect(screen.queryByRole('slider', { name: 'OOS share' })).toBeNull();
+  await user.click(screen.getByRole('radio', { name: 'IS / OOS' }));
   const share = screen.getByRole('slider', { name: 'OOS share' });
   expect(share).toHaveAttribute('aria-valuetext', 'IS 70%, OOS 30%');
   fireEvent.change(share, { target: { value: '60' } });
@@ -168,9 +172,9 @@ test('the objective menu ranks by a grouped objective and direction; chips remov
   });
   expect(screen.queryByRole('dialog', { name: 'Ranking objective' })).toBeNull();
   expect(screen.getByRole('button', { name: /^By Max drawdown ?, min/ })).toBeVisible();
-  await user.click(screen.getByRole('button', { name: 'Remove Trades ≥ 30' }));
+  await user.click(screen.getByRole('button', { name: 'Remove Trades ≥ 5' }));
   expect(optimization().viewSettings.filters).toEqual([
-    { metric: 'maxDrawdown', operator: '<=', value: 15 },
+    { metric: 'maxDrawdown', operator: '<=', value: 35 },
   ]);
   expect(screen.getByRole('button', { name: '+ Condition' })).toBeVisible();
 });

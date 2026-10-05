@@ -129,6 +129,7 @@ for (const language of ['en', 'zh'] as const) {
     ).toBe(barCount);
     await page.getByRole('button', { name: t('shell.optimize'), exact: true }).click();
     const right = page.getByTestId('optimize-right');
+    await right.getByRole('radio', { name: t('optimize.inOut'), exact: true }).click();
     // Fix the grid's spacing as well as its bounds; suggested steps depend on current inputs.
     for (const [title, from, to, step] of [
       ['Length', 18, 19, 1],

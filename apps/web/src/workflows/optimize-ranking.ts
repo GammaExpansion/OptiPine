@@ -84,7 +84,7 @@ export function naturalDirection(objective: ObjectiveId): Direction {
   return objective === 'maxDrawdown' ? 'minimize' : 'maximize';
 }
 
-/** A filter chip such as Trades ≥ 30: sets failing it are not ranked. */
+/** A filter chip such as Trades ≥ 5: sets failing it are not ranked. */
 export interface FilterCondition {
   readonly metric: FilterMetricId;
   readonly operator: '>=' | '<=';
@@ -93,8 +93,8 @@ export interface FilterCondition {
 
 /** The chips a new optimization starts with (O1). */
 export const defaultFilters: readonly FilterCondition[] = [
-  { metric: 'trades', operator: '>=', value: 30 },
-  { metric: 'maxDrawdown', operator: '<=', value: 15 },
+  { metric: 'trades', operator: '>=', value: 5 },
+  { metric: 'maxDrawdown', operator: '<=', value: 35 },
 ];
 
 /** R10's presets, in order. */

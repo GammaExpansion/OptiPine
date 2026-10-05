@@ -30,11 +30,14 @@ it('renders a real nine-set snapshot, switches surfaces and smoothing without ru
     </>,
   );
   expect(screen.getByTestId('parameter-map')).toBeInTheDocument();
+  expect(screen.getByRole('switch')).toBeChecked();
+  expect(screen.getByText('Net profit · smoothed')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('radio', { name: 'OOS' }));
   expect(optimization().views?.map?.surface).toBe('out');
   fireEvent.click(screen.getByRole('switch'));
   await waitFor(() => expect(optimization().views?.pending).toBe(false));
-  expect(optimization().viewSettings.smooth).toBe(true);
+  expect(optimization().viewSettings.smooth).toBe(false);
+  expect(screen.queryByText('Net profit · smoothed')).not.toBeInTheDocument();
   expect(optimization().results).toBe(result);
   expect(start).not.toHaveBeenCalled();
   act(() => uiStore.getState().setLanguage('zh'));
@@ -55,6 +58,7 @@ it('renders the workflow hover list including null results and its mean', async 
   expect(screen.getByText('Mean')).toBeInTheDocument();
   expect(within(table).getByText('IS')).toBeInTheDocument();
   expect(within(table).getByText('OOS')).toBeInTheDocument();
+  expect(screen.getByText('Neighbourhood mean (±1 step)')).toBeInTheDocument();
 });
 
 it('scrolls a large hover list without mounting every value and keeps the full mean', () => {
@@ -127,6 +131,11 @@ it('opens R7 at original resolution with a framed bin, then closes it', async ()
   fireEvent.keyDown(canvas, { key: 'Enter' });
   expect(screen.getByRole('region', { name: 'Bin detail' })).toBeInTheDocument();
   expect(
+    within(screen.getByRole('region', { name: 'Bin detail' })).getByText(
+      'Neighbourhood mean (±1 step)',
+    ),
+  ).toBeInTheDocument();
+  expect(
     screen.getByText('Original resolution. White frames mark the 2 values in this cell.'),
   ).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Close detail' }));
@@ -169,6 +178,6 @@ it('says once, in the tooltip, what an excluded cell fails, with no box over the
   // Keyboard and screen reader users hear the same, with the value in the objective's format.
   const status = within(canvas.parentElement!.parentElement!).getByRole('status');
   expect(status.textContent).toBe(
-    '2–3, ohlc4: +2,317. Excluded by filters. Trades ≥ 30. Trades ≥ 100,000',
+    '2–3, ohlc4: +2,309. Excluded by filters. Trades ≥ 5. Trades ≥ 100,000',
   );
 });

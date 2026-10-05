@@ -65,7 +65,7 @@ export const sheetZh = {
   'sheet.ohlc4': 'ohlc4',
   'sheet.hlcc4': 'hlcc4',
   'sheet.chips': '条件',
-  'sheet.tradesFilter': '交易数 ≥ 30',
+  'sheet.tradesFilter': '交易数 ≥ 5',
   'sheet.badFilter': '盈利因子 ≥ 2.5',
   'sheet.remove': '移除 {label}',
   'sheet.badges': '标记',

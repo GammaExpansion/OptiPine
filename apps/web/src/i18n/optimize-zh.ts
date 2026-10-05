@@ -52,6 +52,7 @@ export const optimizeZh = {
   'optimize.map.all': '完整区间',
   'optimize.map.smooth': '平滑',
   'optimize.map.smoothHint': '平滑：每格取相邻 ±1 步的平均',
+  'optimize.map.smoothedMetric': '{metric} · 平滑',
   'optimize.map.x': 'X',
   'optimize.map.y': 'Y',
   'optimize.map.z': 'Z',
