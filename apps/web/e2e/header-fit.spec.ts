@@ -9,9 +9,11 @@ test.use({ baseURL: origins.dev });
 type Hooks = Window & { headerFixture: Awaited<ReturnType<typeof installHeaderFixture>> };
 const measureOnly = process.env.HEADER_MEASURE === 'before';
 const sweep = measureOnly || process.env.HEADER_SWEEP === '1';
-const widths = sweep
-  ? [...Array.from({ length: 33 }, (_, i) => 1280 + i * 10), 1024, 1180, 1366, 390]
-  : [1024, 1180, 1280, 1366, 1440, 390];
+const widths = process.env.HEADER_WIDTHS
+  ? process.env.HEADER_WIDTHS.split(',').map(Number)
+  : sweep
+    ? [...Array.from({ length: 33 }, (_, i) => 1280 + i * 10), 1024, 1180, 1366, 390]
+    : [1024, 1030, 1040, 1060, 1080, 1100, 1180, 1280, 1366, 1440, 390];
 
 for (const language of ['en', 'zh'] as const) {
   test(`header fits every status (${language})`, async ({ page }, info) => {
@@ -116,6 +118,7 @@ for (const language of ['en', 'zh'] as const) {
             clipped,
             overlaps,
             compact: header.getAttribute('data-compact'),
+            narrow: header.getAttribute('data-narrow'),
             status: header.querySelector('[role="group"]')?.textContent,
             visibleStatus: (
               header.querySelector('[role="group"]') as HTMLElement
@@ -123,13 +126,24 @@ for (const language of ['en', 'zh'] as const) {
           };
         });
         const spacing =
-          width < 1280
+          width < 1024
             ? null
             : measureOnly
               ? await page.getByRole('banner').evaluate(headerLayout)
               : await expectHeaderFits(page);
         rows.push({ language, width, tab, state, ...metrics, spacing });
         if (!measureOnly) {
+          if (width === 1024)
+            expect
+              .soft(spacing!.slack, `${tab} ${state}: narrow header reserve`)
+              .toBeGreaterThanOrEqual(24);
+          if (metrics.narrow === '2') {
+            const script = page.getByRole('banner').locator('span[data-loaded="true"]');
+            await expect(script.locator('..')).toHaveAttribute(
+              'title',
+              (await script.textContent())!,
+            );
+          }
           expect.soft(metrics.overflow, `${width} ${tab} ${state}: header overflow`).toBe(0);
           expect.soft(metrics.pageOverflow, `${width} ${tab} ${state}: page overflow`).toBe(0);
           expect.soft(metrics.clipped, `${width} ${tab} ${state}: clipped labels`).toEqual([]);

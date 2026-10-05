@@ -140,6 +140,7 @@ export const zh = {
   'dock.restore': '还原面板',
   'dock.expand': '展开面板',
   'run.facts': '{bars} 根 K 线，用时 {seconds} 秒',
+  'run.actionFacts': '{action} · {facts}',
   'run.facts.one': '{bars} 根 K 线，用时 {seconds} 秒',
   'run.running': '运行中，已用时 {seconds} 秒',
   'run.runningShort': '运行中 {seconds} 秒',

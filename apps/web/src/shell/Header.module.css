@@ -77,6 +77,23 @@
   gap: 10px;
   padding: 0 8px 0 14px;
 }
+/* Measure the narrow workbench too: shorten Run first, then ellipsize only the script name. */
+@media (min-width: 1024px) {
+  .header[data-layout='tablet'] {
+    gap: 12px;
+  }
+}
+.header[data-narrow='1'] .runLong,
+.header[data-narrow='2'] .runLong {
+  display: none;
+}
+.header[data-narrow='1'] .runShort,
+.header[data-narrow='2'] .runShort {
+  display: inline;
+}
+.header[data-narrow='2'] span[data-loaded] {
+  max-width: 80px;
+}
 .header[data-layout='tablet'] .facts {
   display: none;
 }

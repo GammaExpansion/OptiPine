@@ -144,6 +144,7 @@ export const en = {
   'dock.restore': 'Restore panel',
   'dock.expand': 'Expand panel',
   'run.facts': '{bars} bars, {seconds} s',
+  'run.actionFacts': '{action} · {facts}',
   'run.facts.one': '{bars} bar, {seconds} s',
   'run.running': 'Running, {seconds} s elapsed',
   'run.runningShort': 'Running {seconds} s',

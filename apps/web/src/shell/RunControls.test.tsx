@@ -39,13 +39,22 @@ test('the run action explains what is missing, most fundamental first', async ()
   expect(runButton()).toHaveAccessibleDescription('Fix the value of Length');
 });
 
+test('the narrow Run label keeps the complete action name and tooltip', async () => {
+  setViewportWidth(1024);
+  await loadScript();
+  renderInEnglish(<RunControls />);
+  expect(runButton()).toHaveAccessibleName('Run backtest');
+  expect(runButton()).toHaveAttribute('title', 'Run backtest');
+  expect(screen.getByText('Run', { exact: true })).toHaveAttribute('aria-hidden', 'true');
+});
+
 test('a run shows its elapsed time and Cancel, which keeps the previous result', async () => {
   await loadScript();
   renderInEnglish(<RunControls />);
   await runBacktest();
   expect(screen.getByText('120 bars, 0.0 s')).toBeInTheDocument();
   expect(runButton()).toHaveAccessibleDescription('120 bars, 0.0 s');
-  expect(runButton()).toHaveAttribute('title', '120 bars, 0.0 s');
+  expect(runButton()).toHaveAttribute('title', 'Run backtest · 120 bars, 0.0 s');
   act(() => void getBacktestStore().getState().actions.run());
   expect(screen.getByText('Running, 0.0 s elapsed')).toBeInTheDocument();
   expect(screen.getByRole('progressbar', { name: 'Backtest in progress' })).toBeInTheDocument();

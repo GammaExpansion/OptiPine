@@ -71,6 +71,14 @@ focus order. Progress and errors stay visible; running, cancelled and outdated s
 shorten, with their full wording retained in tooltips and for assistive technology. Missing-input
 guidance can move out of the row because the disabled Run action still explains it.
 
+The narrow workbench at 1024–1279 px (the tablet layout) also measures its controls row,
+reserving **24 px** after padding, control widths and **12 px gaps** for platform font differences.
+When needed, first shorten **Run backtest** to **Run** / **运行**, retaining the full action name
+and tooltip; then limit the script name to 80 px with an ellipsis and its full name in the tooltip.
+Only the required steps apply; wider headers restore the full labels. The same script-name step
+applies during Backtest and Optimize runs, whose **Cancel** label stays complete. Progress and
+errors keep their separate line. Below 1024 px the existing tablet/phone layout remains in use.
+
 The browser tab shows the logo's three bars on the panel's dark tile, so the muted bar reads on
 light and dark tab strips: `public/favicon.svg`, with `favicon.ico` (32 px) for browsers without
 SVG icons and a 180 px `apple-touch-icon.png`, both rendered from it.

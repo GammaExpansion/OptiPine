@@ -143,3 +143,56 @@ test('measures the least compact fit again after width, content and font changes
   expect(disconnectResize).toHaveBeenCalledOnce();
   expect(disconnectMutation).toHaveBeenCalledOnce();
 });
+
+test.each([1, 2])('the narrow workbench reserves 24 px using step %s only when needed', (step) => {
+  vi.useFakeTimers();
+  let width = 1024;
+  let resize!: () => void;
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      constructor(callback: () => void) {
+        resize = callback;
+      }
+      observe() {}
+      disconnect() {}
+    },
+  );
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => width);
+  vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockImplementation(() => width);
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    if (this.tagName === 'HEADER') return new DOMRect(0, 0, width, 80);
+    const header = this.closest('header')!;
+    expect(getComputedStyle(header).paddingRight).toBe('32px');
+    const required = step === 1 ? [1010, 960, 920] : [1045, 985, 945];
+    return new DOMRect(14, 8, required[Number(header.dataset.narrow)], 32);
+  });
+  function Header() {
+    const ref = useRef<HTMLElement>(null);
+    useHeaderFit(ref, 'tablet');
+    return (
+      <header ref={ref} style={{ paddingLeft: 14, paddingRight: 8, columnGap: 12 }}>
+        <button />
+        <div style={{ flexBasis: '100%' }} />
+      </header>
+    );
+  }
+  const view = render(<Header />);
+  const header = view.container.firstElementChild!;
+  expect(header).toHaveAttribute('data-narrow', String(step));
+  expect(header).toHaveStyle({ paddingRight: '8px' });
+  width = 1180;
+  act(() => {
+    resize();
+    vi.advanceTimersByTime(20);
+  });
+  expect(header).toHaveAttribute('data-narrow', '0');
+  width = 900;
+  act(() => {
+    resize();
+    vi.advanceTimersByTime(20);
+  });
+  expect(header).not.toHaveAttribute('data-narrow');
+});

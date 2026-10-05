@@ -162,19 +162,31 @@ function BacktestRunControls() {
           disabled={reason !== null}
           disabledReason={reason ? text(reason) : undefined}
           aria-keyshortcuts="Control+Enter"
+          aria-label={layout === 'tablet' ? t('shell.runBacktest') : undefined}
           aria-describedby={status.kind === 'done' ? factsId : undefined}
-          title={status.kind === 'done' ? backtestFacts(t, status) : undefined}
+          title={
+            status.kind === 'done'
+              ? t('run.actionFacts', {
+                  action: t('shell.runBacktest'),
+                  facts: backtestFacts(t, status),
+                })
+              : t('shell.runBacktest')
+          }
           icon={<Icon name="play" size={11} />}
           shortcut={layout === 'desktop' ? t('shell.shortcut') : undefined}
           onClick={() => void state.actions.run()}
         >
-          {/* A phone's header says Run (G3); a tablet's says it below 1024 px. */}
+          {/* A phone says Run (G3); the narrow workbench shortens it only when needed. */}
           {layout === 'phone' ? (
             <span>{t('shell.run')}</span>
           ) : (
             <>
               <span className={header.runLong}>{t('shell.runBacktest')}</span>
-              {layout === 'tablet' && <span className={header.runShort}>{t('shell.run')}</span>}
+              {layout === 'tablet' && (
+                <span className={header.runShort} aria-hidden="true">
+                  {t('shell.run')}
+                </span>
+              )}
             </>
           )}
         </Button>

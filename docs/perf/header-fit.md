@@ -1,5 +1,88 @@
 # Header width audit
 
+## PR #68 narrow-width slack correction
+
+Baseline: pushed `b63b95c`, Windows, bundled Barlow / Noto Sans SC, Playwright Chromium,
+recorded BTC fixture and the same 20 deterministic status snapshots as below. The application
+calls 1024–1279 px **tablet**: the original fit hook only ran at desktop widths (1280+).
+At 1024 its existing most compact layout still used the full Run backtest label and 10 px gaps.
+Windows reported no scroll overflow, yet loaded English Backtest needed **5.2 px more** than
+the content box allowed; Linux CI reported 2 px of scroll overflow. At 1030 Windows had just
+**0.8 px** spare. Thus an overflow-only tablet check could pass a header with no font slack.
+
+Slack now means content-box width minus the controls' widths and all mandatory column gaps,
+including the gaps on both sides of the flexible spacer. The spacer's expandable width is free
+space, not a required control width. Full-width wrapped progress/error lines are excluded from
+this controls-row sum, but still checked for clipping and padding intrusion. Negative slack
+means the controls and gaps cannot fit. This measures the space that right-aligned actions hide.
+
+The fit hook now measures 1024–1279 px too, reserving **24 px** during measurement, with the
+original visual padding restored before paint. It first switches Run backtest to Run / 运行;
+only if necessary, it limits the script name to **80 px** with an ellipsis. Full action and file
+names remain in tooltips and accessible names; completed-run facts remain in the action's
+tooltip/description. Cancel stays unchanged. Optimize has no Start/Re-optimize header button
+(those live in the run block); its Cancel states use the same script-name step. Gaps at these
+widths increase from 10 to **12 px**. This accounts for the lower slack in states already roomy
+enough to retain their full labels. Padding, the 1280+ sequence, and the below-1024 layout remain
+unchanged. At 1024 English uses short Run, or the script ellipsis while running; Chinese needs
+neither. Compaction follows measured content widths, not a new label-hiding breakpoint.
+
+All 1024 px states, in CSS pixels (one decimal; the assertions use unrounded values):
+
+| Page/state             | EN before | EN after | ZH before | ZH after |
+| ---------------------- | --------: | -------: | --------: | -------: |
+| backtest/empty         |       6.9 |     40.2 |     150.5 |    130.5 |
+| optimize/empty         |     135.9 |    117.9 |     255.5 |    237.5 |
+| backtest/loaded        |      -5.2 |     28.1 |      71.5 |     51.5 |
+| optimize/loaded        |     123.8 |    105.8 |     176.5 |    158.5 |
+| backtest/done          |      -5.2 |     28.1 |      71.5 |     51.5 |
+| optimize/done          |     123.8 |    105.8 |     176.5 |    158.5 |
+| optimize/random        |     123.8 |    105.8 |     176.5 |    158.5 |
+| optimize/windows       |     123.8 |    105.8 |     176.5 |    158.5 |
+| backtest/running       |      29.8 |     43.6 |      95.5 |     75.5 |
+| optimize/running       |      30.5 |     44.2 |      95.5 |     75.5 |
+| optimize/walk-forward  |      30.5 |     44.2 |      95.5 |     75.5 |
+| backtest/preview       |      -5.2 |     28.1 |      71.5 |     51.5 |
+| optimize/preview       |     123.8 |    105.8 |     176.5 |    158.5 |
+| backtest/compile-error |      -5.2 |     28.1 |      71.5 |     51.5 |
+| backtest/error         |      -5.2 |     28.1 |      71.5 |     51.5 |
+| optimize/error         |     123.8 |    105.8 |     176.5 |    158.5 |
+| backtest/cancelled     |      -5.2 |     28.1 |      71.5 |     51.5 |
+| optimize/cancelled     |     123.8 |    105.8 |     176.5 |    158.5 |
+| backtest/outdated      |      -5.2 |     28.1 |      71.5 |     51.5 |
+| optimize/outdated      |     123.8 |    105.8 |     176.5 |    158.5 |
+
+Minimum across all states at each width (restoring a full label can reduce slack as width grows):
+
+| Width | EN before | EN after | ZH before | ZH after |
+| ----: | --------: | -------: | --------: | -------: |
+|  1024 |      -5.2 |     28.1 |      71.5 |     51.5 |
+|  1030 |       0.8 |     34.1 |      77.5 |     57.5 |
+|  1040 |      10.8 |     25.8 |      87.5 |     67.5 |
+|  1060 |      30.8 |     45.8 |     107.5 |     87.5 |
+|  1080 |      50.8 |     30.8 |     127.5 |    107.5 |
+|  1100 |      70.8 |     50.8 |     147.5 |    127.5 |
+|  1180 |     150.8 |    130.8 |     227.5 |    207.5 |
+
+`header-layout.ts` now reports slack and fails below **4 px**, in addition to padding edges,
+gaps of at least 12 px and no overlap. `header-fit.spec.ts` applies that helper from 1024 px,
+adds the nearby widths above, and requires **24 px** at 1024. Regression unit tests cover both
+narrow compaction steps, their 24 px reserve, width restoration and the full Run name/tooltip.
+Baseline artifacts are in `apps/web/test-results/header-slack-before/`; the final repeated
+audit is in `header-slack-verified-repeat/`. The narrow-width subset can be reproduced with
+`HEADER_WIDTHS=1024,1030,1040,1060,1080,1100,1180`; set `HEADER_MEASURE=before` only for
+observational baseline collection without assertions.
+
+Final gates passed on Windows: the header, data and Optimize specs with `--repeat-each=2`
+(**46 tests**, including the matched phone Optimize specs), web unit tests (**222 Node,
+494 component**, four existing skips), web typecheck, repository formatting, and then the
+full **136-test e2e suite** (3.3 minutes). Both browser gates used `E2E_BASE_PORT=6874` and
+`--workers=2`; their setup built production, e2e and demo artifacts. Across the repeated
+**880 observations**, there was no overflow, clipping or overlap; minimum measured gap
+was **12 px**, minimum desktop slack **4.47 px**, and minimum 1024–1180 slack **25.83 px**.
+Logs/artifacts are under `apps/web/test-results/header-slack-verified-repeat/`,
+`header-slack-full/` and `header-slack-*.log`. Linux CI still needs to verify its own font metrics.
+
 ## PR #68 padding correction
 
 Linux CI found a gap in the original criterion: the last header item reached x=1432 at 1440 px

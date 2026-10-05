@@ -21,7 +21,12 @@ export function ScriptButton(props: ComponentPropsWithRef<'button'>) {
   const compile = useBacktestStore((state) => state.compile.status);
   const source = useBacktestStore((state) => state.source);
   return (
-    <Button {...props} variant="toolbar" className={styles.trigger}>
+    <Button
+      {...props}
+      variant="toolbar"
+      className={styles.trigger}
+      title={scriptName(t, fileName, source)}
+    >
       <Icon name="file" />
       <span className={styles.filename} data-loaded={!!source}>
         {scriptName(t, fileName, source)}

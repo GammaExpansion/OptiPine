@@ -3,6 +3,8 @@ import type { Layout } from './layout.ts';
 
 /** Four extra pixels at the right leave room for font-metric differences and rounding. */
 const fitMarginPx = 4;
+/** The narrow workbench needs more room for platform font differences than the desktop. */
+const narrowFitMarginPx = 24;
 
 /** display: contents (the timeframe wrapper) contributes its children as flex items. */
 function itemRects(parent: Element): DOMRect[] {
@@ -10,22 +12,31 @@ function itemRects(parent: Element): DOMRect[] {
     const style = getComputedStyle(element);
     if (style.display === 'contents') return itemRects(element);
     if (style.position === 'absolute' || style.position === 'fixed') return [];
+    // Tablet progress and errors wrap onto their own full-width line.
+    if (style.flexBasis === '100%') return [];
     const rect = element.getBoundingClientRect();
     return rect.width > 0 && rect.height > 1 ? [rect] : [];
   });
 }
 
 /**
- * Pick the least compact desktop header that fits its actual contents, including translated
+ * Pick the least compact workbench header that fits its actual contents, including translated
  * status text and loaded fonts. Measure in one frame; never shrink the controls or reorder them.
  */
 export function useHeaderFit(ref: RefObject<HTMLElement | null>, layout: Layout) {
   useLayoutEffect(() => {
     const header = ref.current;
-    if (!header || layout !== 'desktop') return;
+    if (!header || layout === 'phone') return;
     let frame = 0;
     const fit = () => {
       if (!header.clientWidth) return;
+      const narrow = layout === 'tablet';
+      // Below 1024 the tablet already uses its short Run label and omits the timeframe.
+      if (narrow && header.clientWidth < 1024) {
+        delete header.dataset.narrow;
+        return;
+      }
+      const margin = narrow ? narrowFitMarginPx : fitMarginPx;
       const style = getComputedStyle(header);
       const left = header.getBoundingClientRect().left + header.clientLeft;
       const contentLeft = left + parseFloat(style.paddingLeft);
@@ -34,10 +45,10 @@ export function useHeaderFit(ref: RefObject<HTMLElement | null>, layout: Layout)
       // The growing spacer consumes all spare width. Reserve the margin only while measuring,
       // then restore the designed padding before paint so a roomy header need not compact.
       const paddingRight = header.style.paddingRight;
-      header.style.paddingRight = `${parseFloat(style.paddingRight) + fitMarginPx}px`;
+      header.style.paddingRight = `${parseFloat(style.paddingRight) + margin}px`;
       try {
-        for (let level = 0; level <= 5; level++) {
-          header.dataset.compact = String(level);
+        for (let level = 0; level <= (narrow ? 2 : 5); level++) {
+          header.dataset[narrow ? 'narrow' : 'compact'] = String(level);
           const items = itemRects(header);
           // scrollWidth includes padding and misses collisions between flex items.
           if (
@@ -45,7 +56,7 @@ export function useHeaderFit(ref: RefObject<HTMLElement | null>, layout: Layout)
             items.every(
               (rect, index) =>
                 rect.left >= contentLeft &&
-                rect.right <= contentRight - fitMarginPx &&
+                rect.right <= contentRight - margin &&
                 (index === 0 || rect.left - items[index - 1].right >= gap),
             )
           )
@@ -72,6 +83,7 @@ export function useHeaderFit(ref: RefObject<HTMLElement | null>, layout: Layout)
       content.disconnect();
       document.fonts?.removeEventListener('loadingdone', schedule);
       delete header.dataset.compact;
+      delete header.dataset.narrow;
     };
   }, [ref, layout]);
 }
