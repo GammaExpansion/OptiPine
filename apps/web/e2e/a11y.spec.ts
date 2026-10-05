@@ -128,12 +128,9 @@ for (const language of ['en', 'zh'] as const)
       await audit('S1');
 
       await example.click();
-      const run = page.getByRole('banner').getByRole('button', {
-        name: new RegExp(`^${copy[size.name === 'phone' ? 'shell.run' : 'shell.runBacktest']}`),
-      });
-      await expect(run).toBeEnabled();
-      await run.click();
-      await page.getByRole('tab', { name: copy['dock.report'], exact: true }).click();
+      await expect(
+        page.getByRole('tab', { name: copy['dock.report'], exact: true }),
+      ).toHaveAttribute('aria-selected', 'true');
       await expect(page.getByText(copy['report.netProfit'], { exact: true }).first()).toBeVisible();
       await audit('B1-report');
 

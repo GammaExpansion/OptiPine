@@ -43,7 +43,7 @@ function file(name: string, content: string | Promise<string>) {
   return value;
 }
 
-test('first launch explains missing prerequisites and allows the store run when ready', async () => {
+test('first launch explains missing prerequisites and runs the loaded example', async () => {
   mount();
   const user = userEvent.setup();
   expect(screen.getByRole('button', { name: 'Run backtest' })).toHaveAccessibleDescription(
@@ -51,8 +51,6 @@ test('first launch explains missing prerequisites and allows the store run when 
   );
   expect(screen.getByText('Scripts and backtests run only in your browser')).toBeVisible();
   await user.click(screen.getByRole('button', { name: /Load example/ }));
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Run backtest' })).toBeEnabled());
-  await user.click(screen.getByRole('button', { name: 'Run backtest' }));
   await waitFor(() => expect(getBacktestStore().getState().result).not.toBeNull());
 });
 
@@ -119,6 +117,7 @@ test('an example, a file or a drop asks before replacing an edited script, throu
   await user.click(await screen.findByRole('menuitem', { name: 'MA Cross' }));
   expect(screen.queryByRole('dialog')).toBeNull();
   expect(getBacktestStore().getState().fileName).toBe('ma-cross.pine');
+  await waitFor(() => expect(getBacktestStore().getState().run.status).toBe('done'));
   // An edit marks it, and running a backtest does not clear the mark.
   const edited = `${getBacktestStore().getState().source}\n// mine`;
   getBacktestStore().getState().actions.setSource(edited);
@@ -139,6 +138,21 @@ test('an example, a file or a drop asks before replacing an edited script, throu
   await user.click(await screen.findByRole('button', { name: 'Replace script' }));
   await waitFor(() => expect(getBacktestStore().getState().fileName).toBe('other.pine'));
   expect(getBacktestStore().getState().origin).toEqual({ kind: 'file', edited: false });
+});
+
+test('cancelling an example replacement neither fetches data nor runs a backtest', async () => {
+  openScript({ source, fileName: 'local.pine', origin: { kind: 'file' } });
+  const edited = `${source}\n// keep this edit`;
+  getBacktestStore().getState().actions.setSource(edited);
+  const load = vi.spyOn(getBacktestStore().getState().actions, 'loadExample');
+  mount();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: /Load example/ }));
+  const dialog = await screen.findByRole('dialog', { name: 'Replace the current script?' });
+  await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+  expect(load).not.toHaveBeenCalled();
+  expect(getBacktestStore().getState().source).toBe(edited);
+  expect(getBacktestStore().getState().run.status).toBe('idle');
 });
 
 test('clipboard menu seeds the paste dialog and failure still permits manual paste', async () => {
