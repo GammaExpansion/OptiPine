@@ -86,7 +86,7 @@ npm run dev -w @pine/web
 ```
 
 Open the URL printed by Vite (normally `http://127.0.0.1:5173`). Click **Load example: Trend
-Breakout, BTCUSDT 1 hour**, then **Run backtest**. Switch to **Optimize**, set the search ranges
+Breakout, BTCUSDT 1 hour** to load and run its backtest. Switch to **Optimize**, set the search ranges
 and press **Start**. To use your own strategy, open a `.pine` file or paste its source, then select
 market data or upload a CSV. Example loading and provider data need internet access; calculations
 run locally.

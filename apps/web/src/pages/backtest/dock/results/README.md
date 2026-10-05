@@ -101,8 +101,8 @@ both dock CSV downloads, B6 chart hover/focus, integrated B9/B12 and 10,000 actu
 10,000 rows, records long tasks (50 ms or more), checks a bounded DOM and keyboard navigation to
 both ends. Its `scroll-performance.json` is saved with the screenshots.
 
-The Equity regression loads Trend Breakout with `loadExample` on the dev server. `/api/market`
-is intercepted by `e2e/market-fixtures.ts` with the app's recorded BTCUSDT hourly responses;
+The Equity regression loads and automatically backtests Trend Breakout with `loadExample` on the
+dev server. `/api/market` is intercepted by `e2e/market-fixtures.ts` with the app's recorded BTCUSDT hourly responses;
 external requests remain blocked. The clock is fixed at 2026-10-03 14:37 UTC, giving 17,520 bars from
 2024-10-03 14:00 through 2026-10-03 13:00 UTC. In both languages it checks 731 daily cells, 25 monthly
 values (24 labels fit; the final three-day month is hidden),

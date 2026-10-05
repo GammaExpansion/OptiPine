@@ -33,6 +33,7 @@ const exampleSources: Record<ExampleId, string> = {
 function createBacktestStore(services: AppServices) {
   const session = services.backtest;
   let openVersion = 0;
+  let stopWaitingForCompile: (() => void) | undefined;
   /** The source as it was opened, which edits are measured against. */
   let opened = '';
   const actions = {
@@ -53,6 +54,7 @@ function createBacktestStore(services: AppServices) {
     /** A script opened in place of the current one starts from its own inputs and properties. */
     openScript({ source, fileName, origin }: OpenScript) {
       openVersion++;
+      stopWaitingForCompile?.();
       opened = source;
       store.setState({ fileName, origin: { ...origin, edited: false } });
       session.setSource(source, true);
@@ -65,14 +67,43 @@ function createBacktestStore(services: AppServices) {
         origin: { kind: 'example', id },
       });
       const version = openVersion;
+      const revision = session.getState().sourceRevision;
       const request = exampleRequest(services.now());
       const market = getMarketDataStore(services);
+      const isCurrent = () => {
+        const state = market.getState().fetch;
+        return (
+          version === openVersion &&
+          revision === session.getState().sourceRevision &&
+          'request' in state &&
+          state.request === request
+        );
+      };
       await market.getState().actions.fetch(request);
       // A different script or market selection may have superseded this example while fetching.
+      if (!isCurrent()) return;
       const state = market.getState().fetch;
-      if (version !== openVersion || !('request' in state) || state.request !== request) return;
-      if (state.status === 'preview') market.getState().actions.accept();
-      else if (state.status === 'unavailable' || state.status === 'refused')
+      if (state.status === 'preview') {
+        // Cached data can beat the compiler. Wait only for this example, never a later edit.
+        if (session.getState().compile.status === 'compiling')
+          await new Promise<void>((resolve) => {
+            const finish = () => {
+              unsubscribe();
+              unsubscribeMarket();
+              stopWaitingForCompile = undefined;
+              resolve();
+            };
+            const check = () => {
+              if (!isCurrent() || session.getState().compile.status !== 'compiling') finish();
+            };
+            const unsubscribe = session.subscribe(check);
+            const unsubscribeMarket = market.subscribe(check);
+            stopWaitingForCompile = finish;
+          });
+        if (!isCurrent() || !market.getState().actions.accept()) return;
+        // Reopening the same script can leave its optimization running; do not add another run.
+        if (services.optimization?.session.getState().run.status !== 'running') await actions.run();
+      } else if (state.status === 'unavailable' || state.status === 'refused')
         uiStore.getState().setDialogOpen('marketData', true);
     },
   };
@@ -107,7 +138,10 @@ function createBacktestStore(services: AppServices) {
       showFirstResult(state);
     }),
   );
-  services.onDispose(() => openVersion++);
+  services.onDispose(() => {
+    openVersion++;
+    stopWaitingForCompile?.();
+  });
   return store;
 }
 

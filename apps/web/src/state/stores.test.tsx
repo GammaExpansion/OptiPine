@@ -102,7 +102,8 @@ test('provider preview replaces CSV data and origin only on valid acceptance', a
   expect(getBacktestStore().getState().dataset?.input.syminfo.mintick).toBe(0.5);
 });
 
-test('loadExample opens the source and accepts its two-year provider request', async () => {
+test('loadExample accepts its two-year provider request and runs the backtest', async () => {
+  const run = vi.spyOn(getServices().engine, 'run');
   await act(async () => loadExample('trend-breakout'));
   await waitFor(() => expect(getBacktestStore().getState().readiness.ok).toBe(true));
   expect(getBacktestStore().getState()).toMatchObject({
@@ -114,6 +115,9 @@ test('loadExample opens the source and accepts its two-year provider request', a
     request: exampleRequest(testNow),
   });
   expect(uiStore.getState().openDialogs).toEqual([]);
+  expect(run).toHaveBeenCalledOnce();
+  expect(getBacktestStore().getState().run.status).toBe('done');
+  expect(getBacktestStore().getState().result?.output.equity).toHaveLength(testInput.bars.length);
 });
 
 test('an unavailable example feed keeps the source and opens market data for CSV', async () => {
@@ -121,11 +125,13 @@ test('an unavailable example feed keeps the source and opens market data for CSV
     fakeServices({ fetcher: async () => new Response('<html>', { status: 404 }) }),
   );
   try {
+    const run = vi.spyOn(getServices().engine, 'run');
     await loadExample('rsi-reversal');
     expect(getBacktestStore().getState().source).toContain('RSI');
     expect(getBacktestStore().getState().dataset).toBeNull();
     expect(getMarketDataStore().getState().service).toBe('unavailable');
     expect(uiStore.getState().openDialogs).toEqual(['marketData']);
+    expect(run).not.toHaveBeenCalled();
   } finally {
     reset();
   }
@@ -142,6 +148,7 @@ test('a pending example cannot accept data after another script is opened', asyn
     }),
   );
   try {
+    const run = vi.spyOn(getServices().engine, 'run');
     const loading = loadExample('ma-cross');
     await waitFor(() => expect(respond).toBeDefined());
     openScript({ source: strategySource, fileName: null, origin: { kind: 'pasted' } });
@@ -149,6 +156,7 @@ test('a pending example cannot accept data after another script is opened', asyn
     await loading;
     expect(getBacktestStore().getState().origin).toEqual({ kind: 'pasted', edited: false });
     expect(getBacktestStore().getState().dataset).toBeNull();
+    expect(run).not.toHaveBeenCalled();
   } finally {
     reset();
   }
