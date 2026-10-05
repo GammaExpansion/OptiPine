@@ -19,7 +19,7 @@ const hints = {
 /**
  * Before the first complete run, the results area says what will appear there (O1), and where the
  * settings are: on the right, in the drawer (G2) or under Settings (G4). Walk-forward results are
- * the stitched OOS equity, the windows and their stability (W1).
+ * the per-window equity, the windows and their stability.
  */
 export function EmptyResults() {
   const { t } = useI18n();

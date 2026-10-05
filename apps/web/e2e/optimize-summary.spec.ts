@@ -225,11 +225,11 @@ for (const language of ['en', 'zh'] as const) {
     expect(errors).toEqual([]);
   });
 
-  test(`unvalidated full-range results (${language})`, async ({ page }, info) => {
+  test(`full-range results omit the unvalidated chip (${language})`, async ({ page }, info) => {
     const errors = await open(page, info, language, source, true);
     await expect(
-      page.getByText(language === 'en' ? 'Unvalidated' : '未验证').first(),
-    ).toBeVisible();
+      page.getByText(language === 'en' ? 'Unvalidated' : '未验证', { exact: true }),
+    ).toHaveCount(0);
     await expect(
       page.getByRole('radio', { name: language === 'en' ? 'IS vs OOS' : '样本内 vs 样本外' }),
     ).toBeDisabled();

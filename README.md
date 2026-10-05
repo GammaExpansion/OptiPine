@@ -4,6 +4,10 @@
 
 **Backtest and optimize TradingView Pine Script strategies offline, with numbers verified against TradingView's own exports.**
 
+[![Try it in your browser](https://img.shields.io/badge/Try_it_in_your_browser-gammaexpansion.github.io%2FOptiPine-f2a33a?style=for-the-badge&labelColor=1b1f24)](https://gammaexpansion.github.io/OptiPine/)
+
+No install or sign-up: scripts and backtests run entirely in your browser.
+
 [![Compatibility regression](https://github.com/GammaExpansion/OptiPine/actions/workflows/ci.yml/badge.svg)](https://github.com/GammaExpansion/OptiPine/actions/workflows/ci.yml)
 [![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -11,14 +15,9 @@
 
 </div>
 
-[![Design mock: Trend Breakout at Length 20 on BTCUSDT, 2023-01-02 to 2025-05-04](docs/screenshots/backtest.png)](docs/screenshots/backtest.png)
+[![Design mock: Trend Breakout at Length 20 on BTCUSDT, 2023-01-02 to 2025-05-04](docs/screenshots/backtest.png)](https://gammaexpansion.github.io/OptiPine/ 'Try OptiPine in your browser')
 
 > **Status.** The engine, optimizer and browser app run locally, including walk-forward in the app.
-
-> **[Try it online](https://gammaexpansion.github.io/OptiPine/).** The static demo runs scripts,
-> backtests, optimization and CSV uploads in the browser and loads Binance spot data directly.
-> Yahoo Finance and USDⓈ-M perpetual data require the self-hosted server described in
-> [Running the app](#running-the-app).
 
 ## Why this exists
 
@@ -58,23 +57,24 @@ you optimize is the one you would see on the chart.
 
 These images render the [design mock](docs/web-mock-terminal), which the app follows.
 
-[![Optimization summary, leaderboard, parameter map and sensitivity](docs/screenshots/optimize.png)](docs/screenshots/optimize.png)
+[![Design mock: Top 20 equity, filtered IS / OOS leaderboard, parameter map and sensitivity](docs/screenshots/optimize.png)](docs/screenshots/optimize.png)
 
-A 2,214-set grid search shows the leading equity curves, IS / OOS results, a parameter map
-and the selected set ready to preview or apply.
+A 2,214-set grid search shows the top 20 equity curves, a filtered leaderboard with IS / OOS
+results, a Length × Multiplier parameter map and sensitivity. The selected set can be
+previewed in Backtest or applied to inputs.
 
-[![Walk-forward stitched equity, window results and parameter stability](docs/screenshots/walk-forward.png)](docs/screenshots/walk-forward.png)
+[![Design mock: Walk-forward IS and OOS equity per window, window results and parameter stability](docs/screenshots/walk-forward.png)](docs/screenshots/walk-forward.png)
 
-Six rolling windows show stitched out-of-sample equity, each window's selected parameters and
-their stability across windows.
-
-[![Equity, drawdown, daily P&L and monthly returns](docs/screenshots/equity.png)](docs/screenshots/equity.png)
-
-The Equity tab puts the account curve, drawdown, daily P&L and monthly returns on a shared timeline.
+Six rolling windows place each selected set's dashed IS equity and solid OOS equity on a shared
+timeline. The window table lists selected parameters, IS / OOS results, WFE and trades; the
+stability panel compares near-optimal parameter ranges across windows.
 
 [Regenerate the images](docs/screenshots/README.md) from the mock boards.
 
 ## Running the app
+
+The [online demo](https://gammaexpansion.github.io/OptiPine/) needs no install; it loads Binance
+spot data and CSV files. Run the app locally for Yahoo Finance and USDⓈ-M perpetual data.
 
 Requires [Node.js](https://nodejs.org) 24.5 or newer.
 

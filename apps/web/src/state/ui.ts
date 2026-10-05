@@ -32,7 +32,7 @@ export interface PaneSizes {
   leaderboard: number;
   /** Optimize: the parameter map above sensitivity. */
   map: number;
-  /** Optimize, walk-forward: the stitched equity above the windows (W1). */
+  /** Optimize, walk-forward: the equity summary above the windows (W1/W2). */
   wfSummary: number;
   /** Optimize, walk-forward: the per-window table beside stability and the window map. */
   wfTable: number;
