@@ -18,6 +18,15 @@ npx playwright install chromium
 npm run e2e -w @pine/web
 ```
 
+**Demo build.** Run `npm run build:demo -w @pine/web` to write the static `demo-dist/` bundle.
+Serve it with `npm run preview -w @pine/web -- --mode demo --port 6204 --strictPort`, then open
+`http://127.0.0.1:6204/OptiPine/`. Binance spot search and examples fetch directly from the public
+Binance host; CSV, backtests and optimization run locally. Yahoo Finance and USDⓈ-M perpetuals
+require the self-hosted server (`npm run start -w @pine/web`). There is no bundled or offline
+market data. The demo client reuses `FeedClient`'s validation and five-minute `FeedCache` through
+an in-memory transport; its provider module loads on demand and is eliminated from normal builds.
+The page switches use local state rather than URL routes, so no SPA `404.html` is needed.
+
 Production serves `dist/` on `127.0.0.1:5174`, with `HOST` and `PORT` overrides; `preview` uses the
 same port. Vite development, preview and production preserve the complete `/api/market` request
 path for the package middleware. All fonts are local assets. No scripts or results are persisted:
@@ -47,11 +56,13 @@ same self-hosted fonts. None of the test entries is in `dist/`.
 The other specs cover data, backtests, results, the keyboard, Optimize and walk-forward, and axe
 accessibility scans (`e2e/a11y.spec.ts`); the data, results, keyboard and accessibility specs use
 the recorded provider responses in `e2e/fixtures/market/` with a fixed clock.
-The test setup owns and closes the production, preview and dev servers directly, avoiding
-platform-specific shell process cleanup. They listen on three consecutive ports from
-`E2E_BASE_PORT` (production, preview, dev), 5174–5176 by default; set another base from 1024 to
-65533, as in `E2E_BASE_PORT=6174 npm run e2e -w @pine/web`, to run suites in several worktrees at
-once. `e2e/ports.ts` gives the specs their origins.
+The test setup owns and closes the production, preview, dev and demo servers directly, avoiding
+platform-specific shell process cleanup. They listen on four consecutive ports from
+`E2E_BASE_PORT` (production, preview, dev, demo), 5174–5177 by default; set another base from 1024 to
+65532, as in `E2E_BASE_PORT=6174 npm run e2e -w @pine/web -- --workers=2`, to run suites in several
+worktrees at once. `e2e/ports.ts` gives the specs their origins. The `demo` project serves the real
+`demo-dist/` build under `/OptiPine/`, intercepts the Binance host with the recorded market fixtures,
+and checks the live-data workflow, CSV, both languages, licenses, assets and absence of proxy calls.
 
 `src/i18n/translate.ts` is framework-free: use `translate` for `Text`, `translateId` for app ids,
 and `translateError` for errors carrying `errorText`. Unknown ids retain package fallbacks. Number

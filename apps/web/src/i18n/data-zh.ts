@@ -128,4 +128,8 @@ export const dataZh = {
   'csv.fromFile': '来自文件',
   'csv.previewHint': '选择 CSV 后预览 K 线',
   'csv.localNote': '文件仅在浏览器本地读取，不会上传',
+  'data.demoServerOnly': 'Yahoo Finance 和 USDⓈ-M 永续合约需要自托管服务器（npm start）。',
+  'data.demoServerLink': '阅读“运行应用”说明',
+  'data.demoBrowserNote': '行情数据直接来自 Binance；计算在浏览器本地完成',
+  'data.demoCsvHint': '如无法访问 Binance，请上传 CSV 以继续使用。',
 } satisfies Record<keyof typeof dataEn, string>;

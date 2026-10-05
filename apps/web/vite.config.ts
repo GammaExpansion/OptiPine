@@ -38,11 +38,13 @@ function marketProxy(): Plugin {
 }
 
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), marketProxy(), licenses()],
+  base: mode === 'demo' ? '/OptiPine/' : '/',
+  define: { 'import.meta.env.VITE_DEMO': JSON.stringify(mode === 'demo' ? '1' : '0') },
+  plugins: [react(), ...(mode === 'demo' ? [] : [marketProxy()]), licenses()],
   build: {
     // Test and dev entries exercise production bundling without shipping the harness, sheet or chart
     // workbench.
-    outDir: mode === 'e2e' ? '.e2e-dist' : 'dist',
+    outDir: mode === 'e2e' ? '.e2e-dist' : mode === 'demo' ? 'demo-dist' : 'dist',
     rollupOptions: {
       input:
         mode === 'e2e'

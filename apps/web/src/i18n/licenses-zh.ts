@@ -27,4 +27,5 @@ export const licensesZh = {
   'licenses.notices': '阅读完整第三方声明',
   'licenses.independent':
     'TradingView 和 Pine Script 是 TradingView, Inc. 的商标。Binance 和 Yahoo 是各自所有者的商标。OptiPine 为独立项目，与上述机构无关联，亦未获其认可。',
+  'licenses.demoNotice': '此演示完全在浏览器中运行；行情数据直接来自 Binance。',
 } satisfies Record<keyof typeof licensesEn, string>;

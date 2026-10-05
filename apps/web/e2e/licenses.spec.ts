@@ -59,7 +59,7 @@ for (const language of ['en', 'zh'] as const) {
 test('production, preview and dev serve complete notices and the three original OFL texts', async ({
   request,
 }) => {
-  for (const origin of Object.values(origins)) {
+  for (const origin of [origins.production, origins.preview, origins.dev]) {
     const response = await request.get(`${origin}/licenses/THIRD_PARTY_NOTICES.txt`);
     expect(response.status()).toBe(200);
     expect(response.headers()['content-type']).toContain('text/plain');

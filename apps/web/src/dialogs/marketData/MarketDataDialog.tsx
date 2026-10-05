@@ -14,9 +14,14 @@ import { CsvPanel, type CsvReady } from './CsvPanel.tsx';
 import { ProviderPreview } from './ProviderPreview.tsx';
 import { RangeFields } from './RangeFields.tsx';
 import { SymbolSearch } from './SymbolSearch.tsx';
-import { selectionRequest, type Selection } from '../../workflows/market-selection.ts';
+import {
+  restoreSelection,
+  selectionRequest,
+  type Selection,
+} from '../../workflows/market-selection.ts';
 import { timeframeIds } from './timeframes.ts';
 import styles from './DataDialog.module.css';
+import { demoBuild } from '../../demo.ts';
 
 export function MarketDataDialog() {
   const { t, text } = useI18n();
@@ -28,11 +33,15 @@ export function MarketDataDialog() {
   const dialogActions = useMarketDataDialogStore((state) => state.actions);
   const [initial] = useState(dialogActions.initialSelection);
   const { now } = initial;
-  const [selection, setSelection] = useState(initial.selection);
+  const [selection, setSelection] = useState(() =>
+    demoBuild && initial.selection.feed !== 'binance'
+      ? restoreSelection(null, now)
+      : initial.selection,
+  );
   const [tab, setTab] = useState(() =>
     origin?.kind === 'csv' && current.status === 'idle'
       ? 'csv'
-      : selection.feed === 'yahoo'
+      : !demoBuild && selection.feed === 'yahoo'
         ? 'yahoo'
         : 'binance',
   );
@@ -112,7 +121,13 @@ export function MarketDataDialog() {
       footer={
         <>
           <span className={styles.footerNote}>
-            {t(tab === 'csv' ? 'csv.localNote' : 'data.serverNote')}
+            {t(
+              tab === 'csv'
+                ? 'csv.localNote'
+                : demoBuild
+                  ? 'data.demoBrowserNote'
+                  : 'data.serverNote',
+            )}
           </span>
           <Button onClick={dismiss}>{t('data.cancel')}</Button>
           {tab === 'csv' ? (
@@ -142,6 +157,18 @@ export function MarketDataDialog() {
       }
     >
       <div className={styles.surface}>
+        {demoBuild && (
+          <Note className={styles.demoNote}>
+            {t('data.demoServerOnly')}{' '}
+            <a
+              href="https://github.com/GammaExpansion/OptiPine#running-the-app"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {t('data.demoServerLink')}
+            </a>
+          </Note>
+        )}
         <Tabs
           label={t('data.providers')}
           value={tab}
@@ -152,7 +179,12 @@ export function MarketDataDialog() {
               label: t('data.binance'),
               description: t('data.cryptoDescription'),
             },
-            { value: 'yahoo', label: t('data.yahoo'), description: t('data.yahooDescription') },
+            {
+              value: 'yahoo',
+              label: t('data.yahoo'),
+              description: t('data.yahooDescription'),
+              disabled: demoBuild,
+            },
             { value: 'csv', label: t('data.uploadCsv') },
           ]}
         >
@@ -171,7 +203,11 @@ export function MarketDataDialog() {
                       onChange={(feed) => change({ ...selection, feed: feed as Feed })}
                       options={[
                         { value: 'binance', label: t('data.spot') },
-                        { value: 'binance-futures', label: t('data.perpetual') },
+                        {
+                          value: 'binance-futures',
+                          label: t('data.perpetual'),
+                          disabled: demoBuild,
+                        },
                       ]}
                     />
                   </div>

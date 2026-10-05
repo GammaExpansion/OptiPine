@@ -9,6 +9,7 @@ import { createEngineWorker } from '../workers/factories.ts';
 import { BacktestSession, type EngineClient } from '../workflows/backtest.ts';
 import { MarketDataController } from '../workflows/market-data.ts';
 import type { OptimizationServices } from './optimization-services.ts';
+import { DemoFeedClient } from '../demo-feed-client.ts';
 
 export interface ServiceOptions {
   engineWorker?: EngineWorkerFactory;
@@ -42,7 +43,14 @@ export function createServices(options: ServiceOptions = {}) {
     run: (source, input, revision) => getEngine().run(source, input, revision),
     cancel: () => engine?.cancel(),
   };
-  const feed = new FeedClient(options.fetcher, options.cache);
+  // The literal build-time condition removes this import from normal bundles entirely.
+  const feed =
+    import.meta.env.VITE_DEMO === '1'
+      ? new DemoFeedClient(async (path, signal) => {
+          const { demoResponse } = await import('../demo-market.ts');
+          return demoResponse(path, signal, options.fetcher ?? fetch);
+        }, options.cache)
+      : new FeedClient(options.fetcher, options.cache);
   const backtest = new BacktestSession(lazyEngine, { now });
   const marketData = new MarketDataController(feed, { now });
   let optimization: OptimizationServices | null = null;

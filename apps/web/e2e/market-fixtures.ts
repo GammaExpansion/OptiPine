@@ -93,3 +93,69 @@ export async function installMarketFixtures(page: Page, options: MarketFixtureOp
   });
   return requests;
 }
+
+/** Serve the same recording from Binance's browser-accessible spot API for the Pages build. */
+export async function installDemoMarketFixtures(page: Page) {
+  await page.clock.setFixedTime(fixedClock);
+  const [dataset, search, specific] = await Promise.all([
+    recorded<FeedDataset>('btc-two-years'),
+    recorded<{ symbols: FeedSymbol[] }>('search'),
+    recorded<{ symbols: FeedSymbol[] }>('search-btcus'),
+  ]);
+  const symbols = [
+    ...new Map(
+      [...search.symbols, ...specific.symbols].map((symbol) => [symbol.symbol, symbol]),
+    ).values(),
+  ];
+  const requests: URL[] = [];
+  await page.route('**/*', async (route) => {
+    const url = new URL(route.request().url());
+    if (['127.0.0.1', 'localhost'].includes(url.hostname)) {
+      await route.continue();
+      return;
+    }
+    if (url.hostname !== 'data-api.binance.vision') {
+      await route.abort();
+      return;
+    }
+    requests.push(url);
+    if (url.pathname.endsWith('/exchangeInfo')) {
+      await route.fulfill({
+        json: {
+          symbols: symbols.map((symbol) => ({
+            symbol: symbol.symbol,
+            baseAsset: symbol.name.split(' / ')[0],
+            quoteAsset: symbol.name.split(' / ')[1],
+            status: 'TRADING',
+            isSpotTradingAllowed: true,
+            filters: [
+              { filterType: 'PRICE_FILTER', tickSize: String(dataset.input.syminfo.mintick) },
+              { filterType: 'LOT_SIZE', stepSize: String(dataset.input.syminfo.mincontract) },
+            ],
+          })),
+        },
+      });
+      return;
+    }
+    if (!url.pathname.endsWith('/klines')) {
+      await route.abort();
+      return;
+    }
+    const from = Number(url.searchParams.get('startTime')) / 1000;
+    const to = Number(url.searchParams.get('endTime')) / 1000;
+    const rows = dataset.input.bars
+      .filter((bar) => bar.time >= from && bar.time <= to)
+      .slice(0, Number(url.searchParams.get('limit')))
+      .map((bar) => [
+        bar.time * 1000,
+        String(bar.open),
+        String(bar.high),
+        String(bar.low),
+        String(bar.close),
+        String(bar.volume),
+        bar.time * 1000 + 3_599_999,
+      ]);
+    await route.fulfill({ json: rows });
+  });
+  return requests;
+}

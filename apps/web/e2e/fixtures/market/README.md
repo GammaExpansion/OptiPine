@@ -27,3 +27,8 @@ node apps/web/e2e/fixtures/market/record.ts
 
 The recorder is never called by Playwright. All data tests intercept `/api/market/**` and abort
 external requests, including search, so tests cannot fall through to a live provider.
+
+The demo project intercepts `data-api.binance.vision` instead. Its adapter reconstructs the
+`exchangeInfo` symbol fields from the recorded search names and the BTCUSDT tick/lot profile, and
+re-encodes the recorded hourly bars as `klines`, including close timestamps and 1,000-row pagination.
+Those reconstructed response envelopes are test-only; the shipped demo contains no recordings.

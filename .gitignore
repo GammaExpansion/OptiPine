@@ -1,6 +1,7 @@
 # Dependencies and build output in every workspace
 node_modules/
 dist/
+demo-dist/
 *.tsbuildinfo
 
 # Test output and local golden runs
