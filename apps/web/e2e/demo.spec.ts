@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Response as BrowserResponse } from '@playwright/test';
-import { installDemoMarketFixtures } from './market-fixtures.ts';
+import { fixedClock, installDemoMarketFixtures } from './market-fixtures.ts';
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { gzipSync } from 'node:zlib';
 import { catalogs } from '../src/i18n/catalogs.ts';
@@ -36,8 +36,9 @@ async function openMarket(page: Page) {
   return page.getByRole('dialog', { name: 'Select market data' });
 }
 
-test('loads the demo at its base, fetches Binance spot, runs and optimizes', async ({ page }) => {
+test('loads the demo example with one click, then optimizes', async ({ page }, info) => {
   const requests = await installDemoMarketFixtures(page);
+  await page.clock.install({ time: fixedClock });
   const workers: string[] = [];
   page.on('worker', (worker) => workers.push(worker.url()));
   await page.goto('/OptiPine/');
@@ -46,11 +47,16 @@ test('loads the demo at its base, fetches Binance spot, runs and optimizes', asy
   await expect(page.getByRole('button', { name: /BTCUSDT Binance/ })).toBeVisible({
     timeout: 30_000,
   });
-  await page
-    .getByRole('banner')
-    .getByRole('button', { name: /^Run backtest/ })
-    .click();
   await expect(page.getByLabel('Last run')).toHaveText(/17,520 bars/);
+  await expect(page.getByRole('tab', { name: 'Report', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await expect(page.getByRole('tab', { name: /^Trades [1-9]/ })).toBeVisible();
+  await expect(page.getByRole('tabpanel').getByRole('table')).toHaveCount(3);
+  await page.mouse.move(1435, 895);
+  await page.evaluate(() => document.fonts.ready);
+  await page.screenshot({ path: info.outputPath('example-one-click-demo.png') });
   await page.getByRole('button', { name: 'Optimize', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'No optimization has run yet' })).toBeVisible();
   await page.getByRole('spinbutton', { name: 'Length from' }).fill('18');

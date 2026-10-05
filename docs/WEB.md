@@ -56,17 +56,18 @@ disabled.
 
 **First launch (S1)** shows three steps on the empty workbench: open a script (**Paste code**,
 **Open file**), **Select market data**, and run, with **Load example: Trend Breakout, BTCUSDT 1
-hour**. Until both a script and data exist, the run action explains what is missing. While an
-example's data loads, the data step and the header's data button say "Fetching BTCUSDT 1h", the
+hour**, which loads the script and data and automatically runs its backtest. Until both a script
+and data exist, the run action explains what is missing. While an example's data loads, the data
+step and the header's data button say "Fetching BTCUSDT 1h", the
 step with a progress bar and **Cancel fetch**. When the steps give way to the chart, the focus they
 held moves to the page's heading.
 
 **Script menu (S2)** shows the Pine version, input and plot counts and compile time, then **Open
 .pine file** (Ctrl + O), **Paste from clipboard and replace**, **Download .pine**, and the example
 strategies: Trend Breakout, RSI Reversal and MA Cross. An example loads its source and fetches the
-last two years of BTCUSDT 1h through the proxy (4.7). A `.pine` file dropped anywhere on the page
-opens like one chosen with **Open .pine file**; any other file is explained, never opened by the
-browser in the app's place.
+last two years of BTCUSDT 1h through the proxy (4.7), then runs its backtest automatically. A `.pine`
+file dropped anywhere on the page opens like one chosen with **Open .pine file**; any other file
+is explained, never opened by the browser in the app's place.
 
 Replacing a script edited since it was opened, by an example, a file, a drop or pasted code, first
 asks **Replace the current script?**: the edits will be lost, with **Download .pine**, **Cancel**
@@ -565,9 +566,13 @@ rounded down to the hour, so the last bar is the latest closed one, and starts t
 about 17,500 bars. The feed cache is keyed by both ends of the range and keeps a dataset for five
 minutes, so loading an example again within that time and the same hour reuses the cached data,
 and later loads fetch the newer range; example results change as new bars close. Examples fetch
-through the proxy like any other request; loading one accepts its data but does not start a
-backtest. Without the data service, the example's source still loads and the market data dialog
-opens with the provider tabs marked unavailable, leaving **Upload CSV**.
+through the proxy like any other request; loading one accepts its data and starts the same
+backtest action as **Run backtest**, once compilation succeeds. A superseding script edit, opened
+script or market selection prevents that automatic run; cancelling a replacement prompt loads
+and runs nothing. Opening a different script cancels the previous script's backtest or optimization.
+Reloading the same example while a backtest or optimization remains active does not start another
+run or queue one for later. Without the data service, the example's source still loads and the
+market data dialog opens with the provider tabs marked unavailable, leaving **Upload CSV**.
 
 ### 4.8 Persistence
 

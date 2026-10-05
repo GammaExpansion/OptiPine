@@ -84,10 +84,18 @@ async function runReady(page: Page) {
       }),
     )
     .toBe(true);
-  return page.evaluate(async () => {
+  await page.evaluate(async () => {
     const path = '/src/state/backtest.ts';
     const { getBacktestStore } = (await import(path)) as typeof import('../src/state/backtest.ts');
     await getBacktestStore().getState().actions.run();
+  });
+  return readResult(page);
+}
+
+async function readResult(page: Page) {
+  return page.evaluate(async () => {
+    const path = '/src/state/backtest.ts';
+    const { getBacktestStore } = (await import(path)) as typeof import('../src/state/backtest.ts');
     const state = getBacktestStore().getState();
     if (state.run.status !== 'done') throw new Error(JSON.stringify(state.run));
     return {
@@ -329,7 +337,7 @@ async function loadRecordedExample(page: Page, language: Language) {
     await loadExample('trend-breakout');
   }, language);
   expect(requests.filter((url) => url.pathname.endsWith('/bars'))).toHaveLength(1);
-  return runReady(page);
+  return readResult(page);
 }
 
 for (const language of ['en', 'zh'] as const) {
@@ -432,7 +440,7 @@ for (const language of ['en', 'zh'] as const) {
       const { loadExample } = (await import(path)) as typeof import('../src/state/backtest.ts');
       await loadExample('rsi-reversal');
     });
-    await runReady(page);
+    await readResult(page);
     const lower = chart.locator(':scope > div').nth(1);
     await expect(lower).toContainText('RSI');
     await expect(lower).toHaveCSS('background-color', 'rgb(14, 16, 19)');
