@@ -1,4 +1,6 @@
 .header {
+  position: relative;
+  min-width: 0;
   height: var(--header-height);
   flex: none;
   display: flex;
@@ -9,6 +11,7 @@
   background: var(--canvas);
 }
 .brand {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -27,30 +30,49 @@
   flex: 1;
 }
 .facts {
+  flex: none;
   font-size: 12px;
   color: var(--caption);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-@media (max-width: 1380px) {
-  .facts {
-    white-space: normal;
-    min-width: 100px;
-  }
+.facts:empty,
+.facts:has(> :empty) {
+  display: none;
 }
-/*
- * Below 1500 px the run button hides its Ctrl + Enter hint, whose room the facts, About and the
- * GitHub link need. The hint stays in the button's accessible name, and the shortcut still works.
- */
-@media (max-width: 1499px) {
-  .header[data-layout='desktop'] kbd {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
+/* Measured stages: shortcut, facts, provider, brand, dates, Run label, then script name. */
+.header[data-compact]:not([data-compact='0']) kbd,
+.header[data-compact]:not([data-compact='0'], [data-compact='1']) .longFacts,
+.header[data-compact]:not([data-compact='0'], [data-compact='1'])
+  .backtestFacts:is([data-kind='done'], [data-kind='blocked']),
+.header[data-compact='6'] .runLong,
+.header[data-compact='7'] .runLong {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.shortFacts,
+.rangeShort {
+  display: none;
+}
+.header[data-compact]:not([data-compact='0'], [data-compact='1'], [data-compact='2']) .provider,
+.header[data-compact]:not(
+    [data-compact='0'],
+    [data-compact='1'],
+    [data-compact='2'],
+    [data-compact='3']
+  )
+  .brand
+  span,
+.header[data-compact]:is([data-compact='5'], [data-compact='6'], [data-compact='7']) .rangeLong {
+  display: none;
+}
+.header[data-compact]:not([data-compact='0'], [data-compact='1']) .shortFacts,
+.header[data-compact]:is([data-compact='5'], [data-compact='6'], [data-compact='7']) .rangeShort {
+  display: inline;
 }
 .timeframe {
   display: contents;
@@ -58,13 +80,59 @@
 .runShort {
   display: none;
 }
-/* G2: one row without the brand name, the facts, the provider and the date range. */
+/* G2: omit ordinary facts, brand name, provider and dates; keep progress/errors on their own line. */
 .header[data-layout='tablet'] {
   gap: 10px;
   padding: 0 8px 0 14px;
 }
+/* Measure the narrow workbench too: shorten Run first, then ellipsize only the script name. */
+@media (min-width: 1024px) {
+  .header[data-layout='tablet'] {
+    gap: 12px;
+  }
+}
+.header[data-narrow='1'] .runLong,
+.header[data-narrow='2'] .runLong {
+  display: none;
+}
+.header[data-narrow='1'] .runShort,
+.header[data-narrow='2'] .runShort,
+.header[data-compact='6'] .runShort,
+.header[data-compact='7'] .runShort {
+  display: inline;
+}
+.header[data-narrow='2'] span[data-loaded],
+.header[data-compact='7'] span[data-loaded] {
+  max-width: 80px;
+}
 .header[data-layout='tablet'] .facts {
   display: none;
+}
+.header[data-layout='tablet']:has(
+    .facts:is(
+      [data-kind='running'],
+      [data-kind='failed'],
+      [data-kind='compileFailed'],
+      [data-kind='runFailed']
+    )
+  ) {
+  height: auto;
+  min-height: var(--header-height);
+  flex-wrap: wrap;
+  row-gap: 4px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.header[data-layout='tablet']
+  .facts:is(
+    [data-kind='running'],
+    [data-kind='failed'],
+    [data-kind='compileFailed'],
+    [data-kind='runFailed']
+  ) {
+  display: block;
+  order: 1;
+  flex-basis: 100%;
 }
 .toggle[aria-expanded='true'] {
   color: var(--link);
@@ -130,9 +198,23 @@
 }
 .phone .facts {
   min-width: 0;
-  overflow: hidden;
+  flex: 0 1 auto;
 }
-/* About shares this fixed-height row; long run facts may use its two text lines. */
+.phone .facts[data-kind='running'] {
+  order: 1;
+  flex: 1 0 100%;
+  padding-bottom: 4px;
+}
+/* Counts get their own line; Cancel, page tabs and About keep their full touch targets. */
+.phone .row:first-child {
+  height: auto;
+  min-height: 52px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.phone .row:first-child:has(.facts[data-kind='running']) {
+  flex-wrap: wrap;
+}
 .phone .facts > span {
   white-space: normal;
 }

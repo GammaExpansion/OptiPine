@@ -590,7 +590,9 @@ test('B9 outdated results remain visible, and B12 shows zero trades', async ({ p
   await expect(page.getByRole('tabpanel').getByRole('status')).toHaveCount(1);
   await expect(page.getByText('Current results use Length 5.', { exact: true })).toHaveCount(1);
   await expect(page.getByText('Results outdated', { exact: true })).toHaveCount(1);
-  await expect(page.getByLabel('Last run')).toHaveText('Results outdated');
+  await expect(
+    page.getByLabel('Last run').getByText('Results outdated', { exact: true }),
+  ).toBeAttached();
   await expect(page.locator('[data-outdated="true"] [data-dimmed="true"]')).toHaveCSS(
     'opacity',
     '0.4',

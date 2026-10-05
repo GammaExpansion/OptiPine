@@ -57,6 +57,32 @@ provider, as a preview to accept (2.2); for CSV data they are disabled. A phone 
 top row, which a run's progress needs, and puts the GitHub link beside the language switch, where
 the script's name gives way to it (G3, G4).
 
+At desktop widths (1280 px and up), the header measures its actual contents after resizing,
+status/language changes and font loading. All flex items must remain inside the content box,
+with at least 12 px between them. Padding stays 16 px left and 12 px right; the fit measurement
+requires at least 4 px of slack after subtracting control widths and all gaps from the content box.
+The flexible spacer's expandable width counts as slack. The hook and browser tests share this
+calculation and threshold; measurement never changes padding.
+It uses only as much compaction as needed, in order:
+hide the Run shortcut hint; shorten run facts (Backtest's completed facts move to Run's tooltip
+and accessible description); hide the provider name; hide the OptiPine text but keep the logo;
+then shorten dates to `24-10-05 – 26-10-05`. If these levels 0–5 still cannot leave 4 px, level 6
+shortens **Run backtest** to **Run** / **运行**, and level 7 limits the script name to 80 px with
+an ellipsis. These final two steps are available at every desktop width, only when needed.
+The symbol's accessible name retains its provider; full dates, action and script names remain
+accessible and in tooltips. Control heights and focus order stay the same. Progress and errors
+stay visible; running, cancelled and outdated sentences may
+shorten, with their full wording retained in tooltips and for assistive technology. Missing-input
+guidance can move out of the row because the disabled Run action still explains it.
+
+The narrow workbench at 1024–1279 px (the tablet layout) also measures its controls row,
+reserving **24 px** after padding, control widths and **12 px gaps** for platform font differences.
+When needed, first shorten **Run backtest** to **Run** / **运行**, retaining the full action name
+and tooltip; then limit the script name to 80 px with an ellipsis and its full name in the tooltip.
+Only the required steps apply; wider headers restore the full labels. The same script-name step
+applies during Backtest and Optimize runs, whose **Cancel** label stays complete. Progress and
+errors keep their separate line. Below 1024 px the existing tablet/phone layout remains in use.
+
 The browser tab shows the logo's three bars on the panel's dark tile, so the muted bar reads on
 light and dark tab strips: `public/favicon.svg`, with `favicon.ico` (32 px) for browsers without
 SVG icons and a 180 px `apple-touch-icon.png`, both rendered from it.
@@ -377,6 +403,14 @@ summary, initially **Per window**, above Windows, Stability and Settings, and th
 bar below (G4). The component sheet is G5. The phone leaderboard measures card height separately
 from desktop rows; cards share the tallest measured height at that width so paging stays stable.
 Switching layouts recomputes capacity and preserves the selected or leading set, just like resizing R1.
+
+The header uses the measured compaction order in 2.1 on desktop. A tablet omits the brand text,
+provider, date range and ordinary run facts; progress and errors occupy a separate line below its
+controls. On a phone, Optimize's live counts occupy their own line below the page tabs,
+Cancel and About, so English and Chinese counts never ellipsize. After the run, facts wrap beside
+the page tabs in the original row, returning that height to the leaderboard. The script, symbol,
+timeframe, language and GitHub stay in the next row. Longer errors/statuses can increase the
+row's height if needed; the workbench uses the remaining space.
 
 ## 3. Behavior
 

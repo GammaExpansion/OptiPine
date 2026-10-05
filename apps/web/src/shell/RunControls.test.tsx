@@ -39,11 +39,22 @@ test('the run action explains what is missing, most fundamental first', async ()
   expect(runButton()).toHaveAccessibleDescription('Fix the value of Length');
 });
 
+test('the narrow Run label keeps the complete action name and tooltip', async () => {
+  setViewportWidth(1024);
+  await loadScript();
+  renderInEnglish(<RunControls />);
+  expect(runButton()).toHaveAccessibleName('Run backtest');
+  expect(runButton()).toHaveAttribute('title', 'Run backtest');
+  expect(screen.getByText('Run', { exact: true })).toHaveAttribute('aria-hidden', 'true');
+});
+
 test('a run shows its elapsed time and Cancel, which keeps the previous result', async () => {
   await loadScript();
   renderInEnglish(<RunControls />);
   await runBacktest();
   expect(screen.getByText('120 bars, 0.0 s')).toBeInTheDocument();
+  expect(runButton()).toHaveAccessibleDescription('120 bars, 0.0 s');
+  expect(runButton()).toHaveAttribute('title', 'Run backtest · 120 bars, 0.0 s');
   act(() => void getBacktestStore().getState().actions.run());
   expect(screen.getByText('Running, 0.0 s elapsed')).toBeInTheDocument();
   expect(screen.getByRole('progressbar', { name: 'Backtest in progress' })).toBeInTheDocument();
@@ -89,13 +100,15 @@ test('on the Optimize page the header states the run, with Cancel and no main ac
   await loadOptimization();
   act(() => uiStore.setState({ page: 'optimize' }));
   renderInEnglish(<RunControls />);
+  await screen.findByRole('group', { name: 'Last run' });
   expect(facts()).toHaveTextContent('No optimization has run yet');
   expect(screen.queryByRole('button', { name: /Run backtest|Start/ })).toBeNull();
   let run!: Promise<void>;
   act(() => {
     run = optimization().actions.start();
   });
-  expect(facts()).toHaveTextContent(/^Optimizing 0 \/ (0|9)$/);
+  expect(screen.getByText(/^Optimizing 0 \/ (0|9)$/)).toBeInTheDocument();
+  expect(screen.getByText(/^0 \/ (0|9)$/)).toHaveAttribute('aria-hidden', 'true');
   fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   await act(() => run);
   expect(facts()).toHaveTextContent('Optimization cancelled');
@@ -130,21 +143,24 @@ test('a walk-forward run states its window, then the windows it took (W4, W1)', 
   await loadWalkForward();
   act(() => uiStore.setState({ page: 'optimize' }));
   renderInEnglish(<RunControls />);
+  await screen.findByRole('group', { name: 'Last run' });
   let run!: Promise<void>;
   act(() => {
     run = optimization().actions.start();
   });
   expect(facts()).toHaveTextContent('Window 1 / 4');
   await act(() => run);
-  expect(facts()).toHaveTextContent(/^4 windows in 0:00$/);
+  expect(screen.getByText('4 windows in 0:00')).toBeInTheDocument();
+  expect(screen.getByText('4 · 0:00')).toHaveAttribute('aria-hidden', 'true');
 });
 
-// A phone's header row has room for the counts beside Cancel, not "Optimizing 3 / 403".
+// A phone uses a separate line for the counts so they never compete with Cancel.
 test('a phone states the run as its counts', async () => {
   setViewportWidth(390);
   await loadOptimization();
   act(() => uiStore.setState({ page: 'optimize' }));
   renderInEnglish(<RunControls />);
+  await screen.findByRole('group', { name: 'Last run' });
   let run!: Promise<void>;
   act(() => {
     run = optimization().actions.start();
@@ -158,6 +174,7 @@ test('a phone states a walk-forward run as its window count', async () => {
   await loadWalkForward();
   act(() => uiStore.setState({ page: 'optimize' }));
   renderInEnglish(<RunControls />);
+  await screen.findByRole('group', { name: 'Last run' });
   let run!: Promise<void>;
   act(() => {
     run = optimization().actions.start();

@@ -26,9 +26,9 @@
 }
 /* B8: an indeterminate line along the header's lower edge while a backtest runs. */
 .progress {
-  position: fixed;
+  position: absolute;
   z-index: 5;
-  top: calc(var(--header-height) - 1px);
+  bottom: -1px;
   left: 0;
   right: 0;
   height: 2px;

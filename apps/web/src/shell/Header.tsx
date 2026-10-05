@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Icon } from '../components/Icon.tsx';
 import { IconButton } from '../components/IconButton.tsx';
 import { IconLink } from '../components/IconLink.tsx';
@@ -11,18 +12,20 @@ import { HeaderData } from './HeaderData.tsx';
 import { RunControls } from './RunControls.tsx';
 import { drawerToggleId } from './layout.ts';
 import { useLayout } from './useLayout.ts';
+import { useHeaderFit } from './useHeaderFit.ts';
 import styles from './Header.module.css';
 
 /**
- * The top bar (G5). A tablet keeps one row without the brand name, facts and date range, and
- * gains the right panel's toggle (G2); a phone splits it into the page switch with Run, then the
- * script, data and language (G3, G4). About shares the phone's top row so data stays readable; the
- * GitHub link sits beside the language switch, where the script's name gives way to it, because a
- * run's progress needs the rest of the top row.
+ * The top bar (G5) compacts its optional text to fit the available desktop width. Tablet (G2)
+ * adds the drawer toggle and omits ordinary facts and dates, keeping progress/errors on another
+ * line. Phone (G3, G4) separates the page switch/actions, Optimize status and data controls.
+ * About stays with the actions and GitHub beside the language switch so counts remain readable.
  */
 export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
   const { t, language } = useI18n();
   const layout = useLayout();
+  const header = useRef<HTMLElement>(null);
+  useHeaderFit(header, layout);
   // R1, R5 and B16 mark Optimize while it holds complete results, outdated or not; a first run
   // in progress has none yet (O8). Before the Optimize page first opens there are none either.
   const optimizeResults = useOptimizationPresence((presence) => presence.hasResults);
@@ -101,7 +104,7 @@ export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
       </header>
     );
   return (
-    <header className={styles.header} data-layout={layout} data-page={page}>
+    <header ref={header} className={styles.header} data-layout={layout} data-page={page}>
       <div className={styles.brand}>
         <Icon name="logo" size={18} />
         {layout === 'desktop' && <span>{t('shell.brand')}</span>}
