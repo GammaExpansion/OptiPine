@@ -39,6 +39,13 @@ React and React DOM, Radix UI primitives, TanStack Table and TanStack Virtual, C
 Lezer, Zustand, react-resizable-panels, and their dependencies. The full production dependency tree
 contains only MIT, ISC, 0BSD, Apache-2.0 and OFL-1.1 licenses; `npm ls --omit=dev --all` lists it.
 
+### GitHub Octicons
+
+The header's link to this repository draws GitHub's mark with the `mark-github-16` path of
+[Octicons](https://github.com/primer/octicons) 19.15.1, © 2025 GitHub Inc., under the MIT License.
+The path is copied into `apps/web/src/components/Icon.tsx`, and the app ships the license text in
+its notices (`apps/web/licenses/octicons-LICENSE.txt`).
+
 ## Software used by the verification suite
 
 `@pine/golden` reads TradingView's exports with [fast-xml-parser](https://github.com/NaturalIntelligence/fast-xml-parser)

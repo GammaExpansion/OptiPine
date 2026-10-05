@@ -153,13 +153,16 @@ test('S1 keeps results, dialogs, the script menu, Optimize and Chinese out of th
   expect(scripts.map(({ file }) => file).filter((file) => lazy.test(file))).toEqual([]);
   // Measured after the catalog split and #48: 494,758 bytes of first-load code, 490,705 of them
   // in the entry modules. The split moved about 33.6 KB of copy out of the first load at the
-  // cost of about 1.8 KB of loader code. Both code budgets leave about 1 KB of headroom, still
-  // too little for the script menu or market data dialog to load with the page again.
+  // cost of about 1.8 KB of loader code. The header's GitHub link then added 1,079 bytes to both
+  // (495,099 to 496,178, and 491,046 to 492,125 in the entry): 576 of them are the Octicons
+  // mark's path, the rest the link component and the repository's address. Both code budgets
+  // leave about 1 KB of headroom, still too little for the script menu or market data dialog to
+  // load with the page again.
   const catalog = /\/en-[^/]*\.js$/;
   const sum = (files: typeof scripts) => files.reduce((total, script) => total + script.bytes, 0);
   const code = sum(scripts.filter(({ file }) => !catalog.test(file)));
   expect(code).toBeGreaterThan(0);
-  expect(code).toBeLessThan(496_000);
+  expect(code).toBeLessThan(497_200);
   // Area copy loads with its UI. Core fell from 53,508 to 19,851 bytes; allow about 6 KB for
   // shell, Backtest and shared additions in this independent catalog budget.
   const catalogBytes = sum(scripts.filter(({ file }) => catalog.test(file)));
@@ -170,7 +173,7 @@ test('S1 keeps results, dialogs, the script menu, Optimize and Chinese out of th
     [...html.matchAll(/(?:src|href)="([^"\s]+\.js)"/g)].map((match) => match[1]),
   );
   const entryBytes = sum(scripts.filter(({ file }) => entryFiles.has(file)));
-  expect(entryBytes).toBeLessThan(492_000);
+  expect(entryBytes).toBeLessThan(493_150);
   await writeFile(
     info.outputPath('s1-bundle.json'),
     JSON.stringify({ scripts, entryBytes, code, catalogBytes }, null, 2),

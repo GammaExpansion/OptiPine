@@ -184,6 +184,30 @@ test('panes resize, reset, collapse, maximize and remember sizes independently p
   expect(chartHeight === 0 || chartHeight >= 240).toBe(true);
 });
 
+test('dev, preview and production serve the favicon, its fallback and the touch icon', async ({
+  request,
+}) => {
+  const icons = [
+    ['/favicon.svg', 'image/svg+xml'],
+    ['/favicon.ico', 'image/'],
+    ['/apple-touch-icon.png', 'image/png'],
+  ];
+  for (const origin of [origins.production, origins.preview, origins.dev]) {
+    const page = await (
+      await request.get(`${origin}/`, { headers: { Accept: 'text/html' } })
+    ).text();
+    for (const [path, type] of icons) {
+      expect(page, `${origin} links ${path}`).toContain(`href="${path}"`);
+      const response = await request.get(`${origin}${path}`);
+      expect(response.status(), `${origin}${path}`).toBe(200);
+      expect(response.headers()['content-type']).toContain(type);
+    }
+    // The logo's three bars, on the panel's dark tile so the muted bar shows on light tab strips.
+    const svg = await (await request.get(`${origin}/favicon.svg`)).text();
+    for (const colour of ['#14171b', '#f2a33a', '#7a5a26']) expect(svg).toContain(colour);
+  }
+});
+
 test('dev, preview and production preserve the market API prefix', async ({ request }) => {
   expect((await request.get(`${origins.production}/e2e/harness.html`)).status()).toBe(404);
   for (const origin of [origins.production, origins.preview, origins.dev]) {

@@ -7,6 +7,7 @@ export const licensesEn = {
   'licenses.app': 'OptiPine · MIT License',
   'licenses.copyright': 'Copyright (c) 2026 GammaExpansion',
   'licenses.appLicense': 'Read the MIT License',
+  'licenses.repository': 'Source code on GitHub',
   'licenses.charts': 'TradingView Lightweight Charts™',
   'licenses.chartNotice': 'Copyright (с) 2025 TradingView, Inc. https://www.tradingview.com/',
   'licenses.chartLicense': 'Apache License 2.0',
@@ -27,6 +28,8 @@ export const licensesEn = {
     'React and React DOM, Radix UI primitives, TanStack Table and TanStack Virtual, CodeMirror 6 and Lezer, Zustand, react-resizable-panels, and their dependencies.',
   'licenses.libraryLicenses':
     'These libraries use the MIT License. The complete notices include each production dependency’s version, copyright and license text.',
+  'licenses.octicons':
+    'The GitHub mark is from GitHub Octicons, © 2025 GitHub Inc., under the MIT License.',
   'licenses.notices': 'Read all third-party notices',
   'licenses.independent':
     'TradingView and Pine Script are trademarks of TradingView, Inc. Binance and Yahoo are trademarks of their owners. OptiPine is independent and not affiliated with or endorsed by any of them.',

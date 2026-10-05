@@ -38,6 +38,20 @@
     min-width: 100px;
   }
 }
+/*
+ * Below 1500 px the run button hides its Ctrl + Enter hint, whose room the facts, About and the
+ * GitHub link need. The hint stays in the button's accessible name, and the shortcut still works.
+ */
+@media (max-width: 1499px) {
+  .header[data-layout='desktop'] kbd {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
 .timeframe {
   display: contents;
 }
@@ -95,9 +109,20 @@
   height: 44px;
   min-width: 0;
   padding: 0 6px;
+  gap: 4px;
 }
 .phone .data span[data-loaded] {
   max-width: 104px;
+}
+/*
+ * Only the script's name gives way in this row: it ellipsizes before the symbol, the timeframe,
+ * the language switch or the GitHub link could be squeezed.
+ */
+.phone .data > * {
+  flex-shrink: 0;
+}
+.phone .data > button:first-of-type {
+  flex-shrink: 1;
 }
 /* G3 names the script without its file icon. */
 .phone .data > button:first-of-type > svg:first-child {
@@ -115,8 +140,9 @@
   height: 44px;
   padding: 0 14px;
 }
-/* Keep a full touch target out of the phone's crowded data and language row. */
-.phone .about {
+/* Full touch targets on a phone: About in the top row, GitHub beside the language switch. */
+.phone .about,
+.phone .github {
   width: 44px;
   height: 44px;
 }

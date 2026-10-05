@@ -2,6 +2,7 @@ import { Dialog } from '../../components/Dialog.tsx';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { useUiStore } from '../../state/ui.ts';
 import { appUrl, demoBuild } from '../../demo.ts';
+import { repositoryUrl } from '../../repository.ts';
 import styles from './LicensesDialog.module.css';
 
 export function LicensesDialog() {
@@ -25,9 +26,14 @@ export function LicensesDialog() {
         <section>
           <h3>{t('licenses.app')}</h3>
           <p>{t('licenses.copyright')}</p>
-          <a href={appUrl('licenses/OptiPine.txt')} target="_blank" rel="noreferrer">
-            {t('licenses.appLicense')}
-          </a>
+          <div className={styles.links}>
+            <a href={appUrl('licenses/OptiPine.txt')} target="_blank" rel="noreferrer">
+              {t('licenses.appLicense')}
+            </a>
+            <a href={repositoryUrl} target="_blank" rel="noopener noreferrer">
+              {t('licenses.repository')}
+            </a>
+          </div>
         </section>
         <section>
           <h3>{t('licenses.charts')}</h3>
@@ -70,6 +76,7 @@ export function LicensesDialog() {
           <h3>{t('licenses.libraries')}</h3>
           <p>{t('licenses.mitLibraries')}</p>
           <p>{t('licenses.libraryLicenses')}</p>
+          <p>{t('licenses.octicons')}</p>
         </section>
         <p className={styles.independent}>{t('licenses.independent')}</p>
       </div>

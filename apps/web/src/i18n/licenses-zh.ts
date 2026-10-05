@@ -6,6 +6,7 @@ export const licensesZh = {
   'licenses.app': 'OptiPine · MIT 许可证',
   'licenses.copyright': 'Copyright (c) 2026 GammaExpansion',
   'licenses.appLicense': '阅读 MIT 许可证',
+  'licenses.repository': 'GitHub 上的源代码',
   'licenses.charts': 'TradingView Lightweight Charts™',
   'licenses.chartNotice': 'Copyright (с) 2025 TradingView, Inc. https://www.tradingview.com/',
   'licenses.chartLicense': 'Apache 许可证 2.0',
@@ -24,6 +25,7 @@ export const licensesZh = {
     'React 和 React DOM、Radix UI 组件、TanStack Table 和 TanStack Virtual、CodeMirror 6 和 Lezer、Zustand、react-resizable-panels 及其依赖项。',
   'licenses.libraryLicenses':
     '这些软件库依据 MIT 许可证授权。完整的第三方声明列明了各项生产依赖的版本、版权及许可证全文。',
+  'licenses.octicons': 'GitHub 标志取自 GitHub Octicons，© 2025 GitHub Inc.，依据 MIT 许可证授权。',
   'licenses.notices': '阅读完整第三方声明',
   'licenses.independent':
     'TradingView 和 Pine Script 是 TradingView, Inc. 的商标。Binance 和 Yahoo 是各自所有者的商标。OptiPine 为独立项目，与上述机构无关联，亦未获其认可。',
