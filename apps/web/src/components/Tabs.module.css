@@ -4,10 +4,12 @@
 .list {
   display: flex;
   border-bottom: 1px solid var(--divider);
-  overflow-x: auto;
+  /* Keep focus rings and underlines visible; compact the text rather than scroll the strip. */
+  overflow: visible;
 }
 .tab {
   flex: 1;
+  min-width: 0;
   min-height: 40px;
   padding: 10px 12px;
   display: flex;
@@ -36,6 +38,11 @@
 }
 .tab:disabled {
   opacity: 0.45;
+}
+.label,
+.description {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .description {
   font-size: 12px;

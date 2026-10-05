@@ -35,8 +35,9 @@ export function DockTabs({
               key={option.value}
               value={option.value}
               disabled={option.disabled}
+              title={option.label}
             >
-              {option.label}
+              <span className={styles.label}>{option.label}</span>
               {option.count !== undefined && (
                 <span className={`${styles.count} ${option.bad ? styles.bad : ''}`}>
                   {option.count}
