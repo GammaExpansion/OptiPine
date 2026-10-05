@@ -82,6 +82,7 @@ export const dataEn = {
   'data.session': 'Session',
   'data.continuous': '24 × 7',
   'data.tradingDays': 'Exchange sessions, {count} trading days',
+  'data.tradingDays.one': 'Exchange sessions, {count} trading day',
   'data.profile': 'Symbol info',
   'data.providerProfile': 'From the data source, editable',
   'data.profile.mintick': 'Tick size',
@@ -93,6 +94,8 @@ export const dataEn = {
   'data.unadjusted': 'Prices use the provider’s OHLC; no additional adjustment is applied.',
   'data.ohlcNormalized':
     'Yahoo forex high/low expanded on {count} bars to include open/close (at most 0.05%). Open, close and volume are unchanged.',
+  'data.ohlcNormalized.one':
+    'Yahoo forex high/low expanded on {count} bar to include open/close (at most 0.05%). Open, close and volume are unchanged.',
   'data.estimated':
     'Yahoo does not publish trading rules: tick size is estimated from quote precision; point value and minimum order size default to 1. Verify before use.',
   'data.refusedBy': '{provider} refused the request',
@@ -102,6 +105,7 @@ export const dataEn = {
   'data.unavailable': 'The data service is unavailable. Upload a CSV instead.',
   'data.dateTitle': 'Change date range',
   'data.estimate': 'About {count} bars',
+  'data.estimate.one': 'About {count} bar',
   'data.fetchAgain': 'Fetch again',
   'csv.file': 'CSV file',
   'csv.chooseFile': 'Choose file',
@@ -111,6 +115,8 @@ export const dataEn = {
   'csv.timeframeHint': 'Pine units, e.g. 60 or 1D',
   'csv.timeframeMismatch':
     'Bars are most often {minutes} minutes apart; the selected timeframe is {timeframe}. Check the timeframe; session breaks or missing bars can change spacing.',
+  'csv.timeframeMismatch.one':
+    'Bars are most often {minutes} minute apart; the selected timeframe is {timeframe}. Check the timeframe; session breaks or missing bars can change spacing.',
   'csv.type': 'Symbol type',
   'csv.type.crypto': 'Crypto',
   'csv.type.stock': 'Stock',
@@ -128,7 +134,9 @@ export const dataEn = {
   'csv.manualProfile': 'Not in the file; enter manually',
   'csv.reading': 'Reading file…',
   'csv.rows': '{count} rows',
+  'csv.rows.one': '{count} row',
   'csv.errors': '{count} errors',
+  'csv.errors.one': '{count} error',
   'csv.failed': 'File parsing failed',
   'csv.fix': 'Fix the file and choose it again',
   'csv.row': 'Row {line}',

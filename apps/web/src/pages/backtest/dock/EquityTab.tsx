@@ -50,7 +50,7 @@ export function EquityTab() {
             {fact(
               t('equity.annualizedReturn'),
               number(summary.annualizedReturn, 2, true, true),
-              t('equity.years', { value: number(summary.years, 2) }),
+              t('equity.years', { value: number(summary.years, 2), count: summary.years }),
             )}
             {fact(
               t('equity.maxDrawdown'),
@@ -60,7 +60,10 @@ export function EquityTab() {
             )}
             {fact(
               t('equity.duration'),
-              t('equity.days', { value: number(dd?.durationDays ?? 0) }),
+              t('equity.days', {
+                value: number(dd?.durationDays ?? 0),
+                count: dd?.durationDays ?? 0,
+              }),
               dd && !dd.recovery ? t('equity.notRecovered') : undefined,
               dd && !dd.recovery ? 'amber' : undefined,
             )}

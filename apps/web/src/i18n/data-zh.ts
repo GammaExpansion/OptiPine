@@ -76,6 +76,7 @@ export const dataZh = {
   'data.session': '交易时段',
   'data.continuous': '24 × 7',
   'data.tradingDays': '交易所时段，{count} 个交易日',
+  'data.tradingDays.one': '交易所时段，{count} 个交易日',
   'data.profile': '品种档案',
   'data.providerProfile': '由数据源提供，可修改',
   'data.profile.mintick': '最小变动价位',
@@ -86,6 +87,8 @@ export const dataZh = {
   'data.unadjusted': '价格采用数据源 OHLC，不另行复权。',
   'data.ohlcNormalized':
     '已扩大 {count} 根 Yahoo 外汇 K 线的最高价/最低价以包含开盘价/收盘价（幅度不超过 0.05%）。开盘价、收盘价和成交量未改动。',
+  'data.ohlcNormalized.one':
+    '已扩大 {count} 根 Yahoo 外汇 K 线的最高价/最低价以包含开盘价/收盘价（幅度不超过 0.05%）。开盘价、收盘价和成交量未改动。',
   'data.estimated':
     'Yahoo 未提供交易规则：最小变动价位按报价精度估算，合约乘数与最小下单量默认为 1，请在使用前核对。',
   'data.refusedBy': '{provider} 拒绝了请求',
@@ -95,6 +98,7 @@ export const dataZh = {
   'data.unavailable': '数据服务不可用。请改用 CSV。',
   'data.dateTitle': '更改日期范围',
   'data.estimate': '约 {count} 根 K 线',
+  'data.estimate.one': '约 {count} 根 K 线',
   'data.fetchAgain': '重新获取',
   'csv.file': 'CSV 文件',
   'csv.chooseFile': '选择文件',
@@ -103,6 +107,8 @@ export const dataZh = {
     '可拖放 TradingView「导出图表数据」CSV：time、open、high、low、close 和 Volume。time 为 Unix 秒；其它列将被忽略。',
   'csv.timeframeHint': 'Pine 单位，如 60 或 1D',
   'csv.timeframeMismatch':
+    'K 线最常见的间隔为 {minutes} 分钟，所选周期为 {timeframe}。请核对周期；休市或缺失 K 线也可能改变间隔。',
+  'csv.timeframeMismatch.one':
     'K 线最常见的间隔为 {minutes} 分钟，所选周期为 {timeframe}。请核对周期；休市或缺失 K 线也可能改变间隔。',
   'csv.type': '品种类型',
   'csv.type.crypto': '加密货币',
@@ -121,7 +127,9 @@ export const dataZh = {
   'csv.manualProfile': '文件未包含，需手动填写',
   'csv.reading': '正在读取文件…',
   'csv.rows': '{count} 行',
+  'csv.rows.one': '{count} 行',
   'csv.errors': '{count} 处错误',
+  'csv.errors.one': '{count} 处错误',
   'csv.failed': '文件解析失败',
   'csv.fix': '修正后请重新选择文件',
   'csv.row': '第 {line} 行',

@@ -141,10 +141,12 @@ export function csvTimeframeWarning(
   } else {
     spacing = mostCommon(gaps) / (unit === 'S' ? 1 : 60);
   }
+  const minutes = mostCommon(gaps) / 60;
   return spacing === count
     ? null
     : message('csv.timeframeMismatch', {
-        minutes: mostCommon(gaps) / 60,
+        minutes,
+        count: minutes,
         timeframe,
       });
 }

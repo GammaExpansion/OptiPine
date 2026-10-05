@@ -168,6 +168,7 @@ export function LeaderboardPanel({
         <h2>{t('optimize.leaderboard.title')}</h2>
         <span>
           {t('optimize.leaderboard.pass', {
+            count: board?.passing ?? 0,
             passing: board?.passing ?? 0,
             total: board?.total ?? 0,
           })}

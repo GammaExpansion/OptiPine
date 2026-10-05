@@ -1,6 +1,7 @@
 ﻿import { expect, test } from 'vitest';
 import { inspectCsv, csvInput, csvTimeframeWarning, calendarFromJson } from './csv-import.ts';
 import { defaultProfile } from './ProfileFields.tsx';
+import { translate } from '../../i18n/translate.ts';
 
 const header = 'time,open,high,low,close,Volume,plot';
 const valid = `${header}\n1700000000,100,103,99,102,5,\n1700003600,102,104,101,103,6,"a,b"`;
@@ -145,4 +146,13 @@ test('CSV spacing handles session gaps, DST, calendar weeks and variable-length 
   expect(csvTimeframeWarning(monthly, '1D', 'Etc/UTC')).toMatchObject({
     id: 'csv.timeframeMismatch',
   });
+});
+
+test('a one-minute CSV spacing warning carries its numeric count', () => {
+  const dataset = inspectCsv(valid.replace('1700003600', '1700000060')).dataset!;
+  const warning = csvTimeframeWarning(dataset, '15', 'Etc/UTC')!;
+  expect(warning.values).toEqual({ count: 1, minutes: 1, timeframe: '15' });
+  expect(translate(warning, 'en')).toBe(
+    'Bars are most often 1 minute apart; the selected timeframe is 15. Check the timeframe; session breaks or missing bars can change spacing.',
+  );
 });
