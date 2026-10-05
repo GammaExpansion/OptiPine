@@ -313,7 +313,6 @@ export const optimizeZh = {
   'optimize.summary.fullRange': '排行前 20 组（全区间{objective}）',
   'optimize.summary.median': '中位数',
   'optimize.summary.best': '#1',
-  'optimize.summary.unvalidated': '未验证',
   'optimize.summary.progress': '进行中 · {completed} / {total}',
   'optimize.summary.inProgress': '进行中',
   'optimize.summary.computing': '正在计算前 20 组权益…',

@@ -322,7 +322,6 @@ export const optimizeEn = {
   'optimize.summary.fullRange': 'Top 20 ({objective}, full range)',
   'optimize.summary.median': 'Median',
   'optimize.summary.best': '#1',
-  'optimize.summary.unvalidated': 'Unvalidated',
   'optimize.summary.progress': 'In progress · {completed} / {total}',
   'optimize.summary.inProgress': 'In progress',
   'optimize.summary.computing': 'Computing Top 20 equity…',
