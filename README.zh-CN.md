@@ -47,19 +47,26 @@ OptiPine 直接运行你的 Pine 源码。提供一个 v5 或 v6 策略和行情
 - **自带行情数据。** 经由一个小型 Node 代理获取 Binance 现货与永续、Yahoo Finance 行情，并支持
   CSV 文件。
 
-## 看看界面
+## 看看效果
 
-这些图片由应用所遵循的[设计稿](docs/web-mock-terminal)渲染而成。
+### 找到真正有效的参数
 
-[![设计稿：前 20 组权益、筛选后的样本内外排行、参数图与影响度](docs/screenshots/optimize-zh.png)](docs/screenshots/optimize-zh.png)
+[![OptiPine 参数优化：最佳权益曲线、参数排行与参数热力图](docs/screenshots/optimize-zh.png)](https://gammaexpansion.github.io/OptiPine/ '在浏览器中试用 OptiPine')
 
-2,214 组参数的网格搜索展示前 20 组权益曲线、筛选后的样本内 / 样本外排行、
-Length × Multiplier 参数图及影响度。选中的参数组可在回测页预览，或应用到输入参数。
+一次运行即可测试数千组参数组合。最佳权益曲线、参数排行与参数热力图汇于同一屏，
+帮助你分辨稳定可靠的参数与偶然得出的结果。任意一组参数均可一键在图表上查看。
 
-[![设计稿：滚动优化的逐窗样本内外权益、窗口结果与参数稳定性](docs/screenshots/walk-forward-zh.png)](docs/screenshots/walk-forward-zh.png)
+### 检验策略能否经得起时间考验
 
-六个滚动窗口在同一时间轴上逐窗展示所选参数组的样本内权益（虚线）与样本外权益（实线）。
-窗口表列出所选参数、样本内外结果、WFE 和交易数；参数稳定性面板对比各窗口的近优参数范围。
+[![OptiPine 滚动窗口测试：各窗口的优化区间及其后续表现](docs/screenshots/walk-forward-zh.png)](https://gammaexpansion.github.io/OptiPine/ '在浏览器中试用 OptiPine')
+
+滚动窗口测试先用历史数据优化策略，再用其后数月的数据加以检验，并逐窗重复。
+仅在事后看来有效的策略会在此显露问题，无需等到实盘亏损才发现。
+
+**[立即在浏览器中试用 →](https://gammaexpansion.github.io/OptiPine/)**
+一键载入示例策略，即刻查看首次回测结果。
+
+<sub>图片为应用设计稿的渲染图。</sub>
 
 ## 运行应用
 

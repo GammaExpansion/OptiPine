@@ -53,21 +53,28 @@ you optimize is the one you would see on the chart.
 - **Market data included.** Binance spot and perpetuals and Yahoo Finance through a small Node
   proxy, plus CSV files.
 
-## See it
+## See it in action
 
-These images render the [design mock](docs/web-mock-terminal), which the app follows.
+### Find the settings that work
 
-[![Design mock: Top 20 equity, filtered IS / OOS leaderboard, parameter map and sensitivity](docs/screenshots/optimize.png)](docs/screenshots/optimize.png)
+[![OptiPine optimization: the best equity curves, a ranked leaderboard and a parameter heatmap](docs/screenshots/optimize.png)](https://gammaexpansion.github.io/OptiPine/ 'Try OptiPine in your browser')
 
-A 2,214-set grid search shows the top 20 equity curves, a filtered leaderboard with IS / OOS
-results, a Length × Multiplier parameter map and sensitivity. The selected set can be
-previewed in Backtest or applied to inputs.
+Test thousands of input combinations in one run. The best equity curves, a ranked leaderboard and
+a heatmap of your inputs share one screen, so you can tell settings that are reliably good from
+lucky one-offs. One click shows any of them on the chart.
 
-[![Design mock: Walk-forward IS and OOS equity per window, window results and parameter stability](docs/screenshots/walk-forward.png)](docs/screenshots/walk-forward.png)
+### Check that it holds up
 
-Six rolling windows place each selected set's dashed IS equity and solid OOS equity on a shared
-timeline. The window table lists selected parameters, IS / OOS results, WFE and trades; the
-stability panel compares near-optimal parameter ranges across windows.
+[![OptiPine walk-forward: each window's tuning period and the months that followed](docs/screenshots/walk-forward.png)](https://gammaexpansion.github.io/OptiPine/ 'Try OptiPine in your browser')
+
+Walk-forward testing tunes your strategy on past data, then checks it on the months that follow,
+window after window. A strategy that only works in hindsight shows it here, before it costs real
+money.
+
+**[Try it in your browser →](https://gammaexpansion.github.io/OptiPine/)** One click loads the
+example strategy and runs its first backtest.
+
+<sub>Screens are rendered from the app's design mock.</sub>
 
 ## Running the app
 
