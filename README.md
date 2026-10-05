@@ -4,6 +4,10 @@
 
 **Backtest and optimize TradingView Pine Script strategies offline, with numbers verified against TradingView's own exports.**
 
+[![Try it in your browser](https://img.shields.io/badge/Try_it_in_your_browser-gammaexpansion.github.io%2FOptiPine-f2a33a?style=for-the-badge&labelColor=1b1f24)](https://gammaexpansion.github.io/OptiPine/)
+
+No install or sign-up: scripts and backtests run entirely in your browser.
+
 [![Compatibility regression](https://github.com/GammaExpansion/OptiPine/actions/workflows/ci.yml/badge.svg)](https://github.com/GammaExpansion/OptiPine/actions/workflows/ci.yml)
 [![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -11,14 +15,9 @@
 
 </div>
 
-[![Design mock: Trend Breakout at Length 20 on BTCUSDT, 2023-01-02 to 2025-05-04](docs/screenshots/backtest.png)](docs/screenshots/backtest.png)
+[![Design mock: Trend Breakout at Length 20 on BTCUSDT, 2023-01-02 to 2025-05-04](docs/screenshots/backtest.png)](https://gammaexpansion.github.io/OptiPine/ 'Try OptiPine in your browser')
 
 > **Status.** The engine, optimizer and browser app run locally, including walk-forward in the app.
-
-> **[Try it online](https://gammaexpansion.github.io/OptiPine/).** The static demo runs scripts,
-> backtests, optimization and CSV uploads in the browser and loads Binance spot data directly.
-> Yahoo Finance and USDⓈ-M perpetual data require the self-hosted server described in
-> [Running the app](#running-the-app).
 
 ## Why this exists
 
@@ -75,6 +74,9 @@ The Equity tab puts the account curve, drawdown, daily P&L and monthly returns o
 [Regenerate the images](docs/screenshots/README.md) from the mock boards.
 
 ## Running the app
+
+The [online demo](https://gammaexpansion.github.io/OptiPine/) needs no install; it loads Binance
+spot data and CSV files. Run the app locally for Yahoo Finance and USDⓈ-M perpetual data.
 
 Requires [Node.js](https://nodejs.org) 24.5 or newer.
 
