@@ -156,7 +156,7 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
     const box = page.getByRole('checkbox', { name: `Search ${title}`, exact: true });
     if ((await box.getAttribute('aria-checked')) === 'true') await box.click();
   }
-  // The flat-window threshold below uses the best raw IS net profit, without filters or smoothing.
+  // The flat-window threshold below uses the best IS profit, without filters or smoothing.
   await page.evaluate(() => {
     const hooks = window as unknown as Hooks;
     hooks.wf().actions.setSmooth(false);

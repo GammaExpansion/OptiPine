@@ -265,8 +265,10 @@ row is picked, is marked on the parameter map and shown in the selection bar bel
 value (R4); choosing an input that is already on another axis swaps the two. The remaining inputs
 are slices that fix a value, take the best (**Max**, or **Min** for a minimized objective), or take
 the mean. **IS** / **OOS** switches the surface; **Smooth**, on by default, replaces each cell
-with the mean of its ±1 step neighbours in every searched input. The legend, hover tooltip and
-bin detail identify smoothed values; with validation None, values are labelled **Full range**.
+with the mean of its ±1 step neighbours in every searched input. For the profit objective, each
+neighbour contributes its marked-to-market range profit before averaging. The legend, hover
+tooltip and bin detail identify smoothed values; with validation None, values are labelled
+**Full range**.
 
 - Cells are square with a 2 px gap: 16 px on a layered map, which scrolls; a single-layer map
   sizes them to fill its panel, from 10 px, so a 14-value axis keeps its rows at 1440 × 900, up to

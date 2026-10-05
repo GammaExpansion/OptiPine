@@ -1,9 +1,12 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
+import { runWithEquity } from '@pine/engine';
 import { getOptimizationStore } from '../../../state/optimization.ts';
 import { getServices } from '../../../state/services.ts';
 import { uiStore } from '../../../state/ui.ts';
+import { testInput } from '../../../state/test-support.ts';
 import { cellValues } from '../../../workflows/optimize-views.ts';
+import { strategySource } from '../../../workflows/test-support.ts';
 import {
   loadOptimization,
   optimization,
@@ -18,6 +21,31 @@ import { CellValuesTable } from './CellValuesTable.tsx';
 useOptimizeTestServices();
 beforeEach(() => vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null));
 
+/** Independent engine calculation: the fixture splits its 120 bars into 84 IS and 36 OOS. */
+function fixtureProfit(length: number, source: string, surface: 'in' | 'out') {
+  const result = runWithEquity(strategySource, {
+    ...testInput,
+    bars: surface === 'in' ? testInput.bars.slice(0, 84) : testInput.bars.slice(84),
+    inputs: { Length: length, Source: source, Multiplier: 1 },
+    realtimeTail: false,
+    strategyClosePending: false,
+  });
+  expect(result.diagnostics).toEqual([]);
+  const closed = Number(result.metrics['Performance/Net profit/All USD']);
+  const open = Number(result.metrics['Performance/Open PnL/All USD']);
+  expect(open).not.toBe(0);
+  expect(closed + open).toBeCloseTo(result.equity.at(-1)! - 10_000, 8);
+  return closed + open;
+}
+
+/** At Source ohlc4 the adjacent Source values are hl2 and ohlc4, including excluded sets. */
+function fixtureMean(lengths: readonly number[], surface: 'in' | 'out') {
+  const profits = lengths.flatMap((length) =>
+    ['hl2', 'ohlc4'].map((source) => fixtureProfit(length, source, surface)),
+  );
+  return profits.reduce((sum, profit) => sum + profit, 0) / profits.length;
+}
+
 it('renders a real nine-set snapshot, switches surfaces and smoothing without running the pool', async () => {
   await loadOptimization();
   await runOptimization();
@@ -31,13 +59,19 @@ it('renders a real nine-set snapshot, switches surfaces and smoothing without ru
   );
   expect(screen.getByTestId('parameter-map')).toBeInTheDocument();
   expect(screen.getByRole('switch')).toBeChecked();
-  expect(screen.getByText('Net profit · smoothed')).toBeInTheDocument();
+  expect(screen.getByText('Profit · smoothed')).toBeInTheDocument();
+  const cell = () =>
+    optimization().views!.map!.panel.cells.find((cell) => cell.x === 2 && cell.y === 'ohlc4')!;
+  expect(cell().value).toBeCloseTo(fixtureMean([2, 3], 'in'), 8);
   fireEvent.click(screen.getByRole('radio', { name: 'OOS' }));
+  await waitFor(() => expect(optimization().views?.pending).toBe(false));
   expect(optimization().views?.map?.surface).toBe('out');
+  expect(cell().value).toBeCloseTo(fixtureMean([2, 3], 'out'), 8);
   fireEvent.click(screen.getByRole('switch'));
   await waitFor(() => expect(optimization().views?.pending).toBe(false));
   expect(optimization().viewSettings.smooth).toBe(false);
-  expect(screen.queryByText('Net profit · smoothed')).not.toBeInTheDocument();
+  expect(screen.queryByText('Profit · smoothed')).not.toBeInTheDocument();
+  expect(cell().value).toBeCloseTo(fixtureProfit(2, 'ohlc4', 'out'), 8);
   expect(optimization().results).toBe(result);
   expect(start).not.toHaveBeenCalled();
   act(() => uiStore.getState().setLanguage('zh'));
@@ -75,7 +109,7 @@ it('scrolls a large hover list without mounting every value and keeps the full m
     <CellValuesTable values={values} x="Length" y="Multiplier" validated={false} />,
   );
   expect(screen.queryByText('OOS')).not.toBeInTheDocument();
-  // Net profit, the default objective, reads in whole amounts as R1 writes them.
+  // Profit, the default objective, reads in whole amounts as R1 writes them.
   expect(screen.getByText('+100')).toBeInTheDocument();
   expect(screen.getByText('200 values; scroll for the rest')).toBeInTheDocument();
   const table = screen.getByRole('table');
@@ -177,7 +211,22 @@ it('says once, in the tooltip, what an excluded cell fails, with no box over the
   expect(screen.getAllByText('Excluded by filters')).toHaveLength(2);
   // Keyboard and screen reader users hear the same, with the value in the objective's format.
   const status = within(canvas.parentElement!.parentElement!).getByRole('status');
+  // The bin averages two smoothed cells, each with a different boundary neighbourhood.
+  const length2 = fixtureMean([2, 3], 'in');
+  const length3 = fixtureMean([2, 3, 4], 'in');
+  const expected = (length2 + length3) / 2;
+  expect(length2).toBeCloseTo(3340.83695, 8);
+  expect(length3).toBeCloseTo(3320.2637366666677, 8);
+  const views = optimization().views!;
+  const cell = views.map!.panel.cells.find(
+    (cell) => cell.xValues?.[0] === 2 && cell.y === 'ohlc4',
+  )!;
+  expect(cell.xValues).toEqual([2, 3]);
+  expect(cell.y).toBe('ohlc4');
+  expect(cell.value).toBeCloseTo(expected, 8);
+  expect(cellValues(views.summary, cell).mean.inSample).toBeCloseTo(expected, 8);
+  expect(within(tooltip).getByText('+3,331')).toBeInTheDocument();
   expect(status.textContent).toBe(
-    '2–3, ohlc4: +2,309. Excluded by filters. Trades ≥ 5. Trades ≥ 100,000',
+    '2–3, ohlc4: +3,331. Excluded by filters. Trades ≥ 5. Trades ≥ 100,000',
   );
 });

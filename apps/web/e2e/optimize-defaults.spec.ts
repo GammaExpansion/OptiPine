@@ -80,7 +80,7 @@ test('fresh Optimize runs the full recorded range with smoothing and the default
   await expect(
     page.getByRole('switch', { name: 'Smooth: mean of ±1 step neighbours' }),
   ).toBeChecked();
-  await expect(page.getByText('Net profit · smoothed', { exact: true })).toBeVisible();
+  await expect(page.getByText('Profit · smoothed', { exact: true })).toBeVisible();
   await expect(page.getByTestId('optimize-summary').getByText('Unvalidated')).toBeVisible();
   await expect(page.getByRole('radio', { name: 'IS vs OOS', exact: true })).toBeDisabled();
   const map = page.getByTestId('parameter-map');
@@ -99,6 +99,6 @@ test('fresh Optimize runs the full recorded range with smoothing and the default
   await expect(right.getByRole('radio', { name: '不验证', exact: true })).toBeChecked();
   await expect(right).toContainText('交易数 ≥ 5');
   await expect(right).toContainText('最大回撤 ≤ 35%');
-  await expect(page.getByText('净利润 · 平滑', { exact: true })).toBeVisible();
+  await expect(page.getByText('盈亏 · 平滑', { exact: true })).toBeVisible();
   expect(errors).toEqual([]);
 });
