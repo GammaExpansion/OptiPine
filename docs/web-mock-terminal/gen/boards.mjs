@@ -558,10 +558,7 @@ row('优化 · 结果');
       chart: A.FAN({ split: false, label: '排行前 20 组（全区间盈亏）' }),
       lb: {
         count: '367 / 369 符合',
-        chips:
-          rmChip('交易数 ≥ 5') +
-          rmChip('最大回撤 ≤ 35%') +
-          addChip(),
+        chips: rmChip('交易数 ≥ 5') + rmChip('最大回撤 ≤ 35%') + addChip(),
       },
       sel: A.selBar(
         '#1',
