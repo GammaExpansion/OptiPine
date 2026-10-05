@@ -20,7 +20,7 @@ import styles from './results/Results.module.css';
 const noRows: readonly TradeRow[] = [];
 
 export function TradesTab() {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const result = useBacktestStore(displayedResult);
   const [side, setSide] = useState<SideFilter>('all');
   const [pnl, setPnl] = useState<PnlFilter>('all');
@@ -32,7 +32,7 @@ export function TradesTab() {
         <IconButton
           icon="download"
           label={t('trades.export')}
-          onClick={() => downloadCsv(tradeExport(list.rows, language), t('trades.filename'))}
+          onClick={() => downloadCsv(tradeExport(list.rows), t('trades.filename'))}
         />
       </DockActions>
       <div className={styles.tradeToolbar}>

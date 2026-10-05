@@ -10,7 +10,7 @@ that contract and never show partial output.
 
 `formatting.ts` only controls presentation: en-US grouping, the Unicode minus, fixed decimals,
 units, zero signs and missing-value dashes. It returns catalog messages. Report labels use the
-English board's short metric names in both languages, per WEB.md section 6. Only net profit and
+English and Chinese boards' short metric names in their respective languages, per WEB.md section 6. Only net profit and
 open P&L get profit/loss colors in the report, as in B1. `ResultFrame` shows the B9 amber notice,
 dims retained figures and calls the existing restore-inputs action. A single changed input shows
 “Reset to {value}” using the result's input value; several changes use the generic restore action.
@@ -21,7 +21,7 @@ side and a sticky header bound the mounted DOM. The grid owns keyboard focus: ar
 Home/End jump, Enter focuses the selected trade. Hover, leave, scroll, filtering and unmount update
 the shared selection store. A new row collection clears the local selection and scroll position.
 Side and P&L filters call `filterTrades`; export downloads the filtered list using `tradesCsv`,
-translated headers and sides, and a UTF-8 BOM for spreadsheet applications. Prices/P&L use two
+stable English headers and sides, and a UTF-8 BOM for spreadsheet applications. Prices/P&L use two
 decimals, quantities four, matching B2. CSV retains workflow precision.
 
 ## Visual review and integration
@@ -34,8 +34,8 @@ horizontal overflow. Smaller widths use stacked report groups and contained tabl
 Differences and remaining integration points:
 
 - Synthetic engine results naturally differ from the boards' sample values and curves. The
-  Report's six figures, three groups, signs, colors and spacing follow B1. Chinese report metric
-  labels stay English as WEB.md requires, unlike the Chinese reference's translated metrics.
+  Report's six figures, three groups, signs, colors and spacing follow B1. Chinese metric labels
+  follow the Chinese reference; the drawdown label adds “盘中” to distinguish it from Equity's “收盘”.
 - The real price chart and right panel are integrated. B6 checks amber canvas marks on hover,
   clearing hover, focus and scrolling to the oldest trade outside the initial recent window. B9
   checks one dock notice, dimmed results, the header status and the input's changed dot together.
@@ -57,7 +57,8 @@ Differences and remaining integration points:
   `returns`, `trades`, `risk`). Canonical engine metric names stay English. Secondary key figures
   are separate metric rows, except side breakdowns in Long/Short. Percentages carry `%`, loss
   magnitudes print negative, absent/nonfinite cells stay empty, and CSV quoting/precision use the
-  shared helpers. `reportExport` supplies catalog headers; both downloads include a UTF-8 BOM.
+  shared helpers. `reportExport` and `tradeExport` supply stable English schemas independently of
+  the UI catalogs; both downloads include a UTF-8 BOM and retain English filenames.
 
 ## Loading and bundle review
 
@@ -92,7 +93,7 @@ npm run e2e --workspace @pine/web
 ```
 
 The adjacent Vitest tests exercise formatting, missing values, zero trades, both languages,
-preview selection, outdated inputs and restoration, filtering, translated CSV, resource cleanup,
+preview selection, outdated inputs and restoration, filtering, stable English CSV, resource cleanup,
 and row hover/click/keyboard actions. `e2e/results.spec.ts` installs deterministic synthetic bars
 through the stores on the suite's dev server, fixes wall-clock time, runs the actual engine Worker,
 and blocks market/external requests. It checks all tabs, Amount/Percent, maximize/restore, filtered
@@ -108,5 +109,5 @@ values (24 labels fit; the final three-day month is hidden),
 toolbar/facts order, no scrolling, hidden/zero-width initialization, resizing, shared zoom,
 unit/language/tab persistence, reset, and fitting a new run. Fresh `equity-example-en.png` and
 `equity-example-zh.png` show that actual example run; its values differ from the B5 sample.
-Node tests next to the report workflow cover CSV sections, secondary figures, translated headers,
+Node tests next to the report workflow cover CSV sections, secondary figures, supplied headers,
 English metric names, escaping, percentage/loss formatting and missing values.

@@ -31,7 +31,7 @@ function FigureDetail({ figure }: { figure: KeyFigure }) {
 }
 
 export function ReportTab() {
-  const { t, text, language } = useI18n();
+  const { t, text } = useI18n();
   const result = useBacktestStore(displayedResult);
   const report = result && reportFor(result);
   return (
@@ -41,7 +41,7 @@ export function ReportTab() {
           <IconButton
             icon="download"
             label={t('report.export')}
-            onClick={() => downloadCsv(reportExport(report, language), t('report.filename'))}
+            onClick={() => downloadCsv(reportExport(report), t('report.filename'))}
           />
         </DockActions>
       )}

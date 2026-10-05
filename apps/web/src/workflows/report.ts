@@ -6,7 +6,7 @@ type Part = 'value' | 'percent';
 
 /**
  * One row of a report group. `id` is the engine's `Section/Name`; the catalogs label it with
- * TradingView's English name in both languages.
+ * the localized metric name. CSV exports retain the engine's English name.
  */
 export interface ReportRow {
   readonly id: string;
@@ -150,7 +150,7 @@ export function strategyReport(metrics: RunResult['metrics']): StrategyReport {
   };
 }
 
-/** The caller translates section titles and column headers; metric names stay engine English. */
+/** The export boundary supplies stable section titles and headers; metric names stay engine English. */
 export type ReportCsvHeaders = Readonly<
   Record<'metric' | 'all' | 'long' | 'short' | 'keyFigures' | ReportGroup['id'], string>
 >;

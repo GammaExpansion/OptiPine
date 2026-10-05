@@ -186,7 +186,10 @@ for (const language of ['en', 'zh'] as const) {
     const result = await install(page, language);
     const label = (en: string, zh: string) => (language === 'en' ? en : zh);
     await expect(page.getByRole('tabpanel').getByRole('table')).toHaveCount(3);
-    await expect(page.getByText('Net profit', { exact: true })).toHaveCount(2);
+    await expect(page.getByText(label('Net profit', '净利润'), { exact: true })).toHaveCount(2);
+    await expect(
+      page.getByText(label('Max drawdown (intrabar)', '最大回撤（盘中）'), { exact: true }),
+    ).toHaveCount(2);
     const reportAction = page.getByRole('button', {
       name: label('Export report CSV', '导出报告 CSV'),
     });
@@ -196,9 +199,7 @@ for (const language of ['en', 'zh'] as const) {
     const reportFile = await reportDownload;
     expect(reportFile.suggestedFilename()).toBe('report.csv');
     const reportCsv = await readFile((await reportFile.path())!, 'utf8');
-    expect(reportCsv).toContain(
-      label('Key figures,,,\r\nMetric,All,Long,Short', '关键指标,,,\r\n指标,全部,多头,空头'),
-    );
+    expect(reportCsv).toContain('Key figures,,,\r\nMetric,All,Long,Short');
     expect(reportCsv).toContain('Net profit,');
     expect(reportCsv).toContain('Average profit / average loss,');
     await page.screenshot({ path: info.outputPath(`B1-${language}.png`) });
@@ -208,6 +209,9 @@ for (const language of ['en', 'zh'] as const) {
     await page.getByRole('tab', { name: label('Equity', '权益'), exact: true }).click();
     await expect(page.getByTestId('equity-charts')).toBeVisible();
     await expect(page.getByText(label('Winning / losing days', '盈利日 / 亏损日'))).toBeVisible();
+    await expect(
+      page.getByText(label('Max drawdown (bar close)', '最大回撤（收盘）'), { exact: true }),
+    ).toBeVisible();
     await page.getByRole('button', { name: label('Percent', '百分比'), exact: true }).click();
     await expect(
       page.getByRole('button', { name: label('Percent', '百分比'), exact: true }),
@@ -294,13 +298,16 @@ for (const language of ['en', 'zh'] as const) {
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: label('Export trades CSV', '导出成交 CSV') }).click();
     const download = await downloadPromise;
+    expect(download.suggestedFilename()).toBe('trades.csv');
     const csv = await readFile((await download.path())!, 'utf8');
-    expect(csv).toContain(label('#,Side,Entry UTC', '#,方向,入场 UTC'));
+    expect(csv).toContain(
+      '#,Side,Entry UTC,Entry price,Exit UTC,Exit price,Qty,P&L,P&L %,Cumulative,Bars',
+    );
     const lines = csv.trim().split('\r\n').slice(1);
     expect(lines.length).toBeGreaterThan(0);
     for (const line of lines) {
       const fields = line.split(',');
-      expect(fields[1]).toBe(label('Short', '空'));
+      expect(fields[1]).toBe('Short');
       expect(Number(fields[7])).toBeGreaterThan(0);
     }
     expect(errors).toEqual([]);
