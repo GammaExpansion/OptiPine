@@ -86,7 +86,9 @@ function WalkForwardFields() {
           invalid={invalid}
           onChange={(stepMonths) => setValidation({ walkForward: { stepMonths } })}
         />
-        <span className={styles.caption}>{t('optimize.setup.monthsUnit')}</span>
+        <span className={styles.caption}>
+          {t('optimize.setup.monthsUnit', { count: settings.stepMonths })}
+        </span>
       </div>
       {plan.status === 'failed' && (
         <span className={styles.error} role="alert">

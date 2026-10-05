@@ -18,6 +18,23 @@ useOptimizeTestServices();
 
 const block = () => within(screen.getByRole('region', { name: 'Optimization run' }));
 
+test('a one-combination run shows a singular unit before and during the run', async () => {
+  await loadOptimization();
+  act(() => {
+    optimization().actions.setRange('Length', { from: 2, to: 2, step: 1 });
+    optimization().actions.setSearched('Source', false);
+  });
+  renderInEnglish(<RunBlock />);
+  expect(block().getByText('combo').previousElementSibling).toHaveTextContent('1');
+  act(() => void optimization().actions.start());
+  expect(block().getByText('0 / 1 combo')).toBeVisible();
+  await act(async () => {
+    while (optimization().run.status === 'running')
+      await new Promise((done) => setTimeout(done, 20));
+  });
+  expect(optimization().run.status).toBe('done');
+});
+
 test('Start runs the grid, shows its progress with Cancel, then becomes Re-optimize (O1, O8)', async () => {
   const user = userEvent.setup();
   await loadOptimization();

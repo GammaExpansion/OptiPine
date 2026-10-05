@@ -91,7 +91,11 @@ function Running({ startedAt, progress }: { startedAt: number; progress: RunProg
             : t(`optimize.run.phase.${view.phase}`)}
         </strong>
         <span className={styles.secondary}>
-          {t('optimize.run.progressCount', { done: view.done, total: view.combinations })}
+          {t('optimize.run.progressCount', {
+            done: view.done,
+            total: view.combinations,
+            count: view.combinations,
+          })}
         </span>
         <strong className={styles.percent}>
           {t('optimize.setup.percent', { value: view.percent })}
@@ -152,7 +156,11 @@ export function RunBlock() {
           <strong>
             {view.count === null ? t('common.unavailable') : formatNumber(view.count)}
           </strong>
-          <span>{t(view.unit === 'combos' ? 'optimize.combos' : 'optimize.run.backtests')}</span>
+          <span>
+            {t(view.unit === 'combos' ? 'optimize.combos' : 'optimize.run.backtests', {
+              count: view.count ?? 0,
+            })}
+          </span>
         </div>
         <div className={styles.runCaption}>
           <Caption caption={view.caption} />

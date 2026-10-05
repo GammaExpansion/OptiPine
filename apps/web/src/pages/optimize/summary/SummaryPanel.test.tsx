@@ -26,6 +26,24 @@ async function results() {
   await waitFor(() => expect(optimization().topEquity.status).toBe('ready'));
 }
 
+test('a one-set run uses singular distribution and scatter captions', async () => {
+  await loadOptimization();
+  act(() => {
+    optimization().actions.setRange('Length', { from: 2, to: 2, step: 1 });
+    optimization().actions.setSearched('Source', false);
+    optimization().actions.removeFilter(1);
+    optimization().actions.removeFilter(0);
+  });
+  await runOptimization();
+  expect(optimization().results?.combinations).toBe(1);
+  renderInEnglish(<SummaryPanel />);
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('radio', { name: 'Distribution' }));
+  expect(screen.getByText(/^1 set · bin width /)).toBeVisible();
+  await user.click(screen.getByRole('radio', { name: 'IS vs OOS' }));
+  expect(screen.getByText('One dot per set · 1 set')).toBeVisible();
+});
+
 test('switches reproduced equity, scatter and distribution without rerunning', async () => {
   await results();
   const user = userEvent.setup();
@@ -120,7 +138,7 @@ test('live snapshots are explicitly provisional; reproduction and errors remain 
       },
     }),
   );
-  expect(screen.getByText('1 equity reproductions failed')).toBeVisible();
+  expect(screen.getByText('1 equity reproduction failed')).toBeVisible();
 });
 
 test('scatter resolves ranks on another leaderboard page through store actions', async () => {

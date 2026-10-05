@@ -33,6 +33,24 @@ const panels = () =>
     </>,
   );
 
+it.each([1, 6])('uses the planned total for progress grammar with %i windows', (total) => {
+  const fixture = resultsFixture('live');
+  installResultsFixture({
+    ...fixture,
+    windows: fixture.windows.slice(0, total),
+    totals: { ...fixture.totals, completed: 1, windows: total },
+  });
+  renderInEnglish(<WfSummary />);
+  expect(screen.getByRole('status')).toHaveTextContent(
+    total === 1 ? '1 / 1 window done' : '1 / 6 windows done',
+  );
+  expect(
+    screen.getByRole('img', {
+      name: total === 1 ? '1 window with IS and OOS equity' : '6 windows with IS and OOS equity',
+    }),
+  ).toBeInTheDocument();
+});
+
 it('opens on Per window and switches both ways without changing results or totals', () => {
   installResultsFixture();
   const view = state().walkForward;

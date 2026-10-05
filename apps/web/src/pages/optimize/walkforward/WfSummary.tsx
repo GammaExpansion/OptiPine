@@ -58,8 +58,9 @@ export function WfSummary() {
         ) : (
           <span className={styles.muted} role="status">
             {t('optimize.wfResults.completed', {
-              count: view.totals.completed,
+              done: view.totals.completed,
               total: view.totals.windows,
+              count: view.totals.windows,
             })}
           </span>
         )}

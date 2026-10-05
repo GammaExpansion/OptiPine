@@ -118,6 +118,34 @@ test('result adapters preserve workflow outputs and identities across input chan
   expect(equityFor({ ...result, output: { ...result.output, equity: undefined } })).toBeNull();
 });
 
+test('equity durations keep formatted values while selecting singular units', async () => {
+  const result = await run();
+  const start = testInput.bars[0].time;
+  const times = [start, start + 43_200, start + 86_400, start + 365 * 86_400];
+  const valued = {
+    ...result,
+    computedWith: {
+      ...result.computedWith,
+      dataset: {
+        ...result.computedWith.dataset,
+        input: {
+          ...result.computedWith.dataset.input,
+          bars: times.map((time) => ({ ...testInput.bars[0], time })),
+        },
+      },
+    },
+    output: { ...result.output, equity: [10_000, 9_000, 10_000, 11_000] },
+  };
+  act(() => getBacktestStore().setState({ result: valued }));
+  render(
+    <I18nProvider>
+      <EquityTab />
+    </I18nProvider>,
+  );
+  expect(screen.getByText('1.00 year')).toBeVisible();
+  expect(screen.getByText('1 day')).toBeVisible();
+});
+
 test('CSV actions belong to the active tab dock host and disappear when collapsed', async () => {
   await run();
   const host = document.createElement('div');
