@@ -577,25 +577,30 @@ test('sensitivity mean, quartiles and eta squared are calculated from real trial
     expectedOrder.map((item) => item.parameter),
   );
   ordered.forEach((strip, index) => near(strip.etaSquared, expectedOrder[index].contribution));
+});
+
+test('default heatmap axes use value counts, declaration order ties and one-input curves', () => {
+  const axes = [
+    { title: 'High impact', values: [1, 2] },
+    { title: 'Many values', values: [1, 2, 3, 4] },
+    { title: 'Tie', values: ['a', 'b', 'c', 'd'] },
+  ];
+  assert.deepEqual(defaultHeatmapAxes(axes), ['Many values', 'Tie']);
+  assert.deepEqual(defaultHeatmapAxes(axes.toReversed()), ['Tie', 'Many values']);
   assert.deepEqual(
-    defaultHeatmapAxes(trials, space.activeAxes),
-    expectedOrder.slice(0, 2).map((item) => item.parameter),
+    axes.map((axis) => axis.title),
+    ['High impact', 'Many values', 'Tie'],
   );
+  assert.deepEqual(defaultHeatmapAxes(axes.slice(0, 1)), ['High impact']);
   assert.deepEqual(
-    defaultHeatmapAxes(trials, space.activeAxes.toReversed()),
-    expectedOrder.slice(0, 2).map((item) => item.parameter),
-    'different positive contributions determine default axes even after input order changes',
+    defaultHeatmapAxes([
+      { title: 'First', values: [1, 2, 3] },
+      { title: 'Second', values: [1, 2, 3] },
+      { title: 'Third', values: [1, 2, 3] },
+    ]),
+    ['First', 'Second'],
   );
-  const flat = trials.filter((trial) => trial.parameters.Enabled === false);
-  assert.ok(flat.length && flat.every((trial) => trial.objectiveValue === 0));
-  assert.deepEqual(
-    defaultHeatmapAxes(flat, space.activeAxes.toReversed()),
-    space.activeAxes
-      .toReversed()
-      .slice(0, 2)
-      .map((axis) => axis.title),
-    'a real flat surface uses declared axis order to resolve equal zero contributions',
-  );
+  assert.deepEqual(defaultHeatmapAxes([]), []);
 });
 
 test('stability re-tunes other parameters, uses tolerance and selects the smallest real average shortfall', () => {

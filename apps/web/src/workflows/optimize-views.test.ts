@@ -116,6 +116,80 @@ function analyze(
 const small = searchSpace([3, 10], ['close', 'hl2']);
 const inOut = analyze(small, 'in-out');
 
+test('the web map defaults to value-count axes even when impact favours a smaller axis', () => {
+  const valueCountSpace = generateSearchSpace(descriptors, {
+    ranges: {
+      Length: { values: [3, 4] },
+      Multiplier: { values: [0.5, 1, 1.5, 2] },
+      Source: { values: ['close', 'hl2', 'ohlc4'] },
+    },
+    active: { 'Use trailing stop': false },
+  });
+  const records: TrialRecord[] = enumerateGrid(valueCountSpace).map((parameters, index) => {
+    const length = parameters.Length as number;
+    const score = length === 3 ? 1_000 : 0;
+    return {
+      trialId: `value-count-${index}`,
+      parameters,
+      inSampleMetrics: { [reportMetrics.netProfit]: score },
+      objectiveValue: null,
+      inSampleValue: null,
+      outOfSampleValue: null,
+      valid: true,
+      excluded: false,
+    };
+  });
+  const input: OptimizerAnalysisInput = {
+    trials: records,
+    resultSpace: valueCountSpace,
+    mode: 'none',
+    objective: 'Net profit',
+    direction: 'maximize',
+    constraints: [],
+  };
+  const response = handleAnalysisRequest({ requestId: 1, kind: 'view', input });
+  assert.equal(response.kind, 'view');
+  if (response.kind !== 'view') return;
+  const analysis = response.output;
+  assert.deepEqual(analysis.axes, { x: 'Multiplier', y: 'Source', z: undefined });
+  assert.deepEqual(analysis.defaultAxes, ['Multiplier', 'Source']);
+  assert.equal(analysis.sensitivity.parameters[0].parameter, 'Length');
+  const summary = structuredClone(summarizeOptimizerAnalysis(analysis, summaryRequest([], true)));
+  const trials: OptimizationTrial[] = records.map((record) => ({
+    trialId: record.trialId,
+    parameters: { inputs: record.parameters },
+    metrics: record.inSampleMetrics!,
+    diagnostics: [],
+    tradeCount: 0,
+  }));
+  const results = rankResults(
+    summary,
+    trials,
+    'none',
+    'netProfit',
+    'maximize',
+    axesOf(valueCountSpace),
+  );
+  const map = mapView(results, 'in', {});
+  assert.ok(map);
+  assert.deepEqual(
+    [map.x, map.y, map.panel.xKey, map.panel.yKey],
+    ['Multiplier', 'Source', 'Multiplier', 'Source'],
+  );
+  assert.deepEqual(
+    map.slices.map((slice) => slice.title),
+    ['Length'],
+  );
+  assert.deepEqual(
+    sensitivityView(results).rows.map((row) => [row.parameter, row.role]),
+    [
+      ['Length', null],
+      ['Multiplier', 'x'],
+      ['Source', 'y'],
+    ],
+  );
+});
+
 test('all profit views and preview origins consume the same marked range amounts', () => {
   const space = searchSpace([3, 4], ['close']);
   const groups = sweep(space, 'in-out').map((group) =>

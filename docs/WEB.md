@@ -296,12 +296,15 @@ the axis inputs come first and the rest collapse into
 with **+ Condition** and links to the failed combinations (R11). The selected set, #1 until another
 row is picked, is marked on the parameter map and shown in the selection bar below (3.3).
 
-**Parameter map.** X and Y are any searched inputs, with an optional Z that draws one layer per Z
-value (R4); choosing an input that is already on another axis swaps the two. The remaining inputs
-are slices that fix a value, take the best (**Max**, or **Min** for a minimized objective), or take
-the mean. **IS** / **OOS** switches the surface; **Smooth**, on by default, replaces each cell
-with the mean of its ±1 step neighbours in every searched input. For the profit objective, each
-neighbour contributes its marked-to-market range profit before averaging. The legend, hover
+**Parameter map.** Until axes are chosen, X and Y are the two searched inputs with the most values,
+ties in declaration order; the one with more values runs horizontally. X and Y are any searched
+inputs, with an optional Z that draws one layer per Z value (R4); choosing an input that is already
+on another axis swaps the two. Defaults depend only on the search space, so arriving results do
+not change them. The remaining inputs are slices that fix a value, take the best (**Max**, or
+**Min** for a minimized objective), or take the mean. **IS** / **OOS** switches the surface;
+**Smooth**, on by default, replaces each cell with the mean of its ±1 step neighbours in every
+searched input. For the profit objective, each neighbour contributes its marked-to-market range
+profit before averaging. The legend, hover
 tooltip and bin detail identify smoothed values; with validation None, values are labelled
 **Full range**.
 

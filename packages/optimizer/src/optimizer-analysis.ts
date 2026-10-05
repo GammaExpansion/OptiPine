@@ -145,7 +145,7 @@ export function rankOptimizerTrials(
 export function analyzeOptimizer(state: OptimizerAnalysisInput): OptimizerAnalysis {
   const trials = deriveOptimizerTrials(state),
     active = (state.resultSpace ?? state.space)?.activeAxes ?? [];
-  const preferred = defaultHeatmapAxes(trials, active, { includeExcluded: true });
+  const preferred = defaultHeatmapAxes(active);
   const valid = (key?: string): key is string => !!key && active.some((axis) => axis.title === key);
   let x = valid(state.axes?.x) ? state.axes!.x : preferred[0];
   let y =
