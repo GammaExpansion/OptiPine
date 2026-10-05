@@ -104,9 +104,12 @@ tabs.
 The phone's Optimize results keep the summary above four tabs (G4); walk-forward results keep
 the stitched equity above Windows, Stability and Settings, and a tab of the other kind opens its
 counterpart (Leaderboard and Windows; Parameter map or Sensitivity and Stability). The
-leaderboard uses the same 13-set pages as the desktop table, displaying all searched inputs in
-declaration order at the run's step precision. The selection and preview actions, including the
-window bar's, have 44 px targets. The summary's view switch and the selection actions each get
+leaderboard fits each page to its measured card height, displaying all searched inputs in
+declaration order at the run's step precision. Desktop rows use the table's measured height.
+Both share one capacity setting, updated after resizing settles, and preserve the selected or
+leading set; see the [leaderboard README](src/pages/optimize/leaderboard/README.md).
+The selection and preview actions, including the window bar's, have 44 px targets. The summary's
+view switch and the selection actions each get
 their own row so both languages fit. The B16 banner adds to the phone chart's height, leaving its
 result tabs unobstructed.
 `e2e/phone-optimize.spec.ts` runs 18 combinations through the real Worker pool in both languages

@@ -123,11 +123,12 @@ test('scatter resolves ranks on another leaderboard page through store actions',
     optimization().actions.removeFilter(0);
   });
   await runOptimization();
+  act(() => optimization().actions.setPageSize(6));
   act(() => selectScatterRank(15));
   await waitFor(() => expect(optimization().views?.selection?.row.rank).toBe(15));
-  expect(optimization().viewSettings.page).toBe(1);
+  expect(optimization().viewSettings.page).toBe(2);
   act(() => selectScatterRank(0));
-  expect(optimization().viewSettings.page).toBe(1);
+  expect(optimization().viewSettings.page).toBe(2);
 });
 
 test('a scatter click selects its hit without a preceding hover render', async () => {

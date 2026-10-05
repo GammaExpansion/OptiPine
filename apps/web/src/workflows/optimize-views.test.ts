@@ -33,7 +33,9 @@ import {
   failedCombination,
   failuresCsv,
   filterDiagnosis,
-  leaderboardPageSize,
+  defaultLeaderboardPageSize,
+  leaderboardRowsPerPage,
+  leaderboardPageForRank,
   leaderboardView,
   leadingSets,
   mapView,
@@ -177,17 +179,49 @@ test('the summary request covers the figures and every filter metric once', () =
   );
 });
 
+test('capacity counts whole rows and clamps unusually short or tall bodies', () => {
+  assert.equal(leaderboardRowsPerPage(479, 30), 15);
+  assert.equal(leaderboardRowsPerPage(779, 30), 25);
+  assert.equal(leaderboardRowsPerPage(300, 58), 5);
+  assert.equal(leaderboardRowsPerPage(30, 30), 5);
+  assert.equal(leaderboardRowsPerPage(10_000, 30), 100);
+  assert.equal(leaderboardRowsPerPage(300, 0), defaultLeaderboardPageSize);
+  assert.equal(leaderboardRowsPerPage(NaN, 30), defaultLeaderboardPageSize);
+});
+
+test('each capacity shares page boundaries with scatter highlighting and draft ranks', () => {
+  const results = inOut.results();
+  const draft = { metric: 'trades', operator: '>=', value: 30 } as const;
+  for (const size of [5, 8, 12, 100]) {
+    const page = leaderboardPageForRank(15, size);
+    const board = leaderboardView(results, page, size);
+    assert.equal(board.pageCount, Math.ceil(16 / size));
+    assert.ok(board.rows.some((row) => row.rank === 15));
+    assert.ok(board.rows.length <= size);
+    assert.deepEqual(scatterView(results, page, size)?.pageRanks, [
+      board.rows[0].rank,
+      board.rows.at(-1)!.rank,
+    ]);
+    assert.deepEqual(
+      draftPreview(results, draft, page, size).pageRanks,
+      [...results.summary.removedConstraintRanks]
+        .map((rank) => rank + 1)
+        .filter((rank) => board.rows.some((row) => row.rank === rank)),
+    );
+  }
+});
+
 test('the leaderboard pages ranked sets with IS and OOS figures (R1, R4)', () => {
   const results = inOut.results();
   const view = leaderboardView(results, 0);
   assert.equal(view.passing, 16);
   assert.equal(view.total, 16);
   assert.equal(view.pageCount, 2);
-  assert.equal(view.rows.length, leaderboardPageSize);
+  assert.equal(view.rows.length, defaultLeaderboardPageSize);
   assert.deepEqual(view.columns, [inOut.summary.axes.x, inOut.summary.axes.y]);
   assert.deepEqual(
     view.rows.map((row) => row.trialId),
-    inOut.analysis.ranked.slice(0, leaderboardPageSize).map((trial) => trial.trialId),
+    inOut.analysis.ranked.slice(0, defaultLeaderboardPageSize).map((trial) => trial.trialId),
   );
   const split = splitBars(common.bars, { mode: 'in-out', splitRatio: 0.7 });
   const first = view.rows[0];
@@ -215,7 +249,7 @@ test('the leaderboard pages ranked sets with IS and OOS figures (R1, R4)', () =>
   assert.equal(last.page, 1);
   assert.deepEqual(
     last.rows.map((row) => row.rank),
-    [14, 15, 16],
+    [11, 12, 13, 14, 15, 16],
   );
   assert.deepEqual(
     leadingSets(results, 3).map((set) => set.trialId),
@@ -228,7 +262,9 @@ test('ranked by the neighbourhood mean, rows follow the Worker and score by it',
   const view = leaderboardView(byNeighbourhood.results('neighbourhoodMean'), 0);
   assert.deepEqual(
     view.rows.map((row) => row.trialId),
-    byNeighbourhood.analysis.ranked.slice(0, leaderboardPageSize).map((trial) => trial.trialId),
+    byNeighbourhood.analysis.ranked
+      .slice(0, defaultLeaderboardPageSize)
+      .map((trial) => trial.trialId),
   );
   for (const row of view.rows) assert.equal(row.score, row.neighbourhoodMean);
   const scores = view.rows.map((row) => row.score!);
@@ -254,7 +290,7 @@ test('the scatter has one point per set and highlights the page (R2)', () => {
   const results = inOut.results();
   const scatter = scatterView(results, 1)!;
   assert.equal(scatter.inSample.length, 16);
-  assert.deepEqual(scatter.pageRanks, [14, 16]);
+  assert.deepEqual(scatter.pageRanks, [11, 16]);
   const best = scatter.rank.indexOf(1);
   const top = inOut.groups[0].findIndex(
     (trial) => trial.trialId === inOut.analysis.ranked[0].trialId,
@@ -337,7 +373,7 @@ test('a draft condition previews the sets and page ranks it would drop (R10)', (
   assert.equal(preview.excluded, failing.length);
   assert.deepEqual(
     preview.pageRanks,
-    failing.filter((rank) => rank <= leaderboardPageSize),
+    failing.filter((rank) => rank <= defaultLeaderboardPageSize),
   );
 });
 
@@ -541,8 +577,8 @@ test('20,000-set views read columns and only fetch parameters for visible rows a
   assert.ok(parameterReads <= page.rows.length + 1);
   // Selection may scan IDs once, but must never materialize all trials' parameters or metrics.
   assert.ok(identityReads <= total + page.rows.length + 1);
-  assert.equal(page.rows[0].rank, 40);
-  assert.equal(page.rows[0].trialId, String(total - 40));
+  assert.equal(page.rows[0].rank, 3 * defaultLeaderboardPageSize + 1);
+  assert.equal(page.rows[0].trialId, String(total - (3 * defaultLeaderboardPageSize + 1)));
   assert.equal(scatter.inSample.length, total);
   assert.equal(distribution.inSample.sets, total);
   assert.equal(distribution.inSample.profitable, total - 5_001);
