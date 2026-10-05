@@ -289,11 +289,11 @@ export const objectiveMenu = (style) => {
 <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px 8px"><span class="t2">方向</span>${seg(['最大', '最小'], 0, { cls: 'sm', label: '优化方向' })}</div>
 <div class="msep"></div>
 <div class="mh">收益</div>
-${it('样本内净利润', true)}${it('年化收益率')}${it('盈利因子')}${it('平均盈亏')}
+${it('样本内盈亏', true)}${it('年化收益率')}${it('盈利因子')}${it('平均盈亏')}
 <div class="mh">风险</div>
 ${it('最大回撤')}${it('夏普比率')}${it('索提诺比率')}
 <div class="mh">稳健</div>
-${it('邻域均值（相邻 ±1 步的平均净利润）')}
+${it('邻域均值（相邻 ±1 步的平均盈亏）')}
 </div>`;
 };
 
@@ -412,7 +412,7 @@ export function mapColBinned() {
   const row = (a, b, style = '') =>
     `<div style="height: ${ROW}px; display: flex; align-items: center; justify-content: space-between${style}">${a}${b}</div>`;
   const list = `<div class="num" style="display: flex; flex-direction: column; font-size: 12.5px">
-${row('<span class="t3">Length</span>', '<span class="t3">净利润</span>', '; padding-right: 10px; border-bottom: 1px solid #23272d')}
+${row('<span class="t3">Length</span>', '<span class="t3">盈亏</span>', '; padding-right: 10px; border-bottom: 1px solid #23272d')}
 <div style="height: ${ROW * SHOW}px; overflow: hidden; position: relative; padding-right: 10px">
 ${vals.map(([L, v]) => row(`<span class="t2">${L}</span>`, `<span class="up">${sfmt(Math.round(v / 10) * 10)}</span>`)).join('\n')}
 <span style="position: absolute; right: 1px; top: 2px; width: 3px; height: ${Math.round(((ROW * SHOW - 4) * SHOW) / vals.length)}px; border-radius: 2px; background: #3a4048"></span>
@@ -434,7 +434,7 @@ ${h.svg}
 <text x="256" y="${mh + 40}" fill="#aab1b9" font-size="11.5" text-anchor="middle">Length<tspan fill="#7f8790"> · 每格 ${ax.n} 个值取平均</tspan></text>
 </svg>
 </div>
-<div class="num" style="height: 30px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px; font-size: 11.5px"><span class="t3">净利润</span><div style="display: flex; align-items: center; gap: 2px">${ramp(X.kv(gLo), X.kv(gHi))}</div></div>
+<div class="num" style="height: 30px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px; font-size: 11.5px; white-space: nowrap"><span class="t3">盈亏</span><div style="display: flex; align-items: center; gap: 2px">${ramp(X.kv(gLo), X.kv(gHi))}</div></div>
 <div style="flex: 1; min-height: 0; border-top: 1px solid #1f2328; padding: 8px 16px 0; display: flex; flex-direction: column; gap: 8px">
 <div style="display: flex; align-items: center; gap: 10px; height: 24px"><span style="font-weight: 600">格内明细</span><span class="t2 num" style="flex: 1">Length ${ax.label(bi)}，Multiplier 2.00</span><button class="iconbtn" style="width: 24px; height: 24px" aria-label="关闭明细">${I.x(11)}</button></div>
 <div style="display: flex; gap: 18px">
@@ -460,14 +460,14 @@ ${mapHead('目标曲线', `<span style="display: flex; align-items: center; gap:
 <span class="t2">仅一个输入参与优化，以曲线代替热力图</span>
 </div>
 <div style="height: 266px; flex: none; position: relative">
-<svg width="480" height="266" viewBox="0 0 480 266" style="display: block" role="img" aria-label="净利润随 Length 的变化，样本内与样本外各一条，选中 Length 28">
+<svg width="480" height="266" viewBox="0 0 480 266" style="display: block" role="img" aria-label="盈亏随 Length 的变化，样本内与样本外各一条，选中 Length 28">
 ${X.curve1d({ x0: 56, x1: 460, y0: 12, y1: 214 })}
 </svg>
 </div>
 <div style="flex: 1; min-height: 0; border-top: 1px solid #1f2328; padding: 10px 16px 0; display: flex; flex-direction: column">
 <div style="display: flex; align-items: baseline; height: 24px"><span style="font-weight: 600">Length 28</span></div>
-<div class="kv num"><span>样本内净利润</span><span class="up">+22,200</span></div>
-<div class="kv num"><span>样本外净利润</span><span class="up">+12,340</span></div>
+<div class="kv num"><span>样本内盈亏</span><span class="up">+22,200</span></div>
+<div class="kv num"><span>样本外盈亏</span><span class="up">+12,340</span></div>
 <div class="kv num"><span>邻域均值（±1 步）</span><span>+19,090</span></div>
 <div class="kv num" style="border-bottom: 1px solid #1f2328"><span>样本内不低于峰值 90% 的区间</span><span>24 – 29</span></div>
 </div>

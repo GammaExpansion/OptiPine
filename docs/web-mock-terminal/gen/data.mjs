@@ -318,14 +318,15 @@ export const trials = (() => {
 export const cell = (L, M, src = 'close', tr = '关') =>
   trials.find((x) => x.L === L && x.M === M && x.src === src && x.tr === tr);
 
-// The leaderboard's filters (Trades ≥ 30, Max DD ≤ 15%) exclude 118 of the 2,214 sets, so 2,096
-// pass: long lengths with wide bands trade too rarely, and the deepest losses draw down too far.
-const fewTrades = (t) => t.L >= 47 && t.M >= 2.5;
+// The leaderboard's filters (Trades ≥ 5, Max DD ≤ 35%) exclude 51 of the 2,214 sets, so 2,163
+// pass: the longest lengths with the widest bands trade too rarely, and the deepest losses draw
+// down too far.
+const fewTrades = (t) => t.L >= 48 && t.M >= 2.75;
 const deepLoss = new Set(
   trials
     .filter((t) => !fewTrades(t))
     .sort((a, b) => a.is - b.is)
-    .slice(0, 118 - trials.filter(fewTrades).length),
+    .slice(0, 51 - trials.filter(fewTrades).length),
 );
 export const excluded = (t) => fewTrades(t) || deepLoss.has(t);
 
