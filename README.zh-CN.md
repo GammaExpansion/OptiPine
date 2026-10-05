@@ -59,17 +59,6 @@ OptiPine 直接运行你的 Pine 源码。提供一个 v5 或 v6 策略和行情
 
 权益页签把账户曲线、回撤、每日盈亏和月度收益放在同一条时间轴上。
 
-<table>
-  <tr>
-    <td width="260">
-      <a href="docs/screenshots/phone.png">
-        <img src="docs/screenshots/phone.png" width="234" alt="手机上的回测图表与报告" />
-      </a>
-    </td>
-    <td>手机回测页将图表放在报告、权益、成交、参数、代码和问题页签上方。</td>
-  </tr>
-</table>
-
 可从设计稿[重新生成图片](docs/screenshots/README.md)。
 
 ## 运行应用

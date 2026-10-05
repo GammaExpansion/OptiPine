@@ -12,7 +12,7 @@ npm run screenshots
 ```
 
 The [README renderer](../web-mock-terminal/gen/readme-shots.mjs) invokes
-[`shot.mjs`](../web-mock-terminal/gen/shot.mjs) for exactly the six boards below. It uses a temporary
+[`shot.mjs`](../web-mock-terminal/gen/shot.mjs) for exactly the five boards below. It uses a temporary
 profile and output folder, a free localhost port, and device scale 1, then writes losslessly
 optimized PNGs here. Set `CHROME` to the browser executable if it is not found automatically.
 In a container that cannot launch Chrome's sandboxed subprocesses, set `CHROME_NO_SANDBOX=1`.
@@ -25,7 +25,6 @@ Fonts, so rendering needs access to that service; browser and font versions can 
 | `equity.png`       | `B5-en`   | Equity, drawdown, daily P&L and monthly returns          | 1440 × 900 |
 | `optimize.png`     | `R1-en`   | Top 20 equity, leaderboard, map, sensitivity, selection  | 1440 × 900 |
 | `walk-forward.png` | `W1-en`   | Stitched OOS equity, six windows and parameter stability | 1440 × 900 |
-| `phone.png`        | `G3-en`   | English Backtest chart and Report on a phone             | 390 × 844  |
 | `backtest-zh.png`  | `Main`    | Chinese chart, plots, trade markers and Report (B1)      | 1440 × 900 |
 
 Compression uses Node's zlib to repack PNG data without changing any pixels or colour metadata.
@@ -46,4 +45,4 @@ node --test docs/web-mock-terminal/gen/readme-shots.test.mjs
 npm run format:check
 ```
 
-Open all six images after regeneration to review the layout and text.
+Open all five images after regeneration to review the layout and text.
