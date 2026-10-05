@@ -2,7 +2,6 @@
 import { useMemo, useState } from 'react';
 import { ProgressBar } from '../../../components/ProgressBar.tsx';
 import { SegmentedControl } from '../../../components/SegmentedControl.tsx';
-import { Tag } from '../../../components/Tag.tsx';
 import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { useOptimizationStore } from '../../../state/optimization.ts';
 import { useLayout } from '../../../shell/useLayout.ts';
@@ -113,14 +112,13 @@ export function SummaryPanel() {
           ]}
         />
       </header>
-      {(live || views?.unvalidated || error) && (
+      {(live || error) && (
         <div className={styles.status} role="status">
           {live &&
             t('optimize.summary.progress', {
               completed: views?.completed ?? 0,
               total: run.progress.combinations,
             })}
-          {views?.unvalidated && <Tag tone="amber">{t('optimize.summary.unvalidated')}</Tag>}
           {error && text(error)}
         </div>
       )}

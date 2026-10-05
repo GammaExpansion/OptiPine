@@ -85,6 +85,13 @@ for (const language of ['en', 'zh'] as const) {
     page,
   }, info) => {
     const errors = await open(page, language);
+    await expect(
+      page.getByRole('radio', { name: language === 'en' ? 'Per window' : '分窗口', exact: true }),
+    ).toHaveAttribute('aria-checked', 'true');
+    // These W1/W3 screenshots compare the stitched reference alongside stability.
+    await page
+      .getByRole('radio', { name: language === 'en' ? 'Stitched' : '拼接', exact: true })
+      .click();
     const panel = page.getByRole('region', {
       name: language === 'en' ? 'Walk-forward stability' : '滚动前推稳定性',
     });

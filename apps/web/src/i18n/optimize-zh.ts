@@ -124,11 +124,11 @@ export const optimizeZh = {
   'optimize.emptyHintSettings':
     '在「设置」中设置搜索范围与验证方式。运行后，汇总图显示在标签页上方，排行、参数图与影响度显示在各自的标签页。',
   'optimize.emptyHintWalkForward':
-    '在右侧设置搜索范围与滚动窗口。运行后，此处显示拼接样本外权益、各窗口结果及其稳定性。',
+    '在右侧设置搜索范围与滚动窗口。运行后，此处显示各窗口权益、各窗口结果及其稳定性。',
   'optimize.emptyHintPanelWalkForward':
-    '在右栏设置搜索范围与滚动窗口，右栏从顶栏打开。运行后，此处显示拼接样本外权益、各窗口结果及其稳定性。',
+    '在右栏设置搜索范围与滚动窗口，右栏从顶栏打开。运行后，此处显示各窗口权益、各窗口结果及其稳定性。',
   'optimize.emptyHintSettingsWalkForward':
-    '在「设置」中设置搜索范围与滚动窗口。运行后，拼接样本外权益显示在标签页上方，各窗口结果及其稳定性显示在各自的标签页。',
+    '在「设置」中设置搜索范围与滚动窗口。运行后，各窗口权益显示在标签页上方，各窗口结果及其稳定性显示在各自的标签页。',
   'optimize.singleSetHint': '单组参数的 K 线、权益曲线、报告与成交在「回测」页查看。',
   'optimize.dataRange': '数据区间',
   'optimize.searchRanges': '搜索范围',
@@ -313,7 +313,6 @@ export const optimizeZh = {
   'optimize.summary.fullRange': '排行前 20 组（全区间{objective}）',
   'optimize.summary.median': '中位数',
   'optimize.summary.best': '#1',
-  'optimize.summary.unvalidated': '未验证',
   'optimize.summary.progress': '进行中 · {completed} / {total}',
   'optimize.summary.inProgress': '进行中',
   'optimize.summary.computing': '正在计算前 20 组权益…',
@@ -411,6 +410,9 @@ export const optimizeZh = {
   'optimize.selection.wait': '请等待优化完成',
   'optimize.wfResults.isAnchored': '样本内（固定起点）',
   'optimize.wfResults.summary': '拼接样本外权益',
+  'optimize.wfResults.summaryWindows': '窗口与权益',
+  'optimize.wfResults.windowsHint':
+    '条内虚线为选中参数的样本内权益，实线为样本外权益；右侧为样本外盈亏与累计权益',
   'optimize.wfResults.perWindow': '分窗口',
   'optimize.wfResults.stitched': '拼接',
   'optimize.wfResults.view': '窗口视图',
