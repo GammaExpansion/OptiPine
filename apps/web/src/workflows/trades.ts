@@ -84,7 +84,7 @@ export function filterTrades(rows: readonly TradeRow[], filter: TradeFilter): Tr
   return { rows: kept, closedCount: kept.length - openCount, openCount };
 }
 
-/** The export's columns, in order; the caller supplies each one's translated header. */
+/** The export's columns, in order; the caller supplies each one's stable English header. */
 export const tradeCsvColumns = [
   'number',
   'side',

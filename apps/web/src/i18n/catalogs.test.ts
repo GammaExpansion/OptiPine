@@ -19,6 +19,124 @@ test('catalogs have identical keys and placeholders', () => {
   }
 });
 
+test('report and optimization metric labels are translated in Chinese', () => {
+  const ids = [
+    'report.netProfit',
+    'report.grossProfit',
+    'report.grossLoss',
+    'report.commission',
+    'report.buyHold',
+    'report.maxRunUp',
+    'report.maxDrawdown',
+    'report.openPnl',
+    'report.tradeCount',
+    'report.totalTrades',
+    'report.winningTrades',
+    'report.losingTrades',
+    'report.winRate',
+    'report.averagePnl',
+    'report.averageWin',
+    'report.averageLoss',
+    'report.winLoss',
+    'report.sharpe',
+    'report.sortino',
+    'report.profitFactor',
+    'report.largestWin',
+    'report.largestLoss',
+    'report.averageBars',
+    'report.maxContracts',
+    'report.marginCalls',
+    'report.sortinoDetail',
+    'report.returns',
+    'report.trades',
+    'report.risk',
+    'report.all',
+    'report.long',
+    'report.short',
+    'report.metric',
+    'report.keyFigures',
+    'equity.endingEquity',
+    'equity.annualizedReturn',
+    'equity.maxDrawdown',
+    'equity.duration',
+    'equity.returnDrawdown',
+    'equity.winningLosing',
+    'equity.bestWorst',
+    'charts.maxDrawdown',
+    'optimize.setup.objective.isNetProfit',
+    'optimize.setup.objective.neighbourhoodMean',
+    'optimize.map.objective.neighbourhoodMean',
+    'optimize.leaderboard.metric.neighbourhoodMean',
+    'optimize.summary.inNet',
+    'optimize.summary.outNet',
+    'optimize.summary.net',
+    'optimize.leaderboard.net',
+    'optimize.leaderboard.dd',
+    'optimize.leaderboard.trades',
+    'optimize.wfResults.is',
+    'optimize.wfResults.oos',
+    'optimize.wfResults.trades',
+    'optimize.wfResults.profitableWindows',
+    ...(
+      [
+        'netProfit',
+        'annualizedReturn',
+        'profitFactor',
+        'averagePnl',
+        'maxDrawdown',
+        'sharpeRatio',
+        'sortinoRatio',
+      ] as const
+    ).flatMap(
+      (metric) =>
+        [
+          `optimize.map.objective.${metric}`,
+          `optimize.setup.objective.${metric}`,
+          `optimize.setup.metric.${metric}`,
+          `optimize.leaderboard.metric.${metric}`,
+        ] as const,
+    ),
+    ...(['trades', 'winRate', 'consecutiveLosses'] as const).flatMap(
+      (metric) =>
+        [`optimize.setup.metric.${metric}`, `optimize.leaderboard.metric.${metric}`] as const,
+    ),
+  ] as const;
+  for (const id of ids) {
+    assert.notEqual(catalogs.zh[id], catalogs.en[id], id);
+    assert.match(catalogs.zh[id], /\p{Script=Han}/u, id);
+  }
+  assert.equal(catalogs.zh['report.maxDrawdown'], '最大回撤（盘中）');
+  assert.equal(catalogs.zh['equity.maxDrawdown'], '最大回撤（收盘）');
+  assert.equal(catalogs.zh['charts.maxDrawdown'], '最大回撤（收盘）−{value}%');
+  // R1 and W1 retain these established abbreviations; full metric names remain translated.
+  assert.equal(catalogs.zh['optimize.leaderboard.pf'], 'PF');
+  assert.equal(catalogs.zh['optimize.wfResults.wfe'], 'WFE');
+});
+
+test('shared metrics agree across report, ranking, filter presets, leaderboard and parameter map', () => {
+  for (const [metric, report] of [
+    ['netProfit', 'report.netProfit'],
+    ['profitFactor', 'report.profitFactor'],
+    ['averagePnl', 'report.averagePnl'],
+    ['sharpeRatio', 'report.sharpe'],
+    ['sortinoRatio', 'report.sortino'],
+    ['annualizedReturn', 'optimize.setup.objective.annualizedReturn'],
+  ] as const) {
+    for (const prefix of [
+      'optimize.map.objective',
+      'optimize.setup.objective',
+      'optimize.setup.metric',
+      'optimize.leaderboard.metric',
+    ] as const) {
+      assert.equal(catalogs.zh[`${prefix}.${metric}`], catalogs.zh[report]);
+    }
+  }
+  assert.equal(catalogs.zh['optimize.setup.metric.winRate'], catalogs.zh['report.winRate']);
+  assert.equal(catalogs.zh['optimize.leaderboard.metric.winRate'], catalogs.zh['report.winRate']);
+  assert.equal(catalogs.zh['optimize.leaderboard.trades'], catalogs.zh['report.tradeCount']);
+  assert.equal(catalogs.zh['optimize.wfResults.trades'], catalogs.zh['report.tradeCount']);
+});
+
 test('each area has matching languages and every global id has exactly one owner', () => {
   for (const area of Object.keys(catalogAreas.en) as (keyof typeof catalogAreas.en)[]) {
     assert.deepEqual(

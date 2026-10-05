@@ -55,7 +55,9 @@ async function open(page: Page, language: 'en' | 'zh', state: State) {
       () => (window as unknown as HookWindow).backtestHooks.backtest().result !== null,
     );
     // The first result opens the Report (#6); its tab loads before anything is measured or clicked.
-    await expect(page.getByText('Net profit', { exact: true }).first()).toBeVisible();
+    await expect(
+      page.getByText(catalogs[language]['report.netProfit'], { exact: true }).first(),
+    ).toBeVisible();
     return errors;
   }
   await page
