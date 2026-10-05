@@ -72,7 +72,7 @@ test('an edited input marks the result outdated until the next run (B9)', async 
   await expect(page.getByRole('tab', { name: /^Trades \d+$/ })).toBeVisible();
   const length = page.getByRole('spinbutton', { name: 'Length' });
   await length.fill('28');
-  await expect(facts(page)).toHaveText('Results outdated');
+  await expect(facts(page).getByText('Results outdated', { exact: true })).toBeAttached();
   await expect(page.getByText('Default 180')).toBeVisible();
   await page.screenshot({ path: info.outputPath('B9-en.png') });
   await run(page).click();
@@ -194,7 +194,7 @@ test('the properties dialog overrides a property and changes the result (B13)', 
   await dialog.getByRole('spinbutton', { name: 'Commission' }).fill('0.5');
   await expect(dialog.getByText('Overridden; the script value is 0.1.')).toBeVisible();
   await expect(dialog.getByText('1 overridden')).toBeVisible();
-  await expect(facts(page)).toHaveText('Results outdated');
+  await expect(facts(page).getByText('Results outdated', { exact: true })).toBeAttached();
   await page.screenshot({ path: info.outputPath('B13-en.png') });
   await run(page).click();
   await expect(facts(page)).toHaveText(/^20,488 bars/);

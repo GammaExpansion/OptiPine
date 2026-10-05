@@ -57,6 +57,17 @@ provider, as a preview to accept (2.2); for CSV data they are disabled. A phone 
 top row, which a run's progress needs, and puts the GitHub link beside the language switch, where
 the script's name gives way to it (G3, G4).
 
+At desktop widths (1280 px and up), the header measures its actual contents after resizing,
+status/language changes and font loading. It uses only as much compaction as needed, in order:
+hide the Run shortcut hint; shorten run facts (Backtest's completed facts move to Run's tooltip
+and accessible description); hide the provider name; hide the OptiPine text but keep the logo;
+then shorten dates to `24-10-05 – 26-10-05`. The symbol's accessible name retains its provider,
+and the date button retains the full dates in its tooltip and accessible name. The page tabs,
+script, symbol, timeframe, Run/Cancel, language, About and GitHub controls keep their size and
+focus order. Progress and errors stay visible; running, cancelled and outdated sentences may
+shorten, with their full wording retained in tooltips and for assistive technology. Missing-input
+guidance can move out of the row because the disabled Run action still explains it.
+
 The browser tab shows the logo's three bars on the panel's dark tile, so the muted bar reads on
 light and dark tab strips: `public/favicon.svg`, with `favicon.ico` (32 px) for browsers without
 SVG icons and a 180 px `apple-touch-icon.png`, both rendered from it.
@@ -377,6 +388,14 @@ summary, initially **Per window**, above Windows, Stability and Settings, and th
 bar below (G4). The component sheet is G5. The phone leaderboard measures card height separately
 from desktop rows; cards share the tallest measured height at that width so paging stays stable.
 Switching layouts recomputes capacity and preserves the selected or leading set, just like resizing R1.
+
+The header uses the measured compaction order in 2.1 on desktop. A tablet omits the brand text,
+provider, date range and ordinary run facts; progress and errors occupy a separate line below its
+controls. On a phone, Optimize's live counts occupy their own line below the page tabs,
+Cancel and About, so English and Chinese counts never ellipsize. After the run, facts wrap beside
+the page tabs in the original row, returning that height to the leaderboard. The script, symbol,
+timeframe, language and GitHub stay in the next row. Longer errors/statuses can increase the
+row's height if needed; the workbench uses the remaining space.
 
 ## 3. Behavior
 

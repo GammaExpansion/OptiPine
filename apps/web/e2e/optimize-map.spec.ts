@@ -293,6 +293,8 @@ test('R8: a one-input curve marks the near-peak range and selects a set by keybo
     state().actions.setRange('Length', { from: 2, to: 30, step: 1 });
     await state().actions.start();
   });
+  // The run can finish before its final analysis replaces the live curve's shorter point list.
+  await settled(page);
   const canvas = page.getByTestId('objective-curve');
   await expect(canvas).toBeVisible();
   await canvas.focus();

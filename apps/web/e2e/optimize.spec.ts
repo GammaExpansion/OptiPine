@@ -73,7 +73,10 @@ test('a small grid runs through the Worker pool, goes outdated, and a cancelled 
     block(page).getByRole('progressbar', { name: 'Optimization progress' }),
   ).toBeVisible();
   await expect(facts(page)).toHaveText(/^Optimizing \d \/ 5$/);
-  await expect(facts(page)).toHaveText(/^5 combos, \d+:\d\d$/, { timeout: 60_000 });
+  await expect(facts(page)).toHaveText(/^5 combos, \d+:\d\d$/, {
+    useInnerText: true,
+    timeout: 60_000,
+  });
   await expect(block(page).getByRole('button', { name: 'Re-optimize' })).toBeEnabled();
   await expect(block(page)).toContainText(/Last run \d+:\d\d, \d+ threads?/);
   await expect(page.locator('[data-results]')).toBeVisible();
@@ -120,7 +123,10 @@ test('walk-forward runs window by window and lays out W1 (W4, W1)', async ({ pag
   await expect(facts(page)).toHaveText(/^Window [1-3] \/ 3$/);
   await expect(block(page)).toContainText(/Window [1-3] \/ 3/);
   await page.screenshot({ path: info.outputPath('W4-en.png') });
-  await expect(facts(page)).toHaveText(/^3 windows in \d+:\d\d$/, { timeout: 120_000 });
+  await expect(facts(page)).toHaveText(/^3 windows in \d+:\d\d$/, {
+    useInnerText: true,
+    timeout: 120_000,
+  });
   const done = await state(page);
   expect(done).toMatchObject({ run: 'done', combinations: 5, outdated: [] });
   expect(done.windows).toHaveLength(3);

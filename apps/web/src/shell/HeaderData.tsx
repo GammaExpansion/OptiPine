@@ -31,6 +31,19 @@ export function HeaderData({ layout = 'desktop' }: { layout?: Layout }) {
   const input = dataset?.input;
   const request = origin?.kind === 'provider' ? origin.request : null;
   const timeframe = input?.timeframe === 'D' ? '1D' : (input?.timeframe ?? '');
+  const symbol = String(input?.syminfo.ticker ?? input?.syminfo.tickerid ?? request?.symbol ?? '');
+  const provider = t(
+    origin?.kind === 'csv'
+      ? 'data.csvProvider'
+      : request?.feed === 'yahoo'
+        ? 'data.yahoo'
+        : request?.feed === 'binance-futures'
+          ? 'data.binanceFutures'
+          : 'data.binance',
+  );
+  const from = input ? formatDate(input.bars[0].time * 1000) : '';
+  const to = input ? formatDate(input.bars.at(-1)!.time * 1000) : '';
+  const range = input ? t('data.rangeValue', { from, to }) : t('shell.dateRange');
   const changeTimeframe = (timeframe: string) => {
     if (!request) return;
     void fetchData({ ...request, timeframe });
@@ -42,23 +55,17 @@ export function HeaderData({ layout = 'desktop' }: { layout?: Layout }) {
     <>
       <ScriptFilePicker />
       <ScriptMenu />
-      <Button variant="toolbar" onClick={() => open('marketData', true)}>
+      <Button
+        variant="toolbar"
+        aria-label={input ? `${symbol} ${provider}` : undefined}
+        onClick={() => open('marketData', true)}
+      >
         {input ? (
           <>
-            <strong style={{ color: 'var(--text)' }}>
-              {String(input.syminfo.ticker ?? input.syminfo.tickerid ?? request?.symbol ?? '')}
-            </strong>
+            <strong style={{ color: 'var(--text)' }}>{symbol}</strong>
             {layout === 'desktop' && (
-              <span style={{ color: 'var(--caption)' }}>
-                {t(
-                  origin?.kind === 'csv'
-                    ? 'data.csvProvider'
-                    : request?.feed === 'yahoo'
-                      ? 'data.yahoo'
-                      : request?.feed === 'binance-futures'
-                        ? 'data.binanceFutures'
-                        : 'data.binance',
-                )}
+              <span className={header.provider} style={{ color: 'var(--caption)' }}>
+                {provider}
               </span>
             )}
           </>
@@ -114,6 +121,8 @@ export function HeaderData({ layout = 'desktop' }: { layout?: Layout }) {
       {layout === 'desktop' && (
         <Button
           variant="toolbar"
+          aria-label={range}
+          title={range}
           disabled={!request}
           disabledReason={origin?.kind === 'csv' ? t('data.csvFixed') : undefined}
           onClick={() => open('dateRange', true)}
@@ -125,12 +134,10 @@ export function HeaderData({ layout = 'desktop' }: { layout?: Layout }) {
               fontVariantNumeric: 'tabular-nums',
             }}
           >
-            {input
-              ? t('data.rangeValue', {
-                  from: formatDate(input.bars[0].time * 1000),
-                  to: formatDate(input.bars.at(-1)!.time * 1000),
-                })
-              : t('shell.dateRange')}
+            <span className={header.rangeLong}>{range}</span>
+            <span className={header.rangeShort} aria-hidden="true">
+              {input ? t('data.rangeValue', { from: from.slice(2), to: to.slice(2) }) : range}
+            </span>
           </span>
         </Button>
       )}
