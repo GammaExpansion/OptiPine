@@ -67,20 +67,6 @@ their stability across windows.
 
 The Equity tab puts the account curve, drawdown, daily P&L and monthly returns on a shared timeline.
 
-<table>
-  <tr>
-    <td width="260">
-      <a href="docs/screenshots/phone.png">
-        <img src="docs/screenshots/phone.png" width="234" alt="Backtest chart and report on a phone" />
-      </a>
-    </td>
-    <td>
-      The phone Backtest view keeps the chart above tabs for Report, Equity, Trades, Inputs,
-      Pine code and Issues.
-    </td>
-  </tr>
-</table>
-
 [Regenerate the images](docs/screenshots/README.md) from the mock boards.
 
 ## Running the app

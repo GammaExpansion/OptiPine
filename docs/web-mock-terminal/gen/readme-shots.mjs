@@ -11,7 +11,6 @@ const images = [
   ['B5-en', 'equity.png', 1440, 900],
   ['R1-en', 'optimize.png', 1440, 900],
   ['W1-en', 'walk-forward.png', 1440, 900],
-  ['G3-en', 'phone.png', 390, 844],
   ['Main', 'backtest-zh.png', 1440, 900],
 ];
 const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
@@ -52,7 +51,7 @@ export function optimizePng(png, width, height) {
   return optimized.length < png.length ? optimized : png;
 }
 
-/** Render the six README boards in isolation; validate every output before replacing any image. */
+/** Render the five README boards in isolation; validate every output before replacing any image. */
 export async function renderReadmeShots() {
   const temporary = await mkdtemp(path.join(os.tmpdir(), 'optipine-readme-mock-'));
   const output = new URL('../../screenshots/', import.meta.url);
