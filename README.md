@@ -57,19 +57,17 @@ you optimize is the one you would see on the chart.
 
 These images render the [design mock](docs/web-mock-terminal), which the app follows.
 
-[![Optimization summary, leaderboard, parameter map and sensitivity](docs/screenshots/optimize.png)](docs/screenshots/optimize.png)
+[![Design mock: Top 20 equity, filtered IS / OOS leaderboard, parameter map and sensitivity](docs/screenshots/optimize.png)](docs/screenshots/optimize.png)
 
-A 2,214-set grid search shows the leading equity curves, IS / OOS results, a parameter map
-and the selected set ready to preview or apply.
+A 2,214-set grid search shows the top 20 equity curves, a filtered leaderboard with IS / OOS
+results, a Length × Multiplier parameter map and sensitivity. The selected set can be
+previewed in Backtest or applied to inputs.
 
-[![Walk-forward stitched equity, window results and parameter stability](docs/screenshots/walk-forward.png)](docs/screenshots/walk-forward.png)
+[![Design mock: Walk-forward IS and OOS equity per window, window results and parameter stability](docs/screenshots/walk-forward.png)](docs/screenshots/walk-forward.png)
 
-Six rolling windows show stitched out-of-sample equity, each window's selected parameters and
-their stability across windows.
-
-[![Equity, drawdown, daily P&L and monthly returns](docs/screenshots/equity.png)](docs/screenshots/equity.png)
-
-The Equity tab puts the account curve, drawdown, daily P&L and monthly returns on a shared timeline.
+Six rolling windows place each selected set's dashed IS equity and solid OOS equity on a shared
+timeline. The window table lists selected parameters, IS / OOS results, WFE and trades; the
+stability panel compares near-optimal parameter ranges across windows.
 
 [Regenerate the images](docs/screenshots/README.md) from the mock boards.
 

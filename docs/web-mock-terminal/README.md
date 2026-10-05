@@ -72,8 +72,8 @@ Set `SHOT_PORT` to change the local server's port (5397 by default, or 0 for a f
 one; `ABS=1` lists every overflow in both languages and `STRESS=0.05` widens letter spacing to find
 labels with no room to spare.
 
-Run `npm run screenshots` from the repository root to render the five README images into
-`docs/screenshots/`. `gen/readme-shots.mjs` selects Main-en, B5-en, R1-en, W1-en and Main,
+Run `npm run screenshots` from the repository root to render the six README images into
+`docs/screenshots/`. `gen/readme-shots.mjs` selects Main-en, R1-en, W2-en, Main, R1 and W2,
 uses their full sizes at 1×, and losslessly compresses the PNGs. See the
 [image mapping and regeneration notes](../screenshots/README.md).
 
@@ -99,7 +99,7 @@ canvas and pass its path as `RUNTIME` to either script.
 | `en.mjs`           | English copy table                                                             |
 | `build.mjs`        | Writes the boards and `canvas.json`                                            |
 | `shot.mjs`         | Renders boards to PNG                                                          |
-| `readme-shots.mjs` | Renders and losslessly compresses the five README images                       |
+| `readme-shots.mjs` | Renders and losslessly compresses the six README images                        |
 | `check.mjs`        | Text-overflow check                                                            |
 
 Some panel functions are left from directions the canvas no longer shows (an equity strip under

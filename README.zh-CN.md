@@ -51,17 +51,15 @@ OptiPine 直接运行你的 Pine 源码。提供一个 v5 或 v6 策略和行情
 
 这些图片由应用所遵循的[设计稿](docs/web-mock-terminal)渲染而成。
 
-[![优化汇总、排行、参数图与敏感度](docs/screenshots/optimize.png)](docs/screenshots/optimize.png)
+[![设计稿：前 20 组权益、筛选后的样本内外排行、参数图与影响度](docs/screenshots/optimize-zh.png)](docs/screenshots/optimize-zh.png)
 
-2,214 组参数的网格搜索展示领先的权益曲线、样本内 / 样本外结果和参数图，选中的参数可预览或应用。
+2,214 组参数的网格搜索展示前 20 组权益曲线、筛选后的样本内 / 样本外排行、
+Length × Multiplier 参数图及影响度。选中的参数组可在回测页预览，或应用到输入参数。
 
-[![滚动优化的拼接权益、窗口结果与参数稳定性](docs/screenshots/walk-forward.png)](docs/screenshots/walk-forward.png)
+[![设计稿：滚动优化的逐窗样本内外权益、窗口结果与参数稳定性](docs/screenshots/walk-forward-zh.png)](docs/screenshots/walk-forward-zh.png)
 
-六个滚动窗口展示拼接的样本外权益、各窗口选定的参数，以及参数在窗口之间的稳定性。
-
-[![权益、回撤、每日盈亏与月度收益](docs/screenshots/equity.png)](docs/screenshots/equity.png)
-
-权益页签把账户曲线、回撤、每日盈亏和月度收益放在同一条时间轴上。
+六个滚动窗口在同一时间轴上逐窗展示所选参数组的样本内权益（虚线）与样本外权益（实线）。
+窗口表列出所选参数、样本内外结果、WFE 和交易数；参数稳定性面板对比各窗口的近优参数范围。
 
 可从设计稿[重新生成图片](docs/screenshots/README.md)。
 
