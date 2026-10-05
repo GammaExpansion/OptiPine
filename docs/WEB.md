@@ -247,9 +247,10 @@ objectives retain their range statistics as before. The single-backtest Report a
 TradingView's closed-trade **Net profit** and show **Open** separately, including when previewing
 an optimization set. Sweeps score the existing metrics; only Top 20 reproduction needs equity.
 
-With validation None, sets are ranked by the objective over the full range, IS vs OOS is not
-available, and the results are marked unvalidated (R3). During a run IS vs OOS and Distribution
-fill in as trials finish; Top 20 equity follows when the run ends, as it reruns the 20 sets (O8).
+With validation None, sets are ranked by the objective over the full range; IS vs OOS is unavailable.
+Range labels read **Full range**, and profit values are labelled **Profit** (R3). During a run,
+Distribution and, with IS / OOS validation, the comparison view fill in as trials finish;
+Top 20 equity follows when the run ends, as it reruns the 20 sets (O8).
 
 **Leaderboard.** Sets in ranking order, with whole rows per page measured from the available body
 height after the heading, footer and table header, clamped to 5–100. The pane's minimum height
