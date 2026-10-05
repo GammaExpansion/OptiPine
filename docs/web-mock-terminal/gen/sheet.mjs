@@ -92,7 +92,7 @@ ${blk(
       '取值',
       '<button class="chip on">close</button><button class="chip on">hl2</button><button class="chip">open</button>',
     ),
-    st('条件', `${rmChip('交易数 ≥ 30')}${rmChip('盈利因子 ≥ 2.5', 'bad')}${addChip()}`),
+    st('条件', `${rmChip('交易数 ≥ 5')}${rmChip('盈利因子 ≥ 2.5', 'bad')}${addChip()}`),
     st(
       '标记',
       '<span class="tag">+5</span><span class="tag am">已过期</span><span class="tag dn">编译错误</span><span class="tag bl">不支持</span>',
@@ -104,7 +104,7 @@ ${blk(
   col(
     st(
       '主操作',
-      `${runBtn()}<button class="primary" style="background: #f6b04d">${I.play()}开始优化</button>${runBtn({ off: true, kbd: false })}`,
+      `${runBtn({ kbd: true })}<button class="primary" style="background: #f6b04d">${I.play()}开始优化</button>${runBtn({ off: true, kbd: false })}`,
     ),
     st(
       '次操作',
@@ -117,7 +117,7 @@ ${blk(
     st('链接', '<a href="#">全部设置</a><a href="#" class="dn">2 组，查看</a>'),
     st(
       '菜单',
-      `<div class="menu" style="position: static; width: 220px"><button class="mi on">${I.dl(14)}<span style="flex: 1">排行 CSV</span><span class="t3 num" style="font-size: 12px">2,096 行</span></button><button class="mi">${I.dl(14)}<span style="flex: 1">成交 CSV</span></button><button class="mi">${I.copy()}<span style="flex: 1">复制选中参数</span></button></div>`,
+      `<div class="menu" style="position: static; width: 220px"><button class="mi on">${I.dl(14)}<span style="flex: 1">排行 CSV</span><span class="t3 num" style="font-size: 12px">2,163 行</span></button><button class="mi">${I.dl(14)}<span style="flex: 1">成交 CSV</span></button><button class="mi">${I.copy()}<span style="flex: 1">复制选中参数</span></button></div>`,
     ),
   ),
 )}
@@ -150,7 +150,7 @@ ${blk(
   `<div style="display: flex; flex-wrap: wrap; gap: 12px">
 ${O.toast(`${ok}<span>已应用 #1 的参数并重新回测</span><button class="ghost" style="height: 28px">撤销</button>`, 'position: static')}
 ${O.toast(`${ok}<span>参数已复制</span>`, 'position: static; padding-right: 14px')}
-${O.toast(`${ok}<span>已导出 排行.csv，2,096 行</span>`, 'position: static; padding-right: 14px')}
+${O.toast(`${ok}<span>已导出 排行.csv，2,163 行</span>`, 'position: static; padding-right: 14px')}
 ${O.toast(`${I.warn(14)}<span>脚本已修改，上次结果已失效</span>`, 'position: static; padding-right: 14px')}
 ${O.toast(`${I.warn(14)}<span>优化已取消，已保留上次完整结果</span>`, 'position: static; padding-right: 14px')}
 ${O.toast(`${I.err(14)}<span>计算线程异常退出，结果未保留</span><button class="ghost" style="height: 28px">重新运行</button>`, 'position: static')}

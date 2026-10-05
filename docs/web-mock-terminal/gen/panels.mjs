@@ -359,7 +359,7 @@ ${head}
 <span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 2px; background: #3b6f8c"></span><span class="t2">样本内${anchored ? '（固定起点）' : ''}</span></span>
 <span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 2px; background: #f2a33a"></span><span class="t2">样本外</span></span>
 ${view === 'fused' && shadow && !partial ? '<span style="display: flex; align-items: center; gap: 6px"><span style="width: 14px; height: 0; border-top: 1.5px dashed #6cb6dd"></span><span class="t2">W3 样本内曲线</span></span>' : ''}
-${view === 'lanes' ? '<span class="t3">条内虚线为选中参数的样本内权益，实线为样本外权益；右侧为样本外净利润与累计权益</span>' : ''}
+${view === 'lanes' ? '<span class="t3">条内虚线为选中参数的样本内权益，实线为样本外权益；右侧为样本外盈亏与累计权益</span>' : ''}
 </div>
 <div style="flex: 1"></div>
 ${seg(['拼接', '逐窗'], view === 'lanes' ? 1 : 0, { cls: 'sm', label: '窗口视图' })}
@@ -637,17 +637,17 @@ export function lbCol({
   mode = 'split',
   sel = 0,
   chips = null,
-  count = '2,096 / 2,214 符合',
+  count = '2,163 / 2,214 符合',
   empty = false,
   live = false,
   pop = '',
   more = 0,
 } = {}) {
-  const chipHtml = chips ?? rmChip('交易数 ≥ 30') + rmChip('最大回撤 ≤ 15%') + addChip();
+  const chipHtml = chips ?? rmChip('交易数 ≥ 5') + rmChip('最大回撤 ≤ 35%') + addChip();
   let cols, head, rows;
   if (mode === 'none') {
     cols = [40, 62, 50, 62, 44, 88, 84, 50, 76, 68];
-    head = `<th style="text-align: left">#</th><th>Length</th><th>Mult</th><th style="text-align: left">Source</th><th style="text-align: left">止损</th>${sorted('净利润')}<th>邻域均值</th><th>PF</th><th>回撤</th><th style="padding-right: 12px">交易</th>`;
+    head = `<th style="text-align: left">#</th><th>Length</th><th>Mult</th><th style="text-align: left">Source</th><th style="text-align: left">止损</th>${sorted('盈亏')}<th>邻域均值</th><th>PF</th><th>回撤</th><th style="padding-right: 12px">交易</th>`;
     rows = FULL_ROWS.map(
       (x, k) =>
         `<tr${k === sel ? ' class="cur"' : ''}><td>${k + 1}</td><td>${x.L}</td><td>${x.M.toFixed(2)}</td><td style="text-align: left">close</td><td style="text-align: left">关</td><td class="up">${sfmt(x.net)}</td><td>${sfmt(r10(x.nm))}</td><td>${x.pf}</td><td>${x.dd}</td><td style="padding-right: 12px">${x.n}</td></tr>`,
@@ -682,8 +682,8 @@ export function lbCol({
     ? `<div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 0 60px">
 <span style="font-size: 15px; font-weight: 600">无组合同时满足全部 3 项条件</span>
 <div style="width: 100%; display: flex; flex-direction: column">
-<div class="kv num"><span>交易数 ≥ 30</span><span>2,180 组通过</span></div>
-<div class="kv num"><span>最大回撤 ≤ 15%</span><span>2,131 组通过</span></div>
+<div class="kv num"><span>交易数 ≥ 5</span><span>2,178 组通过</span></div>
+<div class="kv num"><span>最大回撤 ≤ 35%</span><span>2,199 组通过</span></div>
 <div class="kv num" style="border-bottom: 1px solid #1f2328"><span class="dn" style="color: #f58a7f">盈利因子 ≥ 2.5</span><span style="display: flex; align-items: center; gap: 12px"><span class="dn">0 组通过，最高值 1.94</span><a href="#">移除</a></span></div>
 </div>
 </div>`
@@ -701,7 +701,7 @@ ${rows.join('\n')}
 <span class="t3 num" style="font-size: 12px">${live ? '基于已完成组合排名，随进度更新' : `第 1–${13 + more} 名`}</span>
 <div class="num" style="display: flex; align-items: center; gap: 4px">
 <button class="iconbtn" aria-label="上一页" style="color: #4f565f">${I.chevL()}</button>
-<span style="font-size: 12.5px">1 <span class="t3">/ ${live ? '106' : mode === 'many' ? '144' : mode === 'none' ? '28' : Math.ceil(2096 / (13 + more))}</span></span>
+<span style="font-size: 12.5px">1 <span class="t3">/ ${live ? '106' : mode === 'many' ? '151' : mode === 'none' ? '29' : Math.ceil(2163 / (13 + more))}</span></span>
 <button class="iconbtn" aria-label="下一页">${I.chevR()}</button>
 </div>
 </div>`;
@@ -724,7 +724,7 @@ const legendRamp = (lo, hi, bins = X.HEAT_A, zeroAt = 3) =>
     .map(
       (b, k) =>
         (k === zeroAt ? '<span style="margin: 0 5px" class="t2">0</span>' : '') +
-        `<span style="width: 20px; height: 10px; background: ${b.color}"></span>`,
+        `<span style="width: 16px; height: 10px; background: ${b.color}"></span>`,
     )
     .join('') +
   `<span class="t3" style="margin-left: 4px">${hi}</span>`;
@@ -810,7 +810,7 @@ export function mapCol({
   live = false,
   sensOpts = {},
   over = '',
-  smooth = false,
+  smooth = true,
   hover = null,
 } = {}) {
   const many = mode === 'many',
@@ -820,10 +820,10 @@ export function mapCol({
   if (none) {
     g = X.fullGrid();
     bins = X.HEAT_FULL;
-    if (smooth) g = D.neighbourMean(g);
   }
   if (many) g = X.meanGrid();
   if (live) g = X.partialGrid(0.62);
+  else if (smooth && !many) g = D.neighbourMean(g);
   g = X.binCols(g, LAX.n);
   const [gLo, gHi] = X.gridRange(g),
     lo = X.kv(gLo),
@@ -906,12 +906,12 @@ ${none ? '' : seg(['样本内', '样本外'], 0, { cls: 'sm', label: '区间' })
 </div>
 ${axisRow}
 <div style="height: ${heatH}px; flex: none; position: relative">
-<svg width="480" height="${heatH}" viewBox="0 0 480 ${heatH}" style="display: block" role="img" aria-label="Length × Multiplier 净利润热力图">
+<svg width="480" height="${heatH}" viewBox="0 0 480 ${heatH}" style="display: block" role="img" aria-label="Length × Multiplier 盈亏热力图">
 ${heat}
 </svg>
 </div>
-<div class="num" style="height: 30px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px; font-size: 11.5px">
-<span class="t3">${none ? (smooth ? '邻域均值' : '净利润') : many ? '样本内均值' : '净利润'}</span>
+<div class="num" style="height: 30px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px; font-size: 11.5px; white-space: nowrap">
+<span class="t3">${many ? '样本内均值' : smooth ? '盈亏 · 平滑' : '盈亏'}</span>
 <div style="display: flex; align-items: center; gap: 2px">
 ${legendRamp(lo, hi, bins)}
 </div>
@@ -1068,8 +1068,8 @@ ${p.labels ? `<span class="t3 num" style="position: absolute; left: -2px; top: -
 <div style="width: 640px; flex: none; display: flex; flex-direction: column; border-right: 1px solid #23272d">
 <div style="height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; white-space: nowrap">
 <span style="font-weight: 600; margin-right: 4px">逐窗口</span>
-<button class="chip"><span class="t3">选参</span>样本内净利润${I.chev(10)}</button>
-${rmChip('交易数 ≥ 30')}${rmChip('最大回撤 ≤ 15%')}${addChip()}
+<button class="chip"><span class="t3">选参</span>样本内盈亏${I.chev(10)}</button>
+${rmChip('交易数 ≥ 5')}${rmChip('最大回撤 ≤ 35%')}${addChip()}
 </div>
 ${wfTable({ sel: partial ? null : sel, done, running, odd })}
 <div style="flex: 1"></div>
@@ -1364,7 +1364,7 @@ export function asideOpt({
       : mode === 'wf'
         ? wfFields(anch)
         : '<span class="t3" style="font-size: 12.5px; line-height: 1.45">全部行情用于优化，排行仅反映拟合程度；稳健性请参考邻域均值与影响度。</span>';
-  const obj = mode === 'none' ? '净利润' : '样本内净利润';
+  const obj = mode === 'none' ? '盈亏' : '样本内盈亏';
   let foot = footer;
   if (foot == null) {
     if (state === 'running')
@@ -1419,7 +1419,7 @@ ${vBody}
 <div style="display: flex; flex-direction: column; gap: 10px">
 <div class="sec"><span>${mode === 'wf' ? '逐窗选参与筛选' : '排序与筛选'}</span></div>
 ${select(`<span class="t3">按 </span>${obj}<span class="t3">，最大</span>`, { cls: objOn ? 'foc' : '' })}
-<div style="display: flex; flex-wrap: wrap; gap: 6px">${rmChip('交易数 ≥ 30')}${rmChip('最大回撤 ≤ 15%')}${addChip(addOn)}</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">${rmChip('交易数 ≥ 5')}${rmChip('最大回撤 ≤ 35%')}${addChip(addOn)}</div>
 </div>
 <div style="display: flex; flex-direction: column; gap: 6px">
 <div class="sec"><span>策略属性</span><a href="#" style="font-size: 12.5px; font-weight: 400">修改</a></div>
@@ -1477,7 +1477,7 @@ export function asideTrial({ mode = 'split', viewing = false, head = null } = {}
     : `<table class="num">
 <thead><tr><th></th><th style="color: #6cb6dd">样本内</th><th style="color: #f5b155">样本外</th></tr></thead>
 <tbody>
-<tr><td>净利润</td><td class="up">${many ? '+20,410' : '+22,200'}</td><td class="up">${many ? '+10,940' : '+12,340'}</td></tr><tr><td>收益率</td><td>${many ? '+20.41%' : '+22.20%'}</td><td>${many ? '+9.09%' : '+10.10%'}</td></tr><tr><td>最大回撤</td><td>−7.50%</td><td>−4.90%</td></tr><tr><td>盈利因子</td><td>1.32</td><td>1.41</td></tr><tr><td>胜率</td><td>48.1%</td><td>46.4%</td></tr><tr><td>交易</td><td>63</td><td>28</td></tr><tr><td>邻域均值</td><td>+19,090</td><td class="t3">—</td></tr>
+<tr><td>盈亏</td><td class="up">${many ? '+20,410' : '+22,200'}</td><td class="up">${many ? '+10,940' : '+12,340'}</td></tr><tr><td>收益率</td><td>${many ? '+20.41%' : '+22.20%'}</td><td>${many ? '+9.09%' : '+10.10%'}</td></tr><tr><td>最大回撤</td><td>−7.50%</td><td>−4.90%</td></tr><tr><td>盈利因子</td><td>1.32</td><td>1.41</td></tr><tr><td>胜率</td><td>48.1%</td><td>46.4%</td></tr><tr><td>交易</td><td>63</td><td>28</td></tr><tr><td>邻域均值</td><td>+19,090</td><td class="t3">—</td></tr>
 </tbody>
 </table>`;
   const facts = many
@@ -1494,7 +1494,7 @@ export function asideTrial({ mode = 'split', viewing = false, head = null } = {}
         ['报错', none ? '<span class="t2">0 组</span>' : '<a href="#" class="dn">2 组，查看</a>'],
       ];
   return aside(`${head ?? rtabs(2, '#1')}
-${selHead('#1', none ? '净利润第 1' : '样本内净利润第 1')}
+${selHead('#1', none ? '盈亏第 1' : '样本内盈亏第 1')}
 <div style="flex: 1; min-height: 0; padding: 14px 16px; display: flex; flex-direction: column; gap: ${many ? 14 : 18}px">
 <table class="num">
 <thead><tr><th>参数</th><th>当前</th><th style="width: 26px"></th><th style="color: #e8eaed">选中</th></tr></thead>

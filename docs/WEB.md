@@ -48,11 +48,18 @@ theme.
 The header holds, from left to right: the OptiPine name; the **Backtest** / **Optimize** switch;
 the script file name, which opens the script menu; the symbol and provider; a timeframe switch
 (15m, 1h, 4h, 1D); the date range; the last run's facts (bar count and duration, or combinations,
-duration and failures on the Optimize page); the main action; and the language switch. The
-Backtest page's main action is **Run backtest** (Ctrl + Enter); the Optimize page's is **Cancel**
-while it runs, as its **Start** sits in the run block (2.4). The timeframe switch and the date
-range refetch from the same provider, as a preview to accept (2.2); for CSV data they are
-disabled.
+duration and failures on the Optimize page); the main action; the language switch; **About &
+licenses** (ⓘ), whose dialog also links the source code; and GitHub's mark, a link to the
+repository that opens in a new tab ("OptiPine on GitHub"). The Backtest page's main action is
+**Run backtest** (Ctrl + Enter); the Optimize page's is **Cancel** while it runs, as its **Start**
+sits in the run block (2.4). The timeframe switch and the date range refetch from the same
+provider, as a preview to accept (2.2); for CSV data they are disabled. A phone keeps About in its
+top row, which a run's progress needs, and puts the GitHub link beside the language switch, where
+the script's name gives way to it (G3, G4).
+
+The browser tab shows the logo's three bars on the panel's dark tile, so the muted bar reads on
+light and dark tab strips: `public/favicon.svg`, with `favicon.ico` (32 px) for browsers without
+SVG icons and a 180 px `apple-touch-icon.png`, both rendered from it.
 
 **First launch (S1)** shows three steps on the empty workbench: open a script (**Paste code**,
 **Open file**), **Select market data**, and run, with **Load example: Trend Breakout, BTCUSDT 1

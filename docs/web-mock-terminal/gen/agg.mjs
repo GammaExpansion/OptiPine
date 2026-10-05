@@ -29,7 +29,7 @@ ${body}
 
 // ---------- aggregate charts
 export const CH = 200;
-const VIEWS = ['前 20 组权益', '样本内 vs 样本外', '净利润分布'];
+const VIEWS = ['前 20 组权益', '样本内 vs 样本外', '盈亏分布'];
 export function fanSvg({
   split = true,
   sel = D.equityTop,
@@ -141,7 +141,7 @@ export const scatterSvg = (n = 820, highlight = true) =>
       ],
     },
   ) +
-  `<text x="1036" y="${CH - 34}" fill="#aab1b9" font-size="11.5" text-anchor="end">样本内净利润 →</text><text x="76" y="24" fill="#aab1b9" font-size="11.5">样本外净利润 ↑</text>`;
+  `<text x="1036" y="${CH - 34}" fill="#aab1b9" font-size="11.5" text-anchor="end">样本内盈亏 →</text><text x="76" y="24" fill="#aab1b9" font-size="11.5">样本外盈亏 ↑</text>`;
 
 const swLine = (c, dash, label, w = 2) =>
   `<span style="display: flex; align-items: center; gap: 6px"><span style="width: 14px; height: 0; border-top: ${w}px ${dash ? 'dashed' : 'solid'} ${c}"></span><span class="t2">${label}</span></span>`;
@@ -280,7 +280,7 @@ export function histSvg() {
       `<text x="${f1(X(v))}" y="${y1 + 16}" fill="#7f8790" font-size="11" text-anchor="middle">${s}</text>`,
     );
   out.push(
-    `<text x="${x1}" y="${y1 + 16}" fill="#aab1b9" font-size="11.5" text-anchor="end">净利润 →</text><text x="${x0 - 8}" y="${y1 + 16}" fill="#aab1b9" font-size="11.5" text-anchor="end">组数</text>`,
+    `<text x="${x1}" y="${y1 + 16}" fill="#aab1b9" font-size="11.5" text-anchor="end">盈亏 →</text><text x="${x0 - 8}" y="${y1 + 16}" fill="#aab1b9" font-size="11.5" text-anchor="end">组数</text>`,
   );
   const posIs = D.trials.filter((t) => t.is > 0).length,
     posOos = D.trials.filter((t) => t.oos > 0).length;

@@ -8,6 +8,7 @@ import { I18nProvider } from '../i18n/I18nProvider.tsx';
 import { defaultPaneSizes, uiStorageKey, uiStore } from '../state/ui.ts';
 import { Shell } from './Shell.tsx';
 import { preloadChunks } from '../test/lazy-chunks.ts';
+import { setViewportWidth } from '../test/viewport.ts';
 import {
   loadOptimization,
   optimization,
@@ -34,11 +35,11 @@ afterEach(() => {
 });
 
 test.each([
-  ['en', 'About & licenses'],
-  ['zh', '关于与许可证'],
+  ['en', 'About & licenses', 'Source code on GitHub'],
+  ['zh', '关于与许可证', 'GitHub 上的源代码'],
 ] as const)(
   'the header info button opens licenses and restores focus on close (%s)',
-  async (language, label) => {
+  async (language, label, repository) => {
     uiStore.setState({ language });
     const user = userEvent.setup();
     await user.pointer({ coords: { clientX: 500, clientY: 500 } });
@@ -60,11 +61,52 @@ test.each([
       'https://www.tradingview.com/',
     );
     expect(dialog).toHaveTextContent('Copyright (с) 2025 TradingView, Inc.');
+    const source = within(dialog).getByRole('link', { name: repository });
+    expect(source).toHaveAttribute('href', 'https://github.com/GammaExpansion/OptiPine');
+    expect(source).toHaveAttribute('target', '_blank');
+    expect(source).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(dialog).toHaveTextContent('GitHub Octicons');
+    expect(dialog).toHaveTextContent('© 2025 GitHub Inc.');
     expect(dialog).toHaveTextContent('CodeMirror 6');
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
     expect(uiStore.getState().openDialogs).toEqual([]);
+  },
+);
+
+test.each([
+  [1440, 'en', 'OptiPine on GitHub'],
+  [1024, 'en', 'OptiPine on GitHub'],
+  [390, 'zh', '在 GitHub 上查看 OptiPine'],
+] as const)(
+  'the header links the GitHub repository in a new tab at %i px (%s)',
+  async (width, language, label) => {
+    setViewportWidth(width);
+    uiStore.setState({ language });
+    const user = userEvent.setup();
+    render(
+      <I18nProvider>
+        <Shell />
+      </I18nProvider>,
+    );
+    const banner = screen.getByRole('banner');
+    const link = within(banner).getByRole('link', { name: label });
+    expect(link).toHaveAttribute('href', 'https://github.com/GammaExpansion/OptiPine');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(link.textContent).toBe('');
+    expect(link.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+    await user.hover(link);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(label);
+    // Beside About on a desktop and a tablet; beside the language switch on a phone, whose top
+    // row a run's progress needs.
+    const languages = within(banner).getByRole('radiogroup', { name: /Language|语言/ });
+    const about = within(banner).getByRole('button', { name: /About|关于/ });
+    if (width === 390) {
+      expect(link.parentElement).toContainElement(languages);
+      expect(link.parentElement).not.toContainElement(about);
+    } else expect(link.parentElement).toBe(about.parentElement);
   },
 );
 

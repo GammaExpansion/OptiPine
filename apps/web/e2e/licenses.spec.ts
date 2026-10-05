@@ -33,6 +33,19 @@ for (const language of ['en', 'zh'] as const) {
       await page.getByRole('banner').screenshot({
         path: info.outputPath(`header-${language}-${width}.png`),
       });
+      // The repository link: beside About, or on a phone beside the language switch, as a real
+      // link that opens GitHub in a new tab, within the page and a full touch target on a phone.
+      const github = page.getByRole('banner').getByRole('link', {
+        name: copy['shell.github'],
+        exact: true,
+      });
+      await expect(github).toBeVisible();
+      await expect(github).toHaveAttribute('href', 'https://github.com/GammaExpansion/OptiPine');
+      await expect(github).toHaveAttribute('target', '_blank');
+      await expect(github).toHaveAttribute('rel', 'noopener noreferrer');
+      const box = (await github.boundingBox())!;
+      expect(box.x + box.width).toBeLessThanOrEqual(width);
+      if (width === 390) expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
       if (width === 390) {
         await page.getByRole('button', { name: copy['shell.backtest'], exact: true }).focus();
         for (
@@ -96,6 +109,8 @@ test('production, preview and dev serve complete notices and the three original 
     expect(text).toContain('lightweight-charts@5.2.1');
     expect(text).toContain('Copyright (c) Microsoft Corporation');
     expect(text).toContain('MIT License');
+    expect(text).toContain('The GitHub mark is from GitHub Octicons');
+    expect(text).toContain('Copyright (c) 2025 GitHub Inc.');
     for (const font of ['barlow', 'noto-sans-sc', 'source-code-pro']) {
       const fontResponse = await request.get(`${origin}/licenses/${font}.txt`);
       expect(fontResponse.status()).toBe(200);
