@@ -25,6 +25,29 @@ async function results() {
   await waitFor(() => expect(optimization().topEquity.status).toBe('ready'));
 }
 
+test('None keeps profit columns and filters without an unvalidated chip in either language', async () => {
+  await loadOptimization();
+  act(() => {
+    optimization().actions.setValidation({ mode: 'none' });
+    optimization().actions.removeFilter(1);
+    optimization().actions.removeFilter(0);
+  });
+  await runOptimization();
+  renderInEnglish(<LeaderboardPanel />);
+  expect(optimization().views?.unvalidated).toBe(true);
+  expect(screen.queryByText('Unvalidated')).not.toBeInTheDocument();
+  expect(screen.getByRole('columnheader', { name: 'Profit' })).toBeVisible();
+  expect(screen.queryByRole('columnheader', { name: 'IS profit' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('columnheader', { name: 'OOS profit' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '+ Condition' })).toBeVisible();
+  act(() => uiStore.getState().setLanguage('zh'));
+  expect(screen.queryByText('未验证')).not.toBeInTheDocument();
+  expect(screen.getByRole('columnheader', { name: '盈亏' })).toBeVisible();
+  expect(screen.queryByRole('columnheader', { name: '样本内盈亏' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('columnheader', { name: '样本外盈亏' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '+ 条件' })).toBeVisible();
+});
+
 test('shows nine ranked rows; adding a draft previews without changing the ranking, then R9 recovers', async () => {
   await results();
   const user = userEvent.setup();

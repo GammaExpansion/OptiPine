@@ -49,6 +49,10 @@
   caret-color: var(--text);
   white-space: pre;
 }
+/* Match the loaded editor: focus belongs to the frame, not the inner text area. */
+.text:focus-visible {
+  outline: none;
+}
 .text::placeholder {
   color: var(--caption);
   opacity: 1;

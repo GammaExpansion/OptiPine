@@ -28,6 +28,10 @@
   outline: none;
   font-variant-numeric: tabular-nums;
 }
+/* The frame owns focus; outrank the global :focus-visible rule regardless of chunk order. */
+.input:focus-visible {
+  outline: none;
+}
 .input::placeholder {
   color: var(--caption);
 }

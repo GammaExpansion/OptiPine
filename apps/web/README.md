@@ -5,6 +5,10 @@ framework-free workflows (`src/workflows/`), Zustand stores (`src/state/`) and t
 Workers, in English and Chinese, from desktop to phone widths. `Shell` opens Optimize once there
 are a script and data; its `canOptimize` prop overrides that for the test harness.
 
+**Load example** on first launch, or an example in the script menu, loads its source and market
+data and automatically runs the backtest. Both use the Run button's action after compilation;
+superseded loads and unavailable or refused data never trigger a run.
+
 Optimize starts with validation **None** (unvalidated, full range), **Smooth** on (the mean of
 ±1-step neighbours), and filters **Trades ≥ 5** and **Max DD ≤ 35%**. Users can change each setting;
 IS / OOS and walk-forward are explicit validation choices.
@@ -108,8 +112,9 @@ checks S1, B1, O1, R1 and W1 (each of its phone tabs too) at 1440 × 900, 1024 �
 tabs.
 
 The phone's Optimize results keep the summary above four tabs (G4); walk-forward results keep
-the stitched equity above Windows, Stability and Settings, and a tab of the other kind opens its
-counterpart (Leaderboard and Windows; Parameter map or Sensitivity and Stability). The
+the equity summary, initially Per window, above Windows, Stability and Settings. Both desktop and
+phone can switch to Stitched and back. A tab of the other kind opens its counterpart (Leaderboard
+and Windows; Parameter map or Sensitivity and Stability). The
 leaderboard fits each page to its measured card height, displaying all searched inputs in
 declaration order at the run's step precision. Desktop rows use the table's measured height.
 Both share one capacity setting, updated after resizing settles, and preserve the selected or

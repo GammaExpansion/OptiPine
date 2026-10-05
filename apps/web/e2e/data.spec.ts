@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
-import { installMarketFixtures, type MarketFixtureOptions } from './market-fixtures.ts';
+import { fixedClock, installMarketFixtures, type MarketFixtureOptions } from './market-fixtures.ts';
 import { readFile } from 'node:fs/promises';
+import { origins } from './ports.ts';
 
 const csv =
   'time,open,high,low,close,Volume,plot\n1790935200,100,103,99,102,5,\n1790938800,102,104,101,103,6,\n1790942400,103,105,102,104,7,\n';
@@ -37,7 +38,7 @@ async function expectHeaderFits(page: Page) {
 }
 
 for (const language of ['en', 'zh'] as const)
-  test(`load the two-year example and press Run backtest in ${language}`, async ({
+  test(`one click loads and backtests the two-year example in ${language}`, async ({
     page,
   }, testInfo) => {
     const requests = await installMarketFixtures(page);
@@ -59,15 +60,24 @@ for (const language of ['en', 'zh'] as const)
     await steps
       .getByRole('button', { name: language === 'en' ? /Load example/ : /载入示例/ })
       .click();
-    await expect(run).toBeEnabled();
     await expect(steps).toHaveCount(0);
     await expect(page.getByRole('button', { name: '2024-10-03 – 2026-10-03' })).toBeVisible();
-    await run.click();
     await expect(page.getByLabel(language === 'en' ? 'Last run' : '上次运行')).toHaveText(
       language === 'en' ? /^17,520 bars, \d+\.\d s$/ : /^17,520 根 K 线，用时 \d+\.\d 秒$/,
     );
+    await expect(
+      page.getByRole('tab', { name: language === 'en' ? 'Report' : '报告', exact: true }),
+    ).toHaveAttribute('aria-selected', 'true');
+    await expect(
+      page.getByRole('tab', { name: language === 'en' ? /^Trades [1-9]/ : /^成交 [1-9]/ }),
+    ).toBeVisible();
     await expectHeaderFits(page);
+    await expect(page.getByRole('tabpanel').getByRole('table')).toHaveCount(3);
     await page.screenshot({ path: testInfo.outputPath(`B1-${language}-1440.png`) });
+    await page
+      .getByRole('tab', { name: language === 'en' ? /^Trades [1-9]/ : /^成交 [1-9]/ })
+      .click();
+    await expect(page.getByRole('grid').getByRole('row').nth(1)).toBeVisible();
     const bars = requests.find((request) => request.pathname.endsWith('/bars'))!;
     expect(Object.fromEntries(bars.searchParams)).toEqual({
       feed: 'binance',
@@ -77,6 +87,28 @@ for (const language of ['en', 'zh'] as const)
       to: '1791036000',
     });
   });
+
+test('the dev app runs an example selected from the script menu', async ({ page }, info) => {
+  await installMarketFixtures(page);
+  await page.clock.install({ time: fixedClock });
+  await page.goto(origins.dev);
+  await page.getByRole('button', { name: /Load example/ }).click();
+  await expect(page.getByLabel('Last run')).toHaveText(/17,520 bars/);
+  await expect(page.getByRole('tab', { name: 'Report', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await expect(page.getByRole('tab', { name: /^Trades [1-9]/ })).toBeVisible();
+  await expect(page.getByRole('tabpanel').getByRole('table')).toHaveCount(3);
+  await page.mouse.move(1435, 895);
+  await page.evaluate(() => document.fonts.ready);
+  await page.screenshot({ path: info.outputPath('example-one-click-dev.png') });
+  await page.getByRole('button', { name: /trend-breakout.pine/ }).click();
+  await page.getByRole('menuitem', { name: 'MA Cross', exact: true }).click();
+  await expect(page.getByRole('button', { name: /ma-cross.pine/ })).toBeVisible();
+  await expect(page.getByLabel('Last run')).toHaveText(/17,520 bars/);
+  await expect(page.getByRole('tab', { name: /^Trades [1-9]/ })).toBeVisible();
+});
 
 test('search, fetch, edit preview and accept; repeat uses the cache', async ({
   page,

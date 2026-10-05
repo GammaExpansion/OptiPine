@@ -117,9 +117,6 @@
   width: 200px;
   flex: none;
 }
-.focused input {
-  outline: none;
-}
 .focused > div > div {
   border-color: var(--primary);
 }

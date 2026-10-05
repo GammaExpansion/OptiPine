@@ -47,7 +47,7 @@ test('switches reproduced equity, scatter and distribution without rerunning', a
   expect(optimization().results!.id).toBe(1);
 });
 
-test('None marks results unvalidated and disables the comparison view in both languages', async () => {
+test('None omits the chip and status row while retaining full-range labels and disabling comparison', async () => {
   await loadOptimization();
   act(() => {
     optimization().actions.setValidation({ mode: 'none' });
@@ -55,16 +55,24 @@ test('None marks results unvalidated and disables the comparison view in both la
     optimization().actions.removeFilter(0);
   });
   await runOptimization();
+  await waitFor(() => expect(optimization().topEquity.status).toBe('ready'));
   renderInEnglish(<SummaryPanel />);
-  expect(screen.getByText('Unvalidated')).toBeVisible();
+  expect(optimization().views?.unvalidated).toBe(true);
+  expect(screen.queryByText('Unvalidated')).not.toBeInTheDocument();
+  expect(screen.queryByRole('status')).not.toBeInTheDocument();
   expect(screen.getByRole('radio', { name: 'IS vs OOS' })).toBeDisabled();
   expect(screen.getByText('Top 20 (Profit, full range)')).toBeVisible();
   // The legend names the objective the sets are ranked by (R3).
   act(() => optimization().actions.setObjective('sharpeRatio'));
   expect(screen.getByText('Top 20 (Sharpe ratio, full range)')).toBeVisible();
+  await waitFor(() => expect(optimization().topEquity.status).toBe('ready'));
   act(() => uiStore.getState().setLanguage('zh'));
-  expect(screen.getByText('未验证')).toBeVisible();
+  expect(screen.queryByText('未验证')).not.toBeInTheDocument();
+  expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  expect(screen.getByRole('radio', { name: '样本内 vs 样本外' })).toBeDisabled();
   expect(screen.getByText('排行前 20 组（全区间夏普比率）')).toBeVisible();
+  act(() => getOptimizationStore().setState({ analysisError: 'Analysis failed' }));
+  expect(screen.getByRole('status')).toHaveTextContent('Analysis failed');
 });
 
 test('live snapshots are explicitly provisional; reproduction and errors remain visible', async () => {
