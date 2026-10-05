@@ -84,20 +84,16 @@ export function BinInspection() {
 /** R8's figures follow the inspected point; selection still belongs to the optimization session. */
 export function CurveInspection() {
   const { t, text } = useI18n();
-  const curve = useOptimizationStore((state) => state.views?.curve);
-  const selection = useOptimizationStore((state) => state.views?.selection);
-  const validated = useOptimizationStore((state) => state.views?.mode === 'in-out');
-  const inspected = useCurveInspection();
-  const rows = useOptimizationStore((state) => state.views?.searchRows);
+  const views = useOptimizationStore((state) => state.views);
+  const curve = views?.curve;
+  const validated = views?.mode === 'in-out';
+  const active = useCurveInspection(views);
+  const rows = views?.searchRows;
   const objective = useOptimizationStore((state) => state.viewSettings.objective);
   const format = useResultFormat(rows);
   if (!curve) return null;
   const row = rows?.find((row) => row.descriptor.title === curve.input);
-  const active =
-    inspected?.view === curve
-      ? inspected.index
-      : curve.points.findIndex((point) => point.trialId === selection?.row.trialId);
-  const point = curve.points[Math.max(0, active)];
+  const point = curve.points[active];
   const number = (value: number | null | undefined) => format.objective(value, objective);
   return (
     <section className={styles.inspection} aria-label={t('optimize.map.curveValues')}>

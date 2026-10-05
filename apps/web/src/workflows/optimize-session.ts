@@ -308,6 +308,8 @@ export interface TopEquity {
 
 /** Everything the results area shows, for the live run or the latest results. */
 export interface ResultsViews {
+  /** Identifies the displayed run even while its analysis is refreshed. */
+  readonly runId: number;
   /** Input order and precision belong to the displayed run, including while settings are outdated. */
   readonly searchRows: SearchSetup['rows'];
   /** A run is still streaming: these are not results yet (O8). */
@@ -2021,6 +2023,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
     }
     const ranked = this.#ranked(slot, mode, space);
     const value: ResultsViews = {
+      runId: slot.runId,
       searchRows: (live ? live.snapshot : results!.computedWith).search.rows,
       inProgress: !!live,
       unvalidated: mode === 'none',

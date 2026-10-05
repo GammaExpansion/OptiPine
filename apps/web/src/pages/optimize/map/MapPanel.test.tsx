@@ -193,6 +193,69 @@ it('renders R8 from the one-input view and inspects values with the keyboard', a
   expect(screen.getByText('IS range within 90% of peak')).toBeInTheDocument();
 });
 
+it('keeps the inspected R8 point when leaderboard capacity changes between End and Enter', async () => {
+  await loadOptimization();
+  act(() => {
+    optimization().actions.setSearched('Source', false);
+    optimization().actions.removeFilter(1);
+    optimization().actions.removeFilter(0);
+  });
+  await runOptimization();
+  renderInEnglish(
+    <>
+      <MapPanel />
+      <SensitivityPanel />
+    </>,
+  );
+  const canvas = screen.getByTestId('objective-curve');
+  fireEvent.keyDown(canvas, { key: 'Home' });
+  fireEvent.keyDown(canvas, { key: 'Enter' });
+  expect(optimization().views!.selection!.row.parameters.Length).toBe(2);
+  fireEvent.keyDown(canvas, { key: 'End' });
+  expect(screen.getByRole('heading', { name: 'Length 4' })).toBeVisible();
+  act(() => optimization().actions.setPageSize(5));
+  expect(screen.getByRole('heading', { name: 'Length 4' })).toBeVisible();
+  await waitFor(() => expect(optimization().views!.pending).toBe(false));
+  expect(screen.getByRole('heading', { name: 'Length 4' })).toBeVisible();
+  fireEvent.keyDown(canvas, { key: 'Enter' });
+  expect(optimization().views!.selection!.row.parameters.Length).toBe(4);
+});
+
+it('R8 inspection follows a changed selection and cannot carry into a new run', async () => {
+  await loadOptimization();
+  act(() => {
+    optimization().actions.setSearched('Source', false);
+    optimization().actions.removeFilter(1);
+    optimization().actions.removeFilter(0);
+  });
+  await runOptimization();
+  renderInEnglish(
+    <>
+      <MapPanel />
+      <SensitivityPanel />
+    </>,
+  );
+  const canvas = screen.getByTestId('objective-curve');
+  fireEvent.keyDown(canvas, { key: 'Home' });
+  fireEvent.keyDown(canvas, { key: 'Enter' });
+  fireEvent.keyDown(canvas, { key: 'End' });
+  const points = optimization().views!.curve!.points;
+  act(() => optimization().actions.select(points[1].trialId));
+  expect(screen.getByRole('heading', { name: 'Length 3' })).toBeVisible();
+  act(() => optimization().actions.select(points[0].trialId));
+  expect(screen.getByRole('heading', { name: 'Length 2' })).toBeVisible();
+  await waitFor(() => expect(optimization().views!.pending).toBe(false));
+
+  const winner = optimization().views!.leaderboard.rows[0].parameters.Length;
+  fireEvent.keyDown(canvas, { key: winner === 2 ? 'End' : 'Home' });
+  const inspected = winner === 2 ? 4 : 2;
+  expect(screen.getByRole('heading', { name: `Length ${inspected}` })).toBeVisible();
+  const previousRun = optimization().views!.runId;
+  await runOptimization();
+  expect(optimization().views!.runId).not.toBe(previousRun);
+  expect(screen.getByRole('heading', { name: `Length ${winner}` })).toBeVisible();
+});
+
 it('says once, in the tooltip, what an excluded cell fails, with no box over the map', async () => {
   await loadOptimization();
   act(() => optimization().actions.setRange('Length', { from: 2, to: 28, step: 1 }));

@@ -6,22 +6,12 @@ import styles from './MapPanel.module.css';
 
 export function ObjectiveCurve() {
   const { t } = useI18n();
-  const rows = useOptimizationStore((state) => state.views?.searchRows);
-  const curve = useOptimizationStore((state) => state.views?.curve);
-  const selection = useOptimizationStore((state) => state.views?.selection);
-  const validated = useOptimizationStore((state) => state.views?.mode === 'in-out');
+  const views = useOptimizationStore((state) => state.views);
+  const curve = views?.curve;
+  const validated = views?.mode === 'in-out';
   const select = useOptimizationStore((state) => state.actions.select);
-  const inspected = useCurveInspection();
-  if (!curve) return null;
-  const active = Math.max(
-    0,
-    Math.min(
-      curve.points.length - 1,
-      inspected?.view === curve
-        ? inspected.index
-        : curve.points.findIndex((point) => point.trialId === selection?.row.trialId),
-    ),
-  );
+  const active = useCurveInspection(views);
+  if (!views || !curve) return null;
   return (
     <div className={styles.body}>
       <p className={styles.axisNote}>{t('optimize.map.oneInput', { title: curve.input })}</p>
@@ -43,9 +33,18 @@ export function ObjectiveCurve() {
       </div>
       <CurveCanvas
         curve={curve}
-        searchRow={rows?.find((row) => row.descriptor.title === curve.input)}
+        searchRow={views.searchRows.find((row) => row.descriptor.title === curve.input)}
         active={active}
-        onInspect={(index) => inspectCurve({ view: curve, index })}
+        onInspect={(index) => {
+          const point = curve.points[index];
+          if (point)
+            inspectCurve({
+              runId: views.runId,
+              input: curve.input,
+              value: point.x,
+              selectionId: views.selection?.row.trialId ?? null,
+            });
+        }}
         onSelect={(index) => {
           const trialId = curve.points[index]?.trialId;
           if (trialId) select(trialId);
