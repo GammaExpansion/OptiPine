@@ -110,6 +110,7 @@ test('R1 and G4 pages fit their bodies and preserve the anchor through viewport 
   );
   await page.evaluate(() => {
     const { actions } = (window as unknown as Hooks).leaderboardState();
+    actions.setValidation({ mode: 'in-out' });
     actions.setRange('Length', { from: 2, to: 20, step: 1 });
     actions.setRange('Multiplier', { from: 1, to: 2, step: 0.25 });
     actions.removeFilter(1);

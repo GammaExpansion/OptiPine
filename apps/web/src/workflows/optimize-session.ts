@@ -529,7 +529,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
     draft: null,
     axes: null,
     slices: {},
-    smooth: false,
+    smooth: true,
     surface: 'in',
     selectedTrialId: null,
     page: 0,

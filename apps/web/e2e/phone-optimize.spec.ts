@@ -120,6 +120,7 @@ for (const language of ['en', 'zh'] as const) {
       .toBe(true);
     await page.evaluate(() => {
       const { actions } = (window as unknown as PhoneWindow).phoneOptimization();
+      actions.setValidation({ mode: 'in-out' });
       actions.setRange('Length', { from: 2, to: 4, step: 1 });
       actions.setRange('Multiplier', { from: 1.5, to: 2, step: 0.25 });
       actions.setSearched('Stop', false);

@@ -79,6 +79,9 @@ async function open(page: Page, dense = false, language: 'en' | 'zh' = 'en') {
   );
   await page.evaluate(async (dense) => {
     const state = (window as unknown as Hooks).mapState;
+    state().actions.setValidation({ mode: 'in-out' });
+    // Establish the raw surface before the Smooth interaction below compares both versions.
+    state().actions.setSmooth(false);
     while (state().viewSettings.filters.length) state().actions.removeFilter(0);
     state().actions.setRange('Length', { from: 2, to: dense ? 50 : 4, step: 1 });
     if (dense) {

@@ -448,6 +448,35 @@ test('a draft condition previews the sets and page ranks it would drop (R10)', (
   );
 });
 
+for (const mode of ['none', 'in-out'] as const) {
+  test(`smoothed hover and bin detail share the map's neighbourhood means (${mode})`, () => {
+    const wide = searchSpace([2, 31], ['close', 'hl2']);
+    const raw = analyze(wide, mode);
+    const smoothed = analyze(wide, mode, { neighborhood: true });
+    const view = mapView(smoothed.results(), 'in', {})!;
+    const cell = view.panel.cells.find((cell) => cell.xValues?.length === 2)!;
+    const values = cellValues(smoothed.summary, cell);
+    const detail = binDetail(view, cell)!;
+    for (const value of values.values) {
+      for (const surface of raw.analysis.maps) {
+        // Both Source values are neighbours; Length contributes its adjacent integer steps.
+        const neighbours = surface.map.cells.filter(
+          (cell) => Math.abs(Number(cell.x) - Number(value.x)) <= 1 && cell.value !== null,
+        );
+        const expected = neighbours.reduce((sum, cell) => sum + cell.value!, 0) / neighbours.length;
+        const actual = surface.surface === 'out' ? value.outOfSample : value.inSample;
+        assert.ok(Math.abs(actual! - expected) < 1e-8);
+      }
+      assert.equal(
+        detail.localMap.cells.find((cell) => cell.x === value.x && cell.y === value.y)?.value,
+        value.inSample,
+      );
+    }
+    assert.equal(values.mean.inSample, cell.value);
+    if (mode === 'none') assert.equal(values.mean.outOfSample, null);
+  });
+}
+
 test('the map exposes both surfaces, slices and cell values (R4, R6, R7)', () => {
   const wide = searchSpace([2, 31], ['close', 'hl2', 'ohlc4']);
   const { analysis, summary, results } = analyze(wide, 'in-out');

@@ -62,7 +62,8 @@ The real dev-server test is e2e/wf-integration.spec.ts. It calls loadExample('tr
 intercepts every market request with the recorded two-year dataset and runs the real Worker pool.
 Length 18-38 and Multiplier 1-3 by 0.25 give 189 sets per window, five rolling/anchored windows,
 including a partial final window. It captures W1, W2, W4, W5, W6 and W3's selected/mean surfaces at
-1440 x 900 in English and Chinese. A Net profit >= 20,000 filter makes the first two windows flat.
+1440 x 900 in English and Chinese. A Profit filter makes the weakest window flat by requiring more
+than its best marked-to-market IS profit.
 Tolerance sends exactly one stability analysis job and leaves the run result, window values and
 equity unchanged. Preview keeps current inputs; apply writes the fixed set with its fixed origin.
 

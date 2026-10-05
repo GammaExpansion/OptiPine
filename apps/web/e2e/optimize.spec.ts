@@ -19,6 +19,8 @@ async function open(page: Page, language: 'en' | 'zh' = 'en', bars = 4_000) {
   });
   await page.addInitScript((language) => {
     localStorage.setItem('optipine.ui', JSON.stringify({ state: { language }, version: 1 }));
+    // Leave time to observe live progress and cancel, even on machines with many cores.
+    Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 3 });
   }, language);
   await page.goto('/e2e/harness.html');
   await page.waitForFunction(() => 'backtestHooks' in window);
@@ -59,6 +61,7 @@ test('a small grid runs through the Worker pool, goes outdated, and a cancelled 
 }, info) => {
   const errors = await open(page);
   await page.getByRole('button', { name: 'Optimize', exact: true }).click();
+  await page.getByRole('radio', { name: 'IS / OOS', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'No optimization has run yet' })).toBeVisible();
   await expect(facts(page)).toHaveText('No optimization has run yet');
   await searchLength(page, 18, 22);

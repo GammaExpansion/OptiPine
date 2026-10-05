@@ -35,8 +35,8 @@ export function filterValueText(
 }
 
 /**
- * A condition's text wherever it appears, chips, presets and R9's diagnosis alike: Trades ≥ 30 or
- * Max DD ≤ 15% (O1, R1, R9, R10).
+ * A condition's text wherever it appears, chips, presets and R9's diagnosis alike: Trades ≥ 5 or
+ * Max DD ≤ 35% (O1, R1, R9, R10).
  */
 export function filterLabel(filter: FilterCondition): Message {
   return message('optimize.setup.filter', {
