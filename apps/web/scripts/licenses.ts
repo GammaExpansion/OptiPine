@@ -112,6 +112,8 @@ export function collectLicenseAssets(appDirectory = webRoot): Record<string, str
     `${licensesEn['licenses.charts']}\n${licensesEn['licenses.chartNotice']}`,
     licensesEn['licenses.tslib'],
     `${licensesEn['licenses.fonts']}\n${licensesEn['licenses.barlow']}: ${licensesEn['licenses.barlowCredit']}\n${licensesEn['licenses.noto']}: ${licensesEn['licenses.notoCredit']}\n${licensesEn['licenses.source']}: ${licensesEn['licenses.sourceCredit']}`,
+    // The header's GitHub mark copies an Octicons path; the package is not installed.
+    `${licensesEn['licenses.octicons']}\n\n${readFileSync(join(supplementalRoot, 'octicons-LICENSE.txt'), 'utf8')}`,
     licensesEn['licenses.independent'],
     'Installed production dependencies (including transitive dependencies and installed peers):\n' +
       packages.map(({ name, version }) => `${name}@${version}`).join('\n'),

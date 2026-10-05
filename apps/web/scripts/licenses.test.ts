@@ -34,6 +34,13 @@ test('the installed production tree ships licenses, font texts and the upstream 
   assert.ok(assets['licenses/lightweight-charts.txt'].includes(notice));
   assert.ok(notices.includes(notice.trim()));
   assert.match(notices, /Copyright \(c\) Microsoft Corporation/);
+  // The header's GitHub mark is a copied Octicons path, so its notice comes from a supplement.
+  assert.ok(notices.includes('The GitHub mark is from GitHub Octicons'));
+  assert.ok(
+    notices.includes(
+      readFileSync(new URL('../licenses/octicons-LICENSE.txt', import.meta.url), 'utf8').trim(),
+    ),
+  );
   assert.equal(
     assets['licenses/OptiPine.txt'],
     readFileSync(new URL('../../../LICENSE', import.meta.url), 'utf8'),

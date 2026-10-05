@@ -255,6 +255,7 @@ export const sheetEn = {
   'sheet.icon.maximize': 'Maximize',
   'sheet.icon.panel': 'Panel',
   'sheet.icon.info': 'Information',
+  'sheet.icon.github': 'GitHub',
   'sheet.icon.logo': 'OptiPine',
   'charts.devTitle': 'OptiPine · Chart workbench',
   'charts.devExample': 'Example strategy',

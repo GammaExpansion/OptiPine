@@ -1,8 +1,10 @@
 import { Icon } from '../components/Icon.tsx';
 import { IconButton } from '../components/IconButton.tsx';
+import { IconLink } from '../components/IconLink.tsx';
 import { PageTabs } from '../components/PageTabs.tsx';
 import { SegmentedControl } from '../components/SegmentedControl.tsx';
 import { useI18n } from '../i18n/I18nProvider.tsx';
+import { repositoryUrl } from '../repository.ts';
 import { useOptimizationPresence } from '../state/optimization.ts';
 import { useUiStore } from '../state/ui.ts';
 import { HeaderData } from './HeaderData.tsx';
@@ -14,7 +16,9 @@ import styles from './Header.module.css';
 /**
  * The top bar (G5). A tablet keeps one row without the brand name, facts and date range, and
  * gains the right panel's toggle (G2); a phone splits it into the page switch with Run, then the
- * script, data and language (G3, G4). About shares the phone's top row so data stays readable.
+ * script, data and language (G3, G4). About shares the phone's top row so data stays readable; the
+ * GitHub link sits beside the language switch, where the script's name gives way to it, because a
+ * run's progress needs the rest of the top row.
  */
 export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
   const { t, language } = useI18n();
@@ -54,6 +58,14 @@ export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
       onClick={() => setDialogOpen('licenses', true)}
     />
   );
+  const github = (
+    <IconLink
+      className={styles.github}
+      icon="github"
+      label={t('shell.github')}
+      href={repositoryUrl}
+    />
+  );
   const languages = (
     <div className={styles.preferences}>
       <SegmentedControl
@@ -67,6 +79,7 @@ export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
         ]}
       />
       {layout !== 'phone' && about}
+      {layout !== 'phone' && github}
     </div>
   );
   if (layout === 'phone')
@@ -83,6 +96,7 @@ export function Header({ canOptimize = false }: { canOptimize?: boolean }) {
           <HeaderData layout={layout} />
           <div className={styles.spacer} />
           {languages}
+          {github}
         </div>
       </header>
     );

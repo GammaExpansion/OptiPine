@@ -1,6 +1,7 @@
 /** Shell, Backtest, first launch and shared copy. */
 export const en = {
   'shell.licenses': 'About & licenses',
+  'shell.github': 'OptiPine on GitHub',
   'backtest.noScript': 'Open a script first',
   'backtest.noData': 'Select market data first',
   'backtest.compiling': 'Compiling the script',
