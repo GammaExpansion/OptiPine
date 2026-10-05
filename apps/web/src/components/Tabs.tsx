@@ -25,8 +25,14 @@ export function Tabs({
             value={option.value}
             disabled={option.disabled}
           >
-            <span>{option.label}</span>
-            {option.description && <span className={styles.description}>{option.description}</span>}
+            <span className={styles.label} title={option.label}>
+              {option.label}
+            </span>
+            {option.description && (
+              <span className={styles.description} title={option.description}>
+                {option.description}
+              </span>
+            )}
           </Primitive.Trigger>
         ))}
       </Primitive.List>

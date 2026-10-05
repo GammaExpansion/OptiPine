@@ -1,9 +1,10 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { catalogs } from '../src/i18n/catalogs.ts';
 import type { BacktestHooks } from './backtest-hooks.ts';
 import type { OptimizeHooks } from './optimize-hooks.ts';
 import { origins } from './ports.ts';
+import { installMarketFixtures } from './market-fixtures.ts';
 
 const { en, zh } = catalogs;
 
@@ -133,6 +134,48 @@ function layoutProblems() {
   const page = document.scrollingElement!;
   if (page.scrollWidth > window.innerWidth)
     problems.push(`page scrolls by ${page.scrollWidth - window.innerWidth} px`);
+  for (const list of document.querySelectorAll('[role="tablist"]')) {
+    const rect = list.getBoundingClientRect();
+    if (!rect.width || !rect.height || list.closest('[aria-hidden="true"]')) continue;
+    const name = `tablist "${list.getAttribute('aria-label')}"`;
+    const { overflowX, overflowY } = getComputedStyle(list);
+    // Overlay scrollbars must not hide the regression: neither axis may scroll or clip tabs.
+    if (overflowX !== 'visible' || overflowY !== 'visible')
+      problems.push(`${name} has overflow ${overflowX}/${overflowY}`);
+    if (list.scrollWidth > list.clientWidth || list.scrollHeight > list.clientHeight)
+      problems.push(
+        `${name} overflows ${list.clientWidth} × ${list.clientHeight} with ${list.scrollWidth} × ${list.scrollHeight}`,
+      );
+    for (const tab of list.querySelectorAll('[role="tab"]')) {
+      const box = tab.getBoundingClientRect();
+      if (
+        box.left < rect.left - 1 ||
+        box.right > rect.right + 1 ||
+        box.top < rect.top - 1 ||
+        box.bottom > rect.bottom + 1
+      )
+        problems.push(`${name} has a tab outside its bounds`);
+      if (tab.getAttribute('aria-selected') === 'true') {
+        const underline = getComputedStyle(tab, '::after');
+        if (
+          underline.content === 'none' ||
+          parseFloat(underline.height) <= 0 ||
+          parseFloat(underline.top) < 0 ||
+          parseFloat(underline.top) + parseFloat(underline.height) > tab.clientHeight
+        )
+          problems.push(`${name} has an underline outside its tab`);
+      }
+      if (tab.matches(':focus-visible')) {
+        const focus = getComputedStyle(tab);
+        if (
+          focus.outlineStyle === 'none' ||
+          parseFloat(focus.outlineWidth) <= 0 ||
+          parseFloat(focus.outlineOffset) + parseFloat(focus.outlineWidth) > 0
+        )
+          problems.push(`${name} needs a visible inset focus ring`);
+      }
+    }
+  }
   const scrolls = (element: Element) => {
     const { overflowX } = getComputedStyle(element);
     return overflowX === 'auto' || overflowX === 'scroll';
@@ -167,6 +210,21 @@ function layoutProblems() {
       problems.push(`${name} overflows its own box`);
   }
   return problems;
+}
+
+/** Arrow navigation must keep every tab, its active underline and its focus ring in the strip. */
+async function exerciseTabs(page: Page, list: Locator) {
+  const tabs = list.getByRole('tab');
+  const count = await tabs.count();
+  expect(count).toBeGreaterThan(0);
+  await tabs.first().focus();
+  for (let index = 0; index <= count; index++) {
+    const tab = tabs.nth(index % count);
+    await expect(tab).toBeFocused();
+    await expect(tab).toHaveAttribute('aria-selected', 'true');
+    expect(await page.evaluate(layoutProblems), await tab.innerText()).toEqual([]);
+    if (index < count) await tab.press('ArrowRight');
+  }
 }
 
 for (const language of ['en', 'zh'] as const)
@@ -214,6 +272,8 @@ for (const language of ['en', 'zh'] as const)
             ])
               expect((await target.boundingBox())!.height).toBeGreaterThanOrEqual(44);
           }
+        if (size.name === 'phone' && ['B1', 'R1', 'W1'].includes(state))
+          await exerciseTabs(page, page.getByRole('tablist'));
         expect(errors, state).toEqual([]);
       }
     });
@@ -248,6 +308,7 @@ test('a tablet opens the right panel as a drawer, and Escape or a press outside 
   await expect(
     page.getByRole('dialog', { name: 'Right panel' }).getByText('Search ranges'),
   ).toBeVisible();
+  expect(await page.evaluate(layoutProblems)).toEqual([]);
   expect(errors).toEqual([]);
 });
 
@@ -257,13 +318,16 @@ test('a phone switches the Backtest and Optimize tabs (G3, G4)', async ({ page }
   await page.getByRole('tab', { name: 'Report' }).click();
   await expect(page.getByText('Net profit').first()).toBeVisible();
   await page.screenshot({ path: info.outputPath('G3-en.png') });
+  expect(await page.evaluate(layoutProblems)).toEqual([]);
   await page.getByRole('tab', { name: 'Inputs' }).click();
   await expect(page.getByRole('spinbutton', { name: 'Length' })).toBeVisible();
+  expect(await page.evaluate(layoutProblems)).toEqual([]);
   const run = page.getByRole('button', { name: 'Run', exact: true });
   expect((await run.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await page.getByRole('button', { name: 'Optimize', exact: true }).click();
   await page.getByRole('tab', { name: 'Settings' }).click();
   await expect(page.getByRole('region', { name: 'Optimization run' })).toBeVisible();
+  expect(await page.evaluate(layoutProblems)).toEqual([]);
   await page.evaluate(() =>
     (window as unknown as HookWindow).optimizeHooks.runOne('Length', 18, 22),
   );
@@ -272,3 +336,74 @@ test('a phone switches the Backtest and Optimize tabs (G3, G4)', async ({ page }
   expect(await page.evaluate(layoutProblems)).toEqual([]);
   expect(errors).toEqual([]);
 });
+
+for (const language of ['en', 'zh'] as const) {
+  for (const size of sizes)
+    test(`provider tabs fit ${size.name} in ${language} without scrolling`, async ({
+      page,
+    }, info) => {
+      await page.setViewportSize({ width: size.width, height: size.height });
+      await installMarketFixtures(page);
+      const errors = await open(page, language, 'S1');
+      const copy = catalogs[language];
+      await page
+        .getByRole('button', { name: copy['data.marketTitle'], exact: true })
+        .first()
+        .click();
+      const dialog = page.getByRole('dialog', { name: copy['data.marketTitle'] });
+      await expect(dialog).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      await exerciseTabs(page, dialog.getByRole('tablist'));
+      await page.screenshot({ path: info.outputPath(`providers-${size.name}-${language}.png`) });
+      expect(errors).toEqual([]);
+    });
+
+  test(`dock tabs fit the minimum dock and right-panel widths in ${language}`, async ({
+    page,
+  }, info) => {
+    const errors = await open(page, language, 'B1');
+    const copy = catalogs[language];
+    await page.evaluate(() => document.fonts.ready);
+    const separator = page.getByRole('separator', { name: copy['layout.resizeRight'] });
+    const bounds = (await separator.boundingBox())!;
+    await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(1160, bounds.y + bounds.height / 2, { steps: 8 });
+    await page.mouse.up();
+    await expect
+      .poll(() =>
+        page.getByRole('complementary').evaluate((panel) => panel.getBoundingClientRect().width),
+      )
+      .toBe(280);
+    const list = page.getByRole('tablist', { name: copy['dock.tabs'] });
+    // The 45% sidebar maximum leaves more than 600 px at supported desktop widths. Exercise
+    // the dock's minimum contract directly, including its actions and the compile status.
+    await list.locator('..').evaluate((bar) => (bar.style.width = '600px'));
+    await exerciseTabs(page, list);
+    await page.getByRole('tab', { name: copy['dock.code'], exact: true }).click();
+    await expect(page.getByRole('textbox')).toBeVisible();
+    expect(await page.evaluate(layoutProblems)).toEqual([]);
+    await page.screenshot({ path: info.outputPath(`dock-minimum-${language}.png`) });
+    await page.getByRole('button', { name: copy['dock.collapse'], exact: true }).click();
+    expect(await page.evaluate(layoutProblems)).toEqual([]);
+    await page.getByRole('tab', { name: copy['dock.report'], exact: true }).press('Enter');
+    await page.getByRole('button', { name: copy['shell.optimize'], exact: true }).click();
+    // The Optimize right panel has the same minimum; its view switches must also fit.
+    const optimizeSeparator = page.getByRole('separator', { name: copy['layout.resizeRight'] });
+    const optimizeBounds = (await optimizeSeparator.boundingBox())!;
+    await page.mouse.move(
+      optimizeBounds.x + optimizeBounds.width / 2,
+      optimizeBounds.y + optimizeBounds.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(1160, optimizeBounds.y + optimizeBounds.height / 2, { steps: 8 });
+    await page.mouse.up();
+    await expect
+      .poll(() =>
+        page.getByRole('complementary').evaluate((panel) => panel.getBoundingClientRect().width),
+      )
+      .toBe(280);
+    expect(await page.evaluate(layoutProblems)).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+}
