@@ -114,6 +114,68 @@ function analyze(
 const small = searchSpace([3, 10], ['close', 'hl2']);
 const inOut = analyze(small, 'in-out');
 
+test('all profit views and preview origins consume the same marked range amounts', () => {
+  const space = searchSpace([3, 4], ['close']);
+  const groups = sweep(space, 'in-out').map((group) =>
+    group.map((trial, index) => ({
+      ...trial,
+      metrics: {
+        ...trial.metrics,
+        'Performance/Net profit/All USD': index === 0 ? 97 : 7,
+        'Performance/Open PnL/All USD': index === 0 ? -200 : 250,
+      },
+    })),
+  );
+  const records = handleAnalysisRequest({
+    requestId: 1,
+    kind: 'records',
+    input: { groups, objective: 'Net profit' },
+  });
+  assert.equal(records.kind, 'records');
+  if (records.kind !== 'records') return;
+  const analysis = analyzeOptimizer({
+    trials: records.output,
+    resultSpace: space,
+    mode: 'in-out',
+    objective: 'Net profit',
+    direction: 'maximize',
+    constraints: [],
+  });
+  const summary = summarizeOptimizerAnalysis(analysis, summaryRequest([], true));
+  const results = rankResults(summary, groups[0], 'in-out', 'netProfit', 'maximize', axesOf(space));
+  const rows = leaderboardView(results, 0).rows;
+  assert.deepEqual(
+    rows.map((row) => row.inSample.netProfit),
+    [257, -103],
+  );
+  assert.deepEqual(
+    rows.map((row) => row.outOfSample!.netProfit),
+    [257, -103],
+  );
+  assert.equal(leadingSets(results, 20)[0].trialId, groups[0][1].trialId);
+  assert.deepEqual([...scatterView(results, 0)!.inSample], [-103, 257]);
+  assert.deepEqual([...scatterView(results, 0)!.outOfSample], [-103, 257]);
+  assert.equal(distributionView(results).inSample.profitable, 1);
+  assert.equal(distributionView(results).best, 257);
+  assert.deepEqual(
+    curveView(results)!.points.map((point) => point.inSample),
+    [-103, 257],
+  );
+  assert.deepEqual(
+    sensitivityView(results).rows[0].points.map((point) => point.mean),
+    [-103, 257],
+  );
+  assert.equal(rows[0].neighbourhoodMean, 77);
+  assert.equal(selectionOf(results, null, 1)!.row.inSample.netProfit, 257);
+  assert.deepEqual(selectionOf(results, null, 1)!.origin, {
+    kind: 'rank',
+    optimizationId: 1,
+    trialId: groups[0][1].trialId,
+    rank: 1,
+    profits: { inSample: 257, outOfSample: 257 },
+  });
+});
+
 test('R9 preserves sampled values, sensitivity and descriptive Top 20 without a selectable rank', () => {
   const filters: FilterCondition[] = [{ metric: 'trades', operator: '>=', value: 1_000_000 }];
   const filtered = analyze(small, 'in-out', {}, { filters });
@@ -244,7 +306,16 @@ test('the selection bar holds the picked row, or #1, with its origin', () => {
   const picked = selectionOf(results, third, 4)!;
   assert.equal(picked.explicit, true);
   assert.equal(picked.row.rank, 3);
-  assert.deepEqual(picked.origin, { kind: 'rank', optimizationId: 4, trialId: third, rank: 3 });
+  assert.deepEqual(picked.origin, {
+    kind: 'rank',
+    optimizationId: 4,
+    trialId: third,
+    rank: 3,
+    profits: {
+      inSample: picked.row.inSample.netProfit,
+      outOfSample: picked.row.outOfSample!.netProfit,
+    },
+  });
   assert.deepEqual(Object.keys(picked.row.parameters).sort(), ['Length', 'Multiplier', 'Source']);
   const fallback = selectionOf(results, 'gone', 4)!;
   assert.deepEqual([fallback.explicit, fallback.row.rank], [false, 1]);

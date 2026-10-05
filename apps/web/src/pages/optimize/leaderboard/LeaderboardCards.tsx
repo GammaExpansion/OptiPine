@@ -50,8 +50,8 @@ export function LeaderboardCards({
                 ))}
               </span>
               <span className={styles.cardMetrics}>
-                <span>
-                  {t(unvalidated ? 'optimize.leaderboard.net' : 'optimize.leaderboard.in')}
+                <span title={t('optimize.profit.help')}>
+                  {t(unvalidated ? 'optimize.leaderboard.net' : 'optimize.profit.is')}
                   <b
                     data-profit={
                       row.inSample.netProfit == null ? undefined : row.inSample.netProfit >= 0
@@ -61,8 +61,8 @@ export function LeaderboardCards({
                   </b>
                 </span>
                 {!unvalidated && (
-                  <span>
-                    {t('optimize.leaderboard.out')}
+                  <span title={t('optimize.profit.help')}>
+                    {t('optimize.profit.oos')}
                     <b
                       data-profit={
                         row.outOfSample?.netProfit == null

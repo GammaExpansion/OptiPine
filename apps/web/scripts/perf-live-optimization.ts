@@ -154,12 +154,12 @@ async function interact(page: Page, phone: boolean, walk: boolean, late: boolean
       .click(),
   );
   await tab('Settings');
-  await page.getByRole('button', { name: /^By (IS net profit|Profit factor)/ }).click();
+  await page.getByRole('button', { name: /^By (IS profit|Profit factor)/ }).click();
   const objective = page.getByRole('dialog', { name: 'Ranking objective', exact: true });
   await action('objective', () =>
     objective
       .getByRole('radio', {
-        name: late ? 'IS net profit' : 'Profit factor',
+        name: late ? 'IS profit' : 'Profit factor',
         exact: true,
       })
       .click(),

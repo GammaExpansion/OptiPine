@@ -59,10 +59,11 @@ export function roundAxis(
   return { bounds: [ticks[0], ticks.at(-1)!], ticks };
 }
 
-/** Preserve local extrema while bounding the drawing work to two points per CSS pixel. */
+/** Preserve local extrema and an optional exact boundary sample, at two points per pixel + 2. */
 export function envelope(
   values: readonly number[],
   pixels: number,
+  boundary?: number,
 ): { index: number; value: number }[] {
   const step = Math.max(1, Math.ceil(values.length / Math.max(1, pixels)));
   const points: { index: number; value: number }[] = [];
@@ -73,8 +74,17 @@ export function envelope(
       if (values[index] < values[low]) low = index;
       if (values[index] > values[high]) high = index;
     }
-    for (const index of low === high ? [low] : [Math.min(low, high), Math.max(low, high)])
-      points.push({ index, value: values[index] });
+    const indices = low === high ? [low] : [Math.min(low, high), Math.max(low, high)];
+    if (
+      boundary !== undefined &&
+      boundary >= start &&
+      boundary < Math.min(start + step, values.length) &&
+      !indices.includes(boundary)
+    ) {
+      indices.push(boundary);
+      indices.sort((a, b) => a - b);
+    }
+    for (const index of indices) points.push({ index, value: values[index] });
   }
   if (values.length && points.at(-1)?.index !== values.length - 1)
     points.push({ index: values.length - 1, value: values.at(-1)! });

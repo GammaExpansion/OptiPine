@@ -58,7 +58,7 @@ test('None marks results unvalidated and disables the comparison view in both la
   renderInEnglish(<SummaryPanel />);
   expect(screen.getByText('Unvalidated')).toBeVisible();
   expect(screen.getByRole('radio', { name: 'IS vs OOS' })).toBeDisabled();
-  expect(screen.getByText('Top 20 (Net profit, full range)')).toBeVisible();
+  expect(screen.getByText('Top 20 (Profit, full range)')).toBeVisible();
   // The legend names the objective the sets are ranked by (R3).
   act(() => optimization().actions.setObjective('sharpeRatio'));
   expect(screen.getByText('Top 20 (Sharpe ratio, full range)')).toBeVisible();

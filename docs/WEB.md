@@ -210,7 +210,7 @@ live on the Backtest page; for walk-forward it first draws the planned windows.
   **Walk-forward** with IS months, OOS months, step months, and an IS start that rolls forward or
   stays anchored (defaults 12, 3 and 3, rolling). With None, the panel warns that ranks only
   measure fit (O2).
-- **Ranking and filters.** The objective and direction (O7), grouped as Returns (net profit,
+- **Ranking and filters.** The objective and direction (O7), grouped as Returns (profit,
   annualized return, profit factor, average P&L), Risk (max drawdown, Sharpe ratio, Sortino ratio)
   and Robustness (neighbourhood mean, ±1 step); then filter chips such as Trades ≥ 30 and Max DD ≤
   15%, and **+ Condition**. For walk-forward this section is **Per-window selection and filters**.
@@ -229,10 +229,22 @@ live on the Backtest page; for walk-forward it first draws the planned windows.
 
 - **Top 20 equity** (R1): the equity of the 20 best sets in the current ranking and filters, with
   their median and #1 highlighted, over the whole data range with the IS / OOS split marked.
-- **IS vs OOS** (R2): one dot per set, in-sample net against out-of-sample net, profit and loss
+- **IS vs OOS** (R2): one dot per set, in-sample profit against out-of-sample profit, profit and loss
   coloured, the current page of the leaderboard highlighted and sets the filters exclude faded.
   Clicking a dot selects its set.
-- **Distribution** (R2b): histograms of net profit for IS and OOS with the count of profitable sets.
+- **Distribution** (R2b): histograms of profit for IS and OOS with the count of profitable sets.
+
+**Range profit.** IS and OOS profit are marked to market at each range's last bar: the engine's
+closed Net profit plus Open P&L, equal to ending account equity minus initial capital, with no
+commission for an exit that did not happen. The percentage is this amount divided by initial
+capital. Validation None applies the same rule to the full range. This definition applies to
+profit ranking and filters, the leaderboard, map, sensitivity, neighbourhood mean, selection and
+preview summaries, Top 20 order, scatter and distribution. Views label it **IS profit / OOS
+profit** (样本内盈亏 / 样本外盈亏), with the tooltip “Closed and open P&L at the end of the range
+(marked to market)”. Profit factor, Sharpe, win rate, trades, drawdown and other report-derived
+objectives retain their range statistics as before. The single-backtest Report and its CSV keep
+TradingView's closed-trade **Net profit** and show **Open** separately, including when previewing
+an optimization set. Sweeps score the existing metrics; only Top 20 reproduction needs equity.
 
 With validation None, sets are ranked by the objective over the full range, IS vs OOS is not
 available, and the results are marked unvalidated (R3). During a run IS vs OOS and Distribution
@@ -240,7 +252,7 @@ fill in as trials finish; Top 20 equity follows when the run ends, as it reruns 
 
 **Leaderboard.** Sets in ranking order, 13 per page, with how many pass the filters. Every searched
 input is a column while the width allows; the axis inputs come first and the rest collapse into
-"+N" (R4). Then IS and OOS net, profit factor, drawdown and trades. The header repeats the filters
+"+N" (R4). Then IS and OOS profit, profit factor, drawdown and trades. The header repeats the filters
 with **+ Condition** and links to the failed combinations (R11). The selected set, #1 until another
 row is picked, is marked on the parameter map and shown in the selection bar below (3.3).
 

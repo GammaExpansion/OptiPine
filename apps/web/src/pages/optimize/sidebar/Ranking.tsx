@@ -13,7 +13,7 @@ import { AddConditionTrigger } from '../filters/AddConditionTrigger.tsx';
 import { filterLabel } from '../filters/filter-label.ts';
 import styles from './OptimizeSidebar.module.css';
 
-/** Net profit is ranked by its IS figure unless validation is None (O2, O7). */
+/** Range profit is ranked by its IS figure unless validation is None (O2, O7). */
 function objectiveId(objective: ObjectiveId, mode: ValidationMode): MessageId {
   return objective === 'netProfit' && mode !== 'none'
     ? 'optimize.setup.objective.isNetProfit'
@@ -59,7 +59,11 @@ function ObjectiveMenu() {
         list.current?.querySelector<HTMLElement>('[aria-checked="true"]')?.focus();
       }}
       trigger={
-        <button type="button" className={styles.objective}>
+        <button
+          type="button"
+          className={styles.objective}
+          title={settings.objective === 'netProfit' ? t('optimize.profit.help') : undefined}
+        >
           <span>
             <span className={styles.caption}>{t('optimize.setup.by')} </span>
             {t(objectiveId(settings.objective, mode))}
@@ -106,6 +110,7 @@ function ObjectiveMenu() {
                   aria-checked={checked}
                   tabIndex={checked ? 0 : -1}
                   className={styles.objectiveItem}
+                  title={objective === 'netProfit' ? t('optimize.profit.help') : undefined}
                   onClick={() => {
                     actions.setObjective(objective);
                     setOpen(false);

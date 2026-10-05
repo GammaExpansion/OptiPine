@@ -29,15 +29,15 @@ export function SelectionBar() {
           ))}
         </div>
         <div className={styles.metrics}>
-          <span>
-            {t(row.outOfSample ? 'optimize.leaderboard.in' : 'optimize.leaderboard.net')}
+          <span title={t('optimize.profit.help')}>
+            {t(row.outOfSample ? 'optimize.profit.is' : 'optimize.leaderboard.net')}
             <b data-profit={(row.inSample.netProfit ?? 0) >= 0}>
               {number(row.inSample.netProfit, true, 0)}
             </b>
           </span>
           {row.outOfSample && (
-            <span>
-              {t('optimize.leaderboard.out')}
+            <span title={t('optimize.profit.help')}>
+              {t('optimize.profit.oos')}
               <b data-profit={(row.outOfSample.netProfit ?? 0) >= 0}>
                 {number(row.outOfSample.netProfit, true, 0)}
               </b>
