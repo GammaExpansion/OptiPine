@@ -58,7 +58,10 @@ top row, which a run's progress needs, and puts the GitHub link beside the langu
 the script's name gives way to it (G3, G4).
 
 At desktop widths (1280 px and up), the header measures its actual contents after resizing,
-status/language changes and font loading. It uses only as much compaction as needed, in order:
+status/language changes and font loading. All flex items must remain inside the content box,
+with at least 12 px between them. Padding stays 16 px left and 12 px right; the fit measurement
+reserves another 4 px for font-metric differences, restoring the designed padding before paint.
+It uses only as much compaction as needed, in order:
 hide the Run shortcut hint; shorten run facts (Backtest's completed facts move to Run's tooltip
 and accessible description); hide the provider name; hide the OptiPine text but keep the logo;
 then shorten dates to `24-10-05 – 26-10-05`. The symbol's accessible name retains its provider,

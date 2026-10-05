@@ -1,5 +1,63 @@
 # Header width audit
 
+## PR #68 padding correction
+
+Linux CI found a gap in the original criterion: the last header item reached x=1432 at 1440 px
+wide, four pixels inside the original 12 px right padding, even though `scrollWidth` still equalled
+`clientWidth`. The implementation now checks every rendered flex item's bounding box against
+the content edges and requires the full CSS column gap. It includes `display: contents` children
+(the timeframe switch), excluding absolute progress/description elements. Desktop padding stays
+at the designed `0 12px 0 16px`. The hook reserves a named **4 px measurement margin**: at 1440,
+measured content must end by **1424 px**, while the displayed padding edge and shared e2e rule
+remain **1428 px**. Because the growing spacer otherwise fills all spare width, the hook reserves
+the margin during synchronous measurement and restores the original padding before paint.
+Tablet/phone padding is unchanged.
+
+`data.spec.ts` and `header-fit.spec.ts` share `e2e/header-layout.ts`, enforcing the content edges,
+gaps of at least 12 px and no item overlap. The sweep retains its text-overlap/clipping checks.
+The stricter check also caught live English Optimize reaching x=1280.19 at width 1280 (content
+edge 1264), even at the final compaction stage. At the existing facts-compaction stage it now
+uses the existing short count/window copy, preserving the spinner, complete counts and full
+accessible wording. No control or gap shrinks.
+
+Unit regressions hold `scrollWidth === clientWidth` while reproducing x=1432, an overlap, a
+11.75 px gap, and a header offset/border. They verify compaction through a stage that preserves
+the padding/gap. The original measurements below document the first pass; this stricter
+criterion and measurement margin can shift their compaction thresholds.
+
+Verification before moving the margin from CSS to the measurement used Windows Chromium with
+`E2E_BASE_PORT=6874` and two workers. The requested
+`data.spec.ts header-fit.spec.ts --repeat-each=3` passed all **54 tests**, including both languages'
+one-click load on every repetition. Across 720 repeated status observations, all desktop items
+stayed inside the content edges and the minimum gap was **12 px**; no clipping or overlap.
+The unit tests reproduce the CI geometry without depending on Windows font widths. Linux CI
+still needs to run the fix.
+
+The stricter 1280–1600 px sweep (every 10 px, both languages and all status cases, plus the
+original tablet/phone widths) also passed: **1,480 observations**, zero padding intrusion,
+clipping or overlap, minimum desktop gap **12 px**. Repeated artifacts are under
+`apps/web/test-results/header-padding-repeat-final/`; exhaustive measurements are under
+`header-padding-full/`, including each observation's content edges and item gaps.
+
+The full e2e suite passed **136/136** (4.2 minutes), including the exhaustive sweep, with
+`E2E_BASE_PORT=6874 --workers=2`. Web tests passed (218 Node, 484 component; four existing skips),
+as did web typecheck and repository format check. The production/e2e/demo builds passed during
+e2e setup. First-load code is **496,345 bytes**, below the unchanged 497,200-byte budget;
+entry modules are **492,293 bytes**, below 493,150. Changes remain uncommitted.
+
+After restoring the designed padding and moving the 4 px reserve into measurement,
+`header-fit.spec.ts data.spec.ts optimize.spec.ts --repeat-each=2 --workers=2` passed all
+**46 tests** with `E2E_BASE_PORT=6874` (including the matched phone Optimize specs). Across
+**480 status observations**, there was no padding intrusion, clipping, overlap or page overflow;
+the minimum desktop gap was **12 px**. At 1440 px, the displayed right edge was **1428 px**;
+the flex spacer expands again after the synchronous 1424 px measurement. A unit regression
+checks that this spacer does not force unnecessary compaction and that padding is restored.
+Web tests passed again (**218 Node, 484 component**, four existing skips), along with web
+typecheck and repository format check. Artifacts and logs are under
+`apps/web/test-results/header-margin-repeat/` and `header-margin-*.log`.
+
+## Original measurements
+
 Measured on Windows with Playwright Chromium, device scale 1, bundled Barlow / Noto Sans SC
 fonts loaded, October 5, 2026. Desktop begins at 1280 px and has no upper breakpoint; tablet is
 768–1279 px and phone is below 768 px. The desktop audit covers 1280–1600 inclusive every

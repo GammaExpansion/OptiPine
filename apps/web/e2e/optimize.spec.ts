@@ -72,7 +72,7 @@ test('a small grid runs through the Worker pool, goes outdated, and a cancelled 
   await expect(
     block(page).getByRole('progressbar', { name: 'Optimization progress' }),
   ).toBeVisible();
-  await expect(facts(page)).toHaveText(/^Optimizing \d \/ 5$/);
+  await expect(facts(page)).toHaveText(/^Optimizing \d \/ 5$/, { useInnerText: true });
   await expect(facts(page)).toHaveText(/^5 combos, \d+:\d\d$/, {
     useInnerText: true,
     timeout: 60_000,
@@ -94,7 +94,10 @@ test('a small grid runs through the Worker pool, goes outdated, and a cancelled 
   await searchLength(page, 5, 200);
   await block(page).getByRole('button', { name: 'Re-optimize' }).click();
   const progress = block(page).getByRole('progressbar', { name: 'Optimization progress' });
-  await expect(facts(page)).toHaveText(/^Optimizing [1-9]\d* \/ 196$/, { timeout: 60_000 });
+  await expect(facts(page)).toHaveText(/^Optimizing [1-9]\d* \/ 196$/, {
+    useInnerText: true,
+    timeout: 60_000,
+  });
   await expect(progress).not.toHaveAttribute('aria-valuenow', '0');
   await page.screenshot({ path: info.outputPath('O8-en.png') });
   await block(page).getByRole('button', { name: 'Cancel' }).click();
@@ -120,7 +123,7 @@ test('walk-forward runs window by window and lays out W1 (W4, W1)', async ({ pag
   await searchLength(page, 18, 22);
   await expect(block(page)).toContainText('15backtests');
   await block(page).getByRole('button', { name: 'Start' }).click();
-  await expect(facts(page)).toHaveText(/^Window [1-3] \/ 3$/);
+  await expect(facts(page)).toHaveText(/^Window [1-3] \/ 3$/, { useInnerText: true });
   await expect(block(page)).toContainText(/Window [1-3] \/ 3/);
   await page.screenshot({ path: info.outputPath('W4-en.png') });
   await expect(facts(page)).toHaveText(/^3 windows in \d+:\d\d$/, {

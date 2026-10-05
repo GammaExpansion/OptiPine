@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { fixedClock, installMarketFixtures, type MarketFixtureOptions } from './market-fixtures.ts';
 import { readFile } from 'node:fs/promises';
 import { origins } from './ports.ts';
+import { expectHeaderFits } from './header-layout.ts';
 
 const csv =
   'time,open,high,low,close,Volume,plot\n1790935200,100,103,99,102,5,\n1790938800,102,104,101,103,6,\n1790942400,103,105,102,104,7,\n';
@@ -18,23 +19,6 @@ test.afterEach(() => expect(browserErrors).toEqual([]));
 async function openMarket(page: Page) {
   await page.getByRole('button', { name: 'Select market data', exact: true }).first().click();
   return page.getByRole('dialog', { name: 'Select market data' });
-}
-
-async function expectHeaderFits(page: Page) {
-  const layout = await page.getByRole('banner').evaluate((header) => {
-    const children = Array.from(header.children)
-      .map((element) => element.getBoundingClientRect())
-      .filter((rect) => rect.width > 1 && rect.height > 1);
-    return {
-      width: header.clientWidth,
-      scrollWidth: header.scrollWidth,
-      right: children.at(-1)!.right,
-      gaps: children.slice(1).map((rect, index) => rect.left - children[index].right),
-    };
-  });
-  expect(layout.scrollWidth).toBe(layout.width);
-  expect(layout.right).toBeLessThanOrEqual(1428);
-  for (const gap of layout.gaps) expect(gap).toBeGreaterThanOrEqual(12);
 }
 
 for (const language of ['en', 'zh'] as const)

@@ -10,12 +10,69 @@ afterEach(() => {
   Reflect.deleteProperty(document, 'fonts');
 });
 
+test.each(['padding', 'gap', 'offset'] as const)(
+  'compacts when %s fails even though scrollWidth equals clientWidth',
+  (reason) => {
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    );
+    const origin = reason === 'offset' ? 102 : 0;
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1440);
+    vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(1440);
+    vi.spyOn(HTMLElement.prototype, 'clientLeft', 'get').mockReturnValue(origin ? 2 : 0);
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      const stage = Number(this.closest('header')?.dataset.compact);
+      if (this.tagName === 'HEADER') return new DOMRect(origin ? 100 : 0, 0, 1440, 48);
+      if (this.dataset.item === 'first') return new DOMRect(origin + 16, 8, 100, 32);
+      if (this.dataset.item === 'last') {
+        const right = reason === 'gap' ? 1400 : [1432, 1428, 1424][Math.min(stage, 2)];
+        const left = reason === 'gap' ? [110, 127.75, 128][Math.min(stage, 2)] : 128;
+        return new DOMRect(origin + left, 8, right - left, 32);
+      }
+      // The progress line and an assistive-only description never consume flex-row space.
+      return this.dataset.item === 'hidden' ? new DOMRect(0, 0, 1, 1) : new DOMRect(0, 0, 1440, 2);
+    });
+    function Header() {
+      const ref = useRef<HTMLElement>(null);
+      useHeaderFit(ref, 'desktop');
+      return (
+        <header ref={ref} style={{ paddingLeft: 16, paddingRight: 12, columnGap: 12 }}>
+          <div data-item="first" />
+          <span style={{ display: 'contents' }}>
+            <div data-item="last" />
+          </span>
+          <div style={{ position: 'absolute' }} />
+          <div data-item="hidden" />
+        </header>
+      );
+    }
+    const view = render(<Header />);
+    expect(view.container.firstElementChild).toHaveAttribute('data-compact', '2');
+    expect(view.container.firstElementChild).toHaveStyle({ paddingRight: '12px' });
+  },
+);
+
 test('measures the least compact fit again after width, content and font changes; disconnects', () => {
   vi.useFakeTimers();
   let width = 1280;
   let required = [1480, 1410, 1320, 1270, 1200, 1160];
   const stages: number[] = [];
   vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => width);
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    if (this.tagName === 'HEADER') return new DOMRect(0, 0, width, 48);
+    // Like the flex spacer, keep the last item against the current padding edge.
+    const padding = parseFloat(getComputedStyle(this.closest('header')!).paddingRight);
+    expect(padding).toBe(16);
+    return new DOMRect(width - padding - 32, 8, 32, 32);
+  });
   vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockImplementation(function (
     this: HTMLElement,
   ) {
@@ -52,7 +109,11 @@ test('measures the least compact fit again after width, content and font changes
   function Header({ layout }: { layout: Layout }) {
     const ref = useRef<HTMLElement>(null);
     useHeaderFit(ref, layout);
-    return <header ref={ref} />;
+    return (
+      <header ref={ref} style={{ paddingLeft: 16, paddingRight: 12, columnGap: 12 }}>
+        <button />
+      </header>
+    );
   }
   const view = render(<Header layout="desktop" />);
   const header = view.container.firstElementChild!;
@@ -64,6 +125,7 @@ test('measures the least compact fit again after width, content and font changes
     vi.advanceTimersByTime(20);
   });
   expect(header).toHaveAttribute('data-compact', '0');
+  expect(header).toHaveStyle({ paddingRight: '12px' });
   required = [1700, 1680, 1630, 1610, 1590, 1550];
   act(() => {
     mutation();

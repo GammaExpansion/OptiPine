@@ -98,7 +98,8 @@ test('on the Optimize page the header states the run, with Cancel and no main ac
   act(() => {
     run = optimization().actions.start();
   });
-  expect(facts()).toHaveTextContent(/^Optimizing 0 \/ (0|9)$/);
+  expect(screen.getByText(/^Optimizing 0 \/ (0|9)$/)).toBeInTheDocument();
+  expect(screen.getByText(/^0 \/ (0|9)$/)).toHaveAttribute('aria-hidden', 'true');
   fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   await act(() => run);
   expect(facts()).toHaveTextContent('Optimization cancelled');

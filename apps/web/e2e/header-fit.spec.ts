@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 import { installMarketFixtures } from './market-fixtures.ts';
 import { origins } from './ports.ts';
+import { expectHeaderFits, headerLayout } from './header-layout.ts';
 import type { installHeaderFixture } from './header-fixture.ts';
 
 test.use({ baseURL: origins.dev });
@@ -121,7 +122,13 @@ for (const language of ['en', 'zh'] as const) {
             )?.checkVisibility(),
           };
         });
-        rows.push({ language, width, tab, state, ...metrics });
+        const spacing =
+          width < 1280
+            ? null
+            : measureOnly
+              ? await page.getByRole('banner').evaluate(headerLayout)
+              : await expectHeaderFits(page);
+        rows.push({ language, width, tab, state, ...metrics, spacing });
         if (!measureOnly) {
           expect.soft(metrics.overflow, `${width} ${tab} ${state}: header overflow`).toBe(0);
           expect.soft(metrics.pageOverflow, `${width} ${tab} ${state}: page overflow`).toBe(0);

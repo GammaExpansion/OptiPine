@@ -25,21 +25,33 @@ function OptimizeStatusText({ status }: { status: OptimizeStatus }) {
   // A phone has a dedicated line for the counts; the run block and progress bar say the rest.
   const short = useLayout() === 'phone';
   switch (status.kind) {
-    case 'running':
+    case 'running': {
+      const label = (compact: boolean) =>
+        status.window
+          ? t(compact ? 'optimize.run.windowShort' : 'optimize.run.window', {
+              index: status.window.index + 1,
+              count: status.window.count,
+            })
+          : t(compact ? 'optimize.run.counts' : 'optimize.run.running', {
+              done: status.done,
+              total: status.combinations,
+            });
       return (
         <span className={`${styles.status} ${styles.strong}`}>
           <Icon name="spinner" />
-          {status.window
-            ? t(short ? 'optimize.run.windowShort' : 'optimize.run.window', {
-                index: status.window.index + 1,
-                count: status.window.count,
-              })
-            : t(short ? 'optimize.run.counts' : 'optimize.run.running', {
-                done: status.done,
-                total: status.combinations,
-              })}
+          {short ? (
+            label(true)
+          ) : (
+            <span title={label(false)}>
+              <span className={header.longFacts}>{label(false)}</span>
+              <span className={header.shortFacts} aria-hidden="true">
+                {label(true)}
+              </span>
+            </span>
+          )}
         </span>
       );
+    }
     case 'failed':
       return (
         <span className={`${styles.status} ${styles.danger}`}>
