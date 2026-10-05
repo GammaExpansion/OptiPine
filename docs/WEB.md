@@ -60,14 +60,18 @@ the script's name gives way to it (G3, G4).
 At desktop widths (1280 px and up), the header measures its actual contents after resizing,
 status/language changes and font loading. All flex items must remain inside the content box,
 with at least 12 px between them. Padding stays 16 px left and 12 px right; the fit measurement
-reserves another 4 px for font-metric differences, restoring the designed padding before paint.
+requires at least 4 px of slack after subtracting control widths and all gaps from the content box.
+The flexible spacer's expandable width counts as slack. The hook and browser tests share this
+calculation and threshold; measurement never changes padding.
 It uses only as much compaction as needed, in order:
 hide the Run shortcut hint; shorten run facts (Backtest's completed facts move to Run's tooltip
 and accessible description); hide the provider name; hide the OptiPine text but keep the logo;
-then shorten dates to `24-10-05 – 26-10-05`. The symbol's accessible name retains its provider,
-and the date button retains the full dates in its tooltip and accessible name. The page tabs,
-script, symbol, timeframe, Run/Cancel, language, About and GitHub controls keep their size and
-focus order. Progress and errors stay visible; running, cancelled and outdated sentences may
+then shorten dates to `24-10-05 – 26-10-05`. If these levels 0–5 still cannot leave 4 px, level 6
+shortens **Run backtest** to **Run** / **运行**, and level 7 limits the script name to 80 px with
+an ellipsis. These final two steps are available at every desktop width, only when needed.
+The symbol's accessible name retains its provider; full dates, action and script names remain
+accessible and in tooltips. Control heights and focus order stay the same. Progress and errors
+stay visible; running, cancelled and outdated sentences may
 shorten, with their full wording retained in tooltips and for assistive technology. Missing-input
 guidance can move out of the row because the disabled Run action still explains it.
 

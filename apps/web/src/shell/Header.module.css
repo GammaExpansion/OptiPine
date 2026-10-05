@@ -40,11 +40,13 @@
 .facts:has(> :empty) {
   display: none;
 }
-/* Measured stages: shortcut, completed facts, provider, brand, then short dates. */
+/* Measured stages: shortcut, facts, provider, brand, dates, Run label, then script name. */
 .header[data-compact]:not([data-compact='0']) kbd,
 .header[data-compact]:not([data-compact='0'], [data-compact='1']) .longFacts,
 .header[data-compact]:not([data-compact='0'], [data-compact='1'])
-  .backtestFacts:is([data-kind='done'], [data-kind='blocked']) {
+  .backtestFacts:is([data-kind='done'], [data-kind='blocked']),
+.header[data-compact='6'] .runLong,
+.header[data-compact='7'] .runLong {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -57,13 +59,19 @@
   display: none;
 }
 .header[data-compact]:not([data-compact='0'], [data-compact='1'], [data-compact='2']) .provider,
-.header[data-compact='4'] .brand span,
-.header[data-compact='5'] .brand span,
-.header[data-compact='5'] .rangeLong {
+.header[data-compact]:not(
+    [data-compact='0'],
+    [data-compact='1'],
+    [data-compact='2'],
+    [data-compact='3']
+  )
+  .brand
+  span,
+.header[data-compact]:is([data-compact='5'], [data-compact='6'], [data-compact='7']) .rangeLong {
   display: none;
 }
 .header[data-compact]:not([data-compact='0'], [data-compact='1']) .shortFacts,
-.header[data-compact='5'] .rangeShort {
+.header[data-compact]:is([data-compact='5'], [data-compact='6'], [data-compact='7']) .rangeShort {
   display: inline;
 }
 .timeframe {
@@ -88,10 +96,13 @@
   display: none;
 }
 .header[data-narrow='1'] .runShort,
-.header[data-narrow='2'] .runShort {
+.header[data-narrow='2'] .runShort,
+.header[data-compact='6'] .runShort,
+.header[data-compact='7'] .runShort {
   display: inline;
 }
-.header[data-narrow='2'] span[data-loaded] {
+.header[data-narrow='2'] span[data-loaded],
+.header[data-compact='7'] span[data-loaded] {
   max-width: 80px;
 }
 .header[data-layout='tablet'] .facts {

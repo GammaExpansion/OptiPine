@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { act, render } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { useHeaderFit } from './useHeaderFit.ts';
+import { headerFitMarginPx, headerLayout } from './header-layout.ts';
 import type { Layout } from './layout.ts';
 
 afterEach(() => {
@@ -70,7 +71,7 @@ test('measures the least compact fit again after width, content and font changes
     if (this.tagName === 'HEADER') return new DOMRect(0, 0, width, 48);
     // Like the flex spacer, keep the last item against the current padding edge.
     const padding = parseFloat(getComputedStyle(this.closest('header')!).paddingRight);
-    expect(padding).toBe(16);
+    expect(padding).toBe(12);
     return new DOMRect(width - padding - 32, 8, 32, 32);
   });
   vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockImplementation(function (
@@ -165,7 +166,7 @@ test.each([1, 2])('the narrow workbench reserves 24 px using step %s only when n
   ) {
     if (this.tagName === 'HEADER') return new DOMRect(0, 0, width, 80);
     const header = this.closest('header')!;
-    expect(getComputedStyle(header).paddingRight).toBe('32px');
+    expect(getComputedStyle(header).paddingRight).toBe('8px');
     const required = step === 1 ? [1010, 960, 920] : [1045, 985, 945];
     return new DOMRect(14, 8, required[Number(header.dataset.narrow)], 32);
   });
@@ -195,4 +196,43 @@ test.each([1, 2])('the narrow workbench reserves 24 px using step %s only when n
     vi.advanceTimersByTime(20);
   });
   expect(header).not.toHaveAttribute('data-narrow');
+});
+
+test.each([6, 7])('desktop continues past 1 px of slack at level 5 to level %s', (step) => {
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
+  vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1280);
+  vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(1280);
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    if (this.tagName === 'HEADER') return new DOMRect(0, 0, 1280, 48);
+    const level = Number(this.closest('header')!.dataset.compact);
+    const slack = level >= step ? 4 : level === 6 ? 3.99 : 1;
+    // Even a zero-height spacer needs both its gaps included in the slack calculation.
+    return this.dataset.spacer
+      ? new DOMRect(1268 - slack, 24, slack, 0)
+      : new DOMRect(16, 8, 1240 - slack, 32);
+  });
+  function Header() {
+    const ref = useRef<HTMLElement>(null);
+    useHeaderFit(ref, 'desktop');
+    return (
+      <header ref={ref} style={{ paddingLeft: 16, paddingRight: 12, columnGap: 12 }}>
+        <button />
+        <div data-spacer="true" style={{ flexGrow: 1 }} />
+      </header>
+    );
+  }
+  const view = render(<Header />);
+  const header = view.container.firstElementChild as HTMLElement;
+  expect(header).toHaveAttribute('data-compact', String(step));
+  expect(headerLayout(header).slack).toBe(headerFitMarginPx);
+  expect(headerLayout(header).gaps).toEqual([12]);
+  expect(header).toHaveStyle({ paddingRight: '12px' });
 });

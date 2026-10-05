@@ -13,7 +13,7 @@ const widths = process.env.HEADER_WIDTHS
   ? process.env.HEADER_WIDTHS.split(',').map(Number)
   : sweep
     ? [...Array.from({ length: 33 }, (_, i) => 1280 + i * 10), 1024, 1180, 1366, 390]
-    : [1024, 1030, 1040, 1060, 1080, 1100, 1180, 1280, 1366, 1440, 390];
+    : [1024, 1030, 1040, 1060, 1080, 1100, 1180, 1280, 1366, 1440, 1600, 390];
 
 for (const language of ['en', 'zh'] as const) {
   test(`header fits every status (${language})`, async ({ page }, info) => {
@@ -132,18 +132,28 @@ for (const language of ['en', 'zh'] as const) {
               ? await page.getByRole('banner').evaluate(headerLayout)
               : await expectHeaderFits(page);
         rows.push({ language, width, tab, state, ...metrics, spacing });
+        // Linux was up to 6.61 px tighter; 16 px flags all five supplied CI near-misses locally.
+        if (spacing && spacing.slack < 16) {
+          const warning = `${language} ${width} ${tab}/${state}: ${spacing.slack.toFixed(2)} px slack (< 16 px)`;
+          info.annotations.push({ type: 'header-slack', description: warning });
+          console.warn(warning);
+        }
         if (!measureOnly) {
           if (width === 1024)
             expect
               .soft(spacing!.slack, `${tab} ${state}: narrow header reserve`)
               .toBeGreaterThanOrEqual(24);
-          if (metrics.narrow === '2') {
+          if (metrics.narrow === '2' || metrics.compact === '7') {
             const script = page.getByRole('banner').locator('span[data-loaded="true"]');
             await expect(script.locator('..')).toHaveAttribute(
               'title',
               (await script.textContent())!,
             );
           }
+          if (width === 1600)
+            expect
+              .soft(Number(metrics.compact), `${tab} ${state}: ordinary wide header`)
+              .toBeLessThan(6);
           expect.soft(metrics.overflow, `${width} ${tab} ${state}: header overflow`).toBe(0);
           expect.soft(metrics.pageOverflow, `${width} ${tab} ${state}: page overflow`).toBe(0);
           expect.soft(metrics.clipped, `${width} ${tab} ${state}: clipped labels`).toEqual([]);
@@ -183,6 +193,69 @@ for (const language of ['en', 'zh'] as const) {
             path: info.outputPath(`${tab}-${state}-${width}-${language}.png`),
           });
       }
+    }
+    if (!measureOnly && language === 'en') {
+      // Reproduce CI's measured room using the real header, without relying on Windows fonts.
+      // The last case additionally exercises script truncation when Optimize has no Run label.
+      const constrained = [
+        { width: 1280, tab: 'backtest', state: 'compile-error', compact: 5, slack: 1, next: 6 },
+        { width: 1280, tab: 'optimize', state: 'cancelled', compact: 5, slack: 6, next: 5 },
+        { width: 1366, tab: 'backtest', state: 'outdated', compact: 3, slack: 7, next: 3 },
+        { width: 1440, tab: 'backtest', state: 'done', compact: 1, slack: 5, next: 1 },
+        { width: 1440, tab: 'backtest', state: 'preview', compact: 1, slack: 5, next: 1 },
+        { width: 1280, tab: 'optimize', state: 'cancelled', compact: 5, slack: 1, next: 7 },
+      ] as const;
+      const replay = [];
+      const banner = page.getByRole('banner');
+      for (const scenario of constrained) {
+        await banner.evaluate((header) => {
+          header.style.width = '';
+        });
+        await page.setViewportSize({ width: scenario.width, height: 900 });
+        await page.evaluate(({ tab, state }) => {
+          (window as unknown as Hooks).headerFixture(tab, state);
+        }, scenario);
+        await page.evaluate(
+          () =>
+            new Promise<void>((resolve) =>
+              requestAnimationFrame(() =>
+                requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+              ),
+            ),
+        );
+        await banner.evaluate((header, compact) => {
+          header.dataset.compact = String(compact);
+        }, scenario.compact);
+        const original = await banner.evaluate(headerLayout);
+        const lostSpace = Math.ceil(original.slack - scenario.slack);
+        await banner.evaluate((header, width) => {
+          // Integer widths avoid clientWidth/computed-style rounding artifacts in this replay.
+          header.style.width = `${width}px`;
+          document.fonts.dispatchEvent(new Event('loadingdone'));
+        }, original.width - lostSpace);
+        await expect(banner).toHaveAttribute('data-compact', String(scenario.next));
+        const after = await expectHeaderFits(page);
+        if (scenario.next === 6) {
+          const run = banner.getByRole('button', { name: /^Run backtest/ });
+          await expect(run.getByText('Run', { exact: true })).toBeVisible();
+          await expect(run).toHaveAttribute('title', 'Run backtest');
+        }
+        if (scenario.next === 7) {
+          const script = banner.locator('span[data-loaded="true"]');
+          expect((await script.boundingBox())!.width).toBeLessThanOrEqual(80);
+          await expect(script.locator('..')).toHaveAttribute(
+            'title',
+            (await script.textContent())!,
+          );
+        }
+        replay.push({
+          ...scenario,
+          originalSlack: original.slack,
+          replayedSlack: original.slack - lostSpace,
+          after,
+        });
+      }
+      await writeFile(info.outputPath('constrained-slack.json'), JSON.stringify(replay, null, 2));
     }
     await writeFile(info.outputPath('measurements.json'), JSON.stringify(rows, null, 2));
     expect(errors).toEqual([]);

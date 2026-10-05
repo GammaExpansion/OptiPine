@@ -1,23 +1,9 @@
 import { useLayoutEffect, type RefObject } from 'react';
 import type { Layout } from './layout.ts';
+import { headerFitMarginPx, headerLayout } from './header-layout.ts';
 
-/** Four extra pixels at the right leave room for font-metric differences and rounding. */
-const fitMarginPx = 4;
 /** The narrow workbench needs more room for platform font differences than the desktop. */
 const narrowFitMarginPx = 24;
-
-/** display: contents (the timeframe wrapper) contributes its children as flex items. */
-function itemRects(parent: Element): DOMRect[] {
-  return [...parent.children].flatMap((element) => {
-    const style = getComputedStyle(element);
-    if (style.display === 'contents') return itemRects(element);
-    if (style.position === 'absolute' || style.position === 'fixed') return [];
-    // Tablet progress and errors wrap onto their own full-width line.
-    if (style.flexBasis === '100%') return [];
-    const rect = element.getBoundingClientRect();
-    return rect.width > 0 && rect.height > 1 ? [rect] : [];
-  });
-}
 
 /**
  * Pick the least compact workbench header that fits its actual contents, including translated
@@ -36,34 +22,19 @@ export function useHeaderFit(ref: RefObject<HTMLElement | null>, layout: Layout)
         delete header.dataset.narrow;
         return;
       }
-      const margin = narrow ? narrowFitMarginPx : fitMarginPx;
-      const style = getComputedStyle(header);
-      const left = header.getBoundingClientRect().left + header.clientLeft;
-      const contentLeft = left + parseFloat(style.paddingLeft);
-      const contentRight = left + header.clientWidth - parseFloat(style.paddingRight);
-      const gap = parseFloat(style.columnGap);
-      // The growing spacer consumes all spare width. Reserve the margin only while measuring,
-      // then restore the designed padding before paint so a roomy header need not compact.
-      const paddingRight = header.style.paddingRight;
-      header.style.paddingRight = `${parseFloat(style.paddingRight) + margin}px`;
-      try {
-        for (let level = 0; level <= (narrow ? 2 : 5); level++) {
-          header.dataset[narrow ? 'narrow' : 'compact'] = String(level);
-          const items = itemRects(header);
-          // scrollWidth includes padding and misses collisions between flex items.
-          if (
-            header.scrollWidth <= header.clientWidth &&
-            items.every(
-              (rect, index) =>
-                rect.left >= contentLeft &&
-                rect.right <= contentRight - margin &&
-                (index === 0 || rect.left - items[index - 1].right >= gap),
-            )
-          )
-            break;
-        }
-      } finally {
-        header.style.paddingRight = paddingRight;
+      const margin = narrow ? narrowFitMarginPx : headerFitMarginPx;
+      for (let level = 0; level <= (narrow ? 2 : 7); level++) {
+        header.dataset[narrow ? 'narrow' : 'compact'] = String(level);
+        const measured = headerLayout(header);
+        // The spacer's expandable width is spare space; padding never needs to change.
+        if (
+          measured.scrollWidth <= measured.width &&
+          measured.left >= measured.contentLeft &&
+          measured.right <= measured.contentRight &&
+          measured.gaps.every((gap) => gap >= 12) &&
+          measured.slack >= margin
+        )
+          break;
       }
     };
     const schedule = () => {

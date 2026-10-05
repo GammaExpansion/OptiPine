@@ -182,11 +182,9 @@ function BacktestRunControls() {
           ) : (
             <>
               <span className={header.runLong}>{t('shell.runBacktest')}</span>
-              {layout === 'tablet' && (
-                <span className={header.runShort} aria-hidden="true">
-                  {t('shell.run')}
-                </span>
-              )}
+              <span className={header.runShort} aria-hidden="true">
+                {t('shell.run')}
+              </span>
             </>
           )}
         </Button>

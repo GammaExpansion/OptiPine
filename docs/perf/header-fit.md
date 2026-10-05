@@ -1,5 +1,59 @@
 # Header width audit
 
+## PR #68 desktop fallback correction
+
+Baseline `44e94e6` stopped searching at desktop level 5, even when that last level could not
+leave the required 4 px. The supplied Linux CI artifact reports 1 px for English Backtest's
+compile error at 1280. A fresh Windows run with the same recorded fixture has 6.42 px there:
+the missing fallback therefore did not fail locally. Across the five supplied states, Linux
+is **2.61–6.61 px tighter**. The other four CI states already meet the hard 4 px requirement.
+
+The desktop sequence now continues to **level 6: Run**, then **level 7: an 80 px script name**,
+at any desktop width. These levels retain all earlier compaction, full accessible names and
+tooltips. Existing 1024–1279 rules remain unchanged. Normal 1600 px states are explicitly tested
+to stay below level 6. `src/shell/header-layout.ts` now supplies both the production hook and
+e2e with one slack calculation and the same **4 px constant**. The hook directly checks slack,
+padding edges and 12 px gaps; it no longer temporarily changes padding. Unit regressions reject
+1 px and 3.99 px of slack and exercise both final levels, including a zero-height flex spacer.
+
+All values below are CSS pixels. The Windows columns are real, unconstrained browser runs;
+they stay unchanged because every listed state already leaves at least 4 px. Linux-before
+comes from the maintainer's downloaded CI `measurements.json`, not a Linux run in this clone.
+The last column is a Windows browser regression that reduces the header's content width to
+replay CI's available space. Widths round down to whole pixels, leaving up to 1 px less space
+than CI; this avoids fractional `clientWidth` rounding artifacts. It is not a Linux-after result.
+
+| Width | Page/state             | CI before | Windows before | Windows after | CI-space replay before → after |
+| ----: | ---------------------- | --------: | -------------: | ------------: | -----------------------------: |
+|  1280 | backtest/compile-error |         1 |           6.42 |          6.42 |         0.42 → 53.69 (level 6) |
+|  1280 | optimize/cancelled     |         6 |           8.61 |          8.61 |          5.61 → 5.61 (level 5) |
+|  1366 | backtest/outdated      |         7 |          13.61 |         13.61 |          6.61 → 6.61 (level 3) |
+|  1440 | backtest/done          |         5 |           9.08 |          9.08 |          4.08 → 4.08 (level 1) |
+|  1440 | backtest/preview       |         5 |           9.08 |          9.08 |          4.08 → 4.08 (level 1) |
+
+A further Optimize/cancelled replay leaves only 0.61 px at level 5: level 6 cannot shorten a
+nonexistent Run action, so it advances to level 7 and leaves **34.36 px**. The tests also verify
+the visible short Run label, its complete accessible name/tooltip, and the script's full tooltip.
+
+The sweep now annotates and prints a warning below **16 px**, without changing its hard
+4 px assertion or the app's compaction threshold. A 10 px warning would miss the local 13.61 px
+outdated state; 16 px flags all five supplied CI near-misses. The warning therefore covers the
+observed platform difference while roomy headers keep their normal labels.
+
+Before artifacts: `apps/web/test-results/header-fallback-before/`. Final repeated observations
+and six constrained cases per repetition: `header-fallback-repeat/`, in `measurements.json` and
+`constrained-slack.json`. `HEADER_WIDTHS=1280,1366,1440` selects the comparison widths;
+`HEADER_MEASURE=before` records a baseline without fit assertions or the constrained cases.
+
+Validation passed: **46 repeated e2e tests**, web tests (**222 Node, 496 component**; four
+existing skips), web typecheck and repository format, followed by the full **136-test e2e
+suite**. Both browser gates used `E2E_BASE_PORT=6874 --workers=2`; setup rebuilt production,
+e2e and demo. The repeated matrix recorded **960 observations**, none below 4 px, and every
+normal 1600 px state remained at level 0. All five supplied CI cases emitted local warnings.
+The first-load gate passed unchanged: **497,078 code bytes** (limit 497,200), **493,026 entry
+bytes** (limit 493,150). Full-suite artifacts are in `header-fallback-full/`; logs are
+`apps/web/test-results/header-fallback-*.log`. A real Linux-after run remains for CI.
+
 ## PR #68 narrow-width slack correction
 
 Baseline: pushed `b63b95c`, Windows, bundled Barlow / Noto Sans SC, Playwright Chromium,
