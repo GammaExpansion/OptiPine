@@ -630,8 +630,10 @@ for any `zh-*` locale, otherwise English) and remembers the choice.
   entries; components hold no copy, and a test fails on user-facing text outside the catalogs.
 - Package errors arrive as message ids with values. A test checks that both catalogs cover
   `optimizerMessageIds`, `marketDataMessageIds`, `workerMessageIds` and the workflows' own ids.
-- Report metrics use TradingView's English names in both languages. Strategy properties are
-  translated like the rest of the interface, as on the Chinese B13.
+- Report and optimization metrics are translated in the Chinese interface, following the Chinese
+  mock. Strategy properties are translated like the rest of the interface, as on the Chinese B13.
+  Report and trades CSV exports keep TradingView's English column and metric names in both
+  languages, with stable English filenames.
 - Pine source, symbols, the script's own input names and numbers are never translated; numbers
   are formatted the same way in both languages.
 - English copy prefers short forms where space is tight, as the mock does: IS / OOS, combos,

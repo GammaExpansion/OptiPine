@@ -1,38 +1,46 @@
-import { translateId, type Language } from '../../../../i18n/translate.ts';
-import { reportCsv, type StrategyReport } from '../../../../workflows/report.ts';
 import {
-  tradeCsvColumns,
-  tradesCsv,
-  type TradeCsvColumn,
-  type TradeRow,
-} from '../../../../workflows/trades.ts';
+  reportCsv,
+  type ReportCsvHeaders,
+  type StrategyReport,
+} from '../../../../workflows/report.ts';
+import { tradesCsv, type TradeCsvColumn, type TradeRow } from '../../../../workflows/trades.ts';
 
-export function reportExport(report: StrategyReport, language: Language): string {
-  return reportCsv(report, {
-    metric: translateId('report.metric', language),
-    all: translateId('report.all', language),
-    long: translateId('report.long', language),
-    short: translateId('report.short', language),
-    keyFigures: translateId('report.keyFigures', language),
-    returns: translateId('report.returns', language),
-    trades: translateId('report.trades', language),
-    risk: translateId('report.risk', language),
-  });
+/** Export schemas stay English and independent of translated UI copy. */
+const reportHeaders: ReportCsvHeaders = {
+  metric: 'Metric',
+  all: 'All',
+  long: 'Long',
+  short: 'Short',
+  keyFigures: 'Key figures',
+  returns: 'Returns',
+  trades: 'Trades',
+  risk: 'Risk',
+};
+const tradeHeaders: Readonly<Record<TradeCsvColumn, string>> = {
+  number: '#',
+  side: 'Side',
+  entryTime: 'Entry UTC',
+  entryPrice: 'Entry price',
+  exitTime: 'Exit UTC',
+  exitPrice: 'Exit price',
+  quantity: 'Qty',
+  pnl: 'P&L',
+  pnlPercent: 'P&L %',
+  cumulativePnl: 'Cumulative',
+  bars: 'Bars',
+};
+
+export function reportExport(report: StrategyReport): string {
+  return reportCsv(report, reportHeaders);
 }
 
-/** The workflow owns CSV escaping and values; this boundary supplies the localized columns. */
-export function tradeExport(rows: readonly TradeRow[], language: Language): string {
-  const header = Object.fromEntries(
-    tradeCsvColumns.map((column) => [column, translateId(`trades.${column}`, language)]),
-  ) as Record<TradeCsvColumn, string>;
-  return tradesCsv(rows, header, {
-    long: translateId('trades.long', language),
-    short: translateId('trades.short', language),
-  });
+/** The workflow owns CSV escaping and values; this boundary supplies the stable English schema. */
+export function tradeExport(rows: readonly TradeRow[]): string {
+  return tradesCsv(rows, tradeHeaders, { long: 'Long', short: 'Short' });
 }
 
 export function downloadCsv(csv: string, filename: string): void {
-  // A BOM lets spreadsheet applications detect Chinese headers as UTF-8.
+  // A BOM lets spreadsheet applications detect UTF-8 even when data contains non-ASCII text.
   const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' }));
   const link = document.createElement('a');
   link.href = url;

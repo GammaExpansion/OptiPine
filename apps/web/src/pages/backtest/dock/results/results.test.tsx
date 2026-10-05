@@ -143,7 +143,7 @@ test('CSV actions belong to the active tab dock host and disappear when collapse
   }
 });
 
-test('report renders all groups, keeps English metric names in Chinese, and restores stale inputs', async () => {
+test('report renders all groups, translates metric names in Chinese, and restores stale inputs', async () => {
   await run();
   render(
     <I18nProvider>
@@ -165,9 +165,9 @@ test('report renders all groups, keeps English metric names in Chinese, and rest
   fireEvent.click(screen.getByRole('button', { name: 'Reset to 5' }));
   expect(screen.queryByRole('status')).toBeNull();
   act(() => uiStore.getState().setLanguage('zh'));
-  expect(
-    within(screen.getByRole('table', { name: '收益' })).getByText('Gross profit'),
-  ).toBeVisible();
+  expect(within(screen.getByRole('table', { name: '收益' })).getByText('毛利润')).toBeVisible();
+  expect(screen.getAllByText('最大回撤（盘中）')).toHaveLength(2);
+  expect(screen.queryByText('Gross profit')).toBeNull();
 });
 
 test('the outdated banner reads the result values as the inputs show them (B9)', async () => {
