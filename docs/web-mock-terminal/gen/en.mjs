@@ -146,7 +146,6 @@ const D = {
   '颜色越深，当日盈亏越大': 'Darker means a larger daily P&amp;L',
   金额: 'Amount',
   百分比: 'Percent',
-  '最大回撤 −7.81%': 'Max drawdown −7.81%',
   '最高 124,910': 'Peak 124,910',
   每日: 'Daily',
   盈亏: 'P&amp;L',
@@ -325,7 +324,6 @@ const D = {
   'Apple Inc.，NASDAQ': 'Apple Inc., NASDAQ',
   'NASDAQ 常规时段，502 个交易日': 'NASDAQ regular session, 502 trading days',
   '2023-05-05 – 2025-05-02，America/New_York': '2023-05-05 – 2025-05-02, America/New_York',
-  '日内周期仅支持最近 730 天。': 'Intraday timeframes cover only the last 730 days.',
   '价格采用数据源 OHLC，不另行复权。': 'Prices are the source OHLC, not adjusted.',
   'Yahoo 未提供交易规则：最小变动价位按报价精度估算，合约乘数与最小下单量默认为 1，请在使用前核对。':
     'Yahoo does not provide trading rules: the tick size is estimated from the quote precision, and the point value and min order size default to 1. Check them before use.',
@@ -786,7 +784,7 @@ Object.assign(D, {
   '每个点是一组参数，共 2,214 组': '1 dot = 1 set · 2,214 total',
   '每个点是一组参数，已完成 1,373 组': '1 dot = 1 set · 1,373 done',
   '排行前 20 组（按当前排序与条件）': 'Top 20 (current ranking)',
-  '排行前 20 组（全区间净利润）': 'Top 20 (full-range net)',
+  '排行前 20 组（全区间净利润）': 'Top 20 (Net profit, full range)',
   '前 20 组权益': 'Top 20 equity',
   净利润分布: 'Distribution',
   '组；当前第 2、10、12、13 名将移出排行。': 'combos; ranks 2, 10, 12 and 13 would drop out.',
@@ -844,6 +842,13 @@ Object.assign(D, {
   '网格共 398,520 组，超出 20,000 组上限，已切换为随机采样。':
     'Grid of 398,520 combos exceeds the 20,000 limit; switched to random sampling.',
   查看这组参数的回测: 'View backtest',
+  关于与许可证: 'About & licenses',
+  '最大回撤（盘中）': 'Max drawdown (intrabar)',
+  '最大回撤（收盘）': 'Max drawdown (bar close)',
+  '最大回撤（收盘）−7.81%': 'Max drawdown (bar close) −7.81%',
+  已被条件排除: 'Excluded by filters',
+  'Yahoo 历史范围：1小时为 730 天；较短日内周期为 60 天；日线可获取全部历史。':
+    'Yahoo history: 730 days for 1h; 60 days for shorter intraday timeframes; full daily history.',
 });
 
 const PATTERNS = [
@@ -928,6 +933,8 @@ const RAW_BOARD = {
       '<button class="dtab" style="padding: 0 10px">',
     ],
   ],
+  // The tablet report table is 312px wide: the intrabar qualifier gets its short form there.
+  G2: [['<td>最大回撤（盘中）</td>', '<td>Max DD (intrabar)</td>']],
   S7: [['<span class="lab">代码</span>', '<span class="lab">Symbol</span>']],
   S8: [['<span class="lab">代码</span>', '<span class="lab">Symbol</span>']],
   O7: [['<span class="t2">方向</span>', '<span class="t2">Direction</span>']],
