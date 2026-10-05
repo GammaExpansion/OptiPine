@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { catalogs } from '../src/i18n/catalogs.ts';
 import { origins } from './ports.ts';
 
 for (const language of ['en', 'zh'] as const) {
@@ -16,13 +17,41 @@ for (const language of ['en', 'zh'] as const) {
           .getByRole('radiogroup', { name: 'Language' })
           .getByRole('radio', { name: '中' })
           .click();
+      const copy = catalogs[language];
       const trigger = page.getByRole('button', {
-        name: language === 'en' ? 'Licenses' : '许可证',
+        name: copy['shell.licenses'],
         exact: true,
       });
-      await trigger.click();
+      await expect(trigger).toHaveText('');
+      await expect(trigger).toHaveAttribute('aria-haspopup', 'dialog');
+      await trigger.hover();
+      await expect(page.getByRole('tooltip')).toHaveText(copy['shell.licenses']);
+      await page.mouse.move(0, 200);
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('tooltip')).not.toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      await page.getByRole('banner').screenshot({
+        path: info.outputPath(`header-${language}-${width}.png`),
+      });
+      if (width === 390) {
+        await page.getByRole('button', { name: copy['shell.backtest'], exact: true }).focus();
+        for (
+          let step = 0;
+          step < 8 && !(await trigger.evaluate((el) => el.matches(':focus')));
+          step++
+        )
+          await page.keyboard.press('Tab');
+      } else {
+        await page
+          .getByRole('radiogroup', { name: copy['shell.language'] })
+          .getByRole('radio', { checked: true })
+          .focus();
+        await page.keyboard.press('Tab');
+      }
+      await expect(trigger).toBeFocused();
+      await page.keyboard.press('Enter');
       const dialog = page.getByRole('dialog', {
-        name: language === 'en' ? 'About & licenses' : '关于与许可证',
+        name: copy['licenses.title'],
       });
       await expect(dialog).toBeVisible();
       await expect(dialog).toContainText(

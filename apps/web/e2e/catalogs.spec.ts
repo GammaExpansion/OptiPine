@@ -116,7 +116,7 @@ test('switching language during an area first load renders only the newly select
     await route.continue();
   });
   await page.goto(origins.dev);
-  await expect(page.getByRole('button', { name: 'Licenses', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'About & licenses', exact: true })).toBeVisible();
   await openArea(page, 'licenses');
   await requested.promise;
   await switchLanguage(page, 'zh');

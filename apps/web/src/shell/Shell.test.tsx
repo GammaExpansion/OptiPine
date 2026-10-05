@@ -34,11 +34,11 @@ afterEach(() => {
 });
 
 test.each([
-  ['en', 'Licenses', 'About & licenses'],
-  ['zh', '许可证', '关于与许可证'],
+  ['en', 'About & licenses'],
+  ['zh', '关于与许可证'],
 ] as const)(
-  'the header opens licenses and restores focus on close (%s)',
-  async (language, label, title) => {
+  'the header info button opens licenses and restores focus on close (%s)',
+  async (language, label) => {
     uiStore.setState({ language });
     const user = userEvent.setup();
     await user.pointer({ coords: { clientX: 500, clientY: 500 } });
@@ -48,8 +48,13 @@ test.each([
       </I18nProvider>,
     );
     const trigger = screen.getByRole('button', { name: label });
+    expect(trigger).toHaveAttribute('aria-haspopup', 'dialog');
+    expect(trigger.textContent).toBe('');
+    expect(trigger.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+    await user.hover(trigger);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(label);
     await user.click(trigger);
-    const dialog = await screen.findByRole('dialog', { name: title });
+    const dialog = await screen.findByRole('dialog', { name: label });
     expect(within(dialog).getByRole('link', { name: 'TradingView' })).toHaveAttribute(
       'href',
       'https://www.tradingview.com/',

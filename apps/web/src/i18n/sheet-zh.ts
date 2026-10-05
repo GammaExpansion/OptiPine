@@ -252,6 +252,7 @@ export const sheetZh = {
   'sheet.icon.paste': '粘贴',
   'sheet.icon.maximize': '最大化',
   'sheet.icon.panel': '面板',
+  'sheet.icon.info': '信息',
   'sheet.icon.logo': 'OptiPine',
   'charts.devTitle': 'OptiPine · 图表工作台',
   'charts.devExample': '示例策略',

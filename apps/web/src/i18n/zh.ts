@@ -2,7 +2,7 @@ import type { en } from './en.ts';
 
 /** Shell, Backtest, first launch and shared copy. */
 export const zh = {
-  'shell.licenses': '许可证',
+  'shell.licenses': '关于与许可证',
   'backtest.noScript': '请先打开脚本',
   'backtest.noData': '请先选择行情',
   'backtest.compiling': '正在编译脚本',
