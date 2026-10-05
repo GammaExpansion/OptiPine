@@ -31,6 +31,8 @@ for (const language of ['en', 'zh'] as const) {
     act(() => {
       uiStore.getState().setLanguage(language);
       const { actions } = optimization();
+      // Inspect the full grid for this precision test, independent of the initial page capacity.
+      actions.setPageSize(100);
       actions.setRange('Length', { from: 2, to: 3, step: 1 });
       actions.setSearched('Multiplier', true);
       actions.setRange('Multiplier', { from: 1.5, to: 1.75, step: 0.25 });

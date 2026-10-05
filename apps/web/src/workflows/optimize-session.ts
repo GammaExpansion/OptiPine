@@ -67,7 +67,9 @@ import {
   failedCombination,
   filterDiagnosis,
   leadingSets,
-  leaderboardPageSize,
+  leaderboardPageForRank,
+  defaultLeaderboardPageSize,
+  normalizeLeaderboardPageSize,
   leaderboardView,
   mapView,
   medianCurve,
@@ -175,6 +177,8 @@ export interface ViewSettings {
   readonly surface: MapSurface;
   readonly selectedTrialId: string | null;
   readonly page: number;
+  /** Whole leaderboard rows that fit the currently rendered body. */
+  readonly pageSize: number;
   /** The selected walk-forward window; null selects the last one that ran a set (W1). */
   readonly window: number | null;
   readonly windowSurface: WindowMapSurface;
@@ -529,6 +533,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
     surface: 'in',
     selectedTrialId: null,
     page: 0,
+    pageSize: defaultLeaderboardPageSize,
     window: null,
     windowSurface: 'window',
     tolerance: defaultTolerance,
@@ -789,13 +794,26 @@ export class OptimizationSession implements Observable<OptimizationState> {
     this.#setView({ surface });
   }
 
+  /** Update the rendered leaderboard capacity, preserving its leading or selected set. */
+  setPageSize(pageSize: number): void {
+    if (!Number.isFinite(pageSize)) return;
+    const next = normalizeLeaderboardPageSize(pageSize);
+    if (next === this.#viewSettings.pageSize) return;
+    const views = this.#views();
+    const selection = views?.selection;
+    const anchor = selection?.explicit
+      ? selection.row.rank
+      : (views?.leaderboard.rows[0]?.rank ?? 1);
+    this.#setView({ pageSize: next, page: leaderboardPageForRank(anchor, next) });
+  }
+
   /** Select a set (3.3): reveal its leaderboard page and move the map; null returns to #1. */
   select(trialId: string | null): void {
     this.#viewSettings = { ...this.#viewSettings, selectedTrialId: trialId };
     const selection = this.#views()?.selection;
     this.#setView(
       selection?.explicit
-        ? { page: Math.floor((selection.row.rank - 1) / leaderboardPageSize) }
+        ? { page: leaderboardPageForRank(selection.row.rank, this.#viewSettings.pageSize) }
         : {},
     );
   }
@@ -1674,6 +1692,7 @@ export class OptimizationSession implements Observable<OptimizationState> {
       settings.slices,
       settings.smooth,
       settings.selectedTrialId,
+      settings.pageSize,
     ]);
   }
 
@@ -2011,14 +2030,14 @@ export class OptimizationSession implements Observable<OptimizationState> {
       failed,
       pending,
       mapError: slot.summary.error ?? null,
-      leaderboard: leaderboardView(ranked, settings.page),
+      leaderboard: leaderboardView(ranked, settings.page, settings.pageSize),
       selection: selectionOf(ranked, settings.selectedTrialId, live ? live.id : results!.id),
-      scatter: scatterView(ranked, settings.page),
+      scatter: scatterView(ranked, settings.page, settings.pageSize),
       distribution: distributionView(ranked),
       filterDiagnosis: filterDiagnosis(ranked, settings.filters),
       draftPreview:
         settings.draft && slot.draft && sameJson(slot.draft, settings.draft)
-          ? draftPreview(ranked, settings.draft, settings.page)
+          ? draftPreview(ranked, settings.draft, settings.page, settings.pageSize)
           : null,
       map: mapView(ranked, settings.surface, settings.slices),
       curve: curveView(ranked),

@@ -154,7 +154,17 @@ for (const language of ['en', 'zh'] as const) {
       (await summary.boundingBox())!.y + (await summary.boundingBox())!.height,
     ).toBeLessThanOrEqual((await tabs.boundingBox())!.y + 1);
     const cards = page.getByRole('list', { name: en ? 'Leaderboard' : '排行', exact: true });
-    await expect(cards.getByRole('button')).toHaveCount(13);
+    await expect
+      .poll(() =>
+        page
+          .getByTestId('leaderboard-body')
+          .evaluate((body) => body.scrollHeight <= body.clientHeight),
+      )
+      .toBe(true);
+    const pageSize = await page.evaluate(
+      () => (window as unknown as PhoneWindow).phoneOptimization().viewSettings.pageSize,
+    );
+    await expect(cards.getByRole('button')).toHaveCount(pageSize);
     await expect(page.getByText(en ? '18 / 18 pass' : '18 / 18 符合')).toBeVisible();
     const card = cards.getByRole('button').nth(1);
     await expect(card).toContainText(/Length \dMultiplier \d\.\d{2}Source (close|hl2)/);
@@ -175,7 +185,7 @@ for (const language of ['en', 'zh'] as const) {
     expect(await clippedLabels(page.locator('body'))).toEqual([]);
     await page.screenshot({ path: info.outputPath(`G4-${language}.png`) });
     await page.getByRole('button', { name: en ? 'Next page' : '下一页' }).click();
-    await expect(cards.getByRole('button')).toHaveCount(5);
+    await expect(cards.getByRole('button')).toHaveCount(Math.min(pageSize, 18 - pageSize));
     await cards.getByRole('button').first().click();
     await expect(cards.getByRole('button').first()).toHaveAttribute('aria-pressed', 'true');
     await page.getByRole('button', { name: en ? 'Previous page' : '上一页' }).click();

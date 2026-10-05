@@ -3,7 +3,7 @@ import { useI18n } from '../../../i18n/I18nProvider.tsx';
 import { formatDate, formatNumber } from '../../../i18n/translate.ts';
 import { getOptimizationStore } from '../../../state/optimization.ts';
 import type { TopEquity } from '../../../workflows/optimize-session.ts';
-import { leaderboardPageSize, type ScatterView } from '../../../workflows/optimize-views.ts';
+import { leaderboardPageForRank, type ScatterView } from '../../../workflows/optimize-views.ts';
 import { useResultFormat } from '../leaderboard/useResultFormat.ts';
 import {
   envelope,
@@ -25,7 +25,8 @@ type Chart = { kind: 'equity'; equity: TopEquity } | { kind: 'scatter'; scatter:
 export function selectScatterRank(rank: number) {
   if (rank <= 0) return;
   const store = getOptimizationStore();
-  store.getState().actions.setPage(Math.floor((rank - 1) / leaderboardPageSize));
+  const { actions, viewSettings } = store.getState();
+  actions.setPage(leaderboardPageForRank(rank, viewSettings.pageSize));
   const row = store.getState().views?.leaderboard.rows.find((item) => item.rank === rank);
   if (row) store.getState().actions.select(row.trialId);
 }

@@ -37,6 +37,7 @@ async function results(none = false) {
     actions.setRange('Length', { from: 2, to: 4, step: 1 });
     actions.setRange('Multiplier', { from: 1.5, to: 2, step: 0.25 });
     actions.setSearched('Fixed', false);
+    actions.setPageSize(6);
     if (none) actions.setValidation({ mode: 'none' });
   });
   await runOptimization();
@@ -50,7 +51,7 @@ for (const language of ['en', 'zh'] as const) {
     const user = userEvent.setup();
     renderInEnglish(<LeaderboardPanel />);
     const list = screen.getByRole('list', { name: en ? 'Leaderboard' : '排行' });
-    expect(within(list).getAllByRole('button')).toHaveLength(13);
+    expect(within(list).getAllByRole('button')).toHaveLength(6);
     expect(screen.queryByRole('table')).toBeNull();
     const row = optimization().views!.leaderboard.rows[1];
     const card = within(list).getAllByRole('button')[1];
@@ -66,15 +67,15 @@ for (const language of ['en', 'zh'] as const) {
     await waitFor(() => expect(card).toHaveAttribute('aria-pressed', 'true'));
     expect(optimization().views?.selection?.row.trialId).toBe(row.trialId);
     await user.click(screen.getByRole('button', { name: en ? 'Next page' : '下一页' }));
-    expect(within(list).getAllByRole('button')).toHaveLength(5);
+    expect(within(list).getAllByRole('button')).toHaveLength(6);
     const lastPageCard = within(list).getAllByRole('button')[0];
     lastPageCard.focus();
     await user.keyboard('{Enter}');
-    await waitFor(() => expect(optimization().views?.selection?.row.rank).toBe(14));
+    await waitFor(() => expect(optimization().views?.selection?.row.rank).toBe(7));
     expect(lastPageCard).toHaveAttribute('aria-pressed', 'true');
     await user.click(screen.getByRole('button', { name: en ? 'Previous page' : '上一页' }));
-    expect(within(list).getAllByRole('button')).toHaveLength(13);
-    expect(optimization().views?.selection?.row.rank).toBe(14);
+    expect(within(list).getAllByRole('button')).toHaveLength(6);
+    expect(optimization().views?.selection?.row.rank).toBe(7);
   });
 }
 

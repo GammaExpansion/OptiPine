@@ -29,6 +29,7 @@ function createOptimizationStore(services: AppServices, session: OptimizationSes
     setSurface: session.setSurface.bind(session),
     select: session.select.bind(session),
     setPage: session.setPage.bind(session),
+    setPageSize: session.setPageSize.bind(session),
     selectWindow: session.selectWindow.bind(session),
     setWindowMapSurface: session.setWindowMapSurface.bind(session),
     setStabilityTolerance: session.setStabilityTolerance.bind(session),
