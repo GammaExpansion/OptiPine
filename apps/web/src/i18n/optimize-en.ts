@@ -129,11 +129,11 @@ export const optimizeEn = {
   'optimize.emptyHintSettings':
     'Set the search ranges and validation under Settings. After a run, the summary appears above the tabs, and the leaderboard, parameter map and sensitivity in their tabs.',
   'optimize.emptyHintWalkForward':
-    'Set the search ranges and the walk-forward windows on the right. After a run, the stitched OOS equity, the results of each window and their stability appear here.',
+    'Set the search ranges and the walk-forward windows on the right. After a run, the per-window equity, the results of each window and their stability appear here.',
   'optimize.emptyHintPanelWalkForward':
-    'Set the search ranges and the walk-forward windows in the right panel, from the top bar. After a run, the stitched OOS equity, the results of each window and their stability appear here.',
+    'Set the search ranges and the walk-forward windows in the right panel, from the top bar. After a run, the per-window equity, the results of each window and their stability appear here.',
   'optimize.emptyHintSettingsWalkForward':
-    'Set the search ranges and the walk-forward windows under Settings. After a run, the stitched OOS equity appears above the tabs, and the windows and their stability in their tabs.',
+    'Set the search ranges and the walk-forward windows under Settings. After a run, the per-window equity appears above the tabs, and the windows and their stability in their tabs.',
   'optimize.singleSetHint':
     'Chart, equity, report and trades of one parameter set are on the Backtest page.',
   'optimize.dataRange': 'Data range',
@@ -422,6 +422,9 @@ export const optimizeEn = {
   'optimize.selection.wait': 'Wait for the optimization to finish',
   'optimize.wfResults.isAnchored': 'IS (anchored)',
   'optimize.wfResults.summary': 'Stitched OOS equity',
+  'optimize.wfResults.summaryWindows': 'Windows and equity',
+  'optimize.wfResults.windowsHint':
+    'Dashed: IS equity · solid: OOS equity · right: OOS profit and equity',
   'optimize.wfResults.perWindow': 'Per window',
   'optimize.wfResults.stitched': 'Stitched',
   'optimize.wfResults.view': 'Window view',

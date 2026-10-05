@@ -148,7 +148,7 @@ async function interact(page: Page, phone: boolean, walk: boolean, late: boolean
   await action('summary', () =>
     page
       .getByRole('radio', {
-        name: walk ? (late ? 'Stitched' : 'Per window') : late ? 'Distribution' : 'IS vs OOS',
+        name: walk ? (late ? 'Per window' : 'Stitched') : late ? 'Distribution' : 'IS vs OOS',
         exact: true,
       })
       .click(),

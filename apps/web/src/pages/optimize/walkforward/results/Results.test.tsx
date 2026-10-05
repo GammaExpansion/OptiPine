@@ -33,11 +33,11 @@ const panels = () =>
     </>,
   );
 
-it('renders W1 totals and fixed parameters in both languages, switching W2 without changing results', () => {
+it('opens on Per window and switches both ways without changing results or totals', () => {
   installResultsFixture();
   const view = state().walkForward;
   panels();
-  const summary = screen.getByRole('region', { name: 'Stitched OOS equity' });
+  const summary = screen.getByRole('region', { name: 'Windows and equity' });
   expect(within(summary).getByText('+7,600')).toBeInTheDocument();
   expect(within(summary).getByText('+7,600')).toHaveAttribute(
     'title',
@@ -47,12 +47,20 @@ it('renders W1 totals and fixed parameters in both languages, switching W2 witho
     'title',
     "Equity change at each window's last bar, including open P&L without an unexecuted exit fee",
   );
-  expect(within(summary).getByText('5 / 6')).toBeInTheDocument();
+  expect(within(summary).queryByText('5 / 6')).not.toBeInTheDocument();
   expect(screen.getByText('5 / 6 profitable')).toBeInTheDocument();
   expect(screen.getByText('Part')).toBeInTheDocument();
   expect(
     screen.getByRole('region', { name: 'Fixed parameters for every window' }),
   ).toHaveTextContent('Length27Multiplier2.00SourcecloseUse trailing stopoff');
+  expect(screen.getByRole('radio', { name: 'Per window' })).toHaveAttribute('aria-checked', 'true');
+  expect(screen.getByRole('img', { name: '6 windows with IS and OOS equity' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('radio', { name: 'Stitched' }));
+  expect(within(summary).getByText('5 / 6')).toBeInTheDocument();
+  expect(screen.getByRole('radio', { name: 'Stitched' })).toHaveAttribute('aria-checked', 'true');
+  expect(
+    screen.getByRole('img', { name: '6 windows and stitched OOS equity' }),
+  ).toBeInTheDocument();
   fireEvent.click(screen.getByRole('radio', { name: 'Per window' }));
   expect(screen.getByRole('img', { name: '6 windows with IS and OOS equity' })).toBeInTheDocument();
   expect(state().walkForward).toBe(view);
@@ -67,6 +75,35 @@ it('renders W1 totals and fixed parameters in both languages, switching W2 witho
   expect(screen.getByRole('region', { name: '选定窗口' })).toHaveTextContent('26，2.25，close，关');
 });
 
+it.each(['en', 'zh'] as const)('uses each view’s title, facts and legend hint (%s)', (language) => {
+  installResultsFixture();
+  panels();
+  act(() => uiStore.getState().setLanguage(language));
+  const english = language === 'en';
+  const title = english ? 'Windows and equity' : '窗口与权益';
+  const hint = english
+    ? 'Dashed: IS equity · solid: OOS equity · right: OOS profit and equity'
+    : '条内虚线为选中参数的样本内权益，实线为样本外权益；右侧为样本外盈亏与累计权益';
+  const summary = screen.getByRole('region', { name: title });
+  expect(within(summary).getByRole('heading', { name: title })).toBeInTheDocument();
+  expect(within(summary).getByText('+7,600')).toBeInTheDocument();
+  expect(summary).not.toHaveTextContent('WFE');
+  expect(summary).not.toHaveTextContent(english ? 'Profitable windows' : '盈利窗口');
+  expect(within(summary).getByText(hint)).toBeInTheDocument();
+  fireEvent.click(within(summary).getByRole('radio', { name: english ? 'Stitched' : '拼接' }));
+  expect(summary).toHaveAccessibleName(english ? 'Stitched OOS equity' : '拼接样本外权益');
+  expect(within(summary).getByRole('heading')).toHaveTextContent(
+    english ? 'Stitched OOS equity' : '拼接样本外权益',
+  );
+  expect(summary).toHaveTextContent('WFE 0.54');
+  expect(summary).toHaveTextContent(english ? 'Profitable windows 5 / 6' : '盈利窗口 5 / 6');
+  expect(within(summary).queryByText(hint)).not.toBeInTheDocument();
+  fireEvent.click(within(summary).getByRole('radio', { name: english ? 'Per window' : '分窗口' }));
+  expect(summary).toHaveAccessibleName(title);
+  expect(within(summary).getByRole('heading')).toHaveTextContent(title);
+  expect(summary).not.toHaveTextContent('WFE');
+});
+
 it('renders unavailable WFE as a neutral dash in the summary, table and selection in both languages', () => {
   const fixture = resultsFixture();
   const windows = fixture.windows.map((window) => ({ ...window, wfe: null }));
@@ -77,6 +114,7 @@ it('renders unavailable WFE as a neutral dash in the summary, table and selectio
     selection: { ...fixture.selection!, window: windows[fixture.selection!.window.plan.index] },
   });
   panels();
+  fireEvent.click(screen.getByRole('radio', { name: 'Stitched' }));
   for (const language of ['en', 'zh'] as const) {
     act(() => uiStore.getState().setLanguage(language));
     const summary = screen.getByRole('region', {
@@ -115,7 +153,7 @@ it('selects through rows and lanes, and delegates preview/apply without mutating
     action: 'applyFixedParameters',
     value: state().walkForward?.fixed,
   });
-  const lane = within(screen.getByRole('region', { name: 'Stitched OOS equity' })).getByRole(
+  const lane = within(screen.getByRole('region', { name: 'Windows and equity' })).getByRole(
     'button',
     { name: 'Select W6' },
   );
@@ -148,6 +186,15 @@ it('delegates ranking and filter changes and uses the shared condition trigger',
 it('keeps live finished windows visible, withholds final totals and fixed set, then fills W1', () => {
   const hook = installResultsFixture(resultsFixture('live'));
   panels();
+  expect(screen.getByRole('radio', { name: 'Per window' })).toHaveAttribute('aria-checked', 'true');
+  const summary = screen.getByRole('region', { name: 'Windows and equity' });
+  for (const mode of ['Stitched', 'Per window']) {
+    fireEvent.click(within(summary).getByRole('radio', { name: mode }));
+    expect(within(summary).getByRole('status')).toHaveTextContent('2 / 6 windows done');
+    expect(summary).not.toHaveTextContent('WFE');
+    expect(summary).not.toHaveTextContent('Profitable windows');
+    expect(summary).not.toHaveTextContent('+3,430');
+  }
   expect(screen.getByText('2 / 6 windows done')).toBeInTheDocument();
   expect(screen.getByText('Totals appear when every window is done')).toBeInTheDocument();
   expect(screen.getByText('+2,310')).toBeInTheDocument();
@@ -164,6 +211,7 @@ it('keeps live finished windows visible, withholds final totals and fixed set, t
   });
   expect(screen.getByRole('button', { name: 'View backtest' })).toBeEnabled();
   act(() => hook.publish(resultsFixture()));
+  expect(screen.getByRole('radio', { name: 'Per window' })).toHaveAttribute('aria-checked', 'true');
   expect(screen.getAllByText('+7,600')).toHaveLength(2);
   expect(screen.getByRole('button', { name: 'Apply to inputs' })).toBeEnabled();
 });

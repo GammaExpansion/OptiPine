@@ -329,9 +329,11 @@ includes open positions at their open profit, without commission for an exit tha
   first-to-last-bar duration (overlapping training periods count for each run); OOS spans its
   first to last bar, including idle gaps. Annualization uses 365-day years; missing equity,
   nonpositive initial or ending capital, zero duration and nonfinite results are unavailable.
-  **Stitched** shows one equity curve; **Per window** shows each window as a lane with dashed IS
-  equity, solid OOS equity, and the OOS net and
-  running equity at the right (W2).
+  The summary opens on **Per window**, on desktop and phone. **Stitched** shows one equity curve;
+  **Per window** shows each window as a lane with dashed IS equity, solid OOS equity, and the OOS
+  profit and running equity at the right (W2). Its header reads **Windows and equity**, with only
+  total OOS profit, the IS/OOS swatches and a hint explaining the lanes; phones omit the long hint.
+  Stitched keeps its WFE and profitable-window facts. Both views withhold final facts during a run.
 - **Per-window table**: window, OOS range, selected parameters, IS and OOS net, WFE and trades,
   ending in a total row, under a header that repeats the objective, direction and filters. A
   window where no set passes the filters stays flat for its OOS range and says so with **Adjust**;
@@ -361,11 +363,11 @@ pane size, double-clicking resets it, panes stop at a minimum, and sizes are rem
 (G2). Below 768 px each page is a single column with tabs: Report, Equity, Trades, Inputs, Code and
 Issues on Backtest (G3). On Optimize the summary stays above the tabs Leaderboard, Parameter map,
 Sensitivity and Settings once there are results, with leaderboard rows as cards, and the selected
-set's bar below them; Settings also holds the data range. Walk-forward results keep the stitched
-equity above Windows, Stability and Settings, and the selected window's bar below (G4). The
-component sheet is G5. The phone leaderboard measures card height separately from desktop rows;
-cards share the tallest measured height at that width so paging stays stable. Switching layouts
-recomputes capacity and preserves the selected or leading set, just like resizing R1.
+set's bar below them; Settings also holds the data range. Walk-forward results keep the equity
+summary, initially **Per window**, above Windows, Stability and Settings, and the selected window's
+bar below (G4). The component sheet is G5. The phone leaderboard measures card height separately
+from desktop rows; cards share the tallest measured height at that width so paging stays stable.
+Switching layouts recomputes capacity and preserves the selected or leading set, just like resizing R1.
 
 ## 3. Behavior
 

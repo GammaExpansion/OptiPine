@@ -251,6 +251,25 @@ for (const language of ['en', 'zh'] as const)
           );
         await page.waitForTimeout(300);
         const copy = catalogs[language];
+        if (state === 'W1') {
+          await expect(
+            page.getByRole('radio', { name: copy['optimize.wfResults.perWindow'], exact: true }),
+          ).toHaveAttribute('aria-checked', 'true');
+          const summary = page.getByRole('region', {
+            name: copy['optimize.wfResults.summaryWindows'],
+            exact: true,
+          });
+          await expect(summary.getByRole('heading')).toHaveText(
+            copy['optimize.wfResults.summaryWindows'],
+          );
+          await expect(summary).not.toContainText('WFE');
+          await expect(summary).not.toContainText(copy['optimize.wfResults.profitableWindows']);
+          const hint = summary.getByText(copy['optimize.wfResults.windowsHint'], { exact: true });
+          if (size.name === 'phone') await expect(hint).toBeHidden();
+          else await expect(hint).toBeVisible();
+          if (size.name === 'desktop')
+            expect((await summary.locator('header').boundingBox())!.height).toBe(32);
+        }
         const header = page.getByRole('banner');
         const about = header.getByRole('button', { name: copy['shell.licenses'], exact: true });
         await expect(about).toBeVisible();
@@ -281,7 +300,7 @@ for (const language of ['en', 'zh'] as const)
         if (state === 'B1') expect(await page.evaluate(legendUnderTools)).toEqual([]);
         // The right panel's collapse chevron covers none of its rows (#32).
         expect(await page.evaluate(collapseCovers), state).toEqual([]);
-        // A phone shows W1's Windows and Stability one per tab under the stitched equity (G4).
+        // A phone shows Windows and Stability beneath the Per window summary by default (G4).
         if (state === 'W1' && size.name === 'phone')
           for (const tab of ['windows', 'stability'] as const) {
             const copy = language === 'en' ? en : zh;
@@ -289,9 +308,10 @@ for (const language of ['en', 'zh'] as const)
             await page.waitForTimeout(300);
             await page.screenshot({ path: info.outputPath(`W1-${tab}-phone-${language}.png`) });
             expect(await page.evaluate(layoutProblems), `W1 ${tab}`).toEqual([]);
-            // The stitched equity's view switch and the window's View backtest are touch targets.
+            // Both summary views and the window's View backtest are touch targets.
             for (const target of [
               page.getByRole('radio', { name: copy['optimize.wfResults.stitched'], exact: true }),
+              page.getByRole('radio', { name: copy['optimize.wfResults.perWindow'], exact: true }),
               page.getByRole('button', {
                 name: copy['optimize.wfResults.viewBacktest'],
                 exact: true,
