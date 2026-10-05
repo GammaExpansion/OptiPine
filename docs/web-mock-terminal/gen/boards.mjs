@@ -534,7 +534,7 @@ row('优化 · 设置');
       lb: {
         live: true,
         count: '已完成 1,373 / 2,214',
-        chips: rmChip('交易数 ≥ 30') + rmChip('最大回撤 ≤ 15%'),
+        chips: rmChip('交易数 ≥ 5') + rmChip('最大回撤 ≤ 35%'),
       },
       map: { live: true },
       sel: '',
@@ -548,20 +548,19 @@ row('优化 · 结果');
 {
   add('R1', 'R1 优化结果 · 前 20 组权益', optDone());
   add('R2', 'R2 优化结果 · 样本内 vs 样本外', optDone({ chart: A.SCATTER() }));
-  add('R2b', 'R2b 优化结果 · 净利润分布', optDone({ chart: A.HIST() }));
+  add('R2b', 'R2b 优化结果 · 盈亏分布', optDone({ chart: A.HIST() }));
   add(
     'R3',
     'R3 优化结果 · 不验证',
     optDone({
       mode: 'none',
       right: status('<span class="t3">优化 369 组，用时 2:31</span>'),
-      chart: A.FAN({ split: false, label: '排行前 20 组（全区间净利润）' }),
+      chart: A.FAN({ split: false, label: '排行前 20 组（全区间盈亏）' }),
       lb: {
-        count: '361 / 369 符合',
+        count: '367 / 369 符合',
         chips:
-          '<span class="tag am">未验证</span>' +
-          rmChip('交易数 ≥ 30') +
-          rmChip('最大回撤 ≤ 15%') +
+          rmChip('交易数 ≥ 5') +
+          rmChip('最大回撤 ≤ 35%') +
           addChip(),
       },
       sel: A.selBar(
@@ -573,7 +572,7 @@ row('优化 · 结果');
           ['止损', '关'],
         ],
         [
-          ['净利润', '+34,540', 'up'],
+          ['盈亏', '+34,540', 'up'],
           ['邻域均值', '+28,670', ''],
         ],
       ),
@@ -605,7 +604,7 @@ ${[
       mode: 'many',
       right: status('<span class="t3">随机 2,000 组，用时 9:12</span>'),
       chart: A.FAN({ sel: X.equityMany, selEnd: 131350 }),
-      lb: { count: '1,872 / 2,000 符合', pop: plus5 },
+      lb: { count: '1,962 / 2,000 符合', pop: plus5 },
       sel: A.selBar(
         '#1',
         [
@@ -671,8 +670,8 @@ row('优化 · 结果的局部状态');
         empty: true,
         count: '0 / 2,214 符合',
         chips:
-          rmChip('交易数 ≥ 30') +
-          rmChip('最大回撤 ≤ 15%') +
+          rmChip('交易数 ≥ 5') +
+          rmChip('最大回撤 ≤ 35%') +
           rmChip('盈利因子 ≥ 2.5', 'bad') +
           addChip(),
       },
@@ -684,7 +683,7 @@ row('优化 · 结果的局部状态');
     'R10 添加条件',
     optDone({
       lb: {
-        chips: rmChip('交易数 ≥ 30') + rmChip('最大回撤 ≤ 15%') + addChip(true),
+        chips: rmChip('交易数 ≥ 5') + rmChip('最大回撤 ≤ 35%') + addChip(true),
         pop: O.constraintPopover('left: 292px; top: 40px'),
       },
     }),
@@ -762,6 +761,7 @@ ${seg(['15m', '1h', '4h', '1D'], 1, { label: '周期' })}
 <div style="flex: 1"></div>
 ${runBtn({ kbd: false })}
 <button class="iconbtn" aria-label="关于与许可证" title="关于与许可证">${I.info()}</button>
+<a class="iconbtn" href="https://github.com/GammaExpansion/OptiPine" aria-label="在 GitHub 上查看 OptiPine" title="在 GitHub 上查看 OptiPine">${I.github()}</a>
 <button class="iconbtn on" style="width: 32px; height: 32px; background: #1b1f24" aria-label="参数面板" aria-pressed="true">${I.panel()}</button>
 </header>`;
   const tablet = `<div style="width: 1024px; height: 768px; display: flex; flex-direction: column; background: #0e1013; color: #e8eaed; overflow: hidden; position: relative">
@@ -790,9 +790,12 @@ ${action}
 <button class="iconbtn" style="width: 44px; height: 44px; margin-right: -8px" aria-label="关于与许可证" title="关于与许可证">${I.info(17)}</button>
 </header>
 <div style="height: 48px; flex: none; display: flex; align-items: center; gap: 4px; padding: 0 6px; border-bottom: 1px solid #23272d; white-space: nowrap">
-<button class="tb" style="height: 44px; min-width: 0; padding: 0 6px"><span style="overflow: hidden; text-overflow: ellipsis; max-width: 128px">trend_breakout.pine</span>${dot('#3fbf8a')}</button>
+<button class="tb" style="height: 44px; min-width: 0; padding: 0 6px"><span style="overflow: hidden; text-overflow: ellipsis; max-width: 76px">trend_breakout.pine</span>${dot('#3fbf8a')}</button>
 <button class="tb" style="height: 44px; padding: 0 6px"><span style="font-weight: 600">BTCUSDT</span>${I.chev()}</button>
 <button class="tb" style="height: 44px; padding: 0 6px">1h${I.chev()}</button>
+<div style="flex: 1"></div>
+<div class="seg" role="group" aria-label="语言"><button class="on">中</button><button>EN</button></div>
+<a class="iconbtn" style="width: 44px; height: 44px" href="https://github.com/GammaExpansion/OptiPine" aria-label="在 GitHub 上查看 OptiPine" title="在 GitHub 上查看 OptiPine">${I.github(17)}</a>
 </div>`;
   const ptab = (items, on) =>
     `<div style="height: 44px; flex: none; display: flex; align-items: stretch; padding: 0 4px; background: #14171b; border-top: 1px solid #23272d; border-bottom: 1px solid #23272d">${items.map((s, k) => `<button class="dtab${k === on ? ' on' : ''}" style="padding: 0 11px">${s}</button>`).join('')}</div>`;
@@ -844,7 +847,7 @@ ${phoneHead(1, '<span class="t3 num" style="font-size: 12px">2,214 组，10:09</
 <div style="height: 150px; flex: none"><svg width="390" height="150" viewBox="0 0 390 150" style="display: block" role="img" aria-label="排行前 20 组的权益">${fanP}</svg></div>
 ${ptab(['排行', '参数图', '影响度', '设置'], 0)}
 <section class="num" style="flex: 1; min-height: 0; background: #14171b; overflow: hidden; display: flex; flex-direction: column">
-<div style="height: 48px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 12px; overflow: hidden; white-space: nowrap"><span class="t3" style="font-size: 12px; margin-right: 2px">2,096 组</span>${rmChip('交易数 ≥ 30')}${rmChip('最大回撤 ≤ 15%')}</div>
+<div style="height: 48px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 12px; overflow: hidden; white-space: nowrap"><span class="t3" style="font-size: 12px; margin-right: 2px">2,163 组</span>${rmChip('交易数 ≥ 5')}${rmChip('最大回撤 ≤ 35%')}</div>
 ${D.LEADER.slice(0, 7).map(lrow).join('\n')}
 </section>
 <div style="height: 76px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: #1b1f24; border-top: 1px solid #2f353c">
