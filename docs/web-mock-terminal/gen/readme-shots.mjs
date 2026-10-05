@@ -6,16 +6,49 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { crc32, deflateSync, inflateSync } from 'node:zlib';
 
-const images = [
+export const readmeImages = [
   ['Main-en', 'backtest.png', 1440, 900],
-  ['B5-en', 'equity.png', 1440, 900],
   ['R1-en', 'optimize.png', 1440, 900],
-  ['W1-en', 'walk-forward.png', 1440, 900],
+  ['W2-en', 'walk-forward.png', 1440, 900],
   ['Main', 'backtest-zh.png', 1440, 900],
+  ['R1', 'optimize-zh.png', 1440, 900],
+  ['W2', 'walk-forward-zh.png', 1440, 900],
 ];
 const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
-/** Recompress only PNG's lossless pixel stream; retain filters, colour metadata and exact pixels. */
+/** Reverse PNG's row filters to expose repeated UI colours to the compressor without pixel changes. */
+export function unfilterPngRows(rows, width, height, channels) {
+  const stride = width * channels + 1;
+  assert.equal(rows.length, stride * height, 'Unexpected PNG pixel data length');
+  const result = Buffer.from(rows);
+  for (let y = 0; y < height; y++) {
+    const start = y * stride;
+    const filter = rows[start];
+    assert(filter <= 4, 'Unknown PNG filter');
+    result[start] = 0;
+    for (let x = 1; x < stride; x++) {
+      const i = start + x;
+      const left = x > channels ? result[i - channels] : 0;
+      const up = y > 0 ? result[i - stride] : 0;
+      const corner = y > 0 && x > channels ? result[i - stride - channels] : 0;
+      let prediction = 0;
+      if (filter === 1) prediction = left;
+      else if (filter === 2) prediction = up;
+      else if (filter === 3) prediction = Math.floor((left + up) / 2);
+      else if (filter === 4) {
+        const p = left + up - corner;
+        const a = Math.abs(p - left);
+        const b = Math.abs(p - up);
+        const c = Math.abs(p - corner);
+        prediction = a <= b && a <= c ? left : b <= c ? up : corner;
+      }
+      result[i] = (rows[i] + prediction) & 255;
+    }
+  }
+  return result;
+}
+
+/** Recompress PNG's lossless pixel stream; retain colour metadata and exact pixels. */
 export function optimizePng(png, width, height) {
   assert(png.subarray(0, 8).equals(signature), 'The renderer must produce a PNG');
   const chunks = [];
@@ -36,7 +69,15 @@ export function optimizePng(png, width, height) {
   const data = chunks.filter(({ type }) => type === 'IDAT');
   assert(data.length > 0, 'PNG has no pixel data');
   const pixels = inflateSync(Buffer.concat(data.map(({ chunk }) => chunk.subarray(8, -4))));
-  const compressed = deflateSync(pixels, { level: 9 });
+  let compressed = deflateSync(pixels, { level: 9 });
+  const header = chunks[0].chunk;
+  // Chrome writes non-interlaced 8-bit RGB or RGBA. Flat UI areas often compress better without
+  // row filters; keep the original stream whenever it is smaller or uses another PNG format.
+  if (header[16] === 8 && [2, 6].includes(header[17]) && header[20] === 0) {
+    const unfiltered = unfilterPngRows(pixels, width, height, header[17] === 2 ? 3 : 4);
+    const candidate = deflateSync(unfiltered, { level: 9 });
+    if (candidate.length < compressed.length) compressed = candidate;
+  }
   const idat = Buffer.alloc(compressed.length + 12);
   idat.writeUInt32BE(compressed.length);
   idat.write('IDAT', 4, 'ascii');
@@ -51,7 +92,7 @@ export function optimizePng(png, width, height) {
   return optimized.length < png.length ? optimized : png;
 }
 
-/** Render the five README boards in isolation; validate every output before replacing any image. */
+/** Render B1, R1 and W2 in both languages; validate every output before replacing any image. */
 export async function renderReadmeShots() {
   const temporary = await mkdtemp(path.join(os.tmpdir(), 'optipine-readme-mock-'));
   const output = new URL('../../screenshots/', import.meta.url);
@@ -59,7 +100,10 @@ export async function renderReadmeShots() {
     await new Promise((resolve, reject) => {
       const child = spawn(
         process.execPath,
-        [fileURLToPath(new URL('./shot.mjs', import.meta.url)), ...images.map(([board]) => board)],
+        [
+          fileURLToPath(new URL('./shot.mjs', import.meta.url)),
+          ...readmeImages.map(([board]) => board),
+        ],
         {
           stdio: 'inherit',
           // Use the plain boards at their native sizes, regardless of canvas/crop settings.
@@ -72,7 +116,7 @@ export async function renderReadmeShots() {
       );
     });
     const rendered = await Promise.all(
-      images.map(async ([board, name, width, height]) => {
+      readmeImages.map(async ([board, name, width, height]) => {
         const png = await readFile(path.join(temporary, `${board}.png`));
         const optimized = optimizePng(png, width, height);
         assert(optimized.length < 400_000, `${name} exceeds 400 KB`);
@@ -80,7 +124,7 @@ export async function renderReadmeShots() {
       }),
     );
     const total = rendered.reduce((sum, { png }) => sum + png.length, 0);
-    assert(total < 1_250_000, 'README images exceed 1.25 MB');
+    assert(total < 1_200_000, 'README images exceed 1.2 MB');
     await mkdir(output, { recursive: true });
     for (const { name, png } of rendered) {
       await writeFile(new URL(name, output), png);

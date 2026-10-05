@@ -4,6 +4,10 @@
 
 **离线回测、优化你的 TradingView Pine Script 策略，结果与 TradingView 自己的导出逐格核对。**
 
+[![在浏览器中试用](https://img.shields.io/badge/%E5%9C%A8%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E8%AF%95%E7%94%A8-gammaexpansion.github.io%2FOptiPine-f2a33a?style=for-the-badge&labelColor=1b1f24)](https://gammaexpansion.github.io/OptiPine/)
+
+无需安装或注册：脚本与回测完全在浏览器中运行。
+
 [![Compatibility regression](https://github.com/GammaExpansion/OptiPine/actions/workflows/ci.yml/badge.svg)](https://github.com/GammaExpansion/OptiPine/actions/workflows/ci.yml)
 [![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -11,12 +15,9 @@
 
 </div>
 
-[![设计稿：Trend Breakout，Length 20，BTCUSDT，2023-01-02 至 2025-05-04](docs/screenshots/backtest-zh.png)](docs/screenshots/backtest-zh.png)
+[![设计稿：Trend Breakout，Length 20，BTCUSDT，2023-01-02 至 2025-05-04](docs/screenshots/backtest-zh.png)](https://gammaexpansion.github.io/OptiPine/ '在浏览器中试用 OptiPine')
 
 > **当前状态。** 引擎、优化器和浏览器应用均可在本地运行，应用已支持 walk-forward（滚动优化）。
-
-> **[在线试用](https://gammaexpansion.github.io/OptiPine/)。** 静态演示版在浏览器中运行脚本、回测、优化并支持上传 CSV，
-> 直接从 Binance 加载现货数据。Yahoo Finance 和 USDⓈ-M 永续合约需要按照[运行应用](#运行应用)中的说明自托管服务器。
 
 ## 为什么做这个
 
@@ -50,21 +51,22 @@ OptiPine 直接运行你的 Pine 源码。提供一个 v5 或 v6 策略和行情
 
 这些图片由应用所遵循的[设计稿](docs/web-mock-terminal)渲染而成。
 
-[![优化汇总、排行、参数图与敏感度](docs/screenshots/optimize.png)](docs/screenshots/optimize.png)
+[![设计稿：前 20 组权益、筛选后的样本内外排行、参数图与影响度](docs/screenshots/optimize-zh.png)](docs/screenshots/optimize-zh.png)
 
-2,214 组参数的网格搜索展示领先的权益曲线、样本内 / 样本外结果和参数图，选中的参数可预览或应用。
+2,214 组参数的网格搜索展示前 20 组权益曲线、筛选后的样本内 / 样本外排行、
+Length × Multiplier 参数图及影响度。选中的参数组可在回测页预览，或应用到输入参数。
 
-[![滚动优化的拼接权益、窗口结果与参数稳定性](docs/screenshots/walk-forward.png)](docs/screenshots/walk-forward.png)
+[![设计稿：滚动优化的逐窗样本内外权益、窗口结果与参数稳定性](docs/screenshots/walk-forward-zh.png)](docs/screenshots/walk-forward-zh.png)
 
-六个滚动窗口展示拼接的样本外权益、各窗口选定的参数，以及参数在窗口之间的稳定性。
-
-[![权益、回撤、每日盈亏与月度收益](docs/screenshots/equity.png)](docs/screenshots/equity.png)
-
-权益页签把账户曲线、回撤、每日盈亏和月度收益放在同一条时间轴上。
+六个滚动窗口在同一时间轴上逐窗展示所选参数组的样本内权益（虚线）与样本外权益（实线）。
+窗口表列出所选参数、样本内外结果、WFE 和交易数；参数稳定性面板对比各窗口的近优参数范围。
 
 可从设计稿[重新生成图片](docs/screenshots/README.md)。
 
 ## 运行应用
+
+[在线演示](https://gammaexpansion.github.io/OptiPine/)无需安装，支持 Binance 现货数据和 CSV 文件。
+如需使用 Yahoo Finance 和 USDⓈ-M 永续合约数据，请在本地运行应用。
 
 需要 [Node.js](https://nodejs.org) 24.5 或更新版本。
 
