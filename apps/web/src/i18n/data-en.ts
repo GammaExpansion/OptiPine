@@ -39,6 +39,12 @@ export const dataEn = {
   'data.providers': 'Data source',
   'data.cryptoDescription': 'Crypto spot, perpetuals',
   'data.yahooDescription': 'Stocks, ETFs, indices, forex',
+  'data.demoServerOnly':
+    'Yahoo Finance and USDⓈ-M perpetual data require the self-hosted server (npm start).',
+  'data.demoServerLink': 'Read the Running the app instructions',
+  'data.demoBrowserNote':
+    'Market data comes directly from Binance; calculations run in your browser',
+  'data.demoCsvHint': 'If Binance is unavailable, upload a CSV to continue.',
   'data.uploadCsv': 'Upload CSV',
   'data.market': 'Market',
   'data.spot': 'Spot',

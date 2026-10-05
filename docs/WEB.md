@@ -522,11 +522,17 @@ Changing the stability tolerance recomputes only the stability.
 
 ### 4.7 Market data and serving
 
-Provider data goes through the `/api/market` middleware from `@pine/market-data/proxy`. In
+In the normal build, provider data goes through the `/api/market` middleware from `@pine/market-data/proxy`. In
 development and preview a Vite plugin mounts it; in production `server/` serves the built app and
 the middleware on `127.0.0.1:5174` (`PORT` and `HOST` override). Without the middleware, as on a
 static host, CSV upload still works, and once a request finds the middleware missing the provider
 tabs say the data service is unavailable.
+
+The GitHub Pages demo is built with `npm run build:demo -w @pine/web` and served below the
+`/OptiPine/` base. It uses the browser `fetch` client for Binance spot only; Yahoo Finance and
+USDⓈ-M perpetuals remain server-only and require `npm start`. The workflow deploys `demo-dist/`
+after Pages is enabled for the repository. Examples use the same live range and cache in the demo;
+failed requests show the provider error and offer CSV, with no offline data fallback.
 
 The example strategies are new Pine sources written for the app, stored in `examples/`. Each runs
 on BTCUSDT 1h from Binance spot over the two years ending now: the range ends at the current time

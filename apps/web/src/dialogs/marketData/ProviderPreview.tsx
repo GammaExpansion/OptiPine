@@ -14,6 +14,7 @@ import { ProfileFields, type ProfileDraft } from './ProfileFields.tsx';
 import { PreviewSummary } from './PreviewSummary.tsx';
 import { timeframeIds } from './timeframes.ts';
 import styles from './DataDialog.module.css';
+import { demoBuild } from '../../demo.ts';
 
 function Preview({ preview }: { preview: DataPreview }) {
   const { t } = useI18n();
@@ -100,9 +101,12 @@ export function ProviderPreview({ onYahoo, onCsv }: { onYahoo: () => void; onCsv
             })}
           </strong>
           <div>{text(state.error)}</div>
+          {demoBuild && <div>{t('data.demoCsvHint')}</div>}
         </Note>
         <div className={styles.chips}>
-          {state.alternative === 'yahoo' && <Button onClick={onYahoo}>{t('data.useYahoo')}</Button>}
+          {!demoBuild && state.alternative === 'yahoo' && (
+            <Button onClick={onYahoo}>{t('data.useYahoo')}</Button>
+          )}
           <Button onClick={onCsv}>{t('data.uploadCsv')}</Button>
           {state.canRetry && <Button onClick={() => void retry()}>{t('data.retry')}</Button>}
         </div>

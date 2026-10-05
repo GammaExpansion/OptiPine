@@ -6,6 +6,7 @@ import { TextInput } from '../../components/TextInput.tsx';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { useMarketDataDialogStore } from '../../state/marketDataDialog.ts';
 import styles from './DataDialog.module.css';
+import { demoBuild } from '../../demo.ts';
 
 /** The store owns requests; the field owns suggestion visibility and keyboard navigation. */
 export function SymbolSearch({
@@ -124,6 +125,7 @@ export function SymbolSearch({
           {!results.length && (
             <div className={styles.searchHint}>
               {failure ? text(failure) : t(loading ? 'data.searching' : 'data.noSymbols')}
+              {failure && demoBuild && <div>{t('data.demoCsvHint')}</div>}
             </div>
           )}
         </div>
@@ -131,6 +133,7 @@ export function SymbolSearch({
       {!open && failure && (
         <Note tone="danger" role="alert">
           {text(failure)}
+          {demoBuild && <div>{t('data.demoCsvHint')}</div>}
         </Note>
       )}
     </div>

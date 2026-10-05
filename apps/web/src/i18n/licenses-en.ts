@@ -1,5 +1,7 @@
 /** Legal copy loads with the dialog, never with the initial language catalog. */
 export const licensesEn = {
+  'licenses.demoNotice':
+    'This demo runs entirely in your browser; market data comes directly from Binance.',
   'licenses.title': 'About & licenses',
   'licenses.description': 'OptiPine and the open-source software that makes it possible.',
   'licenses.app': 'OptiPine · MIT License',

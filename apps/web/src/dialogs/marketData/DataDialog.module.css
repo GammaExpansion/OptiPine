@@ -1,6 +1,9 @@
 ﻿.surface {
   margin: -20px;
 }
+.demoNote {
+  margin: 12px 20px;
+}
 .stack {
   display: flex;
   flex-direction: column;

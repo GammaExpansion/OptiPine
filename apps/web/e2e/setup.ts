@@ -8,39 +8,46 @@ export default async function setup() {
   const root = fileURLToPath(new URL('../', import.meta.url));
   await build({ root, mode: 'production', logLevel: 'warn' });
   await build({ root, mode: 'e2e', logLevel: 'warn' });
-  const production = createAppServer();
-  await new Promise<void>((resolve, reject) => {
-    production.once('error', reject);
-    production.listen(ports.production, '127.0.0.1', resolve);
-  });
-  const closeProduction = () =>
-    new Promise<void>((resolve, reject) => {
-      production.closeAllConnections();
-      production.close((error) => (error ? reject(error) : resolve()));
-    });
+  await build({ root, mode: 'demo', logLevel: 'warn' });
+  const cleanups: (() => Promise<unknown>)[] = [];
+  const close = async () => {
+    await Promise.all(cleanups.map((cleanup) => cleanup()));
+  };
   try {
-    const built = await preview({
-      root,
-      mode: 'e2e',
-      logLevel: 'warn',
-      preview: { host: '127.0.0.1', port: ports.preview, strictPort: true },
+    const production = createAppServer();
+    await new Promise<void>((resolve, reject) => {
+      production.once('error', reject);
+      production.listen(ports.production, '127.0.0.1', resolve);
     });
-    try {
-      const dev = await createServer({
+    cleanups.push(
+      () =>
+        new Promise<void>((resolve, reject) => {
+          production.closeAllConnections();
+          production.close((error) => (error ? reject(error) : resolve()));
+        }),
+    );
+    for (const [mode, port] of [
+      ['e2e', ports.preview],
+      ['demo', ports.demo],
+    ] as const) {
+      const server = await preview({
         root,
+        mode,
         logLevel: 'warn',
-        server: { host: '127.0.0.1', port: ports.dev, strictPort: true },
+        preview: { host: '127.0.0.1', port, strictPort: true },
       });
-      await dev.listen();
-      return async () => {
-        await Promise.all([closeProduction(), built.close(), dev.close()]);
-      };
-    } catch (error) {
-      await built.close();
-      throw error;
+      cleanups.push(() => server.close());
     }
+    const dev = await createServer({
+      root,
+      logLevel: 'warn',
+      server: { host: '127.0.0.1', port: ports.dev, strictPort: true },
+    });
+    cleanups.push(() => dev.close());
+    await dev.listen();
+    return close;
   } catch (error) {
-    await closeProduction();
+    await close();
     throw error;
   }
 }

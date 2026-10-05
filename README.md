@@ -15,6 +15,11 @@
 
 > **Status.** The engine, optimizer and browser app run locally, including walk-forward in the app.
 
+> **[Try it online](https://gammaexpansion.github.io/OptiPine/).** The static demo runs scripts,
+> backtests, optimization and CSV uploads in the browser and loads Binance spot data directly.
+> Yahoo Finance and USDⓈ-M perpetual data require the self-hosted server described in
+> [Running the app](#running-the-app).
+
 ## Why this exists
 
 If you write strategies in Pine Script you know the loop: change an input, wait for the Strategy

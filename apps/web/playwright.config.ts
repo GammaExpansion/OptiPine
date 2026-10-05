@@ -18,6 +18,13 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
-  projects: [{ name: 'chromium', use: { browserName: 'chromium' } }],
+  projects: [
+    { name: 'chromium', testIgnore: '**/demo.spec.ts', use: { browserName: 'chromium' } },
+    {
+      name: 'demo',
+      testMatch: '**/demo.spec.ts',
+      use: { browserName: 'chromium', baseURL: origins.demo },
+    },
+  ],
   globalSetup: './e2e/setup.ts',
 });

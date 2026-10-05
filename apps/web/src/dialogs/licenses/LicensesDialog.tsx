@@ -1,6 +1,7 @@
 import { Dialog } from '../../components/Dialog.tsx';
 import { useI18n } from '../../i18n/I18nProvider.tsx';
 import { useUiStore } from '../../state/ui.ts';
+import { appUrl, demoBuild } from '../../demo.ts';
 import styles from './LicensesDialog.module.css';
 
 export function LicensesDialog() {
@@ -14,16 +15,17 @@ export function LicensesDialog() {
       closeLabel={t('data.close')}
       onOpenChange={(open) => setOpen('licenses', open)}
       footer={
-        <a href="/licenses/THIRD_PARTY_NOTICES.txt" target="_blank" rel="noreferrer">
+        <a href={appUrl('licenses/THIRD_PARTY_NOTICES.txt')} target="_blank" rel="noreferrer">
           {t('licenses.notices')}
         </a>
       }
     >
       <div className={styles.content}>
+        {demoBuild && <p>{t('licenses.demoNotice')}</p>}
         <section>
           <h3>{t('licenses.app')}</h3>
           <p>{t('licenses.copyright')}</p>
-          <a href="/licenses/OptiPine.txt" target="_blank" rel="noreferrer">
+          <a href={appUrl('licenses/OptiPine.txt')} target="_blank" rel="noreferrer">
             {t('licenses.appLicense')}
           </a>
         </section>
@@ -34,7 +36,7 @@ export function LicensesDialog() {
             <a href="https://www.tradingview.com/" target="_blank" rel="noreferrer">
               {t('licenses.tradingView')}
             </a>
-            <a href="/licenses/lightweight-charts.txt" target="_blank" rel="noreferrer">
+            <a href={appUrl('licenses/lightweight-charts.txt')} target="_blank" rel="noreferrer">
               {t('licenses.chartLicense')}
             </a>
           </div>
@@ -45,19 +47,19 @@ export function LicensesDialog() {
           <p>{t('licenses.fontsource')}</p>
           <dl className={styles.fonts}>
             <dt>
-              <a href="/licenses/barlow.txt" target="_blank" rel="noreferrer">
+              <a href={appUrl('licenses/barlow.txt')} target="_blank" rel="noreferrer">
                 {t('licenses.barlow')}
               </a>
             </dt>
             <dd>{t('licenses.barlowCredit')}</dd>
             <dt>
-              <a href="/licenses/noto-sans-sc.txt" target="_blank" rel="noreferrer">
+              <a href={appUrl('licenses/noto-sans-sc.txt')} target="_blank" rel="noreferrer">
                 {t('licenses.noto')}
               </a>
             </dt>
             <dd>{t('licenses.notoCredit')}</dd>
             <dt>
-              <a href="/licenses/source-code-pro.txt" target="_blank" rel="noreferrer">
+              <a href={appUrl('licenses/source-code-pro.txt')} target="_blank" rel="noreferrer">
                 {t('licenses.source')}
               </a>
             </dt>

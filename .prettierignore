@@ -1,6 +1,7 @@
 packages/golden/fixtures/
 node_modules/
 **/dist/
+**/demo-dist/
 .golden/
 package-lock.json
 packages/market-data/test/fixtures/
