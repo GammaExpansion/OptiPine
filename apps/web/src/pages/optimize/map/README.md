@@ -5,6 +5,11 @@ sensitivity regions. They read optimization snapshots and call the stable store 
 workflow supplies all aggregation, rank bins, smoothing, surfaces, selection, cell values, bin
 detail, curve values and sensitivity. View changes never start optimization.
 
+Default X and Y are the two searched inputs with the most values, ties in declaration order,
+with the longer axis horizontal. Defaults depend only on the search space, so live results do
+not move them. Explicit axis choices keep their orientation. Desktop, phone and walk-forward
+maps share this rule; sensitivity remains sorted by impact.
+
 - `src/charts/optimize/` owns the map and single-input canvas renderers, drawing at device pixel
   ratio. A viewport-sized canvas draws visible Z layers; React never reconciles heatmap cells.
   Geometry keeps 2 px gaps and 16 px squares on layered maps and the full-resolution detail; a
