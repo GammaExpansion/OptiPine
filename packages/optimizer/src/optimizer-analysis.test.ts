@@ -8,7 +8,7 @@ import {
   type OptimizerAnalysisInput,
 } from './optimizer-analysis.ts';
 import { summarizeOptimizerAnalysis } from './optimizer-summary.ts';
-import { generateSearchSpace } from './search-space.ts';
+import { enumerateGrid, generateSearchSpace } from './search-space.ts';
 import { consecutiveLossesMetric } from './trade-statistics.ts';
 import { trialIdForParameters } from './trial-id.ts';
 import { constraintValue, leaderboard, type TrialRecord } from './validation.ts';
@@ -96,6 +96,66 @@ test('ranking by the neighbourhood mean works for IS / OOS and moves the default
     secondary.map((trial) => trial.outOfSampleValue),
     secondary.map((trial) => trial.outOfSampleValue).sort((a, b) => b! - a!),
   );
+});
+
+test('default map axes stay independent of results and impact across validation surfaces', () => {
+  const space = generateSearchSpace([
+    descriptor('a', 'A', 2),
+    descriptor('b', 'B', 3),
+    descriptor('c', 'C', 4),
+  ]);
+  const trials: TrialRecord[] = enumerateGrid(space).map((parameters) => ({
+    trialId: trialIdForParameters({ inputs: parameters }),
+    parameters,
+    inSampleMetrics: { [net]: Number(parameters.A) * 1000 },
+    outOfSampleMetrics: { [net]: Number(parameters.B) * 100 },
+    objectiveValue: null,
+    inSampleValue: null,
+    outOfSampleValue: null,
+    valid: true,
+    excluded: false,
+  }));
+  for (const mode of ['none', 'in-out', 'walk-forward'] as const) {
+    for (const wfSurface of ['window', 'mean'] as const) {
+      for (const records of [[], trials.slice(0, 3), trials, trials.toReversed()]) {
+        const analysis = analyzeOptimizer({
+          ...state,
+          resultSpace: space,
+          trials: records,
+          mode,
+          wfSurface,
+          meanTrialGroups: [records],
+        });
+        assert.deepEqual(analysis.defaultAxes, ['C', 'B']);
+        assert.deepEqual(analysis.axes, { x: 'C', y: 'B', z: undefined });
+        for (const { map } of analysis.maps) assert.deepEqual([map.xKey, map.yKey], ['C', 'B']);
+        if (records.length === trials.length) {
+          assert.equal(analysis.sensitivity.parameters[0].parameter, 'A');
+          assert.equal(analysis.sensitivity.parameters[0].etaSquared, 1);
+        }
+      }
+    }
+  }
+  for (const preserveAxisOrientation of [false, true]) {
+    const chosen = analyzeOptimizer({
+      ...state,
+      resultSpace: space,
+      trials,
+      axes: { x: 'A', y: 'B', z: 'C' },
+      preserveAxisOrientation,
+    });
+    assert.deepEqual(chosen.axes, {
+      x: preserveAxisOrientation ? 'A' : 'B',
+      y: preserveAxisOrientation ? 'B' : 'A',
+      z: 'C',
+    });
+    assert.deepEqual(chosen.defaultAxes, ['C', 'B']);
+    assert.equal(chosen.maps[0].map.zKey, 'C');
+  }
+  const single = generateSearchSpace([descriptor('a', 'A', 2)]);
+  const curve = analyzeOptimizer({ ...state, space: single, resultSpace: undefined, trials });
+  assert.deepEqual(curve.axes, { x: 'A', y: undefined, z: undefined });
+  assert.equal(curve.maps[0].map.yKey, undefined);
 });
 
 test('a summary keeps per-set columns and positions instead of the trials', () => {

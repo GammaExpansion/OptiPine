@@ -471,18 +471,15 @@ export function buildSensitivitySummary(
     sharedScale: scores.length ? [Math.min(...scores), Math.max(...scores)] : null,
   };
 }
-export function defaultHeatmapAxes(
-  trials: readonly TrialRecord[],
-  axes: readonly AnalysisAxis[],
-  options: AnalysisOptions = {},
-): string[] {
+/** Active axes in declaration order; trial results never change the default map dimensions. */
+export function defaultHeatmapAxes(axes: readonly AnalysisAxis[]): string[] {
   return axes
     .map((axis, index) => ({
       title: axis.title,
       index,
-      eta: sensitivity(trials, axis.title, { ...options, axes })[0]?.etaSquared ?? 0,
+      values: axis.values.length,
     }))
-    .sort((a, b) => b.eta - a.eta || a.index - b.index)
+    .sort((a, b) => b.values - a.values || a.index - b.index)
     .slice(0, 2)
     .map((axis) => axis.title);
 }
