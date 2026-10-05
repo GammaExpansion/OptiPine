@@ -33,6 +33,7 @@
     "golden": "node apps/cli/dist/main.js run",
     "pine": "node apps/cli/dist/main.js",
     "check": "node apps/cli/dist/main.js check",
+    "screenshots": "node docs/web-mock-terminal/gen/readme-shots.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

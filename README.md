@@ -11,7 +11,7 @@
 
 </div>
 
-[![Trend Breakout on BTCUSDT: chart, trades and backtest report](docs/screenshots/backtest.png)](docs/screenshots/backtest.png)
+[![Design mock: Trend Breakout at Length 20 on BTCUSDT, 2023-01-02 to 2025-05-04](docs/screenshots/backtest.png)](docs/screenshots/backtest.png)
 
 > **Status.** The engine, optimizer and browser app run locally, including walk-forward in the app.
 
@@ -51,14 +51,16 @@ you optimize is the one you would see on the chart.
 
 ## See it
 
+These images render the [design mock](docs/web-mock-terminal), which the app follows.
+
 [![Optimization summary, leaderboard, parameter map and sensitivity](docs/screenshots/optimize.png)](docs/screenshots/optimize.png)
 
-A 40-set grid search shows the leading equity curves, IS / OOS results, a complete parameter map
+A 2,214-set grid search shows the leading equity curves, IS / OOS results, a parameter map
 and the selected set ready to preview or apply.
 
 [![Walk-forward stitched equity, window results and parameter stability](docs/screenshots/walk-forward.png)](docs/screenshots/walk-forward.png)
 
-Three rolling windows show stitched out-of-sample equity, each window's selected parameters and
+Six rolling windows show stitched out-of-sample equity, each window's selected parameters and
 their stability across windows.
 
 [![Equity, drawdown, daily P&L and monthly returns](docs/screenshots/equity.png)](docs/screenshots/equity.png)
@@ -73,14 +75,13 @@ The Equity tab puts the account curve, drawdown, daily P&L and monthly returns o
       </a>
     </td>
     <td>
-      Backtest keeps the chart above its report and input tabs on a phone; Optimize keeps its summary
-      above tabs for results and settings.
+      The phone Backtest view keeps the chart above tabs for Report, Equity, Trades, Inputs,
+      Pine code and Issues.
     </td>
   </tr>
 </table>
 
-These are real runs over recorded BTCUSDT data, with the example's default backtest inputs;
-[regenerate the screenshots](docs/screenshots/README.md) without fetching live market data.
+[Regenerate the images](docs/screenshots/README.md) from the mock boards.
 
 ## Running the app
 
