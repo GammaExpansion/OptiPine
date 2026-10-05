@@ -18,17 +18,18 @@ export function WfSummary() {
         state.validation.walkForward.anchored),
   );
   const actions = useOptimizationStore((state) => state.actions);
-  const [mode, setMode] = useState<SummaryMode>('stitched');
+  const [mode, setMode] = useState<SummaryMode>('windows');
   if (!view) return null;
   const complete = !view.inProgress && view.totals.completed === view.totals.windows;
+  const title = t(
+    mode === 'windows' ? 'optimize.wfResults.summaryWindows' : 'optimize.wfResults.summary',
+  );
   return (
-    <section
-      className={styles.summary}
-      aria-label={t('optimize.wfResults.summary')}
-      aria-busy={view.pending}
-    >
-      <header className={styles.summaryHeader}>
-        <h2>{t('optimize.wfResults.summary')}</h2>
+    <section className={styles.summary} aria-label={title} aria-busy={view.pending}>
+      <header
+        className={`${styles.summaryHeader} ${mode === 'windows' ? styles.windowsHeader : ''}`}
+      >
+        <h2>{title}</h2>
         {complete ? (
           <div className={styles.facts}>
             <strong
@@ -37,18 +38,22 @@ export function WfSummary() {
             >
               {text(figure(view.totals.outOfSampleNet, 0, true))}
             </strong>
-            <span title={t('optimize.wfResults.wfeHint')}>
-              {t('optimize.wfResults.wfe')} <b>{text(figure(view.totals.wfe, 2))}</b>
-            </span>
-            <span title={t('optimize.wfResults.profitableHint')}>
-              {t('optimize.wfResults.profitableWindows')}{' '}
-              <b>
-                {t('optimize.wfResults.count', {
-                  count: view.totals.profitable,
-                  total: view.totals.traded,
-                })}
-              </b>
-            </span>
+            {mode === 'stitched' && (
+              <>
+                <span title={t('optimize.wfResults.wfeHint')}>
+                  {t('optimize.wfResults.wfe')} <b>{text(figure(view.totals.wfe, 2))}</b>
+                </span>
+                <span title={t('optimize.wfResults.profitableHint')}>
+                  {t('optimize.wfResults.profitableWindows')}{' '}
+                  <b>
+                    {t('optimize.wfResults.count', {
+                      count: view.totals.profitable,
+                      total: view.totals.traded,
+                    })}
+                  </b>
+                </span>
+              </>
+            )}
           </div>
         ) : (
           <span className={styles.muted} role="status">
@@ -67,6 +72,9 @@ export function WfSummary() {
             <i />
             {t('optimize.wfResults.oos')}
           </span>
+          {mode === 'windows' && (
+            <span className={styles.legendHint}>{t('optimize.wfResults.windowsHint')}</span>
+          )}
         </div>
         <SegmentedControl
           small

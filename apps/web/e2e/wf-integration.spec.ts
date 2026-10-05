@@ -31,6 +31,10 @@ type Hooks = Window & {
 };
 
 async function capture(page: Page, info: TestInfo, board: string) {
+  // Reference boards choose their view explicitly, independent of the Per window default.
+  await page
+    .getByRole('radio', { name: board === 'W2' ? 'Per window' : 'Stitched', exact: true })
+    .click();
   for (const language of ['en', 'zh'] as const) {
     await page.evaluate(
       (language) => (window as unknown as Hooks).ui().setLanguage(language),
@@ -202,6 +206,10 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
       { timeout: workerWaitTimeout },
     )
     .toBe(true);
+  await expect(page.getByRole('radio', { name: 'Per window', exact: true })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
   await capture(page, info, 'W4');
   await page.evaluate(() => (window as unknown as Hooks).releaseWindows());
   await settled(page);
@@ -221,7 +229,7 @@ test('real walk-forward: live, rolling, flat, anchored, stability, preview and a
   expect(initial.error).toBeNull();
   expect(initial.statuses.every((status) => status === 'done')).toBe(true);
   await capture(page, info, 'W1');
-  const summary = page.getByRole('region', { name: 'Stitched OOS equity', exact: true });
+  const summary = page.getByRole('region', { name: /^(Windows and equity|Stitched OOS equity)$/ });
   await summary.getByRole('radio', { name: 'Per window', exact: true }).click();
   await capture(page, info, 'W2');
   await summary.getByRole('radio', { name: 'Stitched', exact: true }).click();

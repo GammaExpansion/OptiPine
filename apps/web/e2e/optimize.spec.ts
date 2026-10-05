@@ -127,6 +127,11 @@ test('walk-forward runs window by window and lays out W1 (W4, W1)', async ({ pag
     page.getByRole('separator', { name: 'Resize stitched equity and windows' }),
   ).toHaveCount(1);
   await expect(block(page)).toContainText(/Last run \d+:\d\d, \d+ threads?/);
+  await expect(page.getByRole('radio', { name: 'Per window', exact: true })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await page.getByRole('radio', { name: 'Stitched', exact: true }).click();
   await page.screenshot({ path: info.outputPath('W1-en.png') });
   expect(errors).toEqual([]);
 });

@@ -102,8 +102,9 @@ checks S1, B1, O1, R1 and W1 (each of its phone tabs too) at 1440 Ã— 900, 1024 Ã
 tabs.
 
 The phone's Optimize results keep the summary above four tabs (G4); walk-forward results keep
-the stitched equity above Windows, Stability and Settings, and a tab of the other kind opens its
-counterpart (Leaderboard and Windows; Parameter map or Sensitivity and Stability). The
+the equity summary, initially Per window, above Windows, Stability and Settings. Both desktop and
+phone can switch to Stitched and back. A tab of the other kind opens its counterpart (Leaderboard
+and Windows; Parameter map or Sensitivity and Stability). The
 leaderboard fits each page to its measured card height, displaying all searched inputs in
 declaration order at the run's step precision. Desktop rows use the table's measured height.
 Both share one capacity setting, updated after resizing settles, and preserve the selected or

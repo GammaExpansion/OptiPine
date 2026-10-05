@@ -121,7 +121,9 @@ for (const language of ['en', 'zh'] as const) {
     const errors = await open(page, language);
     const english = language === 'en';
     const summary = page.getByRole('region', {
-      name: english ? 'Stitched OOS equity' : '拼接样本外权益',
+      name: english
+        ? /^(Windows and equity|Stitched OOS equity)$/
+        : /^(窗口与权益|拼接样本外权益)$/,
       exact: true,
     });
     const table = page.getByRole('region', {
@@ -133,10 +135,21 @@ for (const language of ['en', 'zh'] as const) {
       exact: true,
     });
     await expect(summary).toContainText('+7,600');
+    await expect(summary).toHaveAccessibleName(english ? 'Windows and equity' : '窗口与权益');
+    await expect(summary).not.toContainText('WFE');
+    await expect(summary).not.toContainText(english ? 'Profitable windows' : '盈利窗口');
     await expect(table.locator('tr[data-selected]')).toContainText('W3');
     // Losses take a true minus sign, as the leaderboard's do.
     await expect(selection).toContainText('−860');
     await noOverflow(page);
+    await expect(
+      summary.getByRole('radio', { name: english ? 'Per window' : '分窗口', exact: true }),
+    ).toHaveAttribute('aria-checked', 'true');
+    await page.screenshot({ path: info.outputPath(`W2-default-${language}.png`) });
+    // W1 captures the stitched view explicitly; the initial summary is W2.
+    await summary.getByRole('radio', { name: english ? 'Stitched' : '拼接', exact: true }).click();
+    await expect(summary).toHaveAccessibleName(english ? 'Stitched OOS equity' : '拼接样本外权益');
+    await expect(summary).toContainText('WFE 0.54');
     await page.screenshot({ path: info.outputPath(`W1-${language}.png`) });
     await page.evaluate(() => {
       const hooks = window as unknown as Hooks;

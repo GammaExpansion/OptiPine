@@ -17,6 +17,17 @@
   min-height: 32px;
   gap: 16px;
 }
+.windowsHeader {
+  padding-block: 0;
+}
+.windowsHeader .legend {
+  margin-left: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.legendHint {
+  color: var(--caption);
+}
 .summaryHeader h2,
 .tableHeader h2 {
   margin: 0;
@@ -58,12 +69,13 @@
   gap: 6px;
 }
 .legend i {
+  flex: none;
   width: 10px;
   height: 10px;
   border-radius: 2px;
   background: #3b6f8c;
 }
-.legend span:last-child i {
+.legend span:nth-child(2) i {
   background: var(--oos);
 }
 .muted {
@@ -454,7 +466,7 @@
   color: var(--loss) !important;
 }
 /*
- * A phone (G4) shows the stitched equity above the tabs and the selection bar below them. The
+ * A phone (G4) shows the equity summary above the tabs and the selection bar below them. The
  * chart fits the width, without the window labels that no longer fit, rather than scrolling; the
  * window table shows whole, its tab scrolling; the view switch and View backtest are touch targets
  * as wide as the phone.
@@ -466,6 +478,13 @@
   .summaryHeader {
     gap: 6px 12px;
     padding: 6px 12px;
+  }
+  .windowsHeader .legend {
+    margin-left: 0;
+  }
+  /* Keep the view switch and swatches visible without the desktop's long explanation. */
+  .legend .legendHint {
+    display: none;
   }
   .summaryHeader > [role='radiogroup'] {
     flex: 1 1 100%;

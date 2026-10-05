@@ -4,6 +4,16 @@ The four result slots read the real optimization store: WfSummary, WfTable, Fixe
 WfSelectionBar. SummaryChart and draw project the workflow's equity and actual bar timestamps onto
 canvas. Components do not rank trials, choose sets, stitch equity or subscribe per trial.
 
+The shared WfSummary opens on **Per window** on desktop and phone (G4). The switch still offers
+**Stitched** and **Per window**, in that order. Changing tabs on a phone keeps the summary mounted
+and preserves the chosen view. Tests and screenshot helpers select Stitched explicitly when
+capturing its W1 reference.
+
+Per window uses W2's **Windows and equity** title, total OOS profit and IS/OOS swatches with the
+lane-reading hint. Phones omit the long hint so the swatches and switch fit. Stitched keeps its
+title, WFE and profitable-window facts. Both views show only progress in place of final facts
+until every window is done.
+
 ## Integration
 
 The pending adapters are removed. The bound session actions are:
@@ -42,6 +52,11 @@ From the repository root:
     npm run format:check
     $env:E2E_BASE_PORT='5474'
     npm run e2e --workspace @pine/web -- --workers=2
+
+`e2e/wf-default.spec.ts` runs the example on recorded BTC bars through the dev server and real
+Workers, with two Length values per window. Desktop and phone must open on Per window and switch
+to Stitched and back. It saves `per-window-desktop.png`, `per-window-phone.png` and the corresponding
+stitched captures in each test's output directory.
 
 The real dev-server test is e2e/wf-integration.spec.ts. It calls loadExample('trend-breakout'),
 intercepts every market request with the recorded two-year dataset and runs the real Worker pool.

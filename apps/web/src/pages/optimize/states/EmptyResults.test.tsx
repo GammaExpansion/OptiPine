@@ -15,7 +15,7 @@ test('the empty results name what the chosen validation shows after a run (O1, W
   act(() => optimization().actions.setValidation({ mode: 'walk-forward' }));
   expect(
     screen.getByText(
-      'Set the search ranges and the walk-forward windows on the right. After a run, the stitched OOS equity, the results of each window and their stability appear here.',
+      'Set the search ranges and the walk-forward windows on the right. After a run, the per-window equity, the results of each window and their stability appear here.',
     ),
   ).toBeVisible();
   expect(screen.queryByText(/leaderboard/)).toBeNull();
@@ -27,13 +27,13 @@ test('a phone points walk-forward to Settings and its tabs, in both languages (G
   renderInEnglish(<EmptyResults />);
   expect(
     screen.getByText(
-      'Set the search ranges and the walk-forward windows under Settings. After a run, the stitched OOS equity appears above the tabs, and the windows and their stability in their tabs.',
+      'Set the search ranges and the walk-forward windows under Settings. After a run, the per-window equity appears above the tabs, and the windows and their stability in their tabs.',
     ),
   ).toBeVisible();
   act(() => uiStore.getState().setLanguage('zh'));
   expect(
     screen.getByText(
-      '在「设置」中设置搜索范围与滚动窗口。运行后，拼接样本外权益显示在标签页上方，各窗口结果及其稳定性显示在各自的标签页。',
+      '在「设置」中设置搜索范围与滚动窗口。运行后，各窗口权益显示在标签页上方，各窗口结果及其稳定性显示在各自的标签页。',
     ),
   ).toBeVisible();
 });
