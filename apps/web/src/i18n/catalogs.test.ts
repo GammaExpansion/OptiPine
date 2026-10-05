@@ -114,8 +114,17 @@ test('report and optimization metric labels are translated in Chinese', () => {
 });
 
 test('shared metrics agree across report, ranking, filter presets, leaderboard and parameter map', () => {
+  // Optimization profit is marked to market at the range end, so it is named apart from the
+  // report's closed-trade Net profit, and the same in every optimization view.
+  const profit = catalogs.zh['optimize.setup.objective.netProfit'];
+  assert.notEqual(profit, catalogs.zh['report.netProfit']);
+  for (const prefix of [
+    'optimize.map.objective',
+    'optimize.setup.metric',
+    'optimize.leaderboard.metric',
+  ] as const)
+    assert.equal(catalogs.zh[`${prefix}.netProfit`], profit);
   for (const [metric, report] of [
-    ['netProfit', 'report.netProfit'],
     ['profitFactor', 'report.profitFactor'],
     ['averagePnl', 'report.averagePnl'],
     ['sharpeRatio', 'report.sharpe'],
