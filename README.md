@@ -74,8 +74,6 @@ money.
 **[Try it in your browser →](https://gammaexpansion.github.io/OptiPine/)** One click loads the
 example strategy and runs its first backtest.
 
-<sub>Screens are rendered from the app's design mock.</sub>
-
 ## Running the app
 
 The [online demo](https://gammaexpansion.github.io/OptiPine/) needs no install; it loads Binance
