@@ -66,8 +66,6 @@ OptiPine 直接运行你的 Pine 源码。提供一个 v5 或 v6 策略和行情
 **[立即在浏览器中试用 →](https://gammaexpansion.github.io/OptiPine/)**
 一键载入示例策略，即刻查看首次回测结果。
 
-<sub>图片为应用设计稿的渲染图。</sub>
-
 ## 运行应用
 
 [在线演示](https://gammaexpansion.github.io/OptiPine/)无需安装，支持 Binance 现货数据和 CSV 文件。
